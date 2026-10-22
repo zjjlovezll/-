@@ -41,7 +41,16 @@ CATALOG_SCHEMA = "velch-simpack-track-catalog-v1"
 
 
 class SimpackCaseError(RuntimeError):
-    """A catalog or template that cannot be turned into a case without guessing."""
+    """A catalog or template that cannot be turned into a case without guessing.
+
+    ``detail`` carries the numbers behind the refusal so a caller (or a script) can act without
+    parsing Chinese prose: "the gauge would change by 103 mm" is only useful if the reader can see
+    ``worst_mm`` and the per-side station counts next to it.
+    """
+
+    def __init__(self, message: str, *, detail: dict[str, Any] | None = None) -> None:
+        super().__init__(message)
+        self.detail: dict[str, Any] = dict(detail or {})
 
 
 @dataclass(frozen=True)
@@ -556,7 +565,18 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
                     if gauge["other_side_stations"] < 3 else
                     "Import both sides in one go, or pass --allow-gauge-change to say you mean it. "
                 )
-                + "Pass --allow-gauge-change only if you mean to change the gauge.")
+                + "Pass --allow-gauge-change only if you mean to change the gauge.",
+                detail={
+                    "code": "lateral_gauge_change",
+                    "gauge_mm": round(float(gauge["gauge_mm"]), 3),
+                    "this_side_mm": round(float(gauge["signed_mm"]), 3),
+                    "other_side_mm": round(float(gauge["other_side_mm"]), 3),
+                    "other_side_stations": int(gauge["other_side_stations"]),
+                    "at_m": round(float(gauge["at_m"]), 3),
+                    "limit_mm": LATERAL_GAUGE_LIMIT_MM,
+                    "both_sides_possible": bool(gauge["other_side_stations"] >= 3),
+                    "ways_out": ["--keep-profiles", "--allow-gauge-change", "a model with both rails"],
+                })
 
     new_stations = []
     for entry, path in zip(chosen, source_files):

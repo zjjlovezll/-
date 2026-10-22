@@ -174,9 +174,14 @@ def main(argv: list[str] | None = None) -> int:
                     import_lateral=args.import_lateral,
                     allow_gauge_change=args.allow_gauge_change)
             except SimpackCaseError as error:
-                print(json.dumps({"status": "failed", "error_type": type(error).__name__,
-                                  "message": str(error)}, ensure_ascii=False, indent=2),
-                      file=sys.stderr)
+                payload = {"status": "failed", "error_type": type(error).__name__,
+                           "message": str(error)}
+                if getattr(error, "detail", None):
+                    # The refusal is actionable only if the numbers travel with it: a caller that
+                    # reads ``detail.other_side_stations`` knows to use --keep-profiles, while one
+                    # that has to parse the sentence does not.
+                    payload["detail"] = error.detail
+                print(json.dumps(payload, ensure_ascii=False, indent=2), file=sys.stderr)
                 return 2
             summary = built.summary()
             if args.keep_profiles or args.no_seat_check:

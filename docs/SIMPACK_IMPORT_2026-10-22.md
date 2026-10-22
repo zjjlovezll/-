@@ -308,3 +308,16 @@ layout, or supply a model whose two rails both carry section tables.
 
 `lateral_gauge_mm` 旁挂字段也多了 `other_side_stations`，让脚本能自己判断"这是不对称模型"还是
 "调用方少传了一侧"。
+
+### 拒绝时的机器可读输出（0.4.16 起）
+
+```json
+{
+  "status": "failed",
+  "error_type": "SimpackCaseError",
+  "detail": {"code": "lateral_gauge_change", "gauge_mm": 81.69,
+             "other_side_stations": 2, "both_sides_possible": false,
+             "limit_mm": 5.0,
+             "ways_out": ["--keep-profiles", "--allow-gauge-change", "a model with both rails"]}
+}
+```

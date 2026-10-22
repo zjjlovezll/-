@@ -1496,6 +1496,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.13.md](RELEASE_NOTES_0.4.13.md) | Velch 0.4.13 发布说明 |
 | [RELEASE_NOTES_0.4.14.md](RELEASE_NOTES_0.4.14.md) | Velch 0.4.14 发布说明 |
 | [RELEASE_NOTES_0.4.15.md](RELEASE_NOTES_0.4.15.md) | Velch 0.4.15 发布说明 |
+| [RELEASE_NOTES_0.4.16.md](RELEASE_NOTES_0.4.16.md) | Velch 0.4.16 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
@@ -1747,6 +1748,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.13.md` | 0.4.13 装什么、证据版包含哪三份可复算材料、与 Simpack 的对照摘要、仍然没有的五项 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.14.md` | 0.4.14 新增 `selfcheck`（六项首次运行检查）与冒烟第 7 步 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.15.md` | 0.4.15：只读安装（O009）自动化，自检在只读目录下的预期输出 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.16.md` | 0.4.16：`SimpackCaseError.detail`，拒绝带结构化数字 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1773,3 +1775,33 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 `agent_home()` **自己就会抛 `PermissionError`** —— 整条自检会带着 traceback 退 2，正好在最需要
 解释的机器上死掉。现在把调用一起包住，失败时给 `[FAIL] 可写目录` 与 `VELCH_AGENT_HOME` 的指路。
 `tests/test_selfcheck.py` 增两项钉住（`agent_home` 抛错时自检不炸、报告仍给"1 项必须修"）。
+
+## 第 54 轮：拒绝也要带上数字（O008 收尾）
+
+`simpack-case --import-lateral` 拒绝单侧导入时，过去只在中文句子里说"这个模型左轨只有 2 站"。
+脚本没法据此行动，只能去解析句子。现在 **`SimpackCaseError` 带 `detail`**，CLI 把它一并打印：
+
+```json
+{
+  "status": "failed",
+  "error_type": "SimpackCaseError",
+  "message": "importing this side's crown lateral positions changes the gauge by +81.7 mm …",
+  "detail": {
+    "code": "lateral_gauge_change",
+    "gauge_mm": 81.69,
+    "this_side_mm": 81.69,
+    "other_side_mm": 0.0,
+    "other_side_stations": 2,
+    "at_m": 80.278,
+    "limit_mm": 5.0,
+    "both_sides_possible": false,
+    "ways_out": ["--keep-profiles", "--allow-gauge-change", "a model with both rails"]
+  }
+}
+```
+
+`both_sides_possible: false` 就是 O008 的机器可读结论：**这个模型不能两侧一起导入**（左轨只有 2 站，
+都在 0 与 150 m）。`other_side_stations < 3` 是判定依据，写进 `detail` 而不是只写在句子里。
+
+`tests/test_simpack_refusal_detail.py`（3 项）：拒绝带全部键与 `limit_mm`、CLI 把 `detail` 打进 stderr
+的 JSON、**其它失败（目录不存在）不带 `detail`** —— 不能让"没有数字"的失败看起来像有数字。

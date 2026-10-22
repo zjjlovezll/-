@@ -102,3 +102,11 @@
 ## O009 关闭（2026-10-23，第 53 轮）
 
 只读安装不再需要手工试：`packaging/smoke_test.py --readonly-acl` 复制安装目录、禁写、验证「仍能算 + 自检说得出原因 + 不崩」。两次试错的结论写在 `docs/CHANGELOG_DOCS.md` 第 53 轮：`(W)` 含 SYNCHRONIZE 会让 Tcl 找不到 init.tcl，所以只能用 `(OI)(CI)(WD,AD,WEA,WA)` 并把已存在的 `.agent` 先删掉。
+
+## O008（2026-10-23，第 54 轮）：已说明且机器可读，仍不可导入
+
+结论没变：这个模型**不能**两侧一起导入——`$RWR_Rail_1` 右轨 236 站，左轨只有 2 站
+（0 与 150 m），单侧导入 +81.7…+103 mm 等于改轨距。现在这个结论有结构化出口：
+`simpack-case --import-lateral` 被拒时 stderr 的 JSON 带
+`detail.both_sides_possible == false` 与 `detail.other_side_stations == 2`。
+真要导入两侧，需要一个两条轨都带断面表的模型（或人工补左轨断面表）。

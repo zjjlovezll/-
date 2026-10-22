@@ -16,8 +16,9 @@ from velch.agent import call_tool, manifest
 from velch.agent.core import AgentError, ErrorCode, predict_wall_s
 from velch.agent.jobs import read_result, submit_run
 from velch.agent.server import handle
+from velch.data_root import case_dir
 
-CASE = "validation/crh380a_m/case_frog_N_strip05.json"
+CASE = str(case_dir() / "case_frog_N_strip05.json")
 
 
 @pytest.fixture()

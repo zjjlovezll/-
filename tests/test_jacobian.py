@@ -19,8 +19,9 @@ import pytest
 from velch.jacobian import JacobianAssembler, frozen_geometry_error
 from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import VehicleDynamics, _static_vertical_equilibrium
+from velch.data_root import case_dir
 
-CASE = Path(__file__).resolve().parent.parent / "validation" / "crh380a_m" / "case_frog_N_strip05.json"
+CASE = case_dir() / "case_frog_N_strip05.json"
 
 
 @pytest.fixture(scope="module")

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from velch.data_root import case_dir
 from velch.ui.parameters import (
     REGISTRY,
     ParameterError,
@@ -19,7 +20,7 @@ from velch.ui.parameters import (
     to_chinese,
 )
 
-CASE = Path(__file__).resolve().parents[1] / "validation" / "crh380a_m" / "case_full12_cap05.json"
+CASE = case_dir() / "case_full12_cap05.json"
 
 
 def _case() -> dict:

@@ -23,8 +23,9 @@ import pytest
 
 from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import VehicleDynamics
+from velch.data_root import case_dir
 
-CASE = Path(__file__).resolve().parent.parent / "validation" / "crh380a_m" / "case_frog_N_strip05.json"
+CASE = case_dir() / "case_frog_N_strip05.json"
 
 
 def _dynamics(bounded: bool) -> tuple[VehicleDynamics, np.ndarray, np.ndarray]:

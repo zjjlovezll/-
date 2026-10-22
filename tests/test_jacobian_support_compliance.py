@@ -27,8 +27,9 @@ from velch.jacobian import frozen_geometry_error
 from velch.model import RunSettings
 from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import VehicleDynamics, _static_vertical_equilibrium
+from velch.data_root import case_dir
 
-BASE = Path(__file__).resolve().parent.parent / "validation" / "crh380a_m"
+BASE = case_dir()
 SETTINGS = {
     "method": "BDF",
     "x_start_m": 13.5,

@@ -14,8 +14,9 @@ from velch.case.derive import (absolutise_profile_paths, relative_profile_refere
                                solver_override, write_derived_case)
 from velch.cli import main
 from velch.model import RunSettings
+from velch.data_root import case_dir
 
-CASE = Path(__file__).resolve().parent.parent / "validation" / "crh380a_m" / "case_frog_N_strip05.json"
+CASE = case_dir() / "case_frog_N_strip05.json"
 
 DECLARED = {
     "method": "DOP853", "x_start_m": 69.0, "duration_s": 0.05, "output_step_s": 5e-4,

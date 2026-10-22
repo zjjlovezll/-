@@ -22,8 +22,9 @@ from velch.contact import (  # noqa: E402
     find_graph_contact,
 )
 from velch.vehicle import load_vehicle_case  # noqa: E402
+from velch.data_root import case_dir
 
-CASE = BASE / "validation" / "crh380a_m" / "case_A_plain.json"
+CASE = case_dir() / "case_A_plain.json"
 
 
 def test_spline_is_a_registered_geometry_policy():

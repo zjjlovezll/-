@@ -22,9 +22,9 @@ import pytest
 
 from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import VehicleDynamics, _static_vertical_equilibrium
+from velch.data_root import case_dir
 
-CASE = (Path(__file__).resolve().parent.parent
-        / "validation" / "crh380a_m" / "case_A_plain.json")
+CASE = case_dir() / "case_A_plain.json"
 
 ORACLE_CONTACT_N = 59_680.577
 ORACLE_VERTICAL_M = -0.4628e-3

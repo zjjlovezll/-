@@ -34,6 +34,31 @@ SOURCE = REPO / "src"
 FAST_CASE_NAME = "case_frog_N_strip05.json"
 
 
+
+def _invariants_step() -> dict[str, object]:
+    """Re-derive the physics invariants from the archive and compare with the reference.
+
+    Deliberately ``--no-run``: the whole suite already runs a simulation, and this step exists to
+    catch a numbers drift, not to re-time the solver.  The full check (with one fresh run) is
+    ``python scripts/physics_invariants.py``.
+    """
+
+    if _fast_case() is None:
+        return {"step": "invariants", "ok": True, "skipped": True,
+                "detail": {"reason": "语料未挂载（VELCH_DATA_ROOT）"}}
+    command = [sys.executable, "-X", "utf8", str(REPO / "scripts" / "physics_invariants.py"),
+               "--no-run"]
+    started = time.perf_counter()
+    completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8",
+                               errors="replace", cwd=str(REPO),
+                               env={**os.environ, "PYTHONPATH": str(SOURCE)})
+    elapsed = time.perf_counter() - started
+    tail = (completed.stdout + completed.stderr).strip().splitlines()[-3:]
+    return {"step": "invariants", "ok": completed.returncode == 0,
+            "detail": {"exit": completed.returncode, "seconds": round(elapsed, 1), "tail": tail},
+            "seconds": round(elapsed, 1)}
+
+
 def _fast_case() -> Path | None:
     """The smoke-test case, or ``None`` when the corpus is not mounted on this machine."""
 
@@ -128,6 +153,8 @@ def main(argv: list[str] | None = None) -> int:
     capabilities = _agent_call({"tool": "capabilities"})
     steps.append({"step": "contract", "ok": bool(capabilities.get("ok")),
                   "detail": {"tools": len((capabilities.get("data") or {}).get("tools", []))}})
+
+    steps.append(_invariants_step())
 
     if not args.skip_run:
         case_path = _fast_case()

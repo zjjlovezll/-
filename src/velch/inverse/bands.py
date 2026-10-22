@@ -64,12 +64,24 @@ def bandpass(values: np.ndarray, rate_hz: float, low_hz: float = DEFAULT_BAND_HZ
 
     from scipy.signal import butter, sosfiltfilt  # local import keeps module import cheap
 
-    sos = butter(order, (low_hz / nyquist, high_hz / nyquist), btype="bandpass", output="sos")
     # A narrow *low* edge (5 Hz at 2 kHz) rings for about a second at the record boundary, and the
     # default odd padding leaves that ring inside the data where it inflates every extremum.
     # Padding by one second of odd extension puts the artefact outside the record instead.
     pad = int(min(data.shape[0] // 2 - 1, max(0, 2.0 * rate_hz)))
-    return sosfiltfilt(sos, data, padlen=pad if pad > 0 else None)
+    padlen = pad if pad > 0 else None
+    # The upper edge sits at ``0.999 * nyquist`` by default.  On a *short* window scipy's stability
+    # check can reject that section outright with ``Filter not stable due to sum(a) == 0`` -- the
+    # same filter is fine on a long record, so retry narrower instead of refusing a 70-sample window.
+    for edge in (high_hz, 0.97 * nyquist, 0.90 * nyquist):
+        if edge <= low_hz:
+            break
+        sos = butter(order, (low_hz / nyquist, edge / nyquist), btype="bandpass", output="sos")
+        try:
+            return sosfiltfilt(sos, data, padlen=padlen)
+        except ValueError as error:
+            if "not stable" not in str(error):
+                raise
+    raise BandError("band-pass filter is unstable for this window and rate")
 
 
 def _trimmed(values: np.ndarray, rate_hz: float, low_hz: float) -> np.ndarray:

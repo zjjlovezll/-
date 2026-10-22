@@ -97,3 +97,4 @@
   左轨 **2** 站（0 与 150 m，均基准 JBG 断面）→ 两侧一起导入无从做起；单侧导入 = 改轨距，闸门拒绝是
   正确行为。0.4.11 起拒绝消息直接指出"模型只在一侧定义变断面"并给出两条出路（`--keep-profiles`
   或换模型），旁挂增加 `other_side_stations`。
+| B025 | 频带分析在短窗上抛 `Filter not stable due to sum(a) == 0` | 70 样本、2 kHz 的窗口（78.8–82.2 m） | `band_metrics`/`band_rms` 直接崩，任何按窗口做频带分析的功能都会失败 | 已修：`bandpass` 收窄上边缘重试（0.999→0.97→0.90×Nyquist）；长记录逐位不变；`tests/test_physics_invariants.py` 钉住 |

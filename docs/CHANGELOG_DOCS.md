@@ -1485,6 +1485,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md](OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md) | 开源轮轨接触算法调查（2026-10-19） |
 | [PACKAGING_2026-10-22.md](PACKAGING_2026-10-22.md) | 打包与安装包（Windows） |
 | [PARALLEL_AND_SIMPACK_RWP.md](PARALLEL_AND_SIMPACK_RWP.md) | 多核并行、Simpack RWP 机制与 CONTACT 接入 |
+| [PHYSICS_INVARIANTS.md](PHYSICS_INVARIANTS.md) | 物理不变量复算门 |
 | [RACK_CASE_DATA_CONTRACT_2026-10-21.md](RACK_CASE_DATA_CONTRACT_2026-10-21.md) | 齿轨过岔算例：数据契约（2026-10-21） |
 | [RAIL_CANT_2026-10-20.md](RAIL_CANT_2026-10-20.md) | 轨底坡 1:40：把"整体倾斜"换成"绕轨顶中心旋转" |
 | [RELEASE_NOTES_0.4.1.md](RELEASE_NOTES_0.4.1.md) | Velch 0.4.1 · 发布说明（2026-10-22） |
@@ -1610,3 +1611,55 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md](UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md) | 统一口径复核 + 代码体检（2026-10-22） |
 | [VEHICLE_V2_DESIGN_AND_EVIDENCE.md](VEHICLE_V2_DESIGN_AND_EVIDENCE.md) | Velch v0.2：车辆—轮对—道岔轨道耦合的证据与实现 |
 <!-- DOCS:ALL:END -->
+
+## 第 50 轮：把"物理数值不变"从一句承诺变成一道门
+
+至今为止，发布说明里那句"物理一根线没碰"背后只有 `tests/test_oracle_frozen.py` 钉的静载门，
+**没有任何东西**拿一次发布去比归档的 1.2 s 结果，八个接触峰值尤其没人复算。
+
+### 新增 `scripts/physics_invariants.py`
+
+两个独立来源，与 `docs/physics_invariants.json` 里 committed 的参考值逐项比较：
+
+- **归档**（不重跑）：`out_full12_cap05/history.csv` 2401 帧 → 八接触峰值、最大侵入、脱空样本、
+  78.8–82.2 m 窗口的 rms / 主导频率 / 三频带、`manifest.json` 的 `result_status` 与七项门；
+- **现跑**（`--fast`，0.05 s 辙叉算例，约 4 s）：当前代码还能不能跑出 `numerically_checked` 与
+  七门全过、首帧与八接触峰值。
+
+判据：接触峰值 ±1.0 kN、侵入 ±1.0 µm、窗口 rms ±0.2 kN、主导频率 ±1.0 Hz、频带 ±0.2 kN、脱空
+样本必须完全相同、首帧静载 ±1.0 N；现跑要求 `numerically_checked` 且八个接触都在、七门无失败。
+退出码 0 / 2。报告写到 `reports/PHYSICS_INVARIANTS_LATEST.md`（运行产物，不入库）。
+
+参考值实测：`axle2_right_normal_n 170.61 kN`、`axle1_right 89.677 kN`、最大侵入 551.89 µm、
+脱空 0、窗口 `rms 9.126 kN / 主频 57.14 Hz / 5.677 / 1.75 / 2.25`、`gates 7/7`、
+`result_status numerically_checked` —— 与文档里引用的数字逐位一致。
+
+已接入 `scripts/auto_accept.py` 作为第四步（`--no-run`，0.2 s），每次提交都会跑。
+
+### 四个"看起来对其实错"的地方（都是自己抓到的）
+
+1. **窗口数字差点用错算法**：我先用手写 FFT，得到 `rms 10.715 kN`；而文档引用的 **9.13 kN** 来自
+   `bands_from_history.py`（去均值 + 矩形窗 + `2/N` 标度）。`band_metrics` 回答的是另一个问题
+   （5–999 Hz 滤波、裁瞬态、主频按 1/3 倍频程中心报，同一窗给 11.59 kN / 396.85 Hz）。改成复刻
+   文档口径后，参考值与文档逐位一致，差别写进 `docs/PHYSICS_INVARIANTS.md`。
+2. **`manifest.json` 的 `result_status`/`gates` 在 `summary` 下一层**：读顶层得到 `None`，
+   参考值会带着两个 `None` 落地，门就变成瞎的。
+3. **静载门不是这个归档的**：`59 680.5769 N` 属于模板算例（`test_oracle_frozen` 钉住），
+   归档从 13.5 m 起算、首帧是 `59 680.3756 N`；复算门比"归档自己的首帧"，硬要比那个常数会
+   在没人动过代码的情况下报漂移。
+4. **辙叉算例的首帧不是静载门**：它过辙叉，首帧一侧只有 37.1 kN。现跑只要求"能跑、门全过、
+   八个接触都在"，不要求首帧等于 59.68 kN。
+
+### 顺带修掉 B025：`bandpass` 在短窗上会抛异常
+
+70 个样本、2 kHz 的窗口让 scipy 抛 `ValueError: Filter not stable due to sum(a) == 0`——上边缘
+贴着 Nyquist；同样的滤波器在 2401 点长记录上正常。现在滤波失败会依次收窄上边缘
+（0.999 → 0.97 → 0.90 × Nyquist）重试，长记录结果逐位不变，短窗不再崩。
+`tests/test_physics_invariants.py` 有一条 70 点用例钉住它。
+
+### 验证
+
+- `tests/test_physics_invariants.py` **6 passed**（参考值完整、与文档一致、归档仍匹配、
+  改一个数会被报出、容差表齐全、短窗滤波不崩）
+- `python scripts/physics_invariants.py` → **VERDICT: UNCHANGED**
+- `python scripts/auto_accept.py --skip-run` → 四步全 PASS

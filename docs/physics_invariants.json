@@ -1,0 +1,41 @@
+{
+  "source": "F:\\velch_data\\validation\\crh380a_m\\out_full12_cap05\\history.csv",
+  "frames": 2401,
+  "contact_peaks_kn": {
+    "axle1_left_normal_n": 61.19,
+    "axle1_right_normal_n": 89.677,
+    "axle2_left_normal_n": 61.075,
+    "axle2_right_normal_n": 170.61,
+    "axle3_left_normal_n": 61.173,
+    "axle3_right_normal_n": 90.767,
+    "axle4_left_normal_n": 61.068,
+    "axle4_right_normal_n": 170.448
+  },
+  "max_penetration_um": 551.89,
+  "detached_samples": 0,
+  "static_first_frame_n": 59680.3756,
+  "lead_axle_right_peak_kn": 89.677,
+  "overall_peak_kn": 170.61,
+  "overall_peak_contact": "axle2_right_normal_n",
+  "window": [
+    78.8,
+    82.2
+  ],
+  "window_metrics": {
+    "rms_kn": 9.126,
+    "dominant_hz": 57.14,
+    "band_30_60_kn": 5.677,
+    "band_150_250_kn": 1.75,
+    "band_250_400_kn": 2.25
+  },
+  "result_status": "numerically_checked",
+  "gates": {
+    "solver_completed": true,
+    "finite_states_and_forces": true,
+    "vertical_preload_residual": true,
+    "penetration_within_case_limit": true,
+    "friction_bound": true,
+    "no_edge_limited_active_contact": true,
+    "translational_action_reaction": true
+  }
+}

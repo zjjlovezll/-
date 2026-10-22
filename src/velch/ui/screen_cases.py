@@ -151,6 +151,13 @@ class CasesScreen(Screen):
             ttk.Button(nav, text=text, style="Ghost.TButton", command=command).grid(
                 row=0, column=column, sticky="ew", padx=(0 if column == 0 else theme.GAP, 0))
 
+        # Simpack geometry lives one button away, not in a sub-menu: "read my Simpack model" is a
+        # thing the interface must be able to do, and the CLI command behind it is the contract.
+        import_row = ttk.Frame(detail, style="Card.TFrame")
+        import_row.pack(fill="x", pady=(theme.SPACE["1"], 0))
+        ttk.Button(import_row, text="从 Simpack 模型派生算例…", style="Ghost.TButton",
+                   command=self.import_from_simpack).pack(fill="x")
+
         self.result_label = ttk.Label(detail, text="", style="Muted.TLabel",
                                       wraplength=int(560 * theme.SCALE), justify="left")
         self.result_label.pack(anchor="w", pady=(theme.SPACE["3"], 0))
@@ -338,6 +345,16 @@ class CasesScreen(Screen):
             text=f"已派生：{path.name}\ncase_id = {payload['case_id']}\nsha256 = {digest}")
         self.app.set_status(f"派生成功 · {path.name}", tone="pass")
         self.reload()
+
+    def import_from_simpack(self) -> None:
+        """Open the Simpack import dialog on the selected case as the template."""
+        from .simpack_dialog import show_simpack_dialog
+
+        template = self.selected.path if self.selected else None
+        dialog = show_simpack_dialog(self, template=template, case_dir=store.VALIDATION_DIR,
+                                     on_done=lambda _path: self.reload())
+        self.simpack_dialog = dialog
+        return None
 
     def export_figure(self) -> None:
         self.app.set_status("算例屏没有图形可导出")

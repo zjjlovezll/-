@@ -1,0 +1,119 @@
+"""The Simpack import dialog must speak the CLI's language and nothing else."""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+from velch.ui import simpack_dialog
+from velch.ui.simpack_dialog import _parse_report, _status_line
+
+SOURCE = Path(__file__).resolve().parent.parent / "src" / "velch"
+
+
+def _dialog(monkeypatch, tmp_path: Path):
+    """Build the dialog headless; skip where Tk is unavailable."""
+    tk = pytest.importorskip("tkinter")
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        owned = True
+    except tk.TclError:  # pragma: no cover - another test already holds the interpreter
+        pytest.skip("no Tk display")
+    dialog = simpack_dialog.SimpackImportDialog(root, template=tmp_path / "case_A.json",
+                                               case_dir=tmp_path)
+    return root, dialog
+
+
+def test_the_command_is_the_cli_command(monkeypatch, tmp_path: Path) -> None:
+    root, dialog = _dialog(monkeypatch, tmp_path)
+    try:
+        dialog.catalog.set(str(tmp_path / "catalog.json"))
+        dialog.case_id.set("simpack_probe")
+        command = dialog.build_command()
+        assert command[:5] == [sys.executable, "-X", "utf8", "-m", "velch"]
+        assert command[5] == "simpack-case"
+        assert "--catalog" in command and "--template" in command
+        assert command[command.index("--out") + 1] == str(tmp_path / "simpack_probe.json")
+        assert "--sample" in command and command[command.index("--sample") + 1] == "60"
+        assert "--keep-profiles" not in command
+        assert "--no-seat-check" not in command
+    finally:
+        root.destroy()
+
+
+def test_the_two_switches_are_opt_in(monkeypatch, tmp_path: Path) -> None:
+    root, dialog = _dialog(monkeypatch, tmp_path)
+    try:
+        dialog.catalog.set(str(tmp_path / "catalog.json"))
+        dialog.keep_profiles.set(True)
+        dialog.seat_check.set(False)
+        dialog.rail.set("R")
+        command = dialog.build_command()
+        assert "--keep-profiles" in command
+        assert "--no-seat-check" in command
+        assert command[command.index("--rail") + 1] == "R"
+    finally:
+        root.destroy()
+
+
+def test_a_missing_catalog_is_refused_with_words_not_a_traceback(monkeypatch,
+                                                                tmp_path: Path) -> None:
+    root, dialog = _dialog(monkeypatch, tmp_path)
+    try:
+        with pytest.raises(ValueError, match="catalog.json"):
+            dialog.build_command()
+    finally:
+        root.destroy()
+
+
+def test_derive_does_not_swallow_a_failing_command(monkeypatch, tmp_path: Path) -> None:
+    root, dialog = _dialog(monkeypatch, tmp_path)
+    try:
+        dialog.catalog.set(str(tmp_path / "catalog.json"))
+        monkeypatch.setattr(dialog, "_run", lambda _command: (2, '{"seating": {"seats": false}}'))
+        called: list[Path] = []
+        dialog._on_done = called.append
+        dialog.derive()
+        assert dialog.report == {"seating": {"seats": False}}
+        assert called == []                       # a refusal must not reload the list as success
+        assert "没坐住" in dialog.status.cget("text")
+    finally:
+        root.destroy()
+
+
+def test_a_successful_derive_hands_back_the_file(monkeypatch, tmp_path: Path) -> None:
+    root, dialog = _dialog(monkeypatch, tmp_path)
+    try:
+        dialog.catalog.set(str(tmp_path / "catalog.json"))
+        dialog.case_id.set("simpack_ok")
+        payload = '{\n  "seating": {"seats": true, "residual_n": 1.1e-07}\n}\n'
+        monkeypatch.setattr(dialog, "_run", lambda _command: (0, payload))
+        called: list[Path] = []
+        dialog._on_done = called.append
+        dialog.derive()
+        assert called == [tmp_path / "simpack_ok.json"]
+        assert "坐住了" in dialog.status.cget("text")
+    finally:
+        root.destroy()
+
+
+def test_the_report_parser_survives_noise() -> None:
+    assert _parse_report('warning: something\n{"a": 1}') == {"a": 1}
+    assert _parse_report("no json here") is None
+    assert _parse_report('{"broken": ') is None
+
+
+def test_the_status_line_distinguishes_three_outcomes() -> None:
+    assert "未跑静平衡" in _status_line(0, {"crown_delta_mm": {}})
+    assert "坐住了" in _status_line(0, {"seating": {"seats": True, "residual_n": 1e-7}})
+    assert "没坐住" in _status_line(2, {"seating": {"seats": False}})
+    assert "退出码 3" in _status_line(3, None)
+
+
+def test_the_dialog_does_not_import_the_forward_stack() -> None:
+    source = (SOURCE / "ui" / "simpack_dialog.py").read_text(encoding="utf-8")
+    for forbidden in ("vehicle_solver", "velch.contact", "velch.jacobian", "import numpy"):
+        assert forbidden not in source, forbidden
+    assert "launcher_argv" in source

@@ -210,3 +210,20 @@ The nearest start that measures within 3 mm is 72.7 m (worst 1.24 mm). Or use --
 2. 双体交接（基本轨 / 尖轨、翼轨 / 心轨），需要 `rail_templates[*].bodies` 与 `y_window_m` 的映射。
 3. 结果对照：把 Simpack 的 `RS_result` 通道与 Velch 的 `history.csv` 按同一里程窗对齐，出
    `docs/SIMPACK_COMPARE_<date>.md`——只描述差异，不调参。
+
+## 八、在界面里做同样的事（0.4.6）
+
+① 算例屏底部新增 **「从 Simpack 模型派生算例…」**：选断面目录 JSON、选模板算例、填起点/时长/采样站数，
+点「生成算例」就写一个新算例，并当场告诉你静平衡坐不坐得住。
+
+![Simpack 导入对话框](images/ui_simpack_dialog.png)
+
+界面本身不算仿真、也不读几何：它把**和命令行完全相同的一条命令**交给 `velch.launcher` 起子进程，
+再把命令的输出原样贴回来。这样有三个好处：
+
+- 冻结成 exe 之后这条路径仍然可用（走 `velch-cli.exe`，不依赖 `-X utf8 -m velch`）；
+- 界面能做的一切，命令行都能做、能复现、能被测试钉住；
+- 裁决失败时界面上看到的就是命令行那一句建议，不会出现"界面说行、命令行说不行"。
+
+派生失败（静平衡坐不住）时退出码为 2，界面**不会**把它当成功去刷新列表——这一点有测试
+（`tests/test_ui_simpack_dialog.py::test_derive_does_not_swallow_a_failing_command`）。

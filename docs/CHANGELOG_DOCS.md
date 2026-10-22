@@ -1200,3 +1200,20 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 - `docs/SIMPACK_IMPORT_2026-10-22.md` 第五节加"更正"块并给旧表加注；`docs/BUGS.md` 记 **B022**、**B023**、
   重写 B021、**撤销 O008**（改为"冠部横移未导入"）。
 - `pytest` **506 passed, 1 skipped**。
+
+## 第 41 轮：界面里也能读 Simpack 模型
+
+命令行能做的 `simpack-case`，现在在 ① 算例屏里点一下也能做，而且做的是**同一条命令**。
+
+- 新增 `Velch/src/velch/ui/simpack_dialog.py`（`SimpackImportDialog`）：断面目录 JSON、模板算例、
+  起点/时长/采样站数、侧别/轨别、`型面沿用模板`（`--keep-profiles`）、`派生后裁决`（默认开，
+  关掉即 `--no-seat-check`）。
+- ① 算例屏新增按钮「从 Simpack 模型派生算例…」，默认把**当前选中的算例**当模板。
+- 命令由 `velch.launcher.launcher_argv()` 组装 → 冻结版走 `velch-cli.exe`，源码版走
+  `[python, -X, utf8, -m, velch, ...]`；界面**不 import 前向求解栈**（有测试盯着）。
+- 失败不清零：退出码 2（静平衡坐不住）时状态行写「静平衡没坐住…」，**不刷新列表**、不把拒绝当成功。
+- 新增 `Velch/tests/test_ui_simpack_dialog.py`（8 项）：命令与 CLI 一致（`simpack-case` + 各参数）、
+  两个开关是 opt-in、缺 catalog 给可读错误而不是 traceback、拒绝不触发 `on_done`、成功把文件交回、
+  报告解析能穿过噪声、状态行区分三种结局、对话框不 import 前向栈。
+- 截图入库 `docs/images/ui_simpack_dialog.png`；`docs/SIMPACK_IMPORT` 新增第八节说明"界面 = 同一条命令"。
+- `pytest` **514 passed, 1 skipped**。

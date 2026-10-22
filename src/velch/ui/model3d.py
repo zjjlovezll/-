@@ -208,8 +208,16 @@ def wheel_grid(case: VehicleCase, wheel: Wheel, state: WheelState, *, spin: int 
                points: int = 46) -> QuadGrid | None:
     """Revolve one wheel profile about the axle and place it at ``state``.
 
-    ``R = R0 - z`` is the radius of each meridian point (see the module docstring), so the
-    flange — the largest radius — is what dips below the rail top.
+    The axle runs along **y** (lateral), so the meridian of the wheel is (axial offset,
+    radius) and the revolution angle sweeps the x–z plane:
+
+        x = x_w + R cos(theta),  z_local = R sin(theta),  y_local = lateral
+
+    ``R = -z_profile`` is the radius of each meridian point: the profile stores height below
+    the axle centre (-0.413 m at the tread, -0.458 m at the flange tip).  Using ``R0 - z``
+    instead drops the whole wheel half a metre, and leaving ``z_local`` at ``-R`` (instead of
+    ``R sin(theta)``) flattens the wheel into a plate — both were caught by looking at the
+    picture, which is why the tests pin the extremes.
     """
     profile = wheel.profile
     lateral = wheel.lateral_offset_m + np.asarray(profile.y_m, dtype=float)
@@ -219,21 +227,19 @@ def wheel_grid(case: VehicleCase, wheel: Wheel, state: WheelState, *, spin: int 
         radial_z = np.asarray(profile.z_m, dtype=float)[picks]
     else:
         radial_z = np.asarray(profile.z_m, dtype=float)
-    # The wheel profile stores height *below the axle centre* (about -0.413 m at the tread,
-    # -0.458 m at the flange tip), so the radius of a meridian point is simply -z.  Using
-    # ``R0 - z`` instead puts the whole wheel half a metre too low, which is how this was
-    # caught: the contact patch has to land on the rail top.
     radius = -radial_z
     if not np.all(radius > 0.0):
         return None
     angles = np.linspace(0.0, 2.0 * math.pi, max(8, spin), endpoint=False)
-    cos, sin = math.cos(state.roll_rad), math.sin(state.roll_rad)
-    # local: lateral offset ly, vertical -R about the axle centre
+    cos_roll, sin_roll = math.cos(state.roll_rad), math.sin(state.roll_rad)
+    radius2d = np.repeat(radius[None, :], angles.size, axis=0)
     local_y = np.repeat(lateral[None, :], angles.size, axis=0)
-    local_z = -np.repeat(radius[None, :], angles.size, axis=0)
-    rotated_y = cos * local_y - sin * local_z
-    rotated_z = sin * local_y + cos * local_z
-    xs = state.x_m + np.repeat(radius[None, :], angles.size, axis=0) * np.sin(angles)[:, None]
+    local_x = radius2d * np.cos(angles)[:, None]
+    local_z = radius2d * np.sin(angles)[:, None]
+    # roll about x mixes the axial offset with the in-plane vertical coordinate
+    rotated_y = cos_roll * local_y - sin_roll * local_z
+    rotated_z = sin_roll * local_y + cos_roll * local_z
+    xs = state.x_m + local_x
     ys = state.y_m + rotated_y
     zs = state.z_m + rotated_z
     return QuadGrid(x_m=xs, y_m=ys, z_m=zs, label=f"{wheel.id} 车轮", colour=WHEEL_COLOUR)

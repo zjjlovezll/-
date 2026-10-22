@@ -43,8 +43,22 @@ def test_contact_patch_lands_on_the_rail_top(case):
     grids = model3d.wheel_grids(case, model3d.initial_states(case), spin=24, points=40)
     lowest = np.array([float(grid.z_m.min()) for grid in grids])
     highest = np.array([float(grid.z_m.max()) for grid in grids])
+    centre = np.array([0.5 * (grid.z_m.min() + grid.z_m.max()) for grid in grids])
     assert lowest.min() == pytest.approx(-0.0285, abs=0.004), "轮缘最低点应在轨面下约 28 mm"
-    assert abs(float(highest.mean())) < 0.030, "踏面最高点应贴着轨面（z≈0）"
+    assert highest.max() == pytest.approx(0.888, abs=0.01), "轮缘最高点约 2 x 0.43 + 0.028"
+    # 圆盘必须以轮心为心：若 z 少扫一个角度，车轮会被压成一块平板，这条会先坏
+    for value, state in zip(centre, model3d.initial_states(case)):
+        assert value == pytest.approx(state.z_m, abs=2e-3)
+
+
+def test_wheel_disc_is_round_not_flat(case):
+    """The revolution must sweep x–z, not a single plane: a disc spans the axle height."""
+    state = model3d.initial_states(case)[0]
+    grids = model3d.wheel_grids(case, (state,), spin=36, points=30)
+    grid = grids[0]
+    assert grid.shape == (36, min(30, case.wheels[0].profile.y_m.size))
+    assert grid.z_m.max() - grid.z_m.min() == pytest.approx(2.0 * 0.458, abs=0.01)
+    assert grid.x_m.max() - grid.x_m.min() == pytest.approx(2.0 * 0.458, abs=0.01)
 
 
 def test_wheelset_uses_the_absolute_centre_height(case):

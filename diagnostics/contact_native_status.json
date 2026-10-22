@@ -1,0 +1,12 @@
+{
+  "schema_version": "velch-contact-native-status-v1",
+  "root": "F:\\ai道岔状态反演辨识\\CONTACT_reference",
+  "interface_path": "F:\\ai道岔状态反演辨识\\CONTACT_reference\\python_intfc\\__init__.py",
+  "interface_present": true,
+  "binary_path": "F:\\ai道岔状态反演辨识\\CONTACT_reference\\bin\\contact_addon_win64.dll",
+  "binary_present": true,
+  "ready_to_attempt_native_load": true,
+  "physics_validation_status": "not_evaluated_by_preflight",
+  "interface_sha256": "681675a7f4402a7e4059b43f2a96a342fc50c8fc776540ebe6455e3c5b5ee77c",
+  "binary_sha256": "dbeee1ea868600c9b828b392575e70439d28ee8fd27712425a0564b9fad57531"
+}

@@ -1,0 +1,13 @@
+{
+  "modes": 3002,
+  "f_max_hz": 321090.4,
+  "build_s": 10.0,
+  "dof": 3037,
+  "track_dof": 3002,
+  "nfev": 274829,
+  "peak_kn": 141.1701314299623,
+  "penetration_um": 117.81205298941407,
+  "wall_s": 874.3,
+  "us_per_rhs": 3181.0,
+  "gates_all_true": true
+}

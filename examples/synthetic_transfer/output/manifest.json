@@ -1,0 +1,76 @@
+{
+  "software": "Velch 0.2.0 (legacy single-wheelset solver)",
+  "case_sha256": "9d44c84ad17aee9fe122b106959d51f059f2a9ecd138815fe5803a31f10acf27",
+  "case_snapshot": "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\output\\case_snapshot.json",
+  "profile_asset_sha256": {
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\wheel_lower.csv": "46fbd4012302c2c43fad629139117993a915b2b86b33e600e16df7b0ac1dc056",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\left_stock_0.csv": "8a3262ac47f9b35d6e76cada52253e69eac90ba41bec3bb787f51bdc05ee8e35",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\left_stock_1.csv": "8a3262ac47f9b35d6e76cada52253e69eac90ba41bec3bb787f51bdc05ee8e35",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\left_stock_2.csv": "8a3262ac47f9b35d6e76cada52253e69eac90ba41bec3bb787f51bdc05ee8e35",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\right_stock_0.csv": "8492d89ac386c7f729b132d40117152d7092c802d6ed708f4735d4fb9b80ddce",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\right_stock_1.csv": "2b45240a002303f53bfb0a84d2dcda26a4629abffdcf65411f4d90c83e4bce5f",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\right_stock_2.csv": "145fbaf9fbfe8ef38c94a49a41f0de464e6ae4aa24f2955253afe9322ddb866e",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\right_switch_0.csv": "b85d7fef5f6a9789857e76b78a99abe34000e0e259f61438db488c0cf526ed02",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\right_switch_1.csv": "4dfa14e03b8ccafd7af42fda00d772f4eba651d94c919dac8050b08ca2c9360b",
+    "F:\\ai道岔状态反演辨识\\Velch\\examples\\synthetic_transfer\\right_switch_2.csv": "4503fdf4ad969f8b22c4e08815b1b1dfa8841c4478f2cf170338e4ad83ec50da"
+  },
+  "state_order": [
+    "wheel_y_m",
+    "wheel_z_m",
+    "wheel_roll_rad",
+    "wheel_spin_rad",
+    "left_stock_y_m",
+    "left_stock_z_m",
+    "right_stock_y_m",
+    "right_stock_z_m",
+    "right_switch_y_m",
+    "right_switch_z_m"
+  ],
+  "units": {
+    "time": "s",
+    "x": "m",
+    "positions": "m except roll/spin in rad",
+    "velocities": "m/s except roll/spin in rad/s",
+    "forces": "N",
+    "penetration": "m"
+  },
+  "summary": {
+    "case_id": "synthetic_two_rail_transfer_v1",
+    "case_purpose": "synthetic",
+    "result_status": "numerically_checked",
+    "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
+    "gates": {
+      "solver_completed": true,
+      "finite_states_and_forces": true,
+      "penetration_within_case_limit": true,
+      "friction_bound": true,
+      "nonnegative_reported_dissipation": true,
+      "no_edge_limited_active_contact": true
+    },
+    "solver": {
+      "method": "DOP853",
+      "nfev": 6173,
+      "njev": 0,
+      "nlu": 0,
+      "rtol": 1e-06,
+      "atol": 1e-08
+    },
+    "max_penetration_m": 0.00016741599044122865,
+    "max_friction_excess_n": 1.1368683772161603e-13,
+    "peak_normal_force_n": {
+      "left_stock": 40533.2069481441,
+      "right_stock": 40059.43648213586,
+      "right_switch": 34049.92144846485
+    },
+    "active_output_samples": {
+      "left_stock": 30,
+      "right_stock": 14,
+      "right_switch": 17
+    },
+    "edge_limited_active_output_samples": 0,
+    "initial_mechanical_energy_j": 9274.55350094518,
+    "final_mechanical_energy_j": 9258.61671988373,
+    "energy_change_j": -15.936781061449437,
+    "note": "Energy changes include prescribed longitudinal drive/profile work and damping; change alone is not a conservation verdict."
+  }
+}

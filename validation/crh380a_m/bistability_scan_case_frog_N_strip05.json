@@ -1,0 +1,29 @@
+[
+  {
+    "scale": 0.995,
+    "status": "numerically_checked",
+    "peak_kN": 170.8595123187882,
+    "min_kN": 0.0,
+    "lost": 10,
+    "samples": 101,
+    "span_mm": 0.24105408607315199
+  },
+  {
+    "scale": 1.0,
+    "status": "numerically_checked",
+    "peak_kN": 170.8595123187882,
+    "min_kN": 0.0,
+    "lost": 10,
+    "samples": 101,
+    "span_mm": 0.24105408607315199
+  },
+  {
+    "scale": 1.005,
+    "status": "numerically_checked",
+    "peak_kN": 170.8595123187882,
+    "min_kN": 0.0,
+    "lost": 10,
+    "samples": 101,
+    "span_mm": 0.24105408607315199
+  }
+]

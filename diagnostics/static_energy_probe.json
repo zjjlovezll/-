@@ -1,0 +1,8 @@
+{
+  "case": "fixed_station_zero_damping_zero_friction",
+  "initial_energy_j": 8140.338000000001,
+  "energy_change_j": -0.0020559826371027157,
+  "relative_change": 2.525672321103516e-07,
+  "criterion": "relative change < 1e-3",
+  "passed": true
+}

@@ -1,0 +1,531 @@
+{
+ "s_lo": 79.0,
+ "s_hi": 81.2,
+ "band_y_m": [
+  0.725,
+  0.785
+ ],
+ "patched_count": 26,
+ "stations": [
+  {
+   "s_m": 79.02859999999998,
+   "station": "R155",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.0286.prr",
+   "src_sha256": "dea32d4b366e7e0ce1ce2aa771192e4fcd2dfd0c5ab85ec01a9b38b25239ebfa",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.07979999999998,
+   "station": "R156",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.0798.prr",
+   "src_sha256": "2fce55361beb133ed00947d29b94c361dce053d1617bc40c2c4ab66e9c8d561b",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.131,
+   "station": "R157",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_YG_DD_XG_DD.prr",
+   "src_sha256": "fef4a2e204481321674b75894ab1b1d932c2d6ccc97ee76a89dce10e66ba4401",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.131,
+   "station": "R158",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_DD.prr",
+   "src_sha256": "ff787afba9a1fdfc42b32708d9d5a148ed65563ade0eef6db24a859b6590a224",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.1464,
+   "station": "R159",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.1464.prr",
+   "src_sha256": "71e3e6fc0af4897662977e4a83d25e0133801c3045e4cc5c0a5032240c92e9e8",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.16179999999999,
+   "station": "R160",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.1618.prr",
+   "src_sha256": "efd5429d9e25ef2aa55298ec76a74a5690a42ae37d5af0e9f4a5784dae5d0a31",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.17719999999998,
+   "station": "R161",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.1772.prr",
+   "src_sha256": "84f02a1885462373fd9723037c2d8360bb3dd1c1b9019380926d6a523bdcb5d3",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.19259999999997,
+   "station": "R162",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.1926.prr",
+   "src_sha256": "6f4c9338b6b497f0e44f0e28ba47275e7147d709a0bb419976cef8df515e0613",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.208,
+   "station": "R163",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_EE.prr",
+   "src_sha256": "a00bbd572391522596a7a2fe4b8f588cfe30c67a6726f431f08ec7ffe13ad367",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.2312,
+   "station": "R164",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.2312.prr",
+   "src_sha256": "674c6b5b97f727bf252fba3dce61c92ebef944ee18023d8dac4179c06aaf72c5",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.25439999999999,
+   "station": "R165",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.2544.prr",
+   "src_sha256": "cc99dfbe2da1839ead78c2d250563e94de25617c7dae4f1042b8fff735e009e4",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.27759999999999,
+   "station": "R166",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.2776.prr",
+   "src_sha256": "12cff0468b105e6cbf4311acd5ef8a3b59f871ee0a1ef32a3a980f3b4eca78b6",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.3008,
+   "station": "R167",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.3008.prr",
+   "src_sha256": "743070b3740236f8bff2ebb11d79d6dce38b03997fbf5abce49944f5dc354bfb",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.32399999999998,
+   "station": "R168",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.324.prr",
+   "src_sha256": "a1e3c6de2479838d38ab2036292cc7c02b11fc5d4582665030e2148cc0d3a3d5",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.34719999999999,
+   "station": "R169",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.3472.prr",
+   "src_sha256": "cb7343572deef902357bdc563b6b1563cb299646ef0ed163b5afb652498741eb",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.37039999999998,
+   "station": "R170",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.3704.prr",
+   "src_sha256": "5b1985669c495dc344eb354a73736d3ae788a8dfc6f73a845d7dc276731bfa97",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.39359999999998,
+   "station": "R171",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.3936.prr",
+   "src_sha256": "87461ceb6efe1e9463b8a4fb8d458a806f64208267ee561e3a0b3073a202c45b",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.41679999999998,
+   "station": "R172",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.4168.prr",
+   "src_sha256": "93b984a263ec7452815749920f0a1e356248222581a5bec4056128eb164da897",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.44,
+   "station": "R173",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_FF.prr",
+   "src_sha256": "34dceb764f6286939bfa09dc40f1593dbe7b6fe9b29228c9316a6395adf2c18d",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.44,
+   "station": "R174",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_FF_1.prr",
+   "src_sha256": "6038b3f972e45c64a7918932ef14db1c54cb19c487d27378397e761b8b585077",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.4934,
+   "station": "R175",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.4934.prr",
+   "src_sha256": "e02fbb3a228d85ddee69e11535307174e4bd06f4dcdd49d5272e7eabd018555f",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.54679999999999,
+   "station": "R176",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.5468.prr",
+   "src_sha256": "1f300356f9526d9b61c39368f61df53616e51a41d51d523ebe6e8512d99d2314",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.60019999999999,
+   "station": "R177",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.6002.prr",
+   "src_sha256": "5393aa42cd9b1665cd2e387dcdbe145ed9ceb5a51da8b8dbc361a509b429df28",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.65359999999998,
+   "station": "R178",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.6536.prr",
+   "src_sha256": "524522493383f625bc71feedca0a5930e8707cd394475508c9a6205b0fcf1b65",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.70699999999997,
+   "station": "R179",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.707.prr",
+   "src_sha256": "e9fc084c187da23eacfe17178c289b0fef8f3619dc256cbd6063493a2dfe55a1",
+   "support_max_before_mm": 0.0,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.76039999999996,
+   "station": "R180",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.7604.prr",
+   "src_sha256": "91164ff580c4b35a822e06ee547a5c91d09252224d63361200b0e79a0d5b51c8",
+   "support_max_before_mm": -9.999999999999999e-05,
+   "shift_abs_mm": 0.0,
+   "patched": false
+  },
+  {
+   "s_m": 79.81379999999996,
+   "station": "R181",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.8138.prr",
+   "src_sha256": "dd841da27f81b55ad1f2e903235f6b3cb4312eed193a58337fcc3eedac9cca93",
+   "support_max_before_mm": -0.0063,
+   "shift_abs_mm": 0.0063,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R181.prr",
+   "dst_sha256": "17a167a7fcc52b43f31f8a3aa28d226cb4777dc9b42888ded14be17a26eba7f8"
+  },
+  {
+   "s_m": 79.86719999999995,
+   "station": "R182",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.8672.prr",
+   "src_sha256": "f2a2d0e56ea371a932af30b6a7787d9f13e6af937fa33f79f9740fa6b37d4b2c",
+   "support_max_before_mm": -0.0222,
+   "shift_abs_mm": 0.0222,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R182.prr",
+   "dst_sha256": "26362ef033ef1534990445b48b2910e34922805c912d73c902f1ac1a3521ca73"
+  },
+  {
+   "s_m": 79.92059999999995,
+   "station": "R183",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.9206.prr",
+   "src_sha256": "5ae8350fba1a649d6224941ade0d54af02387d566da6c80316cb3d1ee6864538",
+   "support_max_before_mm": -0.0506,
+   "shift_abs_mm": 0.0506,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R183.prr",
+   "dst_sha256": "30f21049475e09016bb4f007ed5275af2841a654a492418369daae3f14632e1a"
+  },
+  {
+   "s_m": 79.974,
+   "station": "R184",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_GG.prr",
+   "src_sha256": "6f5d370e88bf9a1f2f7e2dcdbfb429652a1adfdae1cea6efb7329c30be2d2836",
+   "support_max_before_mm": -0.08660000000000001,
+   "shift_abs_mm": 0.08660000000000001,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R184.prr",
+   "dst_sha256": "001a381408ced0fba02eb3b1fb951233e104341ebb13f6b436fd33b2057a2a26"
+  },
+  {
+   "s_m": 80.00439999999999,
+   "station": "R185",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.0044.prr",
+   "src_sha256": "00a8e6a8be4f2d05d8973ccd243b06ec538ce9d7988887b5278b665daaa3101e",
+   "support_max_before_mm": -0.11022,
+   "shift_abs_mm": 0.11022,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R185.prr",
+   "dst_sha256": "3c7b2b52102364687efe186b32dbc09585f45edf7651fdcee6f573ce255b5a0a"
+  },
+  {
+   "s_m": 80.03479999999999,
+   "station": "R186",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.0348.prr",
+   "src_sha256": "4e4fcfede0feab574f58e8d6ccc587ec4cd42ad2401d91d443d0fbeb26c26169",
+   "support_max_before_mm": -0.14135999999999999,
+   "shift_abs_mm": 0.14135999999999999,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R186.prr",
+   "dst_sha256": "1c6574d7495dbeba590689bcebba933a81b813801c6173fe690ebf6ab40cc994"
+  },
+  {
+   "s_m": 80.06519999999998,
+   "station": "R187",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.0652.prr",
+   "src_sha256": "f345dd4b6bf191112481163f9af93e87559936ec86899ecea57c267f5a6d8eef",
+   "support_max_before_mm": -0.17109,
+   "shift_abs_mm": 0.17109,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R187.prr",
+   "dst_sha256": "6e53ebea42bc886e5c40ba15286793c12ce2da0ebeb2d9e847eb8cccbe94aa71"
+  },
+  {
+   "s_m": 80.09559999999998,
+   "station": "R188",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.0956.prr",
+   "src_sha256": "f63fcba417fc08e85788d701d73baee378cf8354c58e0e7ed8f808bd2f89f45f",
+   "support_max_before_mm": -0.20952,
+   "shift_abs_mm": 0.20952,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R188.prr",
+   "dst_sha256": "2217721f604efbc06ada331312412502f5fc03e1784c41e40f10ab8ee913b4df"
+  },
+  {
+   "s_m": 80.12599999999998,
+   "station": "R189",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.126.prr",
+   "src_sha256": "f4d38d4fad634f87c1342fe19ccd520aa9dcd6a6285e01962938a7afac611e0e",
+   "support_max_before_mm": -0.24544999999999997,
+   "shift_abs_mm": 0.24544999999999997,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R189.prr",
+   "dst_sha256": "bfaa4f402bf0b598b0354f78c63a25695f21da1472addec98d949d35fb8ce192"
+  },
+  {
+   "s_m": 80.15639999999996,
+   "station": "R190",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.1564.prr",
+   "src_sha256": "b0dbc5946d4736532e3431d8aceeb419a7c89b18666c201c80e19d1a2172fccf",
+   "support_max_before_mm": -0.29108,
+   "shift_abs_mm": 0.29108,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R190.prr",
+   "dst_sha256": "0b0f4b863d19afb8223aacc38f8c8b10e87f0937fa79c2752a492900d3a4b080"
+  },
+  {
+   "s_m": 80.18679999999996,
+   "station": "R191",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.1868.prr",
+   "src_sha256": "0aac76e361adbba3a81f3f325eae436a9c2edc55c7e5966ce72a9d3536d9dbe4",
+   "support_max_before_mm": -0.33331,
+   "shift_abs_mm": 0.33331,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R191.prr",
+   "dst_sha256": "412eb5323a243dbae5698d3e8862ec29d02b604a2f7a1b7d07b15ca725467118"
+  },
+  {
+   "s_m": 80.21719999999995,
+   "station": "R192",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.2172.prr",
+   "src_sha256": "f744be4c3edd538e3d15cc4650040e5be9312065767715276090386c1bba803e",
+   "support_max_before_mm": -0.32420000000000004,
+   "shift_abs_mm": 0.32420000000000004,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R192.prr",
+   "dst_sha256": "03832f6663dfe221df8239395681b797db49f17def19a82c05e4577277ae31ae"
+  },
+  {
+   "s_m": 80.24759999999995,
+   "station": "R193",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.2476.prr",
+   "src_sha256": "12f6e04fb3cb9aaf0b63b5187b96f3502f9361a45d05c722eca3c438df12ad6d",
+   "support_max_before_mm": -0.18925,
+   "shift_abs_mm": 0.18925,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R193.prr",
+   "dst_sha256": "18cd0750b79c7d94b8fedf55a456ead65809c9e60f71151068b2ec1d2fbee8eb"
+  },
+  {
+   "s_m": 80.278,
+   "station": "R194",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_HH.prr",
+   "src_sha256": "e2ebf0bc6c186a0ccfeff0d4c1e3834b7b8d9c4f84c1bc08dce67505a25cde8b",
+   "support_max_before_mm": -0.0526,
+   "shift_abs_mm": 0.0526,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R194.prr",
+   "dst_sha256": "cc6d7cf432d8d262e977a6c41f6735bed7bdbc968d6a26fe2cace70e0d869daa"
+  },
+  {
+   "s_m": 80.278,
+   "station": "R195",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_HH_1.prr",
+   "src_sha256": "446422fa9b5617842ef35b18bc4c0d1a2dbc8b3c441718390e27e11a5c2dc289",
+   "support_max_before_mm": -0.0528,
+   "shift_abs_mm": 0.0528,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R195.prr",
+   "dst_sha256": "6312b8fff7342e05d0ab23c6bd7fad4ec796addade17b0b5105c5ef2403918c4"
+  },
+  {
+   "s_m": 80.3413,
+   "station": "R196",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.3413.prr",
+   "src_sha256": "7fccfd94fd440b0cc0ec3b3c90fcca37ca4d2e0c99b3a6acb4e6b410e1c43f9f",
+   "support_max_before_mm": -0.04818,
+   "shift_abs_mm": 0.04818,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R196.prr",
+   "dst_sha256": "3a8ab7ab5883f4e91c84e6b97c8cc02b3b16543712dcfa25e30703f2610e5f2e"
+  },
+  {
+   "s_m": 80.4046,
+   "station": "R197",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.4046.prr",
+   "src_sha256": "e29ca3db55ec854706cb6dda32b3d7a3d0144c5fe905acf292620ccdfc0a82c3",
+   "support_max_before_mm": -0.04356,
+   "shift_abs_mm": 0.04356,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R197.prr",
+   "dst_sha256": "7066a67ad4a4c150babdc093d4be48b94ed7495f2618c2450c55eef77bb3a635"
+  },
+  {
+   "s_m": 80.46790000000001,
+   "station": "R198",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.4679.prr",
+   "src_sha256": "2d5f26736ece798b88bbef4c32cc07ded75b98139a4501fb54721544cb354762",
+   "support_max_before_mm": -0.03894,
+   "shift_abs_mm": 0.03894,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R198.prr",
+   "dst_sha256": "0b5ba0c24a6c96c29052852e8a3451ed6a865cee3f822ea744f272fc2187d611"
+  },
+  {
+   "s_m": 80.53120000000001,
+   "station": "R199",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.5312.prr",
+   "src_sha256": "30998adc0a6702f18b7163ea3da784c7a67c54501bc5f6e0e60e0148b9c9a332",
+   "support_max_before_mm": -0.034319999999999996,
+   "shift_abs_mm": 0.034319999999999996,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R199.prr",
+   "dst_sha256": "93425af12c2e214a86149dbaee6fbaf6eeee8e9cb16fc2b8860a4537381ae884"
+  },
+  {
+   "s_m": 80.59450000000001,
+   "station": "R200",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.5945.prr",
+   "src_sha256": "60174272021fc03d57f72c9a6d9afd4033e90b99328bdbc507bdddd31505371d",
+   "support_max_before_mm": -0.0297,
+   "shift_abs_mm": 0.0297,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R200.prr",
+   "dst_sha256": "876046556e87bf58ec09c048be0a1f07bc19c5498d5a3b05b05ea32d16a3ded2"
+  },
+  {
+   "s_m": 80.65780000000002,
+   "station": "R201",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.6578.prr",
+   "src_sha256": "7c82c2b79a55033cfae0d2dbdef3635f5846c3a99d0ec2c098babf0f41f3c250",
+   "support_max_before_mm": -0.02508,
+   "shift_abs_mm": 0.02508,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R201.prr",
+   "dst_sha256": "6bd93c8499d1316d3ec42f3b7399b603913a86aef21bbbbdc94ef9fa7a785e70"
+  },
+  {
+   "s_m": 80.72110000000002,
+   "station": "R202",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.7211.prr",
+   "src_sha256": "97866745cb77a02a136d3117b7adce395231123c2100fe047f924f53211e6a18",
+   "support_max_before_mm": -0.02046,
+   "shift_abs_mm": 0.02046,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R202.prr",
+   "dst_sha256": "71bff30a9efc1c6e4005dee89598fe415e233640f587a5a6d3a71a2c70d4efd6"
+  },
+  {
+   "s_m": 80.78440000000002,
+   "station": "R203",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.7844.prr",
+   "src_sha256": "541689fb1b20b781c7948c76e1855f7d41ca5862c18c214bb91719f97bdbb35d",
+   "support_max_before_mm": -0.01584,
+   "shift_abs_mm": 0.01584,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R203.prr",
+   "dst_sha256": "fa458658edffcb5ea1cbba96a97a0df799de6a12fa36365251cba7a5a62495b8"
+  },
+  {
+   "s_m": 80.84770000000003,
+   "station": "R204",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R80.8477.prr",
+   "src_sha256": "8d2b119d237ec5ccc9612cd3616e94a78e850ad2026c0fd02e82a29afcd5660e",
+   "support_max_before_mm": -0.011219999999999999,
+   "shift_abs_mm": 0.011219999999999999,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R204.prr",
+   "dst_sha256": "c584e12c889510f5d8168ddbc928d101c29aba86c5aa6773c33c561bcf56d6c3"
+  },
+  {
+   "s_m": 80.911,
+   "station": "R205",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_JJ.prr",
+   "src_sha256": "36a517bd7ba698dcb3f58829ce312a57673b8db449c4a72e78c679ddeade563e",
+   "support_max_before_mm": -0.0066,
+   "shift_abs_mm": 0.0066,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R205.prr",
+   "dst_sha256": "bb1b4825ea2de1d432ab2c36eabf5c736dad6369185d470eb95b9137790c84ed"
+  },
+  {
+   "s_m": 80.911,
+   "station": "R206",
+   "src": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_JJ_1.prr",
+   "src_sha256": "d6fbbf7127f2500faf17b7fe840f8678cfbd51e93daac8695f78d0f64f854146",
+   "support_max_before_mm": -0.0014,
+   "shift_abs_mm": 0.0014,
+   "patched": true,
+   "dst": "F:\\ai道岔状态反演辨识\\Velch\\validation\\turnout18_ref\\frogfix\\R206.prr",
+   "dst_sha256": "a0e23b4cb2a8d0d26cb52d224e2ab4e3c681543ab3312ad2b20423e97186ddfb"
+  }
+ ]
+}

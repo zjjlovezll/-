@@ -1,0 +1,12 @@
+{
+  "effective_gap_curvature_x_per_m": 1.0869565217391304,
+  "effective_gap_curvature_y_per_m": 1.0869565217391304,
+  "penetration_m": 0.0001,
+  "speed_m_s": 10.0,
+  "young_modulus_pa": 210000000000.0,
+  "poisson_ratio": 0.3,
+  "friction_coefficient": 0.3,
+  "creepage_x": 0.001,
+  "creepage_y": 0.0,
+  "spin_per_m": 0.0
+}

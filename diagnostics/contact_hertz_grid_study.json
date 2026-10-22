@@ -1,0 +1,128 @@
+{
+  "schema_version": "velch-contact-grid-study-v1",
+  "interpretation": "native module-3 grid study; spherical analytic benchmark only when curvatures match; no Simpack or vehicle validation claim",
+  "case": {
+    "effective_gap_curvature_x_per_m": 1.0869565217391304,
+    "effective_gap_curvature_y_per_m": 1.0869565217391304,
+    "penetration_m": 0.0001,
+    "speed_m_s": 10.0,
+    "young_modulus_pa": 210000000000.0,
+    "poisson_ratio": 0.3,
+    "friction_coefficient": 0.3,
+    "creepage_x": 0.001,
+    "creepage_y": 0.0,
+    "spin_per_m": 0.0
+  },
+  "native": {
+    "schema_version": "velch-contact-native-status-v1",
+    "root": "F:\\ai道岔状态反演辨识\\CONTACT_reference",
+    "interface_path": "F:\\ai道岔状态反演辨识\\CONTACT_reference\\python_intfc\\__init__.py",
+    "interface_present": true,
+    "binary_path": "F:\\ai道岔状态反演辨识\\CONTACT_reference\\bin\\contact_addon_win64.dll",
+    "binary_present": true,
+    "ready_to_attempt_native_load": true,
+    "physics_validation_status": "not_evaluated_by_preflight",
+    "interface_sha256": "681675a7f4402a7e4059b43f2a96a342fc50c8fc776540ebe6455e3c5b5ee77c",
+    "binary_sha256": "dbeee1ea868600c9b828b392575e70439d28ee8fd27712425a0564b9fad57531"
+  },
+  "results": [
+    {
+      "schema_version": "velch-contact-module3-probe-v1",
+      "engine": "official_CONTACT_module_3",
+      "contact_version": 2620,
+      "contact_binary_sha256": "dbeee1ea868600c9b828b392575e70439d28ee8fd27712425a0564b9fad57531",
+      "grid_n": 16,
+      "solver_relative_tolerance": 1e-06,
+      "force_convention": "raw_CONTACT_local; not mapped to Velch body signs",
+      "normal_force_n": 104516.30171267982,
+      "tangent_x_n": -14486.106588341261,
+      "tangent_y_n": -0.00039353677245306266,
+      "spin_moment_nm": 0.0,
+      "patch_area_m2": 0.00015318000000000005,
+      "adhesion_area_m2": 0.00010764000000000003,
+      "slip_area_m2": 4.5540000000000015e-05,
+      "plastic_area_m2": 7.105427357601002e-21,
+      "calculate_time_s": 0.0021941999439150095,
+      "wall_time_s": 0.03068809979595244,
+      "physics_validation_status": "unvalidated_against_benchmark",
+      "relative_to_finest_grid": {
+        "normal_force_n": 0.0015724898762008365,
+        "tangent_x_n": 0.051354392899502145,
+        "tangent_y_n": 5.375561988379427,
+        "patch_area_m2": 0.04778761061946907
+      }
+    },
+    {
+      "schema_version": "velch-contact-module3-probe-v1",
+      "engine": "official_CONTACT_module_3",
+      "contact_version": 2620,
+      "contact_binary_sha256": "dbeee1ea868600c9b828b392575e70439d28ee8fd27712425a0564b9fad57531",
+      "grid_n": 32,
+      "solver_relative_tolerance": 1e-06,
+      "force_convention": "raw_CONTACT_local; not mapped to Velch body signs",
+      "normal_force_n": 104359.03486493138,
+      "tangent_x_n": -13847.424014764618,
+      "tangent_y_n": 0.00029225436410381766,
+      "spin_moment_nm": 0.0,
+      "patch_area_m2": 0.00014490000000000005,
+      "adhesion_area_m2": 0.00010712250000000003,
+      "slip_area_m2": 3.777750000000001e-05,
+      "plastic_area_m2": 2.1316282072803006e-20,
+      "calculate_time_s": 0.01512099988758564,
+      "wall_time_s": 0.04287920007482171,
+      "physics_validation_status": "unvalidated_against_benchmark",
+      "relative_to_finest_grid": {
+        "normal_force_n": 6.541255244132855e-05,
+        "tangent_x_n": 0.005000893751664397,
+        "tangent_y_n": 2.249447512972084,
+        "patch_area_m2": 0.008849557522123805
+      }
+    },
+    {
+      "schema_version": "velch-contact-module3-probe-v1",
+      "engine": "official_CONTACT_module_3",
+      "contact_version": 2620,
+      "contact_binary_sha256": "dbeee1ea868600c9b828b392575e70439d28ee8fd27712425a0564b9fad57531",
+      "grid_n": 64,
+      "solver_relative_tolerance": 1e-06,
+      "force_convention": "raw_CONTACT_local; not mapped to Velch body signs",
+      "normal_force_n": 104352.208920593,
+      "tangent_x_n": -13778.5191046669,
+      "tangent_y_n": 8.993970911581498e-05,
+      "spin_moment_nm": 0.0,
+      "patch_area_m2": 0.00014619375000000004,
+      "adhesion_area_m2": 0.00010764000000000003,
+      "slip_area_m2": 3.8553750000000014e-05,
+      "plastic_area_m2": -7.105427357601002e-21,
+      "calculate_time_s": 0.28603990003466606,
+      "wall_time_s": 0.3146193998400122,
+      "physics_validation_status": "unvalidated_against_benchmark",
+      "relative_to_finest_grid": {
+        "normal_force_n": 0.0,
+        "tangent_x_n": 0.0,
+        "tangent_y_n": 0.0,
+        "patch_area_m2": 0.0
+      }
+    }
+  ],
+  "analytic_benchmark": {
+    "reference": "elastic Hertz sphere-plane, equal isotropic solids",
+    "effective_radius_m": 0.46,
+    "reduced_modulus_pa": 115384615384.61539,
+    "expected_normal_force_n": 104343.53820192722,
+    "normal_force_relative_error_by_grid": [
+      0.0016557183485408355,
+      0.0001485157899683287,
+      8.309780188775484e-05
+    ],
+    "finest_grid_normal_force_relative_error": 8.309780188775484e-05,
+    "tangential_force_to_normal_force_by_grid": [
+      0.13860140811492017,
+      0.13269022689493926,
+      0.13203859551407954
+    ],
+    "finest_grid_within_1_percent_of_analytic": true,
+    "coulomb_bound_satisfied_all_grids": true,
+    "scope": "local module-3 force only; turnout geometry and vehicle force mapping untested"
+  }
+}

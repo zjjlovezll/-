@@ -1,0 +1,36 @@
+{
+  "true_scale": [
+    1.1,
+    0.9
+  ],
+  "start_scale": [
+    1.0,
+    1.0
+  ],
+  "recovered_scale": [
+    1.0985635801433564,
+    0.9031690915580202
+  ],
+  "estimate": {
+    "parameters": {
+      "rail_k_z": {
+        "log_scale": 0.09400349022390989,
+        "scale": 1.0985635801433564,
+        "sigma_log": 0.010311290371804071,
+        "sigma_percent": 1.0311290371804072
+      },
+      "rail_c_z": {
+        "log_scale": -0.10184548777074519,
+        "scale": 0.9031690915580202,
+        "sigma_log": 0.008699621758889269,
+        "sigma_percent": 0.8699621758889269
+      }
+    },
+    "cost": 42.20364883230327,
+    "convergence": "stopped after 4 steps",
+    "steps": 4
+  },
+  "forward_runs": 30,
+  "noise_n": 1000.0,
+  "samples": 101
+}

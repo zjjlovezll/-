@@ -1,0 +1,189 @@
+{
+  "simulated": {
+    "sensorAccTrans": {
+      "SS_B_F__S_FL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_F__S_FR": {
+        "peak_to_peak": 241.79266578057357,
+        "p999_deviation": 162.57762067645857,
+        "samples": 12001
+      },
+      "SS_B_F__S_RL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_F__S_RR": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_R__S_FL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_R__S_FR": {
+        "peak_to_peak": 350.39257990562936,
+        "p999_deviation": 232.07900022525402,
+        "samples": 12001
+      },
+      "SS_B_R__S_RL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_R__S_RR": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_cd1": {
+        "peak_to_peak": 7.199009003751224,
+        "p999_deviation": 6.313478829493858,
+        "samples": 12001
+      },
+      "SS_cd2": {
+        "peak_to_peak": 7.186897913801008,
+        "p999_deviation": 6.313956632087978,
+        "samples": 12001
+      },
+      "SS_cd3": {
+        "peak_to_peak": 7.358617206738942,
+        "p999_deviation": 6.510520537509655,
+        "samples": 12001
+      },
+      "SS_cd4": {
+        "peak_to_peak": 7.314149674518248,
+        "p999_deviation": 6.479883953660848,
+        "samples": 12001
+      }
+    },
+    "sensorPosTrans": {
+      "SS_B_F__S_FL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_F__S_FR": {
+        "peak_to_peak": 95.50676406713748,
+        "p999_deviation": 50.74312169810749,
+        "samples": 12001
+      },
+      "SS_B_F__S_RL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_F__S_RR": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_R__S_FL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_R__S_FR": {
+        "peak_to_peak": 95.42263232981432,
+        "p999_deviation": 50.836943796556326,
+        "samples": 12001
+      },
+      "SS_B_R__S_RL": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_B_R__S_RR": {
+        "peak_to_peak": 0.0,
+        "p999_deviation": 0.0,
+        "samples": 12001
+      },
+      "SS_cd1": {
+        "peak_to_peak": 94.83108033596791,
+        "p999_deviation": 50.721479292192384,
+        "samples": 12001
+      },
+      "SS_cd2": {
+        "peak_to_peak": 95.2614268992954,
+        "p999_deviation": 50.77544017097551,
+        "samples": 12001
+      },
+      "SS_cd3": {
+        "peak_to_peak": 94.83107976636244,
+        "p999_deviation": 50.721464632376446,
+        "samples": 12001
+      },
+      "SS_cd4": {
+        "peak_to_peak": 95.2614273699082,
+        "p999_deviation": 50.77539428499489,
+        "samples": 12001
+      }
+    }
+  },
+  "measured": {
+    "acceleration": {
+      "CH01": {
+        "peak_to_peak": 233.24989068825911,
+        "p999_deviation": 61.967858152084176,
+        "window_s": [
+          33.26,
+          52.76
+        ]
+      },
+      "CH02": {
+        "peak_to_peak": 103.9001,
+        "p999_deviation": 24.016369285945796,
+        "window_s": [
+          22.26,
+          55.26
+        ]
+      },
+      "CH03": {
+        "peak_to_peak": 272.06399999999996,
+        "p999_deviation": 55.743700000001674,
+        "window_s": [
+          31.76,
+          46.51
+        ]
+      },
+      "CH04": {
+        "peak_to_peak": 967.809,
+        "p999_deviation": 55.330100000005366,
+        "window_s": [
+          31.01,
+          54.76
+        ]
+      },
+      "CH05": {
+        "peak_to_peak": 681.9459999999999,
+        "p999_deviation": 153.16094738514096,
+        "window_s": [
+          33.26,
+          44.01
+        ]
+      },
+      "CH06": {
+        "peak_to_peak": 1976.705,
+        "p999_deviation": 243.41354628095226,
+        "window_s": [
+          27.26,
+          48.51
+        ]
+      },
+      "CH07": {
+        "peak_to_peak": 2396.283,
+        "p999_deviation": 111.84641185153629,
+        "window_s": [
+          30.01,
+          49.51
+        ]
+      }
+    }
+  },
+  "note": "the rack model carries no rail strain gauge; measured force channels CH01..CH06 are strain-bridge derived and have no simulated counterpart"
+}

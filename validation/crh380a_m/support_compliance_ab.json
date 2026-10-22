@@ -1,0 +1,47 @@
+[
+  {
+    "case": "out_X_base",
+    "status": "numerically_checked",
+    "peak_kn": 170.8591121274717,
+    "min_kn": 0.0,
+    "mean_kn": 59.15447980930208,
+    "lost": 10,
+    "max_pen_mm": 0.15476712601720286,
+    "wheel_z_pp_mm": 0.24105324067880238,
+    "dominant_hz": 179.82421875,
+    "rms_150_250": 62.32969070498081,
+    "rms_30_60": 11.17771438599552,
+    "samples": 101,
+    "span_s": 0.05
+  },
+  {
+    "case": "out_X_support",
+    "status": "numerically_checked",
+    "peak_kn": 119.16691339456814,
+    "min_kn": 0.08086648061690721,
+    "mean_kn": 58.752015618063886,
+    "lost": 0,
+    "max_pen_mm": 1.2274009327571298,
+    "wheel_z_pp_mm": 0.8333476650386125,
+    "dominant_hz": 59.94140625,
+    "rms_150_250": 7.13053622028885,
+    "rms_30_60": 40.015330370883525,
+    "samples": 101,
+    "span_s": 0.05
+  },
+  {
+    "case": "out_Z_local_rail",
+    "status": "numerically_checked",
+    "peak_kn": 122.47986317599577,
+    "min_kn": 5.874635566202638,
+    "mean_kn": 59.80086242647893,
+    "lost": 0,
+    "max_pen_mm": 0.1012406807797085,
+    "wheel_z_pp_mm": 0.35675388881180453,
+    "dominant_hz": 39.9609375,
+    "rms_150_250": 1.4271201572824375,
+    "rms_30_60": 9.572253559110358,
+    "samples": 101,
+    "span_s": 0.05
+  }
+]

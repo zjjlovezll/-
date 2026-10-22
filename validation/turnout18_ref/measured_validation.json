@@ -1,0 +1,50 @@
+{
+  "ch01": [
+    {
+      "case": "30kmh-SP-1",
+      "samples": 274432,
+      "fs_hz": 5120.0,
+      "unit": "kN",
+      "p99_9": 17.90039522564108,
+      "published": 114.5,
+      "error_percent": -84.36646705184185
+    },
+    {
+      "case": "30kmh-SP-2",
+      "samples": 172032,
+      "fs_hz": 5120.0,
+      "unit": "kN",
+      "p99_9": 19.194247206747743,
+      "published": 115.06,
+      "error_percent": -83.31805387906506
+    },
+    {
+      "case": "30kmh-SP-3",
+      "samples": 217088,
+      "fs_hz": 5120.0,
+      "unit": "kN",
+      "p99_9": 36.133517627262144,
+      "published": 119.3,
+      "error_percent": -69.71205563515328
+    }
+  ],
+  "ch13": [
+    {
+      "case": "30kmh-SP-1",
+      "peak": 2.0048,
+      "unit": "mm"
+    },
+    {
+      "case": "30kmh-SP-2",
+      "peak": 2.16073,
+      "unit": "mm"
+    },
+    {
+      "case": "30kmh-SP-3",
+      "peak": 1.7888,
+      "unit": "mm"
+    }
+  ],
+  "ch13_inside_published_range": false,
+  "worst_ch01_error_percent": 84.36646705184185
+}

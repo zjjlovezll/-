@@ -1,0 +1,33 @@
+{
+  "case_id": "synthetic_four_axle_turnout_v2",
+  "step_convergence": {
+    "coarse_max_step_s": 0.0001,
+    "fine_max_step_s": 5e-05,
+    "final_carbody_z_difference_m": 7.09620079711315e-14,
+    "maximum_peak_normal_relative_difference": 2.8463081164395903e-07,
+    "peak_normal_relative_difference": {
+      "axle1_left_stock": 2.8463081164395903e-07,
+      "axle2_left_stock": 0.0,
+      "axle3_left_stock": 0.0,
+      "axle4_left_stock": 0.0,
+      "axle1_right_stock": 7.673185762086481e-10,
+      "axle2_right_stock": 2.6176250259483064e-10,
+      "axle3_right_stock": 3.5027573853146707e-10,
+      "axle4_right_stock": 3.516843282925536e-10,
+      "axle1_right_switch": 1.8554501528170742e-07,
+      "axle2_right_switch": 0.0,
+      "axle3_right_switch": 0.0,
+      "axle4_right_switch": 0.0
+    },
+    "criterion": "carbody z <= 1e-5 m and all sampled normal peaks <= 2% relative",
+    "passed": true
+  },
+  "conservative_limit": {
+    "initial_energy_j": 87635.061639648,
+    "energy_change_j": 0.005069072532933205,
+    "relative_change": 5.7842973327011924e-08,
+    "criterion": "fixed position, zero damping/friction/drive torque: relative mechanical-energy change < 1e-3",
+    "passed": true
+  },
+  "passed": true
+}

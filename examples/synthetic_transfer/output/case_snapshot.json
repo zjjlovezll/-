@@ -1,0 +1,235 @@
+{
+  "schema_version": "velch-case-v1",
+  "case_id": "synthetic_two_rail_transfer_v1",
+  "purpose": "synthetic",
+  "parameter_source": "invented transparent demonstration values; not engineering calibration",
+  "wheelset": {
+    "mass_kg": 1800.0,
+    "roll_inertia_kg_m2": 780.0,
+    "spin_inertia_kg_m2": 120.0,
+    "gravity_m_s2": 9.81,
+    "travel_speed_m_s": 2.0,
+    "drive_torque_nm": 0.0
+  },
+  "suspension": {
+    "k_y_n_m": 1000000.0,
+    "c_y_n_s_m": 10000.0,
+    "k_z_n_m": 0.0,
+    "c_z_n_s_m": 0.0,
+    "k_roll_nm_rad": 2000000.0,
+    "c_roll_nm_s_rad": 10000.0,
+    "y_reference_m": 0.0,
+    "z_reference_m": 0.46,
+    "roll_reference_rad": 0.0
+  },
+  "contact": {
+    "normal_model": "hertz_effective_radius",
+    "damping_model": "delta_half_velocity",
+    "tangential_model": "sditt_cubic_saturation",
+    "effective_modulus_pa": 100000000000.0,
+    "effective_radius_m": 0.02,
+    "normal_damping_n_s_m_1p5": 1000000.0,
+    "friction_coefficient": 0.35,
+    "creep_stiffness_x_n": 1000000.0,
+    "creep_stiffness_lateral_n": 500000.0,
+    "reference_speed_floor_m_s": 0.1
+  },
+  "wheels": [
+    {
+      "id": "L",
+      "lateral_offset_m": -0.75,
+      "profile": {
+        "file": "wheel_lower.csv",
+        "format": "csv",
+        "units": "m"
+      }
+    },
+    {
+      "id": "R",
+      "lateral_offset_m": 0.75,
+      "profile": {
+        "file": "wheel_lower.csv",
+        "format": "csv",
+        "units": "m"
+      }
+    }
+  ],
+  "rails": [
+    {
+      "id": "left_stock",
+      "wheel_id": "L",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 50000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 40000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "stations": [
+        {
+          "id": "left_stock_0",
+          "s_m": 0.0,
+          "profile": {
+            "file": "left_stock_0.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "left_stock_1",
+          "s_m": 0.06,
+          "profile": {
+            "file": "left_stock_1.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "left_stock_2",
+          "s_m": 0.12,
+          "profile": {
+            "file": "left_stock_2.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        }
+      ]
+    },
+    {
+      "id": "right_stock",
+      "wheel_id": "R",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 50000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 40000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "stations": [
+        {
+          "id": "right_stock_0",
+          "s_m": 0.0,
+          "profile": {
+            "file": "right_stock_0.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_stock_1",
+          "s_m": 0.06,
+          "profile": {
+            "file": "right_stock_1.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_stock_2",
+          "s_m": 0.12,
+          "profile": {
+            "file": "right_stock_2.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        }
+      ]
+    },
+    {
+      "id": "right_switch",
+      "wheel_id": "R",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 50000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 40000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "stations": [
+        {
+          "id": "right_switch_0",
+          "s_m": 0.0,
+          "profile": {
+            "file": "right_switch_0.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_switch_1",
+          "s_m": 0.06,
+          "profile": {
+            "file": "right_switch_1.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_switch_2",
+          "s_m": 0.12,
+          "profile": {
+            "file": "right_switch_2.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        }
+      ]
+    }
+  ],
+  "run": {
+    "method": "DOP853",
+    "x_start_m": 0.0,
+    "duration_s": 0.06,
+    "output_step_s": 0.001,
+    "max_solver_step_s": 0.00025,
+    "rtol": 1e-06,
+    "atol": 1e-08,
+    "maximum_penetration_m": 0.003,
+    "maximum_abs_contact_slope": 1.0
+  },
+  "initial_state": {
+    "wheel_q": {
+      "y_m": 0.0,
+      "z_m": 0.461,
+      "roll_rad": 0.0,
+      "spin_rad": 0.0
+    },
+    "wheel_v": {
+      "y_m_s": 0.0,
+      "z_m_s": 0.0,
+      "roll_rad_s": 0.0,
+      "spin_rad_s": 4.3478260869565215
+    },
+    "rail_q": {
+      "left_stock": {
+        "y_m": 0.0,
+        "z_m": 0.0
+      },
+      "right_stock": {
+        "y_m": 0.0,
+        "z_m": 0.0
+      },
+      "right_switch": {
+        "y_m": 0.0,
+        "z_m": 0.0
+      }
+    },
+    "rail_v": {
+      "left_stock": {
+        "y_m_s": 0.0,
+        "z_m_s": 0.0
+      },
+      "right_stock": {
+        "y_m_s": 0.0,
+        "z_m_s": 0.0
+      },
+      "right_switch": {
+        "y_m_s": 0.0,
+        "z_m_s": 0.0
+      }
+    }
+  }
+}

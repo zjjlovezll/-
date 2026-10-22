@@ -1,0 +1,33 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp/
+.pytest_tmp*/
+*.egg-info/
+build/
+dist/
+
+# Agent state: derived cases, job directories, the revision ledger.  Reproducible from the
+# recipes that produced it, and it grows without bound, so it does not belong in history.
+.agent/
+
+# Simulation output.  One 1.2 s assembly run is ~8 MB and there are 207 of them; committing
+# them turns the repository into 1.4 GB of duplicated CSV.  Two frozen oracles are kept
+# because tests and gates compare against them by value.
+validation/**/out_*/
+!validation/crh380a_m/out_full12_cap05/
+!validation/crh380a_m/out_A_final_law/
+
+# Generated geometry and modal expansions.  All of it is derivable from the PRR profiles in
+# `validation/crh380a_m/bodies` and the SDITT catalogue; `validation/INDEX.md` says how.
+validation/**/div_panel/
+validation/**/smoothed/
+validation/**/smoothed_final/
+validation/**/modes_scale_*.json
+
+validation/**/*.png
+validation/**/*.log
+validation/**/*.err
+
+# Scratch: one-off probes live in .tmp/ and are not part of the package.
+.tmp/

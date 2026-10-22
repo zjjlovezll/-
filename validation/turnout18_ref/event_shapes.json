@@ -1,0 +1,164 @@
+{
+  "velch_force_raw": {
+    "baseline": 58652.27748453504,
+    "peak": 89676.89945060949,
+    "amplitude": 31024.621966074446,
+    "peak_time_s": 0.014999999999999902,
+    "rise_time_s": 0.007000000000000006,
+    "decay_time_s": 0.000500000000000056,
+    "oscillation_count": 6,
+    "window_s": 0.019500000000000073
+  },
+  "velch_force_filtered": {
+    "baseline": 59860.880548337205,
+    "peak": 59820.19993037552,
+    "amplitude": -40.68061796168331,
+    "peak_time_s": 0.034499999999999975,
+    "rise_time_s": 0.027000000000000024,
+    "decay_time_s": 0.0004999999999999449,
+    "oscillation_count": 0,
+    "window_s": 0.0
+  },
+  "velch_axle_filtered": {
+    "baseline": -0.0014998148034215263,
+    "peak": -0.001490174598695027,
+    "amplitude": 9.640204726499204e-06,
+    "peak_time_s": 0.022499999999999964,
+    "rise_time_s": 0.020000000000000018,
+    "decay_time_s": 0.01200000000000001,
+    "oscillation_count": 0,
+    "window_s": 0.01200000000000001
+  },
+  "filter": {
+    "force_corner_hz": 5.0,
+    "displacement_corner_hz": 10.0
+  },
+  "measured": [
+    {
+      "case": "30kmh-SP-1",
+      "channel": 1,
+      "unit": "kN",
+      "descriptor": {
+        "baseline": -0.23663986504723347,
+        "peak": -122.4712914979757,
+        "amplitude": -122.23465163292846,
+        "peak_time_s": 11.058007812500001,
+        "rise_time_s": 0.0595703125,
+        "decay_time_s": 0.03183593749999858,
+        "oscillation_count": 0,
+        "window_s": 2.5296875000000014
+      },
+      "ratios": {
+        "rise_ratio": 2.2063078703703685,
+        "decay_ratio": 63.67187500000417,
+        "oscillation_ratio": 1.0,
+        "amplitude_ratio_not_comparable": 3.00473930233951
+      }
+    },
+    {
+      "case": "30kmh-SP-1",
+      "channel": 13,
+      "unit": "mm",
+      "descriptor": {
+        "baseline": 0.2628,
+        "peak": 2.0048,
+        "amplitude": 1.742,
+        "peak_time_s": 5.046484374999999,
+        "rise_time_s": 0.008007812499997158,
+        "decay_time_s": 0.18320312500000568,
+        "oscillation_count": 0,
+        "window_s": 8.541210937500004
+      },
+      "ratios": {
+        "rise_ratio": 0.40039062499985756,
+        "decay_ratio": 15.266927083333794,
+        "oscillation_ratio": 1.0,
+        "amplitude_ratio_not_comparable": 180701.55659781297
+      }
+    },
+    {
+      "case": "30kmh-SP-2",
+      "channel": 1,
+      "unit": "kN",
+      "descriptor": {
+        "baseline": -0.029653927125506074,
+        "peak": -121.31871929824563,
+        "amplitude": -121.28906537112012,
+        "peak_time_s": 10.654101562500001,
+        "rise_time_s": 0.06718749999999929,
+        "decay_time_s": 0.03105468749999929,
+        "oscillation_count": 0,
+        "window_s": 2.9171875000000007
+      },
+      "ratios": {
+        "rise_ratio": 2.4884259259258976,
+        "decay_ratio": 62.10937500000542,
+        "oscillation_ratio": 1.0,
+        "amplitude_ratio_not_comparable": 2.98149515539221
+      }
+    },
+    {
+      "case": "30kmh-SP-2",
+      "channel": 13,
+      "unit": "mm",
+      "descriptor": {
+        "baseline": 0.17122,
+        "peak": 2.16073,
+        "amplitude": 1.9895100000000001,
+        "peak_time_s": 2.3324218749999996,
+        "rise_time_s": 0.010156249999997868,
+        "decay_time_s": 0.1691406250000007,
+        "oscillation_count": 0,
+        "window_s": 11.238867187500002
+      },
+      "ratios": {
+        "rise_ratio": 0.507812499999893,
+        "decay_ratio": 14.09505208333338,
+        "oscillation_ratio": 1.0,
+        "amplitude_ratio_not_comparable": 206376.32254128295
+      }
+    },
+    {
+      "case": "30kmh-SP-3",
+      "channel": 1,
+      "unit": "kN",
+      "descriptor": {
+        "baseline": 0.04654178137651822,
+        "peak": -131.162334682861,
+        "amplitude": -131.2088764642375,
+        "peak_time_s": 8.755078124999999,
+        "rise_time_s": 0.03398437499999929,
+        "decay_time_s": 0.04218750000000071,
+        "oscillation_count": 0,
+        "window_s": 8.808398437500001
+      },
+      "ratios": {
+        "rise_ratio": 1.258680555555528,
+        "decay_ratio": 84.37500000001071,
+        "oscillation_ratio": 1.0,
+        "amplitude_ratio_not_comparable": 3.225341281389135
+      }
+    },
+    {
+      "case": "30kmh-SP-3",
+      "channel": 13,
+      "unit": "mm",
+      "descriptor": {
+        "baseline": 0.23184,
+        "peak": 1.7888,
+        "amplitude": 1.55696,
+        "peak_time_s": 2.9892578125000018,
+        "rise_time_s": 0.4472656250000018,
+        "decay_time_s": 0.23261718749999716,
+        "oscillation_count": 0,
+        "window_s": 14.574218749999998
+      },
+      "ratios": {
+        "rise_ratio": 22.363281250000068,
+        "decay_ratio": 19.384765624999744,
+        "oscillation_ratio": 1.0,
+        "amplitude_ratio_not_comparable": 161506.94349054585
+      }
+    }
+  ]
+}

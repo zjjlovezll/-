@@ -1,0 +1,95 @@
+{
+  "model": "H:\\总的齿轨项目\\总和1\\直逆_修改降低值后设计 -上坡度\\RACK_RAILWAY_VEHICLE - XNEW - M\\main_model\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.spck",
+  "model_exists": true,
+  "result_files": [
+    {
+      "path": "H:\\齿轨工况\\坡度工况\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00_3d.mat",
+      "exists": true,
+      "size_bytes": 596087044
+    },
+    {
+      "path": "H:\\齿轨工况\\坡度工况\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00_3d.sbr",
+      "exists": true,
+      "size_bytes": 418207004
+    },
+    {
+      "path": "H:\\齿轨工况\\坡度工况\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00.mat",
+      "exists": true,
+      "size_bytes": 398567130
+    },
+    {
+      "path": "H:\\齿轨工况\\坡度工况\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00.sbr",
+      "exists": true,
+      "size_bytes": 235702363
+    }
+  ],
+  "output_dir_files": 264,
+  "measured": [
+    {
+      "root": "E:\\齿轨测试数据\\轮轨力和位移采集",
+      "exists": true,
+      "conditions": [
+        "10kmh-SP-1",
+        "10kmh-SP-2",
+        "10kmh-SP-3",
+        "10kmh-XP-1",
+        "10kmh-XP-2",
+        "10kmh-XP-3",
+        "15kmh-SP-1",
+        "15kmh-SP-2",
+        "15kmh-XP-1",
+        "15kmh-XP-2",
+        "15kmh-XP-3",
+        "20kmh-SP-1",
+        "20kmh-SP-2",
+        "20kmh-SP-3",
+        "20kmh-XP-1",
+        "20kmh-XP-2",
+        "20kmh-XP-3",
+        "25kmh-SP-1",
+        "25kmh-SP-2",
+        "25kmh-SP-3",
+        "25kmh-XP-1(10km-XP)",
+        "25kmh-XP-2(15km-XP)",
+        "25kmh-XP-3(20km-XP)",
+        "30kmh",
+        "5kmh上坡",
+        "5kmh下坡"
+      ]
+    },
+    {
+      "root": "E:\\齿轨测试数据\\加速度采集",
+      "exists": true,
+      "conditions": [
+        "10kmh-SP-1",
+        "10KMH-SP-2",
+        "10KMH-SP-3",
+        "10KMH-XP-1",
+        "10KMH-XP-2",
+        "10KMH-XP-3",
+        "15KMH-SP-1",
+        "15KMH-SP-2",
+        "15KMH-SP-3",
+        "15KMH-XP-1",
+        "15KMH-XP-2",
+        "15KMH-XP-3",
+        "20KMH-SP-1",
+        "20KMH-SP-2",
+        "20KMH-SP-3",
+        "20KMH-XP-1",
+        "20KMH-XP-2",
+        "20KMH-XP-3",
+        "25KMH-SP-1",
+        "25KMH-SP-2",
+        "25KMH-SP-3",
+        "25KMH-XP-1(10KMH)",
+        "25KMH-XP-2(15KMH)",
+        "25KMH-XP-3(20KMH)",
+        "30KMH-SP-1",
+        "30KMH-SP-2",
+        "30KMH-XP-1(10KMH)",
+        "30KMH-XP-2(15KMH)"
+      ]
+    }
+  ]
+}

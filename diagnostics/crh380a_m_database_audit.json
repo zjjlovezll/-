@@ -1,0 +1,73 @@
+{
+  "schema_version": "velch-crh380a-m-database-audit-v1",
+  "scope": "read-only substructure and profile audit; no Simpack or Velch vehicle integration run",
+  "source_model": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.spck",
+  "source_model_sha256": "ab291570643d582781bc6ae420df9ffa463f3b186eb2ac50cde318f673f48172",
+  "profile_set_sha256": "caf3625fee9d947a3f80280788fad014bb3ed2f8b905a48c7812e5aa486a4bda",
+  "model_chain": [
+    "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.spck",
+    "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Bogie.spck",
+    "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Wheelset.spck"
+  ],
+  "rail_profile_references": 238,
+  "unique_rail_prr_files": 233,
+  "rail_prr_files_parsed": 233,
+  "rail_prr_parse_failures": [],
+  "rail_graph_point_count_range": [
+    1993,
+    2012
+  ],
+  "station_range_m": [
+    0.0,
+    150.0
+  ],
+  "coincident_station_pairs": 10,
+  "distinct_coincident_station_pairs": 10,
+  "first_coincident_station_sampling": "rejected_without_explicit_branch: 50.578 m has distinct profiles; configure before/after",
+  "wheel_profiles_referenced_directly": [
+    {
+      "name": "LMA.prw",
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\LMA.prw",
+      "sha256": "30487008e9e834decc21afc54b97f29b2383c5e372b0446251836cab5f7f9a84",
+      "graph_points": 282,
+      "collapsed_points": 0
+    }
+  ],
+  "active_track_reference": "$Trk_STR",
+  "configured_speed_expression": "350 km/h",
+  "configured_end_time_s": 1.2,
+  "candidate_simpack_results": [
+    {
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.output\\350-1.sbr",
+      "bytes": 16725197
+    },
+    {
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.output\\350-2.sbr",
+      "bytes": 20162115
+    },
+    {
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.output\\350-3.sbr",
+      "bytes": 16729594
+    },
+    {
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.output\\350-4.sbr",
+      "bytes": 16729511
+    },
+    {
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.output\\350-5.sbr",
+      "bytes": 16728562
+    },
+    {
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.output\\350.sbr",
+      "bytes": 16728830
+    },
+    {
+      "path": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.output\\400-1.sbr",
+      "bytes": 16450398
+    }
+  ],
+  "geometry_input_gate": "passed_file_and_format_audit",
+  "contact_location_gate": "not_run; coincident stations require active branch mapping",
+  "vehicle_dynamics_gate": "not_run; carbody file has solver settings but runtime validity is unverified",
+  "simpack_comparison_gate": "not_run; candidate SBR provenance is unverified"
+}

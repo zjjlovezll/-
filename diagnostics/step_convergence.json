@@ -1,0 +1,15 @@
+{
+  "case_id": "synthetic_two_rail_transfer_v1",
+  "coarse_max_step_s": 0.00025,
+  "fine_max_step_s": 0.000125,
+  "final_wheel_z_difference_m": 2.560271550322568e-09,
+  "peak_normal_relative_difference": {
+    "left_stock": 3.254393482096081e-08,
+    "right_stock": 6.584906544815599e-06,
+    "right_switch": 1.6178946417461765e-06
+  },
+  "coarse_nfev": 6173,
+  "fine_nfev": 9125,
+  "criterion": "final wheel z difference <= 1e-5 m; each sampled peak normal relative difference <= 0.02",
+  "passed": true
+}

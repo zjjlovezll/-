@@ -1,0 +1,39 @@
+{
+  "model": "H:\\鎬荤殑榻胯建椤圭洰\\鎬诲拰1\\鐩撮€哶淇敼闄嶄綆鍊煎悗璁捐 -涓婂潯搴RACK_RAILWAY_VEHICLE - XNEW - M\\main_model\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.spck",
+  "model_exists": false,
+  "result_files": [
+    {
+      "path": "H:\\榻胯建宸ュ喌\\鍧″害宸ュ喌\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00_3d.mat",
+      "exists": false,
+      "size_bytes": null
+    },
+    {
+      "path": "H:\\榻胯建宸ュ喌\\鍧″害宸ュ喌\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00_3d.sbr",
+      "exists": false,
+      "size_bytes": null
+    },
+    {
+      "path": "H:\\榻胯建宸ュ喌\\鍧″害宸ュ喌\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00.mat",
+      "exists": false,
+      "size_bytes": null
+    },
+    {
+      "path": "H:\\榻胯建宸ュ喌\\鍧″害宸ュ喌\\matlab\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120.output\\NoExt_zgzn_jdz6.2mm_SP_00.sbr",
+      "exists": false,
+      "size_bytes": null
+    }
+  ],
+  "output_dir_files": null,
+  "measured": [
+    {
+      "root": "E:\\榻胯建娴嬭瘯鏁版嵁\\杞建鍔涘拰浣嶇Щ閲囬泦",
+      "exists": false,
+      "conditions": []
+    },
+    {
+      "root": "E:\\榻胯建娴嬭瘯鏁版嵁\\鍔犻€熷害閲囬泦",
+      "exists": false,
+      "conditions": []
+    }
+  ]
+}

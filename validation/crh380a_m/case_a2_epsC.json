@@ -1,0 +1,3713 @@
+{
+  "schema_version": "velch-vehicle-v2",
+  "case_id": "a2_epsC",
+  "purpose": "engineering",
+  "purpose_detail": "CRH380A_M vehicle over the real 236-station turnout catalog | wing body carries a 60TY1-style lift h_max=0.400 mm over 79.60-81.20 m (calibration knob)",
+  "parameter_source": "Simpack text model CRH380A_M_{Carbody,Bogie,Wheelset}.spck subvariables (masses, inertias, suspension stiffness/damping, rail geometry, contact material and friction); rail geometry read-only from diagnostics/crh380a_m_track_catalog.json",
+  "source_evidence": {
+    "simpack_model": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.spck",
+    "simpack_sha256": "ab291570643d582781bc6ae420df9ffa463f3b186eb2ac50cde318f673f48172",
+    "track_catalog": "F:\\ai道岔状态反演辨识\\Velch\\diagnostics\\crh380a_m_track_catalog.json",
+    "track_catalog_sha256": "f20f8eab42779f5c0d3283279df7ed60047f07c9c810fa2ad976c82b809daa36",
+    "track_catalog_profile_set_sha256": "caf3625fee9d947a3f80280788fad014bb3ed2f8b905a48c7812e5aa486a4bda",
+    "wheel_profile_sha256": "30487008e9e834decc21afc54b97f29b2383c5e372b0446251836cab5f7f9a84",
+    "coincident_stations": [
+      50.578,
+      52.889,
+      57.304,
+      60.963,
+      69.479,
+      78.538,
+      79.131,
+      79.44,
+      80.278,
+      80.911
+    ],
+    "declared_model_limits": [
+      "rigid track: no rail mass, support stiffness or fastener compliance",
+      "single equivalent rail per side per axle: no stock/switch/wing sub-rail split",
+      "hertz_effective_radius normal law is a reduced-order substitute, not Simpack RWP",
+      "no axlebox bodies (Simpack has four 48.2 kg axle guides on stiff joints)",
+      "primary yaw stiffness is not exposed by the .spck; taken from Par_Vehicle_CRH380A_v6.m"
+    ]
+  },
+  "vehicle": {
+    "carbody": {
+      "mass_kg": 34934.0,
+      "roll_inertia_kg_m2": 113200.0,
+      "pitch_inertia_kg_m2": 1711800.0,
+      "yaw_inertia_kg_m2": 1615300.0
+    },
+    "bogie": {
+      "mass_kg": 3300.0,
+      "roll_inertia_kg_m2": 2673.0,
+      "pitch_inertia_kg_m2": 1807.0,
+      "yaw_inertia_kg_m2": 3300.0
+    },
+    "wheelset": {
+      "mass_kg": 1780.0,
+      "roll_inertia_kg_m2": 949.0,
+      "spin_inertia_kg_m2": 118.0,
+      "yaw_inertia_kg_m2": 967.0
+    },
+    "primary": {
+      "k_y_n_m": 980000.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 1176000.0,
+      "c_z_n_s_m": 10000.0,
+      "k_yaw_nm_rad": 1960000.0,
+      "c_yaw_nm_s_rad": 0.0,
+      "half_width_m": 1.0,
+      "upper_anchor_height_m": -0.32299999999999995,
+      "lower_anchor_height_m": -0.585
+    },
+    "secondary": {
+      "k_y_n_m": 160000.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 240000.0,
+      "c_z_n_s_m": 20000.0,
+      "k_yaw_nm_rad": 8850000.0,
+      "c_yaw_nm_s_rad": 2450000.0,
+      "half_width_m": 1.23,
+      "upper_anchor_height_m": 0.55,
+      "lower_anchor_height_m": -0.29000000000000004
+    },
+    "bogie_half_spacing_m": 8.75,
+    "wheelbase_m": 2.5,
+    "wheel_center_height_m": 0.43,
+    "nominal_wheel_radius_m": 0.43,
+    "travel_speed_m_s": 97.22222222222221,
+    "gravity_m_s2": 9.81,
+    "drive_torque_per_wheelset_nm": 0.0
+  },
+  "contact": {
+    "normal_model": "hertz_effective_radius",
+    "damping_model": "delta_half_velocity",
+    "tangential_model": "sditt_cubic_saturation",
+    "effective_modulus_pa": 113932291666.667,
+    "effective_radius_m": 0.02,
+    "normal_damping_n_s_m_1p5": 1000000.0,
+    "friction_coefficient": 0.4,
+    "creep_stiffness_x_n": 1000000.0,
+    "creep_stiffness_lateral_n": 500000.0,
+    "reference_speed_floor_m_s": 0.1,
+    "stiffness_policy": "fixed_effective_radius",
+    "normal_policy": "strip_integral",
+    "strip_dy_m": 0.0005
+  },
+  "wheels": [
+    {
+      "id": "L",
+      "lateral_offset_m": -0.7465,
+      "profile": {
+        "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\LMA.prw",
+        "format": "prr",
+        "units": "m",
+        "y_sign": -1,
+        "z_sign": -1,
+        "z_offset_m": -0.4301
+      }
+    },
+    {
+      "id": "R",
+      "lateral_offset_m": 0.7465,
+      "profile": {
+        "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\LMA.prw",
+        "format": "prr",
+        "units": "m",
+        "y_sign": 1,
+        "z_sign": -1,
+        "z_offset_m": -0.4301
+      }
+    }
+  ],
+  "rail_templates": [
+    {
+      "id": "left",
+      "wheel_id": "L",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 500000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 400000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "stations": [
+        {
+          "id": "L001",
+          "s_m": 0.0,
+          "profile": {
+            "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JBG.prr",
+            "format": "prr",
+            "units": "m",
+            "y_sign": -1,
+            "y_offset_m": -0.753,
+            "z_sign": -1
+          }
+        },
+        {
+          "id": "L002",
+          "s_m": 150.0,
+          "profile": {
+            "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JBG.prr",
+            "format": "prr",
+            "units": "m",
+            "y_sign": -1,
+            "y_offset_m": -0.753,
+            "z_sign": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "right",
+      "wheel_id": "R",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 500000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 400000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "event_branches": {
+        "50.578": {
+          "before": "R026",
+          "after": "R027"
+        },
+        "52.889": {
+          "before": "R047",
+          "after": "R048"
+        },
+        "57.304": {
+          "before": "R078",
+          "after": "R079"
+        },
+        "60.963": {
+          "before": "R099",
+          "after": "R100"
+        },
+        "69.479": {
+          "before": "R110",
+          "after": "R111"
+        },
+        "78.538": {
+          "before": "R141",
+          "after": "R142"
+        },
+        "79.131": {
+          "before": "R157",
+          "after": "R158"
+        },
+        "79.44": {
+          "before": "R173",
+          "after": "R174"
+        },
+        "80.278": {
+          "before": "R194",
+          "after": "R195"
+        },
+        "80.911": {
+          "before": "R205",
+          "after": "R206"
+        }
+      },
+      "bodies": [
+        {
+          "id": "main",
+          "s_hi_m": 80.911,
+          "stations": [
+            {
+              "id": "R001",
+              "s_m": 0.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JBG.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R002",
+              "s_m": 5.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R5.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R003",
+              "s_m": 10.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R10.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R004",
+              "s_m": 15.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R15.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R005",
+              "s_m": 20.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R20.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R006",
+              "s_m": 25.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R25.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R007",
+              "s_m": 30.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R30.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R008",
+              "s_m": 35.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R35.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R009",
+              "s_m": 40.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R40.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R010",
+              "s_m": 45.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R45.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R011",
+              "s_m": 50.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JBG.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R012",
+              "s_m": 50.048,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.048.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R013",
+              "s_m": 50.096,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.096.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R014",
+              "s_m": 50.144,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.144.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R015",
+              "s_m": 50.192,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.192.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R016",
+              "s_m": 50.24,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.24.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R017",
+              "s_m": 50.288,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.288.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R018",
+              "s_m": 50.336,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.336.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R019",
+              "s_m": 50.384,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.384.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R020",
+              "s_m": 50.432,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.432.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R021",
+              "s_m": 50.48,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_BB.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R022",
+              "s_m": 50.4996,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.4996.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R023",
+              "s_m": 50.5192,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.5192.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R024",
+              "s_m": 50.538799999999995,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.5388.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R025",
+              "s_m": 50.55839999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.5584.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R026",
+              "s_m": 50.578,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_CC.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R028",
+              "s_m": 50.7128,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.7128.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R029",
+              "s_m": 50.84760000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.8476.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R030",
+              "s_m": 50.982400000000005,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R50.9824.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R031",
+              "s_m": 51.11720000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R51.1172.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R032",
+              "s_m": 51.25200000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R51.252.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R033",
+              "s_m": 51.386800000000015,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R51.3868.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R034",
+              "s_m": 51.52160000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R51.5216.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R035",
+              "s_m": 51.656400000000026,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R51.6564.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R036",
+              "s_m": 51.791200000000025,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R51.7912.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R037",
+              "s_m": 51.926,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_DD.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R038",
+              "s_m": 52.0223,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.0223.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R039",
+              "s_m": 52.11860000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.1186.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R040",
+              "s_m": 52.21490000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.2149.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R041",
+              "s_m": 52.311200000000014,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.3112.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R042",
+              "s_m": 52.40750000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.4075.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R043",
+              "s_m": 52.50380000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.5038.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R044",
+              "s_m": 52.60010000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.6001.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R045",
+              "s_m": 52.696400000000025,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.6964.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R046",
+              "s_m": 52.792700000000025,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R52.7927.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R047",
+              "s_m": 52.889,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_EE.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R049",
+              "s_m": 53.128099999999996,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R53.1281.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R050",
+              "s_m": 53.3672,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R53.3672.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R051",
+              "s_m": 53.6063,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R53.6063.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R052",
+              "s_m": 53.84539999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R53.8454.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R053",
+              "s_m": 54.08449999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R54.0845.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R054",
+              "s_m": 54.32359999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R54.3236.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R055",
+              "s_m": 54.56269999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R54.5627.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R056",
+              "s_m": 54.801799999999986,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R54.8018.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R057",
+              "s_m": 55.040899999999986,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R55.0409.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R058",
+              "s_m": 55.28,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_FF.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R059",
+              "s_m": 55.4089,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R55.4089.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R060",
+              "s_m": 55.537800000000004,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R55.5378.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R061",
+              "s_m": 55.666700000000006,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R55.6667.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R062",
+              "s_m": 55.79560000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R55.7956.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R063",
+              "s_m": 55.92450000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R55.9245.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R064",
+              "s_m": 56.05340000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.0534.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R065",
+              "s_m": 56.18230000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.1823.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R066",
+              "s_m": 56.311200000000014,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.3112.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R067",
+              "s_m": 56.440100000000015,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.4401.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R068",
+              "s_m": 56.569,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_GG.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R069",
+              "s_m": 56.6425,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.6425.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R070",
+              "s_m": 56.716,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.716.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R071",
+              "s_m": 56.7895,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.7895.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R072",
+              "s_m": 56.863,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.863.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R073",
+              "s_m": 56.9365,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R56.9365.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R074",
+              "s_m": 57.01,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R57.01.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R075",
+              "s_m": 57.0835,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R57.0835.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R076",
+              "s_m": 57.157,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R57.157.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R077",
+              "s_m": 57.2305,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R57.2305.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R078",
+              "s_m": 57.304,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_JJ.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R080",
+              "s_m": 57.6416,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R57.6416.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R081",
+              "s_m": 57.9792,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R57.9792.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R082",
+              "s_m": 58.31679999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R58.3168.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R083",
+              "s_m": 58.654399999999995,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R58.6544.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R084",
+              "s_m": 58.99199999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R58.992.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R085",
+              "s_m": 59.32959999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R59.3296.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R086",
+              "s_m": 59.66719999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R59.6672.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R087",
+              "s_m": 60.00479999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.0048.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R088",
+              "s_m": 60.342399999999984,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.3424.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R089",
+              "s_m": 60.68,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_KK.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R090",
+              "s_m": 60.7083,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.7083.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R091",
+              "s_m": 60.7366,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.7366.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R092",
+              "s_m": 60.76490000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.7649.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R093",
+              "s_m": 60.79320000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.7932.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R094",
+              "s_m": 60.821500000000015,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.8215.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R095",
+              "s_m": 60.849800000000016,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.8498.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R096",
+              "s_m": 60.87810000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.8781.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R097",
+              "s_m": 60.906400000000026,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.9064.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R098",
+              "s_m": 60.93470000000003,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R60.9347.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R099",
+              "s_m": 60.963,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_LL.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R101",
+              "s_m": 61.8146,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R61.8146.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R102",
+              "s_m": 62.666199999999996,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R62.6662.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R103",
+              "s_m": 63.517799999999994,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R63.5178.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R104",
+              "s_m": 64.3694,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R64.3694.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R105",
+              "s_m": 65.22099999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R65.221.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R106",
+              "s_m": 66.0726,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R66.0726.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R107",
+              "s_m": 66.9242,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R66.9242.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R108",
+              "s_m": 67.7758,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R67.7758.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R109",
+              "s_m": 68.62740000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R68.6274.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R110",
+              "s_m": 69.479,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JG_MM.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R112",
+              "s_m": 69.6761,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R69.6761.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R113",
+              "s_m": 69.87320000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R69.8732.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R114",
+              "s_m": 70.07030000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R70.0703.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R115",
+              "s_m": 70.26740000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R70.2674.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R116",
+              "s_m": 70.46450000000003,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R70.4645.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R117",
+              "s_m": 70.66160000000004,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R70.6616.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R118",
+              "s_m": 70.85870000000004,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R70.8587.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R119",
+              "s_m": 71.05580000000005,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R71.0558.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R120",
+              "s_m": 71.25290000000005,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R71.2529.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R121",
+              "s_m": 71.45,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JBG_1.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R122",
+              "s_m": 72.0943,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R72.0943.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R123",
+              "s_m": 72.7386,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R72.7386.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R124",
+              "s_m": 73.3829,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R73.3829.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R125",
+              "s_m": 74.02720000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R74.0272.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R126",
+              "s_m": 74.67150000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R74.6715.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R127",
+              "s_m": 75.31580000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R75.3158.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R128",
+              "s_m": 75.96010000000003,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R75.9601.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R129",
+              "s_m": 76.60440000000003,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R76.6044.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R130",
+              "s_m": 77.24870000000003,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R77.2487.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R131",
+              "s_m": 77.893,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_YG_BB.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R132",
+              "s_m": 77.9575,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R77.9575.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R133",
+              "s_m": 78.022,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.022.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R134",
+              "s_m": 78.0865,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.0865.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R135",
+              "s_m": 78.151,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.151.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R136",
+              "s_m": 78.2155,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.2155.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R137",
+              "s_m": 78.28,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.28.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R138",
+              "s_m": 78.3445,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.3445.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R139",
+              "s_m": 78.409,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.409.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R140",
+              "s_m": 78.4735,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.4735.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R141",
+              "s_m": 78.538,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_YG_CC.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R143",
+              "s_m": 78.5542,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.5542.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R144",
+              "s_m": 78.57039999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.5704.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R145",
+              "s_m": 78.58659999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.5866.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R146",
+              "s_m": 78.60279999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.6028.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R147",
+              "s_m": 78.619,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_YG_DD.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R148",
+              "s_m": 78.6702,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.6702.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R149",
+              "s_m": 78.72139999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.7214.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R150",
+              "s_m": 78.7726,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.7726.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R151",
+              "s_m": 78.82379999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.8238.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R152",
+              "s_m": 78.87499999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.875.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R153",
+              "s_m": 78.92619999999998,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.9262.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R154",
+              "s_m": 78.97739999999997,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R78.9774.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R155",
+              "s_m": 79.02859999999998,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.0286.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R156",
+              "s_m": 79.07979999999998,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R79.0798.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "s_m": 79.131,
+              "profile": {
+                "file": "bodies/main_r0791310.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R158"
+            },
+            {
+              "s_m": 79.1464,
+              "profile": {
+                "file": "bodies/main_r0791464.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R159"
+            },
+            {
+              "s_m": 79.16179999999999,
+              "profile": {
+                "file": "bodies/main_r0791618.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R160"
+            },
+            {
+              "s_m": 79.17719999999998,
+              "profile": {
+                "file": "bodies/main_r0791772.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R161"
+            },
+            {
+              "s_m": 79.19259999999997,
+              "profile": {
+                "file": "bodies/main_r0791926.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R162"
+            },
+            {
+              "s_m": 79.208,
+              "profile": {
+                "file": "bodies/main_r0792080.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R163"
+            },
+            {
+              "s_m": 79.2312,
+              "profile": {
+                "file": "bodies/main_r0792312.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R164"
+            },
+            {
+              "s_m": 79.25439999999999,
+              "profile": {
+                "file": "bodies/main_r0792544.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R165"
+            },
+            {
+              "s_m": 79.27759999999999,
+              "profile": {
+                "file": "bodies/main_r0792776.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R166"
+            },
+            {
+              "s_m": 79.3008,
+              "profile": {
+                "file": "bodies/main_r0793008.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R167"
+            },
+            {
+              "s_m": 79.32399999999998,
+              "profile": {
+                "file": "bodies/main_r0793240.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R168"
+            },
+            {
+              "s_m": 79.34719999999999,
+              "profile": {
+                "file": "bodies/main_r0793472.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R169"
+            },
+            {
+              "s_m": 79.37039999999998,
+              "profile": {
+                "file": "bodies/main_r0793704.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R170"
+            },
+            {
+              "s_m": 79.39359999999998,
+              "profile": {
+                "file": "bodies/main_r0793936.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R171"
+            },
+            {
+              "s_m": 79.41679999999998,
+              "profile": {
+                "file": "bodies/main_r0794168.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R172"
+            },
+            {
+              "s_m": 79.44,
+              "profile": {
+                "file": "bodies/main_r0794400.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R173"
+            },
+            {
+              "s_m": 79.4934,
+              "profile": {
+                "file": "bodies/main_r0794934.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R175"
+            },
+            {
+              "s_m": 79.54679999999999,
+              "profile": {
+                "file": "bodies/main_r0795468.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R176"
+            },
+            {
+              "s_m": 79.60019999999999,
+              "profile": {
+                "file": "bodies/main_r0796002.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R177"
+            },
+            {
+              "s_m": 79.65359999999998,
+              "profile": {
+                "file": "bodies/main_r0796536.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R178"
+            },
+            {
+              "s_m": 79.70699999999997,
+              "profile": {
+                "file": "bodies/main_r0797070.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R179"
+            },
+            {
+              "s_m": 79.76039999999996,
+              "profile": {
+                "file": "bodies/main_r0797604.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R180"
+            },
+            {
+              "s_m": 79.81379999999996,
+              "profile": {
+                "file": "bodies/main_r0798138.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R181"
+            },
+            {
+              "s_m": 79.86719999999995,
+              "profile": {
+                "file": "bodies/main_r0798672.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R182"
+            },
+            {
+              "s_m": 79.92059999999995,
+              "profile": {
+                "file": "bodies/main_r0799206.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R183"
+            },
+            {
+              "s_m": 79.974,
+              "profile": {
+                "file": "bodies/main_r0799740.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R184"
+            },
+            {
+              "s_m": 80.00439999999999,
+              "profile": {
+                "file": "bodies/main_r0800044.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R185"
+            },
+            {
+              "s_m": 80.03479999999999,
+              "profile": {
+                "file": "bodies/main_r0800348.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R186"
+            },
+            {
+              "s_m": 80.06519999999998,
+              "profile": {
+                "file": "bodies/main_r0800652.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R187"
+            },
+            {
+              "s_m": 80.09559999999998,
+              "profile": {
+                "file": "bodies/main_r0800956.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R188"
+            },
+            {
+              "s_m": 80.12599999999998,
+              "profile": {
+                "file": "bodies/main_r0801260.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R189"
+            },
+            {
+              "s_m": 80.15639999999996,
+              "profile": {
+                "file": "bodies/main_r0801564.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R190"
+            },
+            {
+              "s_m": 80.18679999999996,
+              "profile": {
+                "file": "bodies/main_r0801868.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R191"
+            },
+            {
+              "s_m": 80.21719999999995,
+              "profile": {
+                "file": "bodies/main_r0802172.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R192"
+            },
+            {
+              "s_m": 80.24759999999995,
+              "profile": {
+                "file": "bodies/main_r0802476.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R193"
+            },
+            {
+              "s_m": 80.278,
+              "profile": {
+                "file": "bodies/main_r0802780.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R194"
+            },
+            {
+              "s_m": 80.3413,
+              "profile": {
+                "file": "bodies/main_r0803413.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R196"
+            },
+            {
+              "s_m": 80.4046,
+              "profile": {
+                "file": "bodies/main_r0804046.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R197"
+            },
+            {
+              "s_m": 80.46790000000001,
+              "profile": {
+                "file": "bodies/main_r0804679.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R198"
+            },
+            {
+              "s_m": 80.53120000000001,
+              "profile": {
+                "file": "bodies/main_r0805312.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R199"
+            },
+            {
+              "s_m": 80.59450000000001,
+              "profile": {
+                "file": "bodies/main_r0805945.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R200"
+            },
+            {
+              "s_m": 80.65780000000002,
+              "profile": {
+                "file": "bodies/main_r0806578.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R201"
+            },
+            {
+              "s_m": 80.72110000000002,
+              "profile": {
+                "file": "bodies/main_r0807211.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R202"
+            },
+            {
+              "s_m": 80.78440000000002,
+              "profile": {
+                "file": "bodies/main_r0807844.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R203"
+            },
+            {
+              "s_m": 80.84770000000003,
+              "profile": {
+                "file": "bodies/main_r0808477.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R204"
+            },
+            {
+              "s_m": 80.911,
+              "profile": {
+                "file": "bodies/main_r0809110.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "R205"
+            },
+            {
+              "id": "R207",
+              "s_m": 81.2902,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R81.2902.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            }
+          ]
+        },
+        {
+          "id": "point",
+          "s_lo_m": 79.131,
+          "stations": [
+            {
+              "s_m": 79.131,
+              "profile": {
+                "file": "bodies/point_r0791310.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P791310"
+            },
+            {
+              "s_m": 79.1464,
+              "profile": {
+                "file": "bodies/point_r0791464.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P791464"
+            },
+            {
+              "s_m": 79.16179999999999,
+              "profile": {
+                "file": "bodies/point_r0791618.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P791618"
+            },
+            {
+              "s_m": 79.17719999999998,
+              "profile": {
+                "file": "bodies/point_r0791772.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P791772"
+            },
+            {
+              "s_m": 79.19259999999997,
+              "profile": {
+                "file": "bodies/point_r0791926.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P791926"
+            },
+            {
+              "s_m": 79.208,
+              "profile": {
+                "file": "bodies/point_r0792080.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P792080"
+            },
+            {
+              "s_m": 79.2312,
+              "profile": {
+                "file": "bodies/point_r0792312.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P792312"
+            },
+            {
+              "s_m": 79.25439999999999,
+              "profile": {
+                "file": "bodies/point_r0792544.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P792544"
+            },
+            {
+              "s_m": 79.27759999999999,
+              "profile": {
+                "file": "bodies/point_r0792776.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P792776"
+            },
+            {
+              "s_m": 79.3008,
+              "profile": {
+                "file": "bodies/point_r0793008.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P793008"
+            },
+            {
+              "s_m": 79.32399999999998,
+              "profile": {
+                "file": "bodies/point_r0793240.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P793240"
+            },
+            {
+              "s_m": 79.34719999999999,
+              "profile": {
+                "file": "bodies/point_r0793472.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P793472"
+            },
+            {
+              "s_m": 79.37039999999998,
+              "profile": {
+                "file": "bodies/point_r0793704.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P793704"
+            },
+            {
+              "s_m": 79.39359999999998,
+              "profile": {
+                "file": "bodies/point_r0793936.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P793936"
+            },
+            {
+              "s_m": 79.41679999999998,
+              "profile": {
+                "file": "bodies/point_r0794168.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P794168"
+            },
+            {
+              "s_m": 79.44,
+              "profile": {
+                "file": "bodies/point_r0794400.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P794400"
+            },
+            {
+              "s_m": 79.4934,
+              "profile": {
+                "file": "bodies/point_r0794934.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P794934"
+            },
+            {
+              "s_m": 79.54679999999999,
+              "profile": {
+                "file": "bodies/point_r0795468.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P795468"
+            },
+            {
+              "s_m": 79.60019999999999,
+              "profile": {
+                "file": "bodies/point_r0796002.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P796002"
+            },
+            {
+              "s_m": 79.65359999999998,
+              "profile": {
+                "file": "bodies/point_r0796536.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P796536"
+            },
+            {
+              "s_m": 79.70699999999997,
+              "profile": {
+                "file": "bodies/point_r0797070.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P797070"
+            },
+            {
+              "s_m": 79.76039999999996,
+              "profile": {
+                "file": "bodies/point_r0797604.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P797604"
+            },
+            {
+              "s_m": 79.81379999999996,
+              "profile": {
+                "file": "bodies/point_r0798138.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P798138"
+            },
+            {
+              "s_m": 79.86719999999995,
+              "profile": {
+                "file": "bodies/point_r0798672.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P798672"
+            },
+            {
+              "s_m": 79.92059999999995,
+              "profile": {
+                "file": "bodies/point_r0799206.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P799206"
+            },
+            {
+              "s_m": 79.974,
+              "profile": {
+                "file": "bodies/point_r0799740.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P799740"
+            },
+            {
+              "s_m": 80.00439999999999,
+              "profile": {
+                "file": "bodies/point_r0800044.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P800044"
+            },
+            {
+              "s_m": 80.03479999999999,
+              "profile": {
+                "file": "bodies/point_r0800348.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P800348"
+            },
+            {
+              "s_m": 80.06519999999998,
+              "profile": {
+                "file": "bodies/point_r0800652.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P800652"
+            },
+            {
+              "s_m": 80.09559999999998,
+              "profile": {
+                "file": "bodies/point_r0800956.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P800956"
+            },
+            {
+              "s_m": 80.12599999999998,
+              "profile": {
+                "file": "bodies/point_r0801260.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P801260"
+            },
+            {
+              "s_m": 80.15639999999996,
+              "profile": {
+                "file": "bodies/point_r0801564.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P801564"
+            },
+            {
+              "s_m": 80.18679999999996,
+              "profile": {
+                "file": "bodies/point_r0801868.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P801868"
+            },
+            {
+              "s_m": 80.21719999999995,
+              "profile": {
+                "file": "bodies/point_r0802172.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P802172"
+            },
+            {
+              "s_m": 80.24759999999995,
+              "profile": {
+                "file": "bodies/point_r0802476.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P802476"
+            },
+            {
+              "s_m": 80.278,
+              "profile": {
+                "file": "bodies/point_r0802780.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P802780"
+            },
+            {
+              "s_m": 80.3413,
+              "profile": {
+                "file": "bodies/point_r0803413.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P803413"
+            },
+            {
+              "s_m": 80.4046,
+              "profile": {
+                "file": "bodies/point_r0804046.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P804046"
+            },
+            {
+              "s_m": 80.46790000000001,
+              "profile": {
+                "file": "bodies/point_r0804679.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P804679"
+            },
+            {
+              "s_m": 80.53120000000001,
+              "profile": {
+                "file": "bodies/point_r0805312.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P805312"
+            },
+            {
+              "s_m": 80.59450000000001,
+              "profile": {
+                "file": "bodies/point_r0805945.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P805945"
+            },
+            {
+              "s_m": 80.65780000000002,
+              "profile": {
+                "file": "bodies/point_r0806578.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P806578"
+            },
+            {
+              "s_m": 80.72110000000002,
+              "profile": {
+                "file": "bodies/point_r0807211.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P807211"
+            },
+            {
+              "s_m": 80.78440000000002,
+              "profile": {
+                "file": "bodies/point_r0807844.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P807844"
+            },
+            {
+              "s_m": 80.84770000000003,
+              "profile": {
+                "file": "bodies/point_r0808477.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P808477"
+            },
+            {
+              "s_m": 80.911,
+              "profile": {
+                "file": "bodies/point_r0809110.csv",
+                "format": "csv",
+                "units": "mm"
+              },
+              "id": "P809110"
+            },
+            {
+              "id": "R208",
+              "s_m": 81.6694,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R81.6694.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R209",
+              "s_m": 82.0486,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R82.0486.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R210",
+              "s_m": 82.42779999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R82.4278.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R211",
+              "s_m": 82.80699999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R82.807.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R212",
+              "s_m": 83.18619999999999,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R83.1862.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R213",
+              "s_m": 83.56539999999998,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R83.5654.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R214",
+              "s_m": 83.94459999999998,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R83.9446.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R215",
+              "s_m": 84.32379999999998,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R84.3238.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R216",
+              "s_m": 84.703,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_XG_LL.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R217",
+              "s_m": 85.4706,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R85.4706.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R218",
+              "s_m": 86.2382,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R86.2382.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R219",
+              "s_m": 87.00580000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R87.0058.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R220",
+              "s_m": 87.77340000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R87.7734.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R221",
+              "s_m": 88.54100000000003,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R88.541.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R222",
+              "s_m": 89.30860000000004,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R89.3086.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R223",
+              "s_m": 90.07620000000004,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R90.0762.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R224",
+              "s_m": 90.84380000000004,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R90.8438.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R225",
+              "s_m": 91.61140000000005,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R91.6114.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R226",
+              "s_m": 92.379,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JBG_1.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R227",
+              "s_m": 98.14110000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R98.1411.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R228",
+              "s_m": 103.90320000000001,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R103.9032.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R229",
+              "s_m": 109.66530000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R109.6653.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R230",
+              "s_m": 115.42740000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R115.4274.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R231",
+              "s_m": 121.18950000000002,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R121.1895.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R232",
+              "s_m": 126.95160000000004,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R126.9516.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R233",
+              "s_m": 132.71370000000005,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R132.7137.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R234",
+              "s_m": 138.47580000000005,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R138.4758.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R235",
+              "s_m": 144.23790000000005,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_R144.2379.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            },
+            {
+              "id": "R236",
+              "s_m": 150.0,
+              "profile": {
+                "file": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\wheel_rail_profiles\\Profile_Mileage_JBG_1.prr",
+                "format": "prr",
+                "units": "m",
+                "y_sign": 1,
+                "y_offset_m": 0.753,
+                "z_sign": -1
+              }
+            }
+          ]
+        },
+        {
+          "id": "wing",
+          "s_lo_m": 79.0,
+          "s_hi_m": 80.911,
+          "stations": [
+            {
+              "id": "W0079029",
+              "s_m": 79.02859999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079029.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079080",
+              "s_m": 79.07979999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079080.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079131",
+              "s_m": 79.131,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079131.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079146",
+              "s_m": 79.1464,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079146.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079162",
+              "s_m": 79.16179999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079162.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079177",
+              "s_m": 79.17719999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079177.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079193",
+              "s_m": 79.19259999999997,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079193.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079208",
+              "s_m": 79.208,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079208.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079231",
+              "s_m": 79.2312,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079231.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079254",
+              "s_m": 79.25439999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079254.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079278",
+              "s_m": 79.27759999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079278.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079301",
+              "s_m": 79.3008,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079301.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079324",
+              "s_m": 79.32399999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079324.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079347",
+              "s_m": 79.34719999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079347.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079370",
+              "s_m": 79.37039999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079370.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079394",
+              "s_m": 79.39359999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079394.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079417",
+              "s_m": 79.41679999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079417.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079440",
+              "s_m": 79.44,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079440.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079493",
+              "s_m": 79.4934,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079493.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079547",
+              "s_m": 79.54679999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079547.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079600",
+              "s_m": 79.60019999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079600.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079654",
+              "s_m": 79.65359999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079654.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079707",
+              "s_m": 79.70699999999997,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079707.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079760",
+              "s_m": 79.76039999999996,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079760.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079814",
+              "s_m": 79.81379999999996,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079814.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079867",
+              "s_m": 79.86719999999995,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079867.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079921",
+              "s_m": 79.92059999999995,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079921.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0079974",
+              "s_m": 79.974,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0079974.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080004",
+              "s_m": 80.00439999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080004.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080035",
+              "s_m": 80.03479999999999,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080035.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080065",
+              "s_m": 80.06519999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080065.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080096",
+              "s_m": 80.09559999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080096.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080126",
+              "s_m": 80.12599999999998,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080126.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080156",
+              "s_m": 80.15639999999996,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080156.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080187",
+              "s_m": 80.18679999999996,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080187.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080217",
+              "s_m": 80.21719999999995,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080217.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080248",
+              "s_m": 80.24759999999995,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080248.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080278",
+              "s_m": 80.278,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080278.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080341",
+              "s_m": 80.3413,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080341.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080405",
+              "s_m": 80.4046,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080405.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080468",
+              "s_m": 80.46790000000001,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080468.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080531",
+              "s_m": 80.53120000000001,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080531.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080595",
+              "s_m": 80.59450000000001,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080595.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080658",
+              "s_m": 80.65780000000002,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080658.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080721",
+              "s_m": 80.72110000000002,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080721.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080784",
+              "s_m": 80.78440000000002,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080784.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080848",
+              "s_m": 80.84770000000003,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080848.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            },
+            {
+              "id": "W0080911",
+              "s_m": 80.911,
+              "profile": {
+                "file": "bodies_wing_rise0p40/wing_r0080911.csv",
+                "format": "csv",
+                "units": "mm"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "track_dynamics": {
+    "kind": "rigid"
+  },
+  "equilibrate_vertical": true,
+  "run": {
+    "method": "DOP853",
+    "x_start_m": 69.0,
+    "duration_s": 0.05,
+    "output_step_s": 0.0005,
+    "max_solver_step_s": 0.0001,
+    "rtol": 1e-06,
+    "atol": 1e-08,
+    "maximum_penetration_m": 0.003,
+    "maximum_abs_contact_slope": 1.0
+  },
+  "initial_state": {
+    "q": [
+      0.0,
+      -0.0005,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.0005,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.0005,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.0005,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}

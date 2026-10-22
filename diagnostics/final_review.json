@@ -1,0 +1,34 @@
+{
+  "software": "Velch 0.2.0",
+  "checks": {
+    "run_numerically_checked": true,
+    "all_run_gates": true,
+    "case_snapshot_hash": true,
+    "profile_hashes": true,
+    "history_rows": true,
+    "history_finite": true,
+    "nonnegative_penetration": true,
+    "step_convergence": true,
+    "static_energy_probe": true,
+    "wheel_package_contents": true,
+    "real_prr_read": true,
+    "v2_run_gates": true,
+    "v2_input_hashes": true,
+    "v2_history_rows": true,
+    "v2_history_finite": true,
+    "v2_nonnegative_penetration": true,
+    "v2_numerical_probes": true,
+    "simpack_topology_read_only": true
+  },
+  "passed": true,
+  "history_rows": 61,
+  "wheel_file": "F:\\ai道岔状态反演辨识\\Velch\\dist\\velch_turnout_dynamics-0.2.0-py3-none-any.whl",
+  "vehicle_v2_history_rows": 31,
+  "real_prr": {
+    "path": "H:\\总的齿轨项目\\总和1\\直逆_修改降低值后设计 -上坡度\\RACK_RAILWAY_VEHICLE - XNEW - M\\database\\Profile_Mileage_ATG_57.85.prr",
+    "sha256": "f7f404855f49bccf94d395804bd48632f796c69f003511a72dfd6c9fec59582b",
+    "unique_y_points": 1448,
+    "collapsed_points": 550
+  },
+  "physics_validation_status": "unvalidated_against_measurement_or_Simpack"
+}

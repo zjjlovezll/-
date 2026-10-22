@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velch 工作台 · 高保真静态稿 2026-10-21</title>
+<style>
+/* ===== Design tokens — must stay in sync with src/velch/ui/theme.py ===== */
+:root{
+  --bg:#0E1116; --surface:#151A21; --raised:#1C232C; --overlay:#222A34;
+  --border:#2A3341; --border-strong:#3A4657;
+  --ink:#E6EDF3; --ink-muted:#9BA9B8; --ink-dim:#7D8B9C;
+  --accent:#4CC2FF; --accent-ink:#06121B;
+  --amber:#F2B134; --pass:#46C46A; --pass-ink:#04170A;
+  --fail:#FF6B5E; --fail-ink:#1A0605; --warn:#E0A33A; --info:#6FB2FF;
+  --s1:#4CC2FF; --s2:#F2B134; --s3:#B48EFF; --s4:#46C46A;
+  --s5:#FF8FA3; --s6:#7DE2D1; --s7:#FFC978; --s8:#8CB8FF;
+  --f-ui:"Microsoft YaHei UI","Segoe UI",system-ui,sans-serif;
+  --f-mono:"Consolas","Cascadia Mono",monospace;
+  --t-micro:9pt; --t-tiny:10pt; --t-body:11pt; --t-body-lg:12pt;
+  --t-section:14pt; --t-title:18pt; --t-display:24pt;
+  --sp1:4px; --sp2:8px; --sp3:12px; --sp4:16px; --sp6:24px; --sp8:32px; --sp12:48px;
+  --gap:8px; --pad:16px; --pad-lg:24px; --radius:6px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--f-ui); font-size:var(--t-body); line-height:18px;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:var(--f-mono)}
+
+/* ===== shell ===== */
+.app{display:flex;height:100vh;min-height:720px;overflow:hidden}
+
+.rail{
+  width:212px;flex:0 0 212px;background:var(--bg);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:var(--pad) var(--sp3);
+}
+.brand{display:flex;flex-direction:column;gap:2px;padding:0 var(--sp2) var(--pad)}
+.brand b{font-size:var(--t-section);letter-spacing:.14em;color:var(--ink)}
+.brand span{font-size:var(--t-micro);color:var(--ink-dim);letter-spacing:.06em}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{
+  all:unset;display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:9px var(--sp3);border-radius:var(--radius);color:var(--ink-muted);
+  font-size:var(--t-tiny);border-left:2px solid transparent;
+}
+.nav button .n{color:var(--ink-dim);font-family:var(--f-mono);font-size:var(--t-micro);width:14px}
+.nav button:hover{background:var(--raised);color:var(--ink)}
+.nav button.on{background:var(--raised);color:var(--ink);border-left-color:var(--accent)}
+.nav button.on .n{color:var(--accent)}
+.rail-foot{margin-top:auto;padding:var(--sp3) var(--sp2) 0;border-top:1px solid var(--border);
+  font-size:var(--t-micro);color:var(--ink-dim);line-height:16px}
+.rail-foot kbd{font-family:var(--f-mono);background:var(--raised);border:1px solid var(--border);
+  border-radius:3px;padding:0 4px;color:var(--ink-muted)}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.header{
+  display:flex;align-items:flex-start;gap:var(--sp4);
+  padding:var(--pad) var(--pad-lg) var(--sp3);border-bottom:1px solid var(--border);
+}
+.header h1{margin:0;font-size:var(--t-title);font-weight:600;line-height:26px}
+.header .sub{margin:2px 0 0;font-size:var(--t-tiny);color:var(--ink-muted)}
+.header .right{margin-left:auto;display:flex;align-items:center;gap:var(--sp3)}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;
+  font-size:var(--t-micro);font-weight:600;letter-spacing:.04em;
+}
+.chip.idle{background:var(--raised);color:var(--ink-muted)}
+.chip.run{background:var(--amber);color:var(--fail-ink)}
+.chip.pass{background:var(--pass);color:var(--pass-ink)}
+.chip.fail{background:var(--fail);color:var(--fail-ink)}
+.chip.info{background:var(--overlay);color:var(--info)}
+.backend{font-size:var(--t-micro);color:var(--ink-dim);font-family:var(--f-mono)}
+
+.body{flex:1;overflow:auto;padding:var(--pad-lg);display:flex;flex-direction:column;gap:var(--sp4)}
+.foot{
+  display:flex;align-items:center;gap:var(--sp4);padding:6px var(--pad-lg);
+  border-top:1px solid var(--border);background:var(--surface);
+  font-size:var(--t-micro);color:var(--ink-muted);
+}
+.foot .ctx{margin-left:auto;font-family:var(--f-mono);color:var(--ink-dim)}
+.bar{width:120px;height:4px;border-radius:2px;background:var(--raised);overflow:hidden;position:relative}
+.bar i{position:absolute;inset:0;width:40%;background:var(--amber);border-radius:2px;
+  animation:sweep 1.6s linear infinite}
+@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(280%)}}
+@media (prefers-reduced-motion:reduce){.bar i{animation:none;width:66%}}
+
+/* ===== primitives ===== */
+.screen{display:none;flex-direction:column;gap:var(--sp4)}
+.screen.on{display:flex}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  display:flex;flex-direction:column;min-width:0}
+.card>h2{
+  margin:0;padding:var(--sp2) var(--sp3);border-bottom:1px solid var(--border);
+  font-size:var(--t-micro);font-weight:600;letter-spacing:.08em;color:var(--ink-muted);
+  text-transform:none;display:flex;align-items:center;gap:var(--sp2);
+}
+.card>h2 .hint{margin-left:auto;font-weight:400;color:var(--ink-dim);letter-spacing:0}
+.card .pad{padding:var(--sp3)}
+.row{display:flex;gap:var(--sp4);align-items:flex-start}
+.grow{flex:1;min-width:0}
+.btn{
+  all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:28px;padding:0 var(--sp3);border-radius:var(--radius);
+  font-size:var(--t-tiny);color:var(--ink);background:var(--raised);
+  border:1px solid var(--border-strong);
+}
+.btn:hover{background:var(--overlay);border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.btn.danger{border-color:var(--fail);color:var(--fail)}
+.btn.danger:hover{background:var(--fail);color:var(--fail-ink)}
+.btn[disabled],.btn.disabled{opacity:.45;cursor:not-allowed;border-color:var(--border);color:var(--ink-dim)}
+.field{
+  height:28px;display:flex;align-items:center;padding:0 var(--sp2);
+  background:var(--raised);border:1px solid var(--border-strong);border-radius:var(--radius);
+  font-family:var(--f-mono);font-size:var(--t-tiny);color:var(--ink);min-width:0;
+}
+.field.focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(76,194,255,.25)}
+.label{font-size:var(--t-micro);color:var(--ink-dim);letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:4px var(--sp3);font-size:var(--t-tiny)}
+.kv dt{color:var(--ink-dim)}
+.kv dd{margin:0;font-family:var(--f-mono);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:var(--t-tiny)}
+thead th{
+  position:sticky;top:0;text-align:left;font-weight:600;color:var(--ink-muted);
+  background:var(--surface);padding:6px var(--sp2);border-bottom:1px solid var(--border);
+  font-size:var(--t-micro);letter-spacing:.04em;
+}
+tbody td{padding:5px var(--sp2);border-bottom:1px solid rgba(42,51,65,.6);color:var(--ink)}
+tbody td.mono{font-family:var(--f-mono);color:var(--ink-muted)}
+tbody tr:nth-child(even){background:rgba(28,35,44,.5)}
+tbody tr:hover{background:var(--overlay)}
+tbody tr.sel{background:var(--overlay);box-shadow:inset 2px 0 0 var(--accent)}
+.scroll{max-height:262px;overflow:auto}
+.note{font-size:var(--t-micro);color:var(--ink-dim);line-height:16px}
+.banner{
+  display:flex;gap:var(--sp3);align-items:flex-start;padding:var(--sp2) var(--sp3);
+  border:1px solid rgba(224,163,58,.5);border-radius:var(--radius);
+  background:rgba(224,163,58,.09);color:#F0D9A8;font-size:var(--t-tiny);line-height:16px;
+}
+.banner b{color:var(--warn)}
+
+/* metric cards */
+.metrics{display:flex;gap:var(--sp3);flex-wrap:wrap}
+.metric{
+  flex:1 1 120px;min-width:110px;background:var(--raised);border:1px solid var(--border);
+  border-radius:var(--radius);padding:var(--sp2) var(--sp3);
+}
+.metric .k{font-size:var(--t-micro);color:var(--ink-dim);letter-spacing:.04em}
+.metric .v{font-family:var(--f-mono);font-size:var(--t-section);line-height:22px;color:var(--ink);margin-top:2px}
+.metric .v small{font-size:var(--t-micro);color:var(--ink-dim);margin-left:4px}
+.metric.ok .v{color:var(--pass)} .metric.bad .v{color:var(--fail)} .metric.warn .v{color:var(--amber)}
+
+/* gates + limit bars */
+.gates{list-style:none;margin:0;padding:var(--sp2) var(--sp3);display:flex;flex-direction:column;gap:6px}
+.gates li{display:flex;align-items:center;gap:var(--sp2);font-size:var(--t-tiny);
+  padding:4px 0;border-bottom:1px dashed rgba(42,51,65,.7)}
+.gates li:last-child{border-bottom:none}
+.gates .mark{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;
+  font-size:10px;font-weight:700;flex:0 0 16px}
+.mark.p{background:rgba(70,196,106,.16);color:var(--pass);border:1px solid var(--pass)}
+.mark.f{background:rgba(255,107,94,.16);color:var(--fail);border:1px solid var(--fail)}
+.gates .val{margin-left:auto;font-family:var(--f-mono);color:var(--ink-dim);font-size:var(--t-micro)}
+.limits{display:flex;flex-direction:column;gap:var(--sp3);padding:var(--sp3)}
+.limit .top{display:flex;align-items:baseline;gap:var(--sp2);font-size:var(--t-tiny)}
+.limit .top .v{font-family:var(--f-mono);color:var(--ink);margin-left:auto}
+.limit .top .l{font-family:var(--f-mono);color:var(--ink-dim);font-size:var(--t-micro)}
+.track{height:8px;border-radius:4px;background:var(--raised);position:relative;margin-top:6px;overflow:hidden}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--pass)}
+.track i.warn{background:var(--amber)} .track i.bad{background:var(--fail)}
+.track em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--border-strong)}
+.limit .cap{font-size:var(--t-micro);color:var(--ink-dim);margin-top:4px}
+
+/* charts */
+.chart{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.chart .ct{display:flex;align-items:center;gap:var(--sp3);padding:6px var(--sp3);
+  border-bottom:1px solid var(--border);font-size:var(--t-micro);color:var(--ink-muted)}
+.chart .ct .unit{color:var(--ink-dim);font-family:var(--f-mono)}
+.chart .ct .tools{margin-left:auto;display:flex;gap:6px}
+.chart .ct .tools span{font-size:var(--t-micro);color:var(--ink-dim);border:1px solid var(--border);
+  border-radius:3px;padding:0 5px;cursor:default}
+.chart svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:var(--sp3);font-size:var(--t-micro);color:var(--ink-muted)}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* channel tree */
+.tree{list-style:none;margin:0;padding:var(--sp2) 0;font-size:var(--t-tiny);max-height:300px;overflow:auto}
+.tree li{padding:3px var(--sp3);display:flex;align-items:center;gap:6px;color:var(--ink-muted)}
+.tree li.grp{color:var(--ink);font-weight:600;margin-top:4px}
+.tree li.grp .c{margin-left:auto;color:var(--ink-dim);font-family:var(--f-mono);font-size:var(--t-micro);font-weight:400}
+.tree li.ch{padding-left:26px;font-family:var(--f-mono);font-size:var(--t-micro)}
+.tree li.ch.on{color:var(--accent)}
+.box{width:12px;height:12px;border:1px solid var(--border-strong);border-radius:2px;flex:0 0 12px}
+.box.on{background:var(--accent);border-color:var(--accent)}
+
+/* log */
+.log{background:#0B0E12;font-family:var(--f-mono);font-size:var(--t-micro);line-height:17px;
+  padding:var(--sp2) var(--sp3);max-height:250px;overflow:auto;color:#B9C6D4}
+.log .t{color:var(--ink-dim)}
+.log .ok{color:var(--pass)} .log .hi{color:var(--accent)} .log .wr{color:var(--amber)}
+
+/* radio list */
+.radios{display:flex;flex-direction:column;gap:6px;padding:var(--sp3);font-size:var(--t-tiny)}
+.radios label{display:flex;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
+.radios .dot{width:12px;height:12px;border-radius:50%;border:1px solid var(--border-strong);flex:0 0 12px}
+.radios label.on .dot{border-color:var(--accent);background:radial-gradient(circle,var(--accent) 0 3px,transparent 4px)}
+.radios label.off{color:var(--ink-dim);cursor:not-allowed}
+
+.hr{height:1px;background:var(--border);margin:var(--sp2) 0}
+.stack{display:flex;flex-direction:column;gap:var(--sp2)}
+.inline{display:flex;align-items:center;gap:var(--sp2);flex-wrap:wrap}
+.tag{font-size:var(--t-micro);font-family:var(--f-mono);color:var(--ink-dim);
+  border:1px solid var(--border);border-radius:3px;padding:0 5px}
+.honesty{font-size:var(--t-micro);color:var(--ink-dim);line-height:16px;padding:0 2px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= NAV RAIL ================= -->
+  <nav class="rail">
+    <div class="brand"><b>VELCH</b><span>轮轨 / 道岔动力学</span></div>
+    <div class="nav" id="nav">
+      <button class="on" data-s="cases"><span class="n">1</span>算例</button>
+      <button data-s="run"><span class="n">2</span>运行</button>
+      <button data-s="timeseries"><span class="n">3</span>时程</button>
+      <button data-s="spectrum"><span class="n">4</span>频谱</button>
+      <button data-s="assess"><span class="n">5</span>评价</button>
+      <button data-s="compare"><span class="n">6</span>对照</button>
+    </div>
+    <div class="rail-foot">
+      <div><kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>6</kbd> 切屏</div>
+      <div><kbd>F5</kbd> 重载 · <kbd>Ctrl</kbd>+<kbd>R</kbd> 运行</div>
+      <div><kbd>Esc</kbd> 取消 · <kbd>F1</kbd> 说明</div>
+      <div style="margin-top:8px">v0.4.0 · 只读产物工作台</div>
+    </div>
+  </nav>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <header class="header">
+      <div>
+        <h1 id="h-title">① 算例 · 算例库</h1>
+        <p class="sub" id="h-sub">选择、检视与派生算例</p>
+      </div>
+      <div class="right">
+        <span class="chip idle" id="state"><span>●</span>空闲</span>
+        <span class="backend">绘图后端 matplotlib 3.11.1</span>
+      </div>
+    </header>
+
+    <div class="body" id="body">
+
+      <!-- ============ 1 算例 ============ -->
+      <section class="screen on" data-screen="cases">
+        <div class="row">
+          <!-- list -->
+          <div class="card grow">
+            <h2>算例库 <span class="hint">276 个 · 33.5 MB · 含故障 0</span></h2>
+            <div class="inline" style="padding:10px 12px 6px">
+              <div class="field focus" style="width:180px">frog_0</div>
+              <span class="label">用途</span><div class="field" style="width:104px">全部 ▾</div>
+              <span class="label">类型</span><div class="field" style="width:112px">整车 v2 ▾</div>
+              <span class="note" style="margin-left:auto">Ctrl+L 聚焦筛选</span>
+            </div>
+            <div class="scroll">
+              <table>
+                <thead><tr><th>算例</th><th>时长 s</th><th>自由度</th><th>大小</th><th>sha256</th></tr></thead>
+                <tbody>
+                  <tr class="sel"><td>case_frog_05</td><td class="mono">0.050</td><td class="mono">51</td><td class="mono">121 KB</td><td class="mono">8e01996d9767…</td></tr>
+                  <tr><td>case_frog_07</td><td class="mono">0.050</td><td class="mono">51</td><td class="mono">121 KB</td><td class="mono">3c6a1f04b2d8…</td></tr>
+                  <tr><td>case_frog_10</td><td class="mono">0.050</td><td class="mono">51</td><td class="mono">120 KB</td><td class="mono">a17be55c901f…</td></tr>
+                  <tr><td>case_full12_cap05</td><td class="mono">1.200</td><td class="mono">51</td><td class="mono">121 KB</td><td class="mono">8e01996d9767…</td></tr>
+                  <tr><td>case_wing_cap05</td><td class="mono">0.050</td><td class="mono">43</td><td class="mono">118 KB</td><td class="mono">de90af712c54…</td></tr>
+                  <tr><td>case_AA_full2l</td><td class="mono">0.300</td><td class="mono">67</td><td class="mono">128 KB</td><td class="mono">55b0c7ee13aa…</td></tr>
+                  <tr><td>case_slab_05</td><td class="mono">0.050</td><td class="mono">35</td><td class="mono">96 KB</td><td class="mono">c01f3a8d7e22…</td></tr>
+                  <tr><td>case_switch_damp_05</td><td class="mono">0.050</td><td class="mono">51</td><td class="mono">122 KB</td><td class="mono">7f24e9b30cc1…</td></tr>
+                  <tr><td>case_fleet_05</td><td class="mono">0.050</td><td class="mono">83</td><td class="mono">141 KB</td><td class="mono">19ac6db2f088…</td></tr>
+                  <tr><td>case_frog_05_narrow</td><td class="mono">0.050</td><td class="mono">51</td><td class="mono">121 KB</td><td class="mono">04de2b7716f9…</td></tr>
+                  <tr><td>case_frog_05_soft</td><td class="mono">0.050</td><td class="mono">51</td><td class="mono">121 KB</td><td class="mono">b6e8c07d41a2…</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="inline" style="padding:10px 12px">
+              <button class="btn">打开 JSON</button>
+              <button class="btn primary">派生复制</button>
+              <button class="btn">在资源管理器显示</button>
+              <span class="note" style="margin-left:auto">自由度 = len(initial_state.q)，无需运行即可读</span>
+            </div>
+          </div>
+
+          <!-- detail -->
+          <div class="card" style="flex:0 0 388px">
+            <h2>算例详情 <span class="hint">只读</span></h2>
+            <div class="pad stack">
+              <dl class="kv">
+                <dt>case_id</dt><dd>case_frog_05</dd>
+                <dt>schema</dt><dd>velch-vehicle-v2</dd>
+                <dt>purpose</dt><dd>engineering</dd>
+                <dt>时长</dt><dd>0.050 s</dd>
+                <dt>自由度</dt><dd>51（整车 35 / 轨道 16）</dd>
+                <dt>输出步长</dt><dd>0.0005 s</dd>
+                <dt>求解器</dt><dd>DOP853 rtol 1e-6 atol 1e-8</dd>
+                <dt>侵入限值</dt><dd>0.003 m</dd>
+                <dt>车速</dt><dd>97.222 m/s（350 km/h）</dd>
+                <dt>sha256</dt><dd>8e01996d9767eec9…</dd>
+                <dt>轮对型面</dt><dd>LMA·sha 4f81…</dd>
+                <dt>轨道目录</dt><dd>track_catalog sha 90ac…</dd>
+              </dl>
+              <div class="hr"></div>
+              <div class="label">派生（写新文件，不覆盖原算例）</div>
+              <div class="inline">
+                <div class="field" style="flex:1">case_frog_05_derived</div>
+                <div class="field" style="width:76px">0.050</div>
+                <div class="field" style="width:74px">0.0005</div>
+              </div>
+              <div class="inline">
+                <span class="label" style="flex:1">新 ID / 时长 s / 步长 s</span>
+                <button class="btn">另存派生算例</button>
+              </div>
+              <div class="hr"></div>
+              <div class="label">等价的命令行（可复制）</div>
+              <div class="field" style="height:auto;padding:8px;line-height:16px;white-space:pre-wrap;font-size:var(--t-micro)">python -X utf8 -m velch run-vehicle validation/crh380a_m/case_frog_05.json --output out_frog_05</div>
+              <div class="inline">
+                <button class="btn">复制命令</button>
+                <button class="btn">→ 在①运行中打开</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="honesty">数据绑定：算例表 = <span class="mono">validation/crh380a_m/case_*.json</span> 的 case_id / purpose / run.duration_s / len(initial_state.q) / 文件 sha256；详情面板同文件 + source_evidence.*</p>
+      </section>
+
+      <!-- ============ 2 运行 ============ -->
+      <section class="screen" data-screen="run">
+        <div class="row">
+          <div class="card" style="flex:0 0 330px">
+            <h2>待运行算例 <span class="hint">可多选 · 276</span></h2>
+            <div class="scroll">
+              <table>
+                <thead><tr><th></th><th>算例</th><th>时长</th></tr></thead>
+                <tbody>
+                  <tr class="sel"><td class="mono">▣</td><td>case_frog_05</td><td class="mono">0.050</td></tr>
+                  <tr class="sel"><td class="mono">▣</td><td>case_frog_07</td><td class="mono">0.050</td></tr>
+                  <tr><td class="mono">□</td><td>case_frog_10</td><td class="mono">0.050</td></tr>
+                  <tr><td class="mono">□</td><td>case_full12_cap05</td><td class="mono">1.200</td></tr>
+                  <tr><td class="mono">□</td><td>case_wing_cap05</td><td class="mono">0.050</td></tr>
+                  <tr><td class="mono">□</td><td>case_AA_full2l</td><td class="mono">0.300</td></tr>
+                  <tr><td class="mono">□</td><td>case_slab_05</td><td class="mono">0.050</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pad note">批量时使用 <span class="mono">run-vehicle-batch … --jobs N</span>；单次运行使用 <span class="mono">run-vehicle --output</span>。</div>
+          </div>
+
+          <div class="card grow">
+            <h2>输出与启动</h2>
+            <div class="pad stack">
+              <div class="inline">
+                <span class="label" style="width:64px">输出目录</span>
+                <div class="field" style="flex:1">F:\ai道岔状态反演辨识\Velch\validation\crh380a_m\out_frog_05_1030</div>
+                <button class="btn">浏览…</button>
+              </div>
+              <div class="inline">
+                <span class="label">并行 jobs</span><div class="field" style="width:56px">4</div>
+                <span class="label">workers</span><div class="field" style="width:56px">—</div>
+                <button class="btn primary">▶ 运行所选</button>
+                <button class="btn">▶▶ 批量运行</button>
+                <button class="btn danger">■ 取消</button>
+              </div>
+              <div class="field" style="height:auto;padding:6px 8px;white-space:pre-wrap;font-size:var(--t-micro);line-height:16px">python -X utf8 -m velch run-vehicle-batch case_frog_05.json case_frog_07.json --output-root out_frog_batch --jobs 4</div>
+              <div class="metrics">
+                <div class="metric"><div class="k">状态</div><div class="v" style="font-size:var(--t-tiny);color:var(--amber)">运行中</div></div>
+                <div class="metric"><div class="k">已用</div><div class="v">128.4<small>s</small></div></div>
+                <div class="metric"><div class="k">输出行</div><div class="v">412</div></div>
+                <div class="metric"><div class="k">退出码</div><div class="v" style="color:var(--ink-dim)">—</div></div>
+              </div>
+            </div>
+            <h2 style="border-top:1px solid var(--border)">实时输出 <span class="hint">stdout + stderr 合流 · 自动滚底</span></h2>
+            <div class="log">
+<div><span class="t">[velch]</span> case_frog_05 → out_frog_05_1030</div>
+<div><span class="t">[velch]</span> case_sha256=8e01996d9767… total_dof=51</div>
+<div><span class="t">[velch]</span> <span class="hi">step 1200/2400</span> t=0.0301 s nfev=8124</div>
+<div><span class="t">[velch]</span> contact axles=2 active_pairs=4 rail_patches=6</div>
+<div><span class="t">[velch]</span> <span class="wr">step 1800/2400</span> t=0.0451 s nfev=11903 max_pen=1.94e-4 m</div>
+<div><span class="t">[velch]</span> <span class="ok">step 2400/2400 done</span> status=numerically_checked</div>
+<div><span class="t">[velch]</span> gates: 7/7 pass · peak_normal_force_n axle1_right=9.42e4 N</div>
+<div><span class="t">[velch]</span> wrote manifest.json · history.csv (2401×187)</div>
+<div><span class="t">[velch]</span> batch 2/2 · elapsed 0.0 s (wall 4.1 s)</div>
+            </div>
+            <div class="inline" style="padding:10px 12px">
+              <button class="btn">查看时程 →</button>
+              <button class="btn">查看评价 →</button>
+              <button class="btn">刷新运行目录</button>
+              <span class="note" style="margin-left:auto">Esc 取消 · Ctrl+R 运行</span>
+            </div>
+          </div>
+        </div>
+        <p class="honesty">进度限制：CLI 只打印里程碑行，没有百分比。界面只能给“已用时间 + 输出行数”，无法区分“在算”与“卡住”——这是本次交付中最影响可用性的缺口（详见规范 §12）。</p>
+      </section>
+
+      <!-- ============ 3 时程 ============ -->
+      <section class="screen" data-screen="timeseries">
+        <div class="row">
+          <div class="card" style="flex:0 0 300px">
+            <h2>运行目录与通道</h2>
+            <div class="pad stack" style="padding-bottom:6px">
+              <div class="field">out_full12_cap05 ▾</div>
+              <div class="note">2401 行 · 2000 Hz · 154 通道</div>
+            </div>
+            <ul class="tree">
+              <li class="grp">接触力 [N]<span class="c">32</span></li>
+              <li class="ch on"><span class="box on"></span>axle1_right_normal_n</li>
+              <li class="ch on"><span class="box on"></span>axle1_left_normal_n</li>
+              <li class="ch"><span class="box"></span>axle2_right_normal_n</li>
+              <li class="ch"><span class="box"></span>axle1_right_fy_n</li>
+              <li class="grp">位移 [m]<span class="c">24</span></li>
+              <li class="ch on"><span class="box on"></span>axle1_z_m</li>
+              <li class="ch"><span class="box"></span>bogie1_z_m</li>
+              <li class="grp">侵入量 [m]<span class="c">8</span></li>
+              <li class="ch on"><span class="box on"></span>axle1_right_penetration_m</li>
+              <li class="grp">速度 [m/s]<span class="c">31</span></li>
+              <li class="ch"><span class="box"></span>axle1_z_m_per_s</li>
+              <li class="grp">转角 [rad]<span class="c">21</span></li>
+              <li class="grp">角速度 [rad/s]<span class="c">21</span></li>
+              <li class="grp">轨道位移 [m]<span class="c">32</span></li>
+              <li class="grp">接触状态 [无量纲]<span class="c">8</span></li>
+            </ul>
+            <div class="pad inline" style="border-top:1px solid var(--border)">
+              <span class="label">预设</span><div class="field" style="width:104px">接触力 ▾</div>
+              <span class="label">点数</span><div class="field" style="width:64px">2000</div>
+            </div>
+          </div>
+
+          <div class="grow stack">
+            <div class="chart">
+              <div class="ct">接触力 <span class="unit">[N]</span>
+                <span class="legend" style="margin-left:12px"><i style="background:var(--s1)"></i>axle1_right_normal_n <i style="background:var(--s2)"></i>axle1_left_normal_n</span>
+                <span class="tools"><span>复位</span><span>＋</span><span>－</span><span>←</span><span>→</span><span>PNG</span></span>
+              </div>
+              <svg viewBox="0 0 900 200" role="img" aria-label="接触力时程">
+                <rect x="0" y="0" width="900" height="200" fill="#151A21"/>
+                <g stroke="#222A34" stroke-width="1">
+                  <line x1="72" y1="20" x2="880" y2="20"/><line x1="72" y1="60" x2="880" y2="60"/>
+                  <line x1="72" y1="100" x2="880" y2="100"/><line x1="72" y1="140" x2="880" y2="140"/>
+                  <line x1="72" y1="170" x2="880" y2="170"/>
+                  <line x1="72" y1="20" x2="72" y2="170"/><line x1="274" y1="20" x2="274" y2="170"/>
+                  <line x1="476" y1="20" x2="476" y2="170"/><line x1="678" y1="20" x2="678" y2="170"/>
+                  <line x1="880" y1="20" x2="880" y2="170"/>
+                </g>
+                <g fill="#7D8B9C" font-family="Consolas" font-size="10">
+                  <text x="64" y="24" text-anchor="end">9.6e4</text>
+                  <text x="64" y="104" text-anchor="end">5.6e4</text>
+                  <text x="64" y="174" text-anchor="end">1.6e4</text>
+                  <text x="72" y="188" text-anchor="middle">0.0</text>
+                  <text x="274" y="188" text-anchor="middle">0.3</text>
+                  <text x="476" y="188" text-anchor="middle">0.6</text>
+                  <text x="678" y="188" text-anchor="middle">0.9</text>
+                  <text x="880" y="188" text-anchor="middle">1.2</text>
+                  <text x="470" y="199" text-anchor="middle">时间 [s]</text>
+                </g>
+                <polyline fill="none" stroke="#4CC2FF" stroke-width="1.6" stroke-linejoin="round"
+                  points="72,150 110,120 140,76 168,34 196,84 224,146 252,150 286,128 312,70 340,26 368,90 396,148 424,152 458,124 484,66 512,30 540,88 568,146 596,152 630,126 656,72 684,28 712,86 740,148 768,150 802,122 828,68 856,32 880,142"/>
+                <polyline fill="none" stroke="#F2B134" stroke-width="1.4" stroke-linejoin="round" opacity=".92"
+                  points="72,142 110,132 140,96 168,58 196,104 224,138 252,144 286,136 312,92 340,50 368,106 396,140 424,146 458,134 484,90 512,52 540,104 568,138 596,144 630,132 656,94 684,54 712,102 740,140 768,144 802,130 828,90 856,56 880,138"/>
+              </svg>
+            </div>
+
+            <div class="chart">
+              <div class="ct">位移 <span class="unit">[m]</span>
+                <span class="legend" style="margin-left:12px"><i style="background:var(--s1)"></i>axle1_z_m</span></div>
+              <svg viewBox="0 0 900 132" role="img" aria-label="位移时程">
+                <rect x="0" y="0" width="900" height="132" fill="#151A21"/>
+                <g stroke="#222A34"><line x1="72" y1="24" x2="880" y2="24"/><line x1="72" y1="62" x2="880" y2="62"/><line x1="72" y1="100" x2="880" y2="100"/></g>
+                <g fill="#7D8B9C" font-family="Consolas" font-size="10">
+                  <text x="64" y="28" text-anchor="end">0.052</text><text x="64" y="104" text-anchor="end">0.044</text>
+                </g>
+                <polyline fill="none" stroke="#4CC2FF" stroke-width="1.6"
+                  points="72,70 120,66 168,74 216,60 264,72 312,64 360,78 408,62 456,70 504,56 552,68 600,74 648,60 696,70 744,64 792,72 840,60 880,68"/>
+              </svg>
+            </div>
+
+            <div class="chart">
+              <div class="ct">侵入量 <span class="unit">[m]</span>
+                <span class="legend" style="margin-left:12px"><i style="background:var(--s1)"></i>axle1_right_penetration_m</span></div>
+              <svg viewBox="0 0 900 112" role="img" aria-label="侵入量时程">
+                <rect x="0" y="0" width="900" height="112" fill="#151A21"/>
+                <g stroke="#222A34"><line x1="72" y1="22" x2="880" y2="22"/><line x1="72" y1="56" x2="880" y2="56"/><line x1="72" y1="90" x2="880" y2="90"/></g>
+                <g fill="#7D8B9C" font-family="Consolas" font-size="10">
+                  <text x="64" y="26" text-anchor="end">2.0e-4</text><text x="64" y="94" text-anchor="end">0.0</text>
+                </g>
+                <polyline fill="none" stroke="#4CC2FF" stroke-width="1.6"
+                  points="72,84 120,70 168,40 216,54 264,86 312,64 360,34 408,52 456,84 504,60 552,44 600,80 648,58 696,36 744,66 792,84 840,62 880,74"/>
+              </svg>
+            </div>
+            <div class="inline">
+              <span class="note">154 通道可选 → 已选 3 → 3 个纵轴组 / 3 条曲线 · 抽稀保极值（1 采样宽尖峰不会被吃掉）</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 4 频谱 ============ -->
+      <section class="screen" data-screen="spectrum">
+        <div class="card">
+          <h2>分析参数</h2>
+          <div class="inline" style="padding:12px">
+            <span class="label">运行</span><div class="field" style="width:200px">out_full12_cap05 ▾</div>
+            <span class="label">通道</span><div class="field" style="width:230px">axle1_right_normal_n ▾</div>
+            <span class="label">频带 Hz</span>
+            <div class="field" style="width:64px">5</div><span class="label">–</span><div class="field" style="width:72px">200</div>
+            <button class="btn primary">计算</button>
+            <span class="note" style="margin-left:auto">上限自动收到 0.49×fs（Nyquist 之下）</span>
+          </div>
+        </div>
+
+        <div class="chart">
+          <div class="ct">1/3 倍频程带宽 RMS <span class="unit">[N]</span>
+            <span class="legend" style="margin-left:12px"><i style="background:var(--s3)"></i>22 个频带 · 5.0–980.0 Hz（示意 16 根）</span>
+            <span class="tools"><span>PNG</span></span></div>
+          <svg viewBox="0 0 900 240" role="img" aria-label="1/3 倍频程柱状">
+            <rect x="0" y="0" width="900" height="240" fill="#151A21"/>
+            <g stroke="#222A34"><line x1="64" y1="20" x2="880" y2="20"/><line x1="64" y1="70" x2="880" y2="70"/><line x1="64" y1="120" x2="880" y2="120"/><line x1="64" y1="170" x2="880" y2="170"/><line x1="64" y1="196" x2="880" y2="196"/></g>
+            <g fill="#7D8B9C" font-family="Consolas" font-size="10">
+              <text x="56" y="24" text-anchor="end">1.2e3</text><text x="56" y="124" text-anchor="end">6.0e2</text><text x="56" y="200" text-anchor="end">0</text>
+            </g>
+            <!-- 16 bars -->
+            <g fill="#B48EFF">
+              <rect x="76"  y="150" width="38" height="46" rx="2"/>
+              <rect x="126" y="140" width="38" height="56" rx="2"/>
+              <rect x="176" y="120" width="38" height="76" rx="2"/>
+              <rect x="226" y="96"  width="38" height="100" rx="2"/>
+              <rect x="276" y="74"  width="38" height="122" rx="2"/>
+              <rect x="326" y="52"  width="38" height="144" rx="2"/>
+              <rect x="376" y="34"  width="38" height="162" rx="2"/>
+              <rect x="426" y="22"  width="38" height="174" rx="2"/>
+            </g>
+            <g fill="#8CB8FF">
+              <rect x="476" y="42"  width="38" height="154" rx="2"/>
+              <rect x="526" y="66"  width="38" height="130" rx="2"/>
+              <rect x="576" y="92"  width="38" height="104" rx="2"/>
+              <rect x="626" y="116" width="38" height="80" rx="2"/>
+              <rect x="676" y="138" width="38" height="58" rx="2"/>
+              <rect x="726" y="154" width="38" height="42" rx="2"/>
+              <rect x="776" y="168" width="38" height="28" rx="2"/>
+              <rect x="826" y="178" width="38" height="18" rx="2"/>
+            </g>
+            <line x1="445" y1="16" x2="445" y2="196" stroke="#F2B134" stroke-width="1" stroke-dasharray="3 3"/>
+            <text x="452" y="14" fill="#F2B134" font-family="Consolas" font-size="10">主导 39.37 Hz</text>
+            <g fill="#7D8B9C" font-family="Consolas" font-size="10">
+              <text x="95"  y="214" text-anchor="middle">5</text>
+              <text x="195" y="214" text-anchor="middle">10</text>
+              <text x="295" y="214" text-anchor="middle">20</text>
+              <text x="395" y="214" text-anchor="middle">40</text>
+              <text x="495" y="214" text-anchor="middle">80</text>
+              <text x="595" y="214" text-anchor="middle">125</text>
+              <text x="695" y="214" text-anchor="middle">160</text>
+              <text x="845" y="214" text-anchor="middle">200</text>
+              <text x="470" y="232" text-anchor="middle">中心频率 [Hz]</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="row">
+          <div class="card" style="flex:0 0 300px">
+            <h2>指标 <span class="hint">band_metrics()</span></h2>
+            <div class="pad stack">
+              <div class="metrics" style="flex-direction:column">
+                <div class="metric"><div class="k">峰值</div><div class="v">9.42e5<small>N</small></div></div>
+                <div class="metric"><div class="k">峰峰值</div><div class="v">1.83e6<small>N</small></div></div>
+                <div class="metric"><div class="k">整体 RMS</div><div class="v">2.86e3<small>N</small></div></div>
+                <div class="metric"><div class="k">主导频带</div><div class="v">39.37<small>Hz</small></div></div>
+              </div>
+              <div class="note">全部计算委托 <span class="mono">velch.inverse.bands</span>：third_octave_centres / third_octave_levels / band_metrics。界面不做自己的 FFT。</div>
+            </div>
+          </div>
+          <div class="card grow">
+            <h2>频带表 <span class="hint">按能量降序 · 占比 = 该带 RMS² / 总 RMS²</span></h2>
+            <div class="scroll" style="max-height:268px">
+              <table>
+                <thead><tr><th>中心 Hz</th><th>带宽 Hz</th><th>RMS [N]</th><th>占比</th></tr></thead>
+                <tbody>
+                  <tr class="sel"><td class="mono">39.4</td><td class="mono">35.5–44.3</td><td class="mono">1.24e3</td><td class="mono">42.1 %</td></tr>
+                  <tr><td class="mono">31.5</td><td class="mono">28.4–35.5</td><td class="mono">9.62e2</td><td class="mono">25.4 %</td></tr>
+                  <tr><td class="mono">50.0</td><td class="mono">44.3–56.0</td><td class="mono">7.10e2</td><td class="mono">13.8 %</td></tr>
+                  <tr><td class="mono">25.0</td><td class="mono">22.4–28.4</td><td class="mono">5.44e2</td><td class="mono">8.1 %</td></tr>
+                  <tr><td class="mono">63.0</td><td class="mono">56.0–70.7</td><td class="mono">3.98e2</td><td class="mono">4.3 %</td></tr>
+                  <tr><td class="mono">20.0</td><td class="mono">17.8–22.4</td><td class="mono">2.87e2</td><td class="mono">2.2 %</td></tr>
+                  <tr><td class="mono">79.4</td><td class="mono">70.7–89.1</td><td class="mono">2.10e2</td><td class="mono">1.2 %</td></tr>
+                  <tr><td class="mono">15.9</td><td class="mono">14.1–17.8</td><td class="mono">1.62e2</td><td class="mono">0.7 %</td></tr>
+                  <tr><td class="mono">100.0</td><td class="mono">89.1–112.2</td><td class="mono">1.31e2</td><td class="mono">0.5 %</td></tr>
+                  <tr><td class="mono">12.5</td><td class="mono">11.2–14.1</td><td class="mono">9.8e1</td><td class="mono">0.3 %</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <p class="honesty">实测（自检脚本）：<span class="mono">out_a5_analytic12 / axle1_right_normal_n</span> → 22 个 1/3 倍频程带（5.0–980.0 Hz，上限自动收到 Nyquist 之下），主导 39.3725 Hz，整体 RMS 2856.133；采样率 2000 Hz。柱数在本预览里画 16 根，实际按频带数全画。</p>
+      </section>
+
+      <!-- ============ 5 评价 ============ -->
+      <section class="screen" data-screen="assess">
+        <div class="card">
+          <h2>评价目标</h2>
+          <div class="inline" style="padding:12px">
+            <span class="label">运行目录</span><div class="field" style="width:250px">out_full12_cap05 ▾</div>
+            <span class="label">静态轴重</span><div class="field" style="width:110px">（自动取均值）</div>
+            <span class="label">N</span>
+            <button class="btn primary">重新评价</button>
+            <button class="btn">跑 CLI assess 交叉核对</button>
+            <span class="chip pass" style="margin-left:auto"><span>●</span>完成</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="card grow">
+            <h2>七项数值门 <span class="hint">manifest.json · summary.gates</span></h2>
+            <ul class="gates">
+              <li><span class="mark p">✓</span>求解器收敛完成<span class="val">nfev 3.94e5 · DOP853</span></li>
+              <li><span class="mark p">✓</span>状态与力全部有限<span class="val">finite</span></li>
+              <li><span class="mark p">✓</span>垂向预载残差<span class="val">2.1e-9 N</span></li>
+              <li><span class="mark p">✓</span>侵入量在算例限值内<span class="val">1.94e-4 m ≤ 3.0e-3 m</span></li>
+              <li><span class="mark p">✓</span>摩擦力在摩擦界内<span class="val">max_friction_excess 0.0 N</span></li>
+              <li><span class="mark p">✓</span>无边缘限幅有效接触<span class="val">0 个采样</span></li>
+              <li><span class="mark p">✓</span>平动作用-反力平衡<span class="val">3.4e-8 N</span></li>
+            </ul>
+            <div class="pad note" style="border-top:1px solid var(--border)">门逐项显示、不折叠成一句“通过”；失败的项右侧直接给对应数值。</div>
+          </div>
+
+          <div class="card" style="flex:0 0 430px">
+            <h2>三项限值 <span class="hint">metrics.assess_history() → verdict()</span></h2>
+            <div class="limits">
+              <div class="limit">
+                <div class="top"><span>脱轨系数 Q/P</span><span class="v">0.0364</span><span class="l">/ 0.80</span></div>
+                <div class="track"><i style="width:4.5%"></i><em style="left:100%"></em></div>
+                <div class="cap">限值 0.80 · 用量 4.5 % · 通过</div>
+              </div>
+              <div class="limit">
+                <div class="top"><span>轮重减载率 ΔP/P̄</span><span class="v">0.4372</span><span class="l">/ 0.60</span></div>
+                <div class="track"><i class="warn" style="width:72.9%"></i><em style="left:100%"></em></div>
+                <div class="cap">限值 0.60 · 用量 72.9 % · 通过（已进入警戒区）</div>
+              </div>
+              <div class="limit">
+                <div class="top"><span>轮轴横向力 H</span><span class="v">2.25 kN</span><span class="l">/ 49.76 kN</span></div>
+                <div class="track"><i style="width:4.5%"></i><em style="left:100%"></em></div>
+                <div class="cap">限值 10 kN + P₀/3 · 用量 4.5 % · 通过</div>
+              </div>
+              <div class="hr"></div>
+              <div class="inline">
+                <span class="chip pass"><span>●</span>总判定：通过（3/3）</span>
+                <span class="note" style="margin-left:auto">2401 个采样 · CLI 退出码应为 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="card grow">
+            <h2>峰值法向力（按轴端） <span class="hint">summary.peak_normal_force_n</span></h2>
+            <div class="pad metrics">
+              <div class="metric"><div class="k">axle1_left</div><div class="v">9.41e4<small>N</small></div></div>
+              <div class="metric"><div class="k">axle1_right</div><div class="v">9.42e4<small>N</small></div></div>
+              <div class="metric"><div class="k">axle2_left</div><div class="v">9.38e4<small>N</small></div></div>
+              <div class="metric"><div class="k">axle2_right</div><div class="v">9.44e4<small>N</small></div></div>
+            </div>
+          </div>
+          <div class="card" style="flex:0 0 380px">
+            <h2>其它头字段 <span class="hint">manifest.json</span></h2>
+            <div class="pad">
+              <dl class="kv">
+                <dt>result_status</dt><dd>numerically_checked</dd>
+                <dt>physics</dt><dd>unvalidated_against_measurement_or_Simpack</dd>
+                <dt>total_dof</dt><dd>51（vehicle 35）</dd>
+                <dt>最大侵入</dt><dd>1.94e-4 m</dd>
+                <dt>能量变化</dt><dd>−3.1e-2 J</dd>
+                <dt>case_sha256</dt><dd>8e01996d9767…</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <p class="honesty">数值与 <span class="mono">velch assess</span> 完全同源：界面直接调用 <span class="mono">velch.metrics.assess_history()</span> 再取 <span class="mono">verdict()</span>，CLI 只是同一函数的外壳（退出码 0 / 2）。</p>
+      </section>
+
+      <!-- ============ 6 对照 ============ -->
+      <section class="screen" data-screen="compare">
+        <div class="banner">
+          <b>⚠ 口径提示</b>
+          <div>非同一道岔时只作口径对照：两侧共用同一里程轴、同一通道定义与同一频带口径，力与位移的差异可以直接读，但不构成同工况验证。本提示在计算前后都常驻可见，不可关闭。</div>
+        </div>
+        <div class="row">
+          <div class="card" style="flex:0 0 300px">
+            <h2>对照源</h2>
+            <div class="radios">
+              <label class="on"><span class="dot"></span>Simpack 350.mat<span class="tag" style="margin-left:auto">2401 采样</span></label>
+              <label><span class="dot"></span>实测 CSV（任选里程列 + 力列）</label>
+              <label class="off"><span class="dot"></span>HDF5 扩展通道（需 h5py）</label>
+            </div>
+            <div class="pad stack" style="border-top:1px solid var(--border)">
+              <div class="label">Velch 运行</div>
+              <div class="field">out_AA_w4 ▾</div>
+              <div class="inline">
+                <span class="label">里程窗</span><div class="field" style="width:60px">79</div>
+                <span class="label">–</span><div class="field" style="width:60px">84</div>
+                <span class="label">m</span>
+              </div>
+              <div class="inline">
+                <span class="label">采样点</span><div class="field" style="width:64px">400</div>
+                <button class="btn primary">计算对照</button>
+              </div>
+              <div class="note">两侧重采样到同一里程网格，不平移、不缩放，所以峰值差是真差。</div>
+            </div>
+          </div>
+
+          <div class="grow stack">
+            <div class="chart">
+              <div class="ct">法向力 <span class="unit">[kN]</span>
+                <span class="legend" style="margin-left:12px"><i style="background:var(--s1)"></i>Velch <i style="background:var(--s2)"></i>Simpack 350.mat</span>
+                <span class="tools"><span>复位</span><span>PNG</span></span></div>
+              <svg viewBox="0 0 900 210" role="img" aria-label="Velch 与 Simpack 法向力叠加">
+                <rect x="0" y="0" width="900" height="210" fill="#151A21"/>
+                <g stroke="#222A34"><line x1="70" y1="20" x2="880" y2="20"/><line x1="70" y1="66" x2="880" y2="66"/><line x1="70" y1="112" x2="880" y2="112"/><line x1="70" y1="158" x2="880" y2="158"/></g>
+                <g fill="#7D8B9C" font-family="Consolas" font-size="10">
+                  <text x="62" y="24" text-anchor="end">96</text><text x="62" y="70" text-anchor="end">76</text>
+                  <text x="62" y="116" text-anchor="end">56</text><text x="62" y="162" text-anchor="end">36</text>
+                  <text x="70" y="184" text-anchor="middle">79</text><text x="272" y="184" text-anchor="middle">80.25</text>
+                  <text x="475" y="184" text-anchor="middle">81.5</text><text x="678" y="184" text-anchor="middle">82.75</text>
+                  <text x="880" y="184" text-anchor="middle">84</text>
+                  <text x="475" y="200" text-anchor="middle">里程 [m]</text>
+                </g>
+                <polyline fill="none" stroke="#4CC2FF" stroke-width="1.7" stroke-linejoin="round"
+                  points="70,120 110,96 150,52 190,30 230,74 270,118 310,126 350,104 390,58 430,26 470,78 510,120 550,128 590,106 630,62 670,28 710,80 750,122 790,126 830,100 880,58"/>
+                <polyline fill="none" stroke="#F2B134" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" opacity=".95"
+                  points="70,126 110,108 150,74 190,54 230,86 270,120 310,128 350,112 390,80 430,50 470,88 510,122 550,130 590,112 630,82 670,52 710,90 750,124 790,128 830,110 880,74"/>
+              </svg>
+            </div>
+
+            <div class="chart">
+              <div class="ct">轮对垂向位移（相对均值） <span class="unit">[mm]</span>
+                <span class="legend" style="margin-left:12px"><i style="background:var(--s1)"></i>Velch <i style="background:var(--s2)"></i>Simpack</span></div>
+              <svg viewBox="0 0 900 150" role="img" aria-label="轮对垂向位移叠加">
+                <rect x="0" y="0" width="900" height="150" fill="#151A21"/>
+                <g stroke="#222A34"><line x1="70" y1="24" x2="880" y2="24"/><line x1="70" y1="60" x2="880" y2="60"/><line x1="70" y1="96" x2="880" y2="96"/><line x1="70" y1="128" x2="880" y2="128"/></g>
+                <g fill="#7D8B9C" font-family="Consolas" font-size="10">
+                  <text x="62" y="28" text-anchor="end">+1.0</text><text x="62" y="100" text-anchor="end">−1.0</text>
+                </g>
+                <line x1="70" y1="76" x2="880" y2="76" stroke="#3A4657" stroke-width="1"/>
+                <polyline fill="none" stroke="#4CC2FF" stroke-width="1.6"
+                  points="70,76 120,72 170,80 220,68 270,84 320,74 370,90 420,70 470,78 520,66 570,84 620,72 670,86 720,70 770,80 820,68 880,76"/>
+                <polyline fill="none" stroke="#F2B134" stroke-width="1.4" stroke-dasharray="5 3"
+                  points="70,78 120,70 170,86 220,66 270,82 320,78 370,86 420,72 470,82 520,68 570,80 620,76 670,90 720,74 770,84 820,72 880,80"/>
+              </svg>
+            </div>
+
+            <div class="card">
+              <h2>差值统计 <span class="hint">Δ = Velch − 对照 · 同口径、不平移</span></h2>
+              <table>
+                <thead><tr><th>指标</th><th>Velch</th><th>对照</th><th>差值</th><th>相对差</th></tr></thead>
+                <tbody>
+                  <tr><td>峰值 force_n</td><td class="mono">95 859.64 N</td><td class="mono">63 475.43 N</td><td class="mono" style="color:var(--fail)">+32 384.21</td><td class="mono">+51.0 %</td></tr>
+                  <tr class="sel"><td>RMS force_n</td><td class="mono">60 352.47 N</td><td class="mono">60 802.13 N</td><td class="mono" style="color:var(--pass)">−449.66</td><td class="mono">−0.7 %</td></tr>
+                  <tr><td>峰值 wheel_z_mm</td><td class="mono">0.0517 mm</td><td class="mono">0.3163 mm</td><td class="mono" style="color:var(--fail)">−0.2646</td><td class="mono">−83.7 %</td></tr>
+                  <tr><td>RMS wheel_z_mm</td><td class="mono">0.0351 mm</td><td class="mono">0.1501 mm</td><td class="mono" style="color:var(--fail)">−0.1150</td><td class="mono">−76.6 %</td></tr>
+                </tbody>
+              </table>
+              <div class="pad note">共里程窗 79.00–84.00 m · 400 个共里程采样点 · 里程 23.50–140.17 m 为两侧整体重叠区间。</div>
+            </div>
+          </div>
+        </div>
+        <p class="honesty">Simpack 通道：<span class="mono">…/SRS_RWP_R/SRS_RWP_R_Pair/ch_008</span>（里程 +17.5 m 移到轨道轴）· <span class="mono">SRS_RWP_R_1/ch_010</span>（法向力）· <span class="mono">SRS_RWP_R_1_Adv/ch_025</span>（侵入量）· <span class="mono">timeInt/bodyPosTrans/SS_F__S_WS_F__B_WS/z</span>（轮对垂向）。</p>
+      </section>
+
+    </div>
+
+    <footer class="foot">
+      <span id="status">就绪</span>
+      <span class="bar" id="progress" hidden><i></i></span>
+      <span class="ctx" id="ctx">算例 case_frog_05 · 运行 out_full12_cap05</span>
+    </footer>
+  </div>
+</div>
+
+<script>
+/* Static mockup only: switches the six screens and mirrors the shortcut table.
+   No data is loaded here — every number is baked in from the 2026-10-21 self-test. */
+(function () {
+  var META = {
+    cases:      ["① 算例 · 算例库",      "选择、检视与派生算例",        "空闲",  "idle"],
+    run:        ["② 运行 · 运行",        "启动 CLI、跟踪日志、批量并行", "运行中", "run"],
+    timeseries: ["③ 时程 · 时程曲线",    "多通道曲线与时程缩放",        "完成",  "pass"],
+    spectrum:   ["④ 频谱 · 1/3 倍频程",  "1/3 倍频程与带宽 RMS",        "完成",  "pass"],
+    assess:     ["⑤ 评价 · 评价",        "七项数值门与三项限值",        "完成",  "pass"],
+    compare:    ["⑥ 对照 · 对照",        "与 Simpack / 实测同轴叠加",   "完成",  "pass"]
+  };
+  var TITLE = document.getElementById("h-title");
+  var SUB   = document.getElementById("h-sub");
+  var CHIP  = document.getElementById("state");
+  var STAT  = document.getElementById("status");
+  var PROG  = document.getElementById("progress");
+
+  function show(name) {
+    var m = META[name]; if (!m) return;
+    var panels = document.querySelectorAll(".screen");
+    for (var i = 0; i < panels.length; i++) {
+      panels[i].classList.toggle("on", panels[i].getAttribute("data-screen") === name);
+    }
+    var btns = document.querySelectorAll("#nav button");
+    for (var j = 0; j < btns.length; j++) {
+      btns[j].classList.toggle("on", btns[j].getAttribute("data-s") === name);
+    }
+    TITLE.textContent = m[0];
+    SUB.textContent = m[1];
+    CHIP.className = "chip " + m[3];
+    CHIP.innerHTML = "<span>●</span>" + m[2];
+    STAT.textContent = name === "run" ? "CLI 运行中 · 已用 128.4 s" : "就绪";
+    PROG.hidden = name !== "run";
+    document.getElementById("body").scrollTop = 0;
+  }
+
+  document.getElementById("nav").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (b) show(b.getAttribute("data-s"));
+  });
+  window.addEventListener("keydown", function (e) {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 6) {
+      e.preventDefault();
+      show(["cases", "run", "timeseries", "spectrum", "assess", "compare"][n - 1]);
+    }
+  });
+})();
+</script>
+</body>
+</html>

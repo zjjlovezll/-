@@ -1,0 +1,319 @@
+{
+  "schema_version": "velch-vehicle-v2",
+  "case_id": "synthetic_four_axle_turnout_v2",
+  "purpose": "synthetic",
+  "parameter_source": "SDITT Par_Vehicle_CRH380A_v6.m selected mass/inertia/linear suspension values; synthetic wheel/rail geometry and independent connector equations",
+  "source_evidence": {
+    "matlab_file": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\Par_Vehicle_CRH380A_v6.m",
+    "matlab_sha256": "494e95d3f59a2b780fff432de3713be4e9ed344904b9fe483d83a7ca9db26926",
+    "simpack_role": "object hierarchy only; no internal vehicle equation recovered"
+  },
+  "vehicle": {
+    "carbody": {
+      "mass_kg": 40840.0,
+      "roll_inertia_kg_m2": 110200.0,
+      "pitch_inertia_kg_m2": 1666000.0,
+      "yaw_inertia_kg_m2": 1572200.0
+    },
+    "bogie": {
+      "mass_kg": 2280.0,
+      "roll_inertia_kg_m2": 1847.0,
+      "pitch_inertia_kg_m2": 1249.0,
+      "yaw_inertia_kg_m2": 2280.0
+    },
+    "wheelset": {
+      "mass_kg": 1901.8,
+      "roll_inertia_kg_m2": 685.0,
+      "spin_inertia_kg_m2": 76.0,
+      "yaw_inertia_kg_m2": 685.0
+    },
+    "primary": {
+      "k_y_n_m": 980000.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 1176000.0,
+      "c_z_n_s_m": 10000.0,
+      "k_yaw_nm_rad": 1960000.0,
+      "c_yaw_nm_s_rad": 0.0,
+      "half_width_m": 1.0,
+      "upper_anchor_height_m": -0.08000000000000002,
+      "lower_anchor_height_m": 0.0
+    },
+    "secondary": {
+      "k_y_n_m": 168900.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 260000.0,
+      "c_z_n_s_m": 40000.0,
+      "k_yaw_nm_rad": 511057.62,
+      "c_yaw_nm_s_rad": 0.0,
+      "half_width_m": 1.23,
+      "upper_anchor_height_m": -0.52,
+      "lower_anchor_height_m": 0.29000000000000004
+    },
+    "bogie_half_spacing_m": 8.75,
+    "wheelbase_m": 2.5,
+    "wheel_center_height_m": 0.43,
+    "nominal_wheel_radius_m": 0.43,
+    "travel_speed_m_s": 2.0,
+    "gravity_m_s2": 9.81,
+    "drive_torque_per_wheelset_nm": 0.0
+  },
+  "contact": {
+    "normal_model": "hertz_effective_radius",
+    "damping_model": "delta_half_velocity",
+    "tangential_model": "sditt_cubic_saturation",
+    "effective_modulus_pa": 100000000000.0,
+    "effective_radius_m": 0.02,
+    "normal_damping_n_s_m_1p5": 1000000.0,
+    "friction_coefficient": 0.35,
+    "creep_stiffness_x_n": 1000000.0,
+    "creep_stiffness_lateral_n": 500000.0,
+    "reference_speed_floor_m_s": 0.1
+  },
+  "wheels": [
+    {
+      "id": "L",
+      "lateral_offset_m": -0.75,
+      "profile": {
+        "file": "wheel_lower.csv",
+        "format": "csv",
+        "units": "m"
+      }
+    },
+    {
+      "id": "R",
+      "lateral_offset_m": 0.75,
+      "profile": {
+        "file": "wheel_lower.csv",
+        "format": "csv",
+        "units": "m"
+      }
+    }
+  ],
+  "rail_templates": [
+    {
+      "id": "left_stock",
+      "wheel_id": "L",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 500000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 400000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "stations": [
+        {
+          "id": "left_stock_0",
+          "s_m": -1.0,
+          "profile": {
+            "file": "left_stock_0.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "left_stock_1",
+          "s_m": 20.005,
+          "profile": {
+            "file": "left_stock_1.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "left_stock_2",
+          "s_m": 20.02,
+          "profile": {
+            "file": "left_stock_2.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "left_stock_3",
+          "s_m": 25.0,
+          "profile": {
+            "file": "left_stock_3.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        }
+      ]
+    },
+    {
+      "id": "right_stock",
+      "wheel_id": "R",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 500000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 400000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "stations": [
+        {
+          "id": "right_stock_0",
+          "s_m": -1.0,
+          "profile": {
+            "file": "right_stock_0.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_stock_1",
+          "s_m": 20.005,
+          "profile": {
+            "file": "right_stock_1.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_stock_2",
+          "s_m": 20.02,
+          "profile": {
+            "file": "right_stock_2.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_stock_3",
+          "s_m": 25.0,
+          "profile": {
+            "file": "right_stock_3.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        }
+      ]
+    },
+    {
+      "id": "right_switch",
+      "wheel_id": "R",
+      "mass_y_kg": 120.0,
+      "mass_z_kg": 120.0,
+      "support": {
+        "k_y_n_m": 500000000.0,
+        "c_y_n_s_m": 20000.0,
+        "k_z_n_m": 400000000.0,
+        "c_z_n_s_m": 10000.0
+      },
+      "stations": [
+        {
+          "id": "right_switch_0",
+          "s_m": -1.0,
+          "profile": {
+            "file": "right_switch_0.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_switch_1",
+          "s_m": 20.005,
+          "profile": {
+            "file": "right_switch_1.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_switch_2",
+          "s_m": 20.02,
+          "profile": {
+            "file": "right_switch_2.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        },
+        {
+          "id": "right_switch_3",
+          "s_m": 25.0,
+          "profile": {
+            "file": "right_switch_3.csv",
+            "format": "csv",
+            "units": "m"
+          }
+        }
+      ]
+    }
+  ],
+  "equilibrate_vertical": true,
+  "run": {
+    "method": "DOP853",
+    "x_start_m": 10.0,
+    "duration_s": 0.015,
+    "output_step_s": 0.0005,
+    "max_solver_step_s": 0.0001,
+    "rtol": 1e-06,
+    "atol": 1e-08,
+    "maximum_penetration_m": 0.003,
+    "maximum_abs_contact_slope": 1.0
+  },
+  "initial_state": {
+    "q": [
+      0.0,
+      -0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}

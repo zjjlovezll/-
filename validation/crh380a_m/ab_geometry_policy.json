@@ -1,0 +1,18 @@
+{
+ "grid": {
+  "status": "numerically_checked",
+  "peak_right_n": 188853.88001205973,
+  "peak_left_n": 79561.37116392991,
+  "max_pen_mm": 0.18391859310731698,
+  "active_right": 87,
+  "runtime_s": 0.0
+ },
+ "patch": {
+  "status": "numerically_checked",
+  "peak_right_n": 175768.09571800657,
+  "peak_left_n": 84368.30075985193,
+  "max_pen_mm": 0.17772307305218502,
+  "active_right": 90,
+  "runtime_s": 0.0
+ }
+}

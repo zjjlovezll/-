@@ -1,0 +1,76 @@
+{
+  "case": "case_inverse_window.json",
+  "samples": 101,
+  "duration_s": 0.02,
+  "theta_truth": [
+    0.3,
+    -0.4
+  ],
+  "theta_recovered": [
+    0.3000682169843065,
+    0.0
+  ],
+  "parameters": [
+    "rail_k_z",
+    "contact_c"
+  ],
+  "base": [
+    50000000.0,
+    1000000.0
+  ],
+  "identifiability": {
+    "rank": 1,
+    "condition_number": null,
+    "sensitivity": {
+      "rail_k_z": 14999288.070546035,
+      "contact_c": 5825.939762736707
+    },
+    "identifiable": {
+      "rail_k_z": true,
+      "contact_c": false
+    },
+    "coverage": {
+      "rail_k_z": "observed",
+      "contact_c": "column energy far below the others: not separable here"
+    },
+    "singular_values": [
+      14999288.593983509,
+      4270.737052476606
+    ]
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "cost": 5724.923213171378,
+      "rail_k_z": 0.0,
+      "contact_c": 0.0
+    },
+    {
+      "iteration": 2,
+      "cost": 230.29951481558513,
+      "rail_k_z": 0.23324462864156667,
+      "contact_c": 0.0
+    },
+    {
+      "iteration": 3,
+      "cost": 35.87387737629989,
+      "rail_k_z": 0.29713215541899746,
+      "contact_c": 0.0
+    },
+    {
+      "iteration": 4,
+      "cost": 35.637036941967,
+      "rail_k_z": 0.30007133740462516,
+      "contact_c": 0.0
+    },
+    {
+      "iteration": 5,
+      "cost": 35.636925821453,
+      "rail_k_z": 0.3000682169843065,
+      "contact_c": 0.0
+    }
+  ],
+  "runs": 39,
+  "sigma_force_n": 2000.0,
+  "sigma_z_m": 2e-05
+}

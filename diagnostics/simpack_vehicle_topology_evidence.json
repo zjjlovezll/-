@@ -1,0 +1,135 @@
+{
+  "evidence_type": "Simpack text model static topology",
+  "scope": "named hierarchy, force endpoints, marker parent and sender/receiver; not solver mathematics",
+  "files": {
+    "main": {
+      "path": "H:\\总的齿轨项目\\总和1\\直逆_修改降低值后设计 -上坡度\\RACK_RAILWAY_VEHICLE - XNEW - M\\main_model\\VEH_GEAR0_FX_STR_RACKN_QY-Re1_cjy_whcl_zn_TE_USERFORCE_CG_120_cj1mm_segmented150_TE_STAGED.spck",
+      "sha256": "6b157c0e1a0bc606b4912965edb17ce3680b003c9a914c8e53786dc9b70c5fa7",
+      "size_bytes": 130027918,
+      "statements": {
+        "front_bogie_template": {
+          "line": 78,
+          "statement": "substr.file (                       $S_B_F                        ) = 'DT_A_T_B_Re1_cjy.spck' ! Filename"
+        },
+        "rear_bogie_template": {
+          "line": 85,
+          "statement": "substr.file (                       $S_B_R                        ) = 'DT_A_T_B_Re1_cjy.spck' ! Filename"
+        },
+        "carbody_marker_parent": {
+          "line": 828,
+          "statement": "marker.parent (                     $M_C_DummyBolster_F           ) = $B_C                    ! Body"
+        },
+        "carbody_sender": {
+          "line": 1204919,
+          "statement": "sender.ref (                        $COM_M_CB_DummyBolster_F      ) = $M_C_DummyBolster_F     ! Source object"
+        }
+      },
+      "missing": []
+    },
+    "bogie_template": {
+      "path": "H:\\总的齿轨项目\\总和1\\直逆_修改降低值后设计 -上坡度\\RACK_RAILWAY_VEHICLE - XNEW - M\\database\\DT_A_T_B_Re1_cjy.spck",
+      "sha256": "ca3c4641ea8ae6dac2bdf6f1ab19dfcc2635c1f90df923235f6d91eb55d93cfe",
+      "size_bytes": 362186,
+      "statements": {
+        "front_wheelset_template": {
+          "line": 78,
+          "statement": "substr.file (                       $S_WS_F                       ) = 'DT_A_T_WS_Re1_cjy.spck' ! Filename"
+        },
+        "rear_wheelset_template": {
+          "line": 85,
+          "statement": "substr.file (                       $S_WS_R                       ) = 'DT_A_T_WS_Re1_cjy.spck' ! Filename"
+        },
+        "primary_bogie_marker_parent": {
+          "line": 755,
+          "statement": "marker.parent (                     $M_F_PS_SP_FR                 ) = $B_F                    ! Body"
+        },
+        "secondary_bogie_marker_parent": {
+          "line": 827,
+          "statement": "marker.parent (                     $M_F_SS_R                     ) = $B_F                    ! Body"
+        },
+        "primary_axlebox_marker_parent": {
+          "line": 1404,
+          "statement": "marker.parent (                     $M_AB_FR_SP                   ) = $B_AB_FR                ! Body"
+        },
+        "axlebox_wheelset_joint_from": {
+          "line": 1420,
+          "statement": "joint.from (                        $J_AB_FR                      ) = $S_WS_F.$M_WS_R         ! From Marker"
+        },
+        "axlebox_wheelset_joint_to": {
+          "line": 1421,
+          "statement": "joint.to (                          $J_AB_FR                      ) = $M_AB_FR_BRF            ! To Marker"
+        },
+        "secondary_dummy_marker_parent": {
+          "line": 2089,
+          "statement": "marker.parent (                     $M_DUMMY_SS_R                 ) = $B_DUMMY                ! Body"
+        },
+        "primary_from": {
+          "line": 2224,
+          "statement": "force.from (                        $F_PS_SP_FR                   ) = $M_F_PS_SP_FR           ! From Marker"
+        },
+        "primary_to": {
+          "line": 2225,
+          "statement": "force.to (                          $F_PS_SP_FR                   ) = $M_AB_FR_SP             ! To Marker"
+        },
+        "secondary_from": {
+          "line": 2587,
+          "statement": "force.from (                        $F_SS_R                       ) = $M_DUMMY_SS_R           ! From Marker"
+        },
+        "secondary_to": {
+          "line": 2588,
+          "statement": "force.to (                          $F_SS_R                       ) = $M_F_SS_R               ! To Marker"
+        },
+        "receiver_target": {
+          "line": 3363,
+          "statement": "receiver.ref (                      $COM_M_DummyBolster_Attached  ) = $M_DUMMY                ! Destination object"
+        },
+        "carbody_receiver": {
+          "line": 3364,
+          "statement": "receiver.priolist (       1 ,       $COM_M_DummyBolster_Attached  ) = '$COM_M_CB_DummyBolster_F' ! Sender priority list"
+        }
+      },
+      "missing": []
+    },
+    "wheelset_template": {
+      "path": "H:\\总的齿轨项目\\总和1\\直逆_修改降低值后设计 -上坡度\\RACK_RAILWAY_VEHICLE - XNEW - M\\database\\DT_A_T_WS_Re1_cjy.spck",
+      "sha256": "e6a0c4bf03ce0022a476ec2b8b12b75ced2d71d99cf329bb79abba232c1afbfe",
+      "size_bytes": 201268,
+      "statements": {
+        "wheel_contact_marker_parent": {
+          "line": 680,
+          "statement": "marker.parent (                     $M_B_WS_ProfRef_RWP_R         ) = $B_WS                   ! Body"
+        },
+        "sleeper_fastener_marker_parent": {
+          "line": 782,
+          "statement": "marker.parent (                     $M_Sleeper_FastenerForce_R    ) = $B_Sleeper              ! Body"
+        },
+        "rail_fastener_marker_parent": {
+          "line": 882,
+          "statement": "marker.parent (                     $M_Rail_R_Fastener            ) = $B_Rail_R               ! Body"
+        },
+        "rail_contact_marker_parent": {
+          "line": 886,
+          "statement": "marker.parent (                     $M_B_Rail_R_ProfRef_RWP_R     ) = $B_Rail_R               ! Body"
+        },
+        "fastener_from": {
+          "line": 1019,
+          "statement": "force.from (                        $F_Fastener_Force_R           ) = $M_Sleeper_FastenerForce_R ! From Marker"
+        },
+        "fastener_to": {
+          "line": 1020,
+          "statement": "force.to (                          $F_Fastener_Force_R           ) = $M_Rail_R_Fastener      ! To Marker"
+        },
+        "wheel_rail_from": {
+          "line": 1052,
+          "statement": "force.from (                        $F_RWContact_RWP_R            ) = $M_B_Rail_R_ProfRef_RWP_R ! From Marker"
+        },
+        "wheel_rail_to": {
+          "line": 1053,
+          "statement": "force.to (                          $F_RWContact_RWP_R            ) = $M_B_WS_ProfRef_RWP_R   ! To Marker"
+        }
+      },
+      "missing": []
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "velch-contact-native-gate-review-v1",
+  "date": "2026-10-19",
+  "target_solver": "CONTACT open-source module 3",
+  "reference_checkout_commit": "5644061ade1b0214e7ce70d780066f630d05f782",
+  "case_file": "examples/contact_hertz_probe.json",
+  "environment_report": "diagnostics/contact_native_status.json",
+  "native_grid_report": "diagnostics/contact_hertz_grid_study.json",
+  "native_binary_sha256": "dbeee1ea868600c9b828b392575e70439d28ee8fd27712425a0564b9fad57531",
+  "checks": {
+    "official_python_interface_present": "valid",
+    "native_windows_dll_present": "valid",
+    "native_library_load": "valid",
+    "module3_solution": "valid_for_synthetic_sphere_plane_case",
+    "analytic_hertz_normal_force": "valid_within_1_percent_at_grid_64",
+    "grid_convergence": "normal_force_32_to_64_relative_change_0.00006541",
+    "local_coulomb_bound": "valid_all_three_grids",
+    "contact_force_sign_and_energy": "local_tangential_sign_observed; vehicle_mapping_and_energy_not_run",
+    "turnout_prr_prw_geometry_mapping": "not_run",
+    "vehicle_solver_contact_replacement": "not_enabled"
+  },
+  "benchmark": {
+    "analytic_normal_force_n": 104343.53820192722,
+    "contact_grid_64_normal_force_n": 104352.208920593,
+    "grid_64_relative_error": 0.00008309780188775484,
+    "grid_64_tangent_x_n": -13778.5191046669
+  },
+  "code_checks": {
+    "test_command": "python -m pytest -q --basetemp .pytest_tmp_contact_final",
+    "result": "15 passed",
+    "native_call_mock": "SI/CONTACT units and result conversion checked",
+    "native_probe_real_dll": "exit_code_0"
+  },
+  "overall_status": "validated_local_module3_analytic_probe_only",
+  "next_gate": "Validate CONTACT module 1 with real PRR/PRW turnout geometry, coordinate and force mapping, then a vehicle integration case against Simpack."
+}

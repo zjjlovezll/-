@@ -1,0 +1,278 @@
+"""SI-only case contract for one prescribed-speed wheelset and flexible rails."""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from .contact import ContactParameters
+from .profiles import GraphProfile, ProfileSeries, Station, load_profile
+
+
+def _finite(name: str, value: Any, *, positive: bool = False, nonnegative: bool = False) -> float:
+    number = float(value)
+    if not math.isfinite(number) or positive and number <= 0 or nonnegative and number < 0:
+        raise ValueError(f"{name} must be a finite SI value with the required sign")
+    return number
+
+
+@dataclass(frozen=True)
+class Wheelset:
+    mass_kg: float
+    roll_inertia_kg_m2: float
+    spin_inertia_kg_m2: float
+    gravity_m_s2: float
+    travel_speed_m_s: float
+    drive_torque_nm: float
+
+    def __post_init__(self) -> None:
+        for name in ("mass_kg", "roll_inertia_kg_m2", "spin_inertia_kg_m2"):
+            _finite(name, getattr(self, name), positive=True)
+        _finite("gravity_m_s2", self.gravity_m_s2, nonnegative=True)
+        _finite("travel_speed_m_s", self.travel_speed_m_s)
+        _finite("drive_torque_nm", self.drive_torque_nm)
+
+
+@dataclass(frozen=True)
+class Wheel:
+    id: str
+    lateral_offset_m: float
+    profile: GraphProfile
+
+    def __post_init__(self) -> None:
+        if not self.id:
+            raise ValueError("wheel ID required")
+        _finite("lateral_offset_m", self.lateral_offset_m)
+
+
+@dataclass(frozen=True)
+class LinearSupport:
+    k_y_n_m: float
+    c_y_n_s_m: float
+    k_z_n_m: float
+    c_z_n_s_m: float
+    # Second track layer (two_layer track kind only). The rail sits on this
+    # support; the sleeper mass and the ballast below it are what give the
+    # track its low-frequency (30-60 Hz) content -- see
+    # validation/turnout18_ref/S1F_TRACK_LAYERS_2026-10-20.md.
+    sleeper_mass_y_kg: float = 0.0
+    sleeper_mass_z_kg: float = 0.0
+    ballast_k_y_n_m: float = 0.0
+    ballast_c_y_n_s_m: float = 0.0
+    ballast_k_z_n_m: float = 0.0
+    ballast_c_z_n_s_m: float = 0.0
+
+    def __post_init__(self) -> None:
+        for name in ("k_y_n_m", "c_y_n_s_m", "k_z_n_m", "c_z_n_s_m",
+                     "sleeper_mass_y_kg", "sleeper_mass_z_kg",
+                     "ballast_k_y_n_m", "ballast_c_y_n_s_m",
+                     "ballast_k_z_n_m", "ballast_c_z_n_s_m"):
+            _finite(name, getattr(self, name), nonnegative=True)
+
+
+@dataclass(frozen=True)
+class TrackLayer:
+    """One layer of the track stack below the steel rail.
+
+    `k_*`/`c_*` describe the spring and damper *below* this layer, so a sleeper
+    layer carries the ballast stiffness, a slab layer carries the subgrade
+    stiffness. The rail itself is not a layer: it is part of the vehicle rail
+    patch and sits on the fastening/pad stiffness.
+    """
+
+    mass_y_kg: float
+    mass_z_kg: float
+    k_y_n_m: float
+    c_y_n_s_m: float
+    k_z_n_m: float
+    c_z_n_s_m: float
+
+    def __post_init__(self) -> None:
+        for name in ("mass_y_kg", "mass_z_kg"):
+            _finite(name, getattr(self, name), positive=True)
+        for name in ("k_y_n_m", "c_y_n_s_m", "k_z_n_m", "c_z_n_s_m"):
+            _finite(name, getattr(self, name), nonnegative=True)
+
+
+@dataclass(frozen=True)
+class WheelSuspension:
+    support: LinearSupport
+    k_roll_nm_rad: float
+    c_roll_nm_s_rad: float
+    y_reference_m: float
+    z_reference_m: float
+    roll_reference_rad: float
+
+    def __post_init__(self) -> None:
+        for name in ("k_roll_nm_rad", "c_roll_nm_s_rad"):
+            _finite(name, getattr(self, name), nonnegative=True)
+        for name in ("y_reference_m", "z_reference_m", "roll_reference_rad"):
+            _finite(name, getattr(self, name))
+
+
+@dataclass(frozen=True)
+class RailPatch:
+    id: str
+    wheel_id: str
+    mass_y_kg: float
+    mass_z_kg: float
+    support: LinearSupport
+    profiles: ProfileSeries
+
+    def __post_init__(self) -> None:
+        if not self.id or not self.wheel_id:
+            raise ValueError("rail and wheel IDs required")
+        _finite("mass_y_kg", self.mass_y_kg, positive=True)
+        _finite("mass_z_kg", self.mass_z_kg, positive=True)
+
+
+@dataclass(frozen=True)
+class RunSettings:
+    method: str
+    x_start_m: float
+    duration_s: float
+    output_step_s: float
+    max_solver_step_s: float
+    rtol: float
+    atol: float
+    maximum_penetration_m: float
+    maximum_abs_contact_slope: float
+    contact_search_half_width_m: float | None = None
+    body_hysteresis: bool = False
+    contact_seed_scope: str = "body"
+    jacobian: str | None = None
+    refine_peak: bool = False
+
+    def __post_init__(self) -> None:
+        if self.method not in {"DOP853", "Radau", "BDF"}:
+            raise ValueError("supported methods are DOP853, Radau and BDF")
+        if self.jacobian not in {None, "sparse_fd", "analytic"}:
+            raise ValueError("jacobian must be None, 'sparse_fd' or 'analytic'")
+        if self.jacobian is not None and self.method == "DOP853":
+            # solve_ivp silently ignores jac/jac_sparsity for explicit solvers and only
+            # emits a UserWarning, so a case could claim an analytic Jacobian and quietly
+            # integrate without one.  Fail loudly instead: A/B comparisons made on top of
+            # that warning are wrong in a way nothing else catches.
+            raise ValueError("jacobian is only used by the implicit methods (Radau/BDF)")
+        _finite("x_start_m", self.x_start_m)
+        for name in ("duration_s", "output_step_s", "max_solver_step_s", "rtol", "atol",
+                     "maximum_penetration_m", "maximum_abs_contact_slope"):
+            _finite(name, getattr(self, name), positive=True)
+        if self.contact_search_half_width_m is not None:
+            _finite("contact_search_half_width_m", self.contact_search_half_width_m, positive=True)
+        if not isinstance(self.body_hysteresis, bool):
+            raise ValueError("body_hysteresis must be a boolean")
+        if self.contact_seed_scope not in ("body", "rail", "rail_hold"):
+            raise ValueError("contact_seed_scope must be 'body', 'rail', or 'rail_hold'")
+        if self.output_step_s > self.duration_s:
+            raise ValueError("output step exceeds duration")
+        if not isinstance(self.refine_peak, bool):
+            raise ValueError("refine_peak must be a boolean")
+
+
+@dataclass(frozen=True)
+class Case:
+    case_id: str
+    purpose: str
+    parameter_source: str
+    wheelset: Wheelset
+    suspension: WheelSuspension
+    wheels: tuple[Wheel, ...]
+    rails: tuple[RailPatch, ...]
+    contact: ContactParameters
+    run: RunSettings
+    initial_q: tuple[float, ...]
+    initial_v: tuple[float, ...]
+    case_sha256: str
+    source_path: Path
+    asset_hashes: dict[str, str]
+
+    def __post_init__(self) -> None:
+        if not self.case_id or self.purpose not in {"synthetic", "engineering"} or not self.parameter_source:
+            raise ValueError("case identity, purpose, and parameter source are required")
+        wheel_ids = {wheel.id for wheel in self.wheels}
+        if not wheel_ids or len(wheel_ids) != len(self.wheels):
+            raise ValueError("wheel IDs must be unique")
+        if not self.rails or len({rail.id for rail in self.rails}) != len(self.rails):
+            raise ValueError("rail IDs must be unique")
+        if any(rail.wheel_id not in wheel_ids for rail in self.rails):
+            raise ValueError("every rail must name a defined wheel")
+        dimension = 4 + 2 * len(self.rails)
+        if len(self.initial_q) != dimension or len(self.initial_v) != dimension:
+            raise ValueError(f"initial q/v must each have {dimension} ordered entries")
+        if not all(math.isfinite(value) for value in (*self.initial_q, *self.initial_v)):
+            raise ValueError("initial state must be finite")
+
+
+def _support(raw: dict[str, Any]) -> LinearSupport:
+    return LinearSupport(**{key: _finite(key, raw[key], nonnegative=True) for key in
+                            ("k_y_n_m", "c_y_n_s_m", "k_z_n_m", "c_z_n_s_m")})
+
+
+def load_case(path: str | Path) -> Case:
+    """Load a declarative JSON case; every external profile is hash recorded."""
+    target = Path(path).resolve(strict=True)
+    data = target.read_bytes()
+    raw = json.loads(data.decode("utf-8"))
+    if raw.get("schema_version") != "velch-case-v1":
+        raise ValueError("unsupported case schema")
+    base = target.parent
+    assets: dict[str, str] = {}
+
+    def profile(spec: dict[str, Any], surface: str) -> GraphProfile:
+        filename = Path(spec["file"])
+        source = (base / filename).resolve(strict=True) if not filename.is_absolute() else filename.resolve(strict=True)
+        if spec.get("units") not in {"m", "mm"}:
+            raise ValueError("profile source units must explicitly be m or mm")
+        if spec["format"] == "prr" and spec["units"] != "m":
+            raise ValueError("PRR source unit must agree with its m header")
+        unit_scale = 1.0 if spec["units"] == "m" else 1e-3
+        parsed = load_profile(source, file_format=spec["format"], surface=surface,
+                              y_scale_m=unit_scale,
+                              z_scale_m=unit_scale,
+                              y_sign=int(spec.get("y_sign", 1)), z_sign=int(spec.get("z_sign", 1)),
+                              y_offset_m=float(spec.get("y_offset_m", 0.0)),
+                              z_offset_m=float(spec.get("z_offset_m", 0.0)))
+        if spec.get("sha256") and spec["sha256"] != parsed.source_sha256:
+            raise ValueError(f"profile checksum mismatch: {source}")
+        assets[str(source)] = parsed.source_sha256
+        return parsed
+
+    wheels = tuple(Wheel(id=item["id"], lateral_offset_m=float(item["lateral_offset_m"]),
+                         profile=profile(item["profile"], "wheel_lower")) for item in raw["wheels"])
+    rails = []
+    for item in raw["rails"]:
+        stations = [Station(float(station["s_m"]), profile(station["profile"], "rail_top"),
+                            station["id"]) for station in item["stations"]]
+        rails.append(RailPatch(item["id"], item["wheel_id"],
+                               float(item["mass_y_kg"]), float(item["mass_z_kg"]),
+                               _support(item["support"]),
+                               ProfileSeries(stations, item.get("event_branches"))))
+    suspension_raw = raw["suspension"]
+    suspension = WheelSuspension(_support(suspension_raw),
+                                  float(suspension_raw["k_roll_nm_rad"]),
+                                  float(suspension_raw["c_roll_nm_s_rad"]),
+                                  float(suspension_raw["y_reference_m"]),
+                                  float(suspension_raw["z_reference_m"]),
+                                  float(suspension_raw["roll_reference_rad"]))
+    initial = raw["initial_state"]
+    wheel_q = initial["wheel_q"]
+    wheel_v = initial["wheel_v"]
+    q = [float(wheel_q[k]) for k in ("y_m", "z_m", "roll_rad", "spin_rad")]
+    v = [float(wheel_v[k]) for k in ("y_m_s", "z_m_s", "roll_rad_s", "spin_rad_s")]
+    for rail in rails:
+        rail_q = initial["rail_q"][rail.id]
+        rail_v = initial["rail_v"][rail.id]
+        q.extend((float(rail_q["y_m"]), float(rail_q["z_m"])))
+        v.extend((float(rail_v["y_m_s"]), float(rail_v["z_m_s"])))
+    return Case(
+        case_id=raw["case_id"], purpose=raw["purpose"], parameter_source=raw["parameter_source"],
+        wheelset=Wheelset(**raw["wheelset"]), suspension=suspension, wheels=wheels,
+        rails=tuple(rails), contact=ContactParameters(**raw["contact"]),
+        run=RunSettings(**raw["run"]), initial_q=tuple(q), initial_v=tuple(v),
+        case_sha256=hashlib.sha256(data).hexdigest(), asset_hashes=assets,
+        source_path=target,
+    )

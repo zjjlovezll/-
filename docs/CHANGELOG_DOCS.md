@@ -91,7 +91,7 @@ numpy 手写实现，未改动环境。
 | 单次 RHS 成本（单核） | 1.19 ms | 4.25 ms CPU |
 | 整程墙钟 | ≈850 s（67 DOF） | 85.08 s（32 线程） |
 | 多进程批量 | 8 工况 8.58× | — |
-| 测试 | 377 passed（2026-10-22 17:52 实测，含 16 条架构规则 + 20 条 agent 契约 + 8 条三维几何；会随并行会话增加，验收只认 0 failed） | — |
+| 测试 | 389 passed（2026-10-22 19:10 实测，含 16 条架构规则 + 20 条 agent 契约 + 8 条三维几何；会随并行会话增加，验收只认 0 failed） | — |
 
 基线组合：条带积分法向律 + 钢轨垂向自由度 + 柔性扣件 5e7/4e4 + 接触阻尼 3e7 且
 `damping_force_cap_ratio=0.5`。
@@ -786,3 +786,45 @@ FD 8.9061e+02 = 2.30 倍；`∂M_yaw/∂y` 解析 0.13 vs FD −87.67，整项�
 校验失败时**不留下输出目录**。全仓 **377 passed**。
 
 文档：README §快速运行 增补 `--fast` 前置说明与两行实测表；本轮起"要报告数字用声明配置、要趋势用 `--fast`"成为写进 README 的规矩。
+
+## 第 27 轮（2026-10-22 傍晚）：把 1.4 GB 语料搬出软件包
+
+**决策**：用户拍板顺序 `2 → 1 → 3`，本轮做第 1 项。目标不是"删掉语料"，而是让
+**软件包目录里只有软件**：`src/` 1.6 MB，语料 1.37 GB，两者同树是仓库显得不可维护的主因，
+但语料又不能删——358 个算例、208 个运行目录、223 个测量脚本仍是判据的出处。
+
+### 做法：把"位置"变成一个只有一处实现的问题
+- 新增 `src/velch/data_root.py`：解析顺序 **`VELCH_DATA_ROOT` 环境变量 → `.velch-data.json`
+  标记文件 → 仓内 `validation/`**；对外只暴露 `data_root()/case_dir()/case_path()/explain()`。
+- `ui/store.py` 的 `VALIDATION_DIR`、`agent/core.py` 的 `case_root()`、以及**九个测试模块**
+  原本各自从 `__file__` 往上走重新拼 `<repo>/validation/crh380a_m`——现在全部改成问 `case_dir()`。
+  这一步让"搬家"从一次九文件重构降级成一份标记文件。
+- `tests/test_data_root.py`（12 项）钉住优先级与失败行为：默认路径、环境变量压过标记、
+  **带 BOM 的标记也要能读**、相对路径标记、6 种坏标记回落而不抛异常、`case_path()` 不猜。
+  理由写进 docstring：静默回落到空目录会让所有门"通过"——没有算例就没有矛盾。
+
+### 实际搬运
+```powershell
+Move-Item F:\ai道岔状态反演辨识\Velch\validation\crh380a_m F:\velch_data\validation\crh380a_m
+'{ "data_root": "F:/velch_data/validation" }' | Set-Content .velch-data.json -Encoding utf8
+```
+- `crh380a_m`（1 392 MB / 14 431 文件 / 358 算例 / 208 `out_*` / 223 脚本）→ `F:\velch_data\validation\crh380a_m`
+- `turnout18`、`turnout18_ref`（15.7 MB 判据长文）**留仓内**——它们是文档而不是数据。
+- 两个"冻结 oracle"随语料外移；**判据值仍在代码里**：静载 59 680.5769 N @ 65.47 µm
+  （`tests/test_oracle_frozen.py`）、1.2 s 动态基线 89.68 / 170.61 kN 与 551.9 µm（文档）。
+- `.velch-data.json` 入库排除（机器相关），同时新增 `.velch-data.example.json` 作模板。
+
+### 踩坑（重要，差点误判成代码坏了）
+PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读到 `\ufeff` 抛错 →
+标记被静默忽略 → 回落到此刻已经空了的仓内路径 → `31 failed / 14 errors`。
+`data_root._root_from_marker()` 改用 `encoding="utf-8-sig"` 读取，并加测试钉住。
+
+### 验证
+- `pytest tests` → **389 passed in 15.9 s**（377 + 12 项 data_root）
+- `python -m velch.ui --selftest` → 退出码 0，7 屏正常，Simpack 对照仍可用
+- `python -m velch.agent doctor` → `ok: true`，`case_root detail: 358`，ledger 4 条
+- `validation/INDEX.md` 重写为路标：现在在哪、怎么解析、哪些目录是常数静载门、门脚本的仓外路径
+
+### 顺带
+- `reports/` 入库排除（验收报告与临时渲染可再生，docs 需要的那张图已入库）。
+- 下一个提交点仍是第 3 项 `contact.py` 拆分——按用户要求**等 CI 兜底**后再动。

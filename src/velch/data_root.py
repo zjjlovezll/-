@@ -56,7 +56,9 @@ def _root_from_marker() -> Path | None:
     if not marker.is_file():
         return None
     try:
-        payload = json.loads(marker.read_text(encoding="utf-8"))
+        # ``utf-8-sig`` rather than ``utf-8``: PowerShell 5.1 writes a BOM when asked for
+        # "utf8", and a BOM makes ``json.loads`` reject an otherwise valid marker file.
+        payload = json.loads(marker.read_text(encoding="utf-8-sig"))
     except (OSError, ValueError):
         return None
     value = payload.get("data_root") if isinstance(payload, dict) else None

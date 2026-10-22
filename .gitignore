@@ -11,12 +11,14 @@ dist/
 # recipes that produced it, and it grows without bound, so it does not belong in history.
 .agent/
 
-# Simulation output.  One 1.2 s assembly run is ~8 MB and there are 207 of them; committing
-# them turns the repository into 1.4 GB of duplicated CSV.  Two frozen oracles are kept
-# because tests and gates compare against them by value.
+# Which machine keeps the corpus, and where.  Machine-specific, so not in history; the
+# committed example next to it is the template.
+.velch-data.json
+
+# Simulation output of anything run in place.  One 1.2 s assembly run is ~8 MB; committing
+# them turns the repository into 1.4 GB of duplicated CSV.  The bulk corpus now lives outside
+# the repository entirely (see validation/INDEX.md), so these patterns only catch strays.
 validation/**/out_*/
-!validation/crh380a_m/out_full12_cap05/
-!validation/crh380a_m/out_A_final_law/
 
 # Generated geometry and modal expansions.  All of it is derivable from the PRR profiles in
 # `validation/crh380a_m/bodies` and the SDITT catalogue; `validation/INDEX.md` says how.

@@ -71,3 +71,27 @@ def test_the_generated_check_agrees(text: str) -> None:  # noqa: ARG001 - fixtur
     sys.path.insert(0, str(REPO / "src"))
     spec.loader.exec_module(module)
     assert module.check() == 0
+
+def test_with_run_is_a_flag_and_reaches_the_simpack_row() -> None:
+    """``--with-run`` must exist *and* be threaded into the ⑤ row builder.
+
+    The row used to stop at ``geometry_readable``; a flag that exists but is never passed down
+    would look identical from the outside and quietly regress to catalog-only evidence.
+    """
+
+    source = (REPO / "scripts" / "evidence_map.py").read_text(encoding="utf-8")
+    assert '"--with-run"' in source
+    assert "def build(with_run: bool = False)" in source
+    assert "_simpack(with_run)" in source
+    assert "run-vehicle" in source and "simpack-case" in source
+
+
+def test_with_run_says_so_when_the_template_is_missing(monkeypatch) -> None:
+    """Without ``VELCH_EVIDENCE_TEMPLATE`` the row must say what is missing, not pretend."""
+
+    from scripts.evidence_map import _simpack  # type: ignore[import-not-found]
+
+    monkeypatch.setenv("VELCH_SIMPACK_MODEL", "")
+    monkeypatch.setenv("VELCH_SIMPACK_ROOT", "")
+    text = _simpack(with_run=True)
+    assert "VELCH_SIMPACK_MODEL" in text

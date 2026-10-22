@@ -1077,3 +1077,84 @@ except (OSError, ValueError, TypeError, KeyError, SimulationFailure,
 | `apply_patch` 是唯一写入者（`parameters.py:15-16`） | 继续是唯一写入者；agent 在它**外面**加"注册表 + policy + 审计"，不新建第二条写路径 |
 | `CaseSpec` 是反演的唯一入口（`case/spec.py:1-14`） | `inverse.estimate` 只用 `CaseSpec`，并且把 `resolve()` 的临时目录问题在 job 目录里解决（§6.①） |
 | 850 s → ≤300 s（M1）→ ≤120 s（M3）的路线（ARCHITECTURE §5.1） | 执行模型按 850 s 设计（后台 + 预算 + 幂等），并用 `solver_patch` 让 agent 能自己打开隐式求解（101.6 s 那条路径），把这个性能缺口变成可操作的旋钮 |
+
+---
+
+## 8. 已实现（2026-10-22 晚）：设计 vs 代码
+
+本节记录**实际落地的第一个竖直切片**。它是只读 + 派生 + 运行 + 读结果这一条链路，不是本文
+第 1 节 20 个工具的全部。凡是没收的，都写在 §8.3 里，不假装存在。
+
+### 8.1 落地了什么
+
+| 设计 | 代码 | 验证 |
+|---|---|---|
+| §1.1 工具清单 | `src/velch/agent/tools.py`：**12 个工具**（`capabilities`/`parameters`/`list_cases`/`read_case`/`derive_case`/`revisions`/`predict_run`/`submit_run`/`job_status`/`list_jobs`/`cancel_job`/`read_result`），`ToolSpec` 单一声明 → `manifest()`（`velch-agent-tools-v1`）+ MCP `tools/list` | `tests/test_agent_contract.py::test_manifest_is_self_consistent` |
+| §2.2 唯一写入口 | `cases.derive_case()` 只调 `velch.ui.parameters.apply_patch`；没有第二条写路径 | `test_derive_leaves_the_parent_untouched_and_chains_the_ledger`（父算例字节前后相同） |
+| §2.3 通配拒绝 | `core.normalise_patch()` 见 `[]` 即 `parameter_rejected`，消息里带 `'[]'` | `test_wildcard_patch_is_refused` |
+| §2.4 solver_patch | `core.validate_solver_patch()`：8 个数值字段带界 + 3 个枚举（`method`/`jacobian`） | 4 组坏补丁各一条断言 |
+| §2.6 审计链 | `cases.append_revision()` → `<home>/revisions/ledger.jsonl`，`r0001` 递增，每条带 `prev_ledger_sha256` | `ledger[1].prev_ledger_sha256 != ledger[0].prev_ledger_sha256` |
+| §3.2 成本路由 | `core.predict_wall_s()` + `jobs.SYNC_LIMIT_S=60`：≤60 s 内联、否则 `Popen(DETACHED_PROCESS)` 起 `python -m velch.agent.worker` | `test_over_budget_is_refused_before_running`、实跑 `inline=True` 18.7 s |
+| §3.3 状态机 | `jobs._status_of()` 三源合一（`state.json` / `manifest.json` / exit code）→ `succeeded`/`gate_failed`/`failed`/`abandoned` | `test_gate_failed_is_reported_as_a_state_not_an_error` |
+| §3.6 幂等 | `sha256({case, workers, program, python})` 复用未失败作业 | 未单测（同一 job 重复 submit 才会触发） |
+| §1.7 产物 fail-closed | `jobs.read_result()` 无 `manifest.json` 即 `artifact_integrity` | `test_read_result_refuses_a_job_without_a_manifest` |
+| §6.① case_snapshot 雷 | `cases.materialise_case()`：先复制成作业私有副本并把**任意层级**名为 `file` 的引用绝对化 | `test_derived_case_has_absolute_profile_references`。实测全仓 358 个算例里 `file` 绝对引用 294 653 处、相对 80 940 处，无 `prr` 键 |
+| §4.1 自描述 | `python -m velch.agent manifest|call|doctor|serve`；MCP `server.py` 支持行分隔 JSON 与 LSP `Content-Length` 两种帧 | `test_mcp_surface`（initialize / tools.list 12 / tools.call 信封 / 通知返回 None / 未知方法 `-32601`） |
+| §7 零新增依赖 | `agent/` 六个模块只用 stdlib（`server.py` 手写 JSON-RPC，`jobs.py` 用 `subprocess`） | `test_agent_import_stays_cheap`：子进程 import `velch.agent` 后 `velch.vehicle_solver`/`contact`/`jacobian` 都不在 `sys.modules` |
+
+补充两条不在设计里的实现决定：
+
+1. **`physics_changed` 认"采样 ≠ 物理"**（`cases.SAMPLING_ONLY_SOLVER_KEYS = {"output_step_s"}`）。
+   自适应步长由 `rtol`/`atol`/`max_solver_step_s` 决定，`output_step_s` 只决定写多少行。
+   把它算成物理改动，会让每个"重采样变体"都不可比，也会让验收冒烟声称自己改了模型。
+2. **CLI 用 `velch agent ...` 子命令**，没有加独立 `velch-mcp` console script。延迟 import
+   （`from .agent.__main__ import main as agent_main`）保证普通仿真不付这 0.08 s 之外的代价。
+   MCP 客户端配置成 `python -m velch.agent serve` 即可，不需要新入口。
+
+### 8.2 成本模型是校准出来的，不是估出来的
+
+初版 `NFEV_PER_STEP={DOP853:27.7, Radau:12.0, BDF:9.0}`、`BAND=(0.6,1.7)` 一上线就被实测打脸：
+frog 0.05 s 的窗口估 7.1 s、实跑 **18.7 s**。改成按输出步测得的
+`{DOP853:138.0, Radau:30.0, BDF:46.0}`、`BAND=(0.5, 2.2)` 后，1.2 s 整车算 848 s、
+实测 850 s（误差 0.2 %），短窗仍高估约 2 倍。
+
+取舍写在 `core.py` 里：**宁可高估**。高估会拒掉一个本来跑得完的作业，人看见"预算不够"就能
+加预算；低估会接下一个跑不完的作业，900 s 之后才失败，而且失败得像是求解器的问题。
+
+### 8.3 明确没做的（不要以为它已经在了）
+
+| 设计项 | 状态 | 原因 |
+|---|---|---|
+| `case.validate` / `case.params` / `case.diff` / `case.revert` | 未做 | `read_case` 已经返回校验后的摘要；`parameters` 给出全表；`revert` 等价于"再派生一次"，ledger 是只追加的 |
+| `case.policy`（`free`/`guarded`/`forbidden` 三档） | **未做**，当前 72 个参数对 agent 全部可写 | 需要先有人拍板"哪些参数 agent 不能碰"。默认全开是明确的选择，不是遗漏 |
+| `run.submit(mode="batch")` | 未做 | 批量入口是 `velch run-vehicle --batch`，agent 接它之前要先把 `parallel._solve_case` 吞异常的问题修掉（§6 honorable mention 1） |
+| `result.series` / `result.assess` / `result.compare` / `result.observations` | 未做 | `read_result` 只给 summary 与 manifest；`series` 的列白名单必须从 manifest 现读（§6 honorable mention 3），单独一轮做 |
+| `inverse.estimate` / `inverse.identifiability` | 未做 | 反演要先解决 `CaseSpec.resolve()` 每轮重建临时目录的问题；切片里改用 `materialise_case` 绕开，但反演路径没接 |
+| `dev.gates` | 未做 | 验收走 `scripts/auto_accept.py`（见 §8.4），不占用工具面 |
+| HTTP 传输、`archive/`、跨进程文件锁 | 未做 | 按架构师的分期（L4 适配器）留到有真实消费者 |
+| `ai_provenance.json` | 未做 | 现在溯源靠 ledger + manifest，二者都在 `Velch/.gitignore` 之外（ledger 在 `.agent/`，是本地状态） |
+
+### 8.4 自动化验收：一条命令回答"这次改动还能不能信"
+
+`scripts/auto_accept.py` 依次做四步，任何一步失败即 `REJECT` 并写
+`reports/auto_accept_<时间戳>.json`：
+
+1. `pytest tests`（整套，含冻结 oracle 与架构规则）
+2. `python -m velch.agent doctor`（registry / case_root / home 可写 / cases / ledger）
+3. `capabilities` 工具调用（信封是否成形、工具数是否仍是 12）
+4. 派生 + 真跑一个 0.05 s 窗口 + 读结果（只有这一步能证明"派生 → 运行 → 读回"没断）
+
+`--skip-run` 跳过第 4 步（约 20 s）。实测一次全通：
+`tests` 352 passed / 17.7 s、`doctor` ok、`contract` 12 工具、
+`end-to-end` `j20261022-165859-yidl` → `result_status=numerically_checked`。
+
+第 4 步的补丁刻意选 `output_step_s`：它是唯一"改了也不算改物理"的旋钮，所以这一步失败
+**一定是管道问题，不可能是物理问题**——这正是冒烟测试该有的性质。
+
+### 8.5 建仓（架构师 Phase 0）
+
+`git init` + `.gitignore` + `LICENSE`(MIT) + 首提 **`9e47611`** + 标签 **`v0.4.0`**。
+`.gitignore` 不是照抄模板：未过滤前 `git add -A` 会吞 **14 134 个文件 / 1.06 GB**
+（`validation/crh380a_m/div_panel` 6 189 文件、`smoothed*/` 各 176 MB、
+`modes_scale_high.json` 248.9 MB），过滤后 **2 013 文件 / 213 MB**，
+两个冻结 oracle 的 `history.csv` 与 `manifest.json` 刻意保留在版本库里。

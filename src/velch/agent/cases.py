@@ -153,19 +153,30 @@ def revisions(*, limit: int = 50) -> dict[str, Any]:
     return {"count": len(lines), "entries": entries}
 
 
+SAMPLING_ONLY_SOLVER_KEYS = frozenset({"output_step_s"})
+"""``run`` keys that change what is written, not what is computed.
+
+Adaptive stepping is driven by ``rtol``/``atol``/``max_solver_step_s``; ``output_step_s`` only
+decides how often the dense solution is sampled onto the history grid.  Treating it as a physics
+change would make every resampled variant non-comparable for no reason, and would make the
+acceptance smoke test claim it had altered the model.
+"""
+
+
 def derive_case(*, parent: str | Path, patch: Any = None, solver_patch: Any = None,
                 note: str = "", tag: str = "") -> dict[str, Any]:
     """Create a new case from ``parent`` plus edits.  The parent is never modified.
 
     ``patch``  : list of ``{path, value}`` in registry paths (SI units).
-    ``solver_patch`` : ``run`` block edits; anything here is echoed with
-    ``physics_changed=true`` because it changes the answer, not the packaging.
+    ``solver_patch`` : ``run`` block edits.  Edits that can move the trajectory are echoed with
+    ``physics_changed=true``; changing only the output sampling is not such an edit.
     """
     edits = normalise_patch(patch)
     solver_edits = validate_solver_patch(solver_patch or {})
     if not edits and not solver_edits:
         raise AgentError(ErrorCode.INVALID_ARGUMENT,
                          "nothing to derive: pass patch and/or solver_patch")
+    changes_physics = any(key not in SAMPLING_ONLY_SOLVER_KEYS for key in solver_edits)
     raw, parent_path = _load(Path(parent))
     parent_digest = sha256_file(parent_path)
 
@@ -196,7 +207,7 @@ def derive_case(*, parent: str | Path, patch: Any = None, solver_patch: Any = No
         "out_sha256": sha256_file(out_path),
         "patch": edits,
         "solver_patch": solver_edits,
-        "physics_changed": bool(solver_edits),
+        "physics_changed": changes_physics,
         "note": note,
     })
     return {
@@ -207,7 +218,7 @@ def derive_case(*, parent: str | Path, patch: Any = None, solver_patch: Any = No
         "parent_sha256": parent_digest,
         "patch": edits,
         "solver_patch": solver_edits,
-        "physics_changed": bool(solver_edits),
-        "comparable_to_parent": not solver_edits,
+        "physics_changed": changes_physics,
+        "comparable_to_parent": not changes_physics,
         "run": derived.get("run", {}),
     }

@@ -1,0 +1,51 @@
+{
+  "schema_version": "velch-auto-accept-v1",
+  "created": "2026-10-22T16:59:17",
+  "repository": "F:\\ai道岔状态反演辨识\\Velch",
+  "ok": true,
+  "steps": [
+    {
+      "step": "tests",
+      "ok": true,
+      "exit_code": 0,
+      "seconds": 17.71,
+      "command": "D:\\Anaconda3\\python.exe -X utf8 -m pytest tests",
+      "tail": [
+        "........................................................................ [ 81%]",
+        "................................................................         [100%]",
+        "352 passed in 17.27s"
+      ],
+      "stderr_tail": []
+    },
+    {
+      "step": "doctor",
+      "ok": true,
+      "exit_code": 0,
+      "seconds": 0.09,
+      "command": "D:\\Anaconda3\\python.exe -X utf8 -m velch.agent doctor",
+      "tail": [
+        "  ],",
+        "  \"ledger_entries\": 2",
+        "}"
+      ],
+      "stderr_tail": []
+    },
+    {
+      "step": "contract",
+      "ok": true,
+      "detail": {
+        "tools": 12
+      }
+    },
+    {
+      "step": "end-to-end",
+      "ok": true,
+      "detail": {
+        "status": "succeeded",
+        "result_status": "numerically_checked",
+        "job": "j20261022-165859-yidl",
+        "seconds": "2026-10-22T16:59:17"
+      }
+    }
+  ]
+}

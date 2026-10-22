@@ -828,3 +828,63 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 ### 顺带
 - `reports/` 入库排除（验收报告与临时渲染可再生，docs 需要的那张图已入库）。
 - 下一个提交点仍是第 3 项 `contact.py` 拆分——按用户要求**等 CI 兜底**后再动。
+
+## 2026-10-22 界面中文化：把数据标识符讲成人话（第 28 轮）
+
+用户的原话是「软件当中的一些部件等元素都改写成中文，要不然很难看懂」。先做审计，再决定改什么。
+
+### 审计：字面量本来就是中文，看不懂的是数据
+`​.tmp/audit_ui_language.py`（AST 抓 `text=` / `title=` / `set_xlabel` / `insert`）在 `src/velch/ui`
+里找到 264 个候选字面量，只有 8 个需要翻译，22 个 mixed —— 其余是 `insert(index="end")`、`state="readonly"`、
+`Card.TLabel` 这类 Tk 管线字符串，不是给人看的。真正让人看不懂的是**从数据里长出来的名字**：
+
+| 位置 | 之前 | 一条运行里的数量 |
+| --- | --- | --- |
+| 时程/频谱通道 | `axle1_right_normal_n` | 123–6127 |
+| 运行目录 | `out_A_final_law` | 208 |
+| 算例编号 | `S_hc_e0.15_v0.5` | 358 |
+| 算例屏标签 | `SHA-256`、`schema` | 2 |
+
+`​.tmp/ui_text_dump.py` 真建一个 Tk 窗口逐屏走 widget 树，量出每个屏还剩多少含 ASCII 的字符串：
+③ 191、④ 321、⑤ 226、⑥ 204、⑦ 538 —— 其中绝大多数就是上面的通道名与目录名。
+
+### 做法：文法化的中文标签，不认识的宁可不译
+- `src/velch/ui/store.py` 重写 `channel_unit` / `channel_group` / `channel_label`：
+  按**有文档的通道文法**拆词（`axleN` / `bogieN` / `carbody` / `track_modeN` / `railN` / `sleeperN`），
+  出 `第2轴右轨 法向力 [N]`、`第1轴 横移速度 [m/s]`、`车体 摇头角 [rad]`、`钢轨 模态位移 12 [m]`、
+  `第1轴左轨 钢轨垂向位移 [m]`。三条规则值得记住：
+  1. **速度后缀 `_per_s` 必须比 `_m` 先匹配**，否则每个速度都会被叫成位移；
+  2. `avle1_left_active` 这类通道把词写在**单位后缀里**（`_active`），剥掉后缀会丢失唯一的语义，
+     所以加了 `_SUFFIX_QUANTITY` 把词捡回来；
+  3. **不认识的通道回落到原始名**，不猜。错的汉语词读起来像定义，比不译更坏。
+- 新增 `channel_short_label()`（去掉单位，给窄表格用）与 `run_label()`：
+  `out_full12_cap05 · 2401 帧 · 155 通道 · 隐式 BDF · 门 7/7`；没有 manifest 的运行目录也会带
+  `（manifest 缺失）`/`（无 history 表头）`，不再退化成一行标识符。③④⑤⑥ 屏的下拉统一改用它。
+- ④ 频谱的通道下拉改为**显示中文、内部映射回原始列名**（`_column_by_label`），图例与状态行给
+  `第1轴右轨 法向力（axle1_right_normal_n）` —— 中文给人读，原始名给人复制。
+- ① 算例屏：`算例 ID` → `算例编号`，`schema` → `算例格式`，`SHA-256` → `文件哈希（SHA-256）`。
+- `src/velch/ui/widgets.py` 图表刻度：matplotlib 默认会为"几乎不变"的力给出 `1e-17+5.96e4`
+  这种偏移标签，关掉偏移后又变成 `59680.5768588`（十二位噪声）。改为统一 4 位有效数字的自定义
+  `FuncFormatter`：`1e-3 ≤ |v| < 1e4` 用 `%.4g`，其余用 `%.2e`。**调用方显式给的刻度标签（频带频率、
+  里程站号）必须保留**，所以 `x_ticks` 非空时不装这个 formatter。
+
+### 度量（`​.tmp/ui_identifier_audit.py`：只统计"像标识符"的字符串，不算单位符号）
+纯标识符 **21 条 → 2 条**：`crh380a_m`（数据目录名，就是要留着）与 `s`（秒的单位）。
+③ 时程与 ④ 频谱各 0 条。截图 `docs/images/ui_chinese_labels.png`（④ 频谱屏，真实运行 `out_full12_cap05`）。
+
+### 测试与验证
+- 新增 `tests/test_ui_labels.py`（**26 项**）：19 条文法对照表（改一个词就会红）、未知通道回落、
+  速度后缀优先、七项门的名字里不得有 ASCII 字母、`run_label` 两例（有/无 manifest），
+  以及**覆盖测试**——把两个真实 history 文件的每一列都翻一遍，断言没有列掉回原始名。
+  这条覆盖测试抓到了固定表看不出来的两类漏译：`axleN_left_rail_z_m`（柔件轨道的钢轨/轨枕通道）
+  与 `track_modeN_m`（模态轨道）。
+- `pytest tests` → **415 passed in 13.9 s**（389 + 26）
+- `python -m velch.ui --selftest` → 退出码 0，7 屏 / 404 控件 / 0 个屏报错
+
+### 踩坑（两次，都是我自己造的）
+1. `_compact_ticks` 写成 `@staticmethod` 却引用 `self.x_ticks` → 每次重绘抛
+   `NameError: name 'self' is not defined`，而 Tk 把回调异常打到 stderr 后**照样出图**，
+   只有看到 stderr 才知道。判据：改完 UI 必须看 stderr，不能只看图。
+2. 先装的 `FuncFormatter` 把 ④ 频谱的 `set_xticks(pos, freq)` 覆盖掉了，横轴标签从
+   `6.2079 … 793.7` 变成 `0.7924 … 2.9`（即 log10 位置）——**图看着正常，轴是错的**。
+   这是"显式标签必须优先于全局格式化"的教训。

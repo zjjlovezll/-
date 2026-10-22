@@ -438,8 +438,36 @@ class Chart(ttk.Frame):
                                  facecolor=theme.OVERLAY, edgecolor=theme.BORDER)
             for text in legend.get_texts():
                 text.set_color(theme.INK)
+        self._compact_ticks(axes)
         figure.tight_layout(pad=0.6)
         self._mpl_widget.draw_idle()
+
+    def _compact_ticks(self, axes) -> None:
+        """Four significant digits per tick, with an explicit exponent only when it is needed.
+
+        Matplotlib's defaults fail on both ends of this data: a force that barely moves gets
+        ``1e-17+5.96e4`` (an offset label nobody can read), and the same force with the offset
+        disabled gets ``59680.5768588`` (twelve digits of noise).  Four significant figures is
+        what the physics justifies, and ``%.2e`` keeps extreme magnitudes short.
+        """
+
+        from matplotlib.ticker import FuncFormatter
+
+        def text(value: float, _position: float) -> str:
+            if value == 0:
+                return "0"
+            magnitude = abs(value)
+            if 1e-3 <= magnitude < 1e4:
+                return f"{value:.4g}"
+            return f"{value:.2e}".replace("e+0", "e+").replace("e-0", "e-")
+
+        formatter = FuncFormatter(text)
+        if not self.x_ticks:
+            # An explicit tick label (a band frequency, a station) is the caller's decision and
+            # must survive: replacing its formatter would print the log position instead of the
+            # frequency the caller asked for.
+            axes.xaxis.set_major_formatter(formatter)
+        axes.yaxis.set_major_formatter(formatter)
 
     @staticmethod
     def _bar_width(xs: Sequence[float]) -> float:

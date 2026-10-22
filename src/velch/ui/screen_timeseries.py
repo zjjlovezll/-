@@ -135,7 +135,7 @@ class TimeSeriesScreen(Screen):
     # -- data --------------------------------------------------------------
     def refresh(self) -> None:
         self.runs = [run for run in store.scan_runs() if run.columns and not run.problem]
-        values = [f"{run.name}  ({run.columns} 通道)" for run in self.runs]
+        values = [store.run_label(run) for run in self.runs]
         self.run_combo.configure(values=values)
         wanted = self.app.context.get("run")
         index = 0

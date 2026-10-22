@@ -81,64 +81,171 @@ class StoreError(RuntimeError):
 # channel vocabulary
 # ---------------------------------------------------------------------------
 
-#: ``(suffix, unit, group)`` ordered most-specific first; the first match wins.
+#: ``(suffix, unit, group)`` ordered most-specific first; the first match wins.  Length matters:
+#: ``_m_per_s`` has to be tested before ``_m`` or every velocity would be labelled a position.
 _UNIT_RULES: tuple[tuple[str, str, str], ...] = (
     ("_m_per_s", "m/s", "速度"),
     ("_rad_per_s", "rad/s", "角速度"),
-    ("_nm", "N·m", "力矩"),
-    ("_penetration_m", "m", "侵入量"),
     ("_normal_n", "N", "接触力"),
     ("_fx_n", "N", "接触力"),
     ("_fy_n", "N", "接触力"),
     ("_fz_n", "N", "接触力"),
-    ("_active", "无量纲", "接触状态"),
-    ("_rail_y_m", "m", "轨道位移"),
-    ("_rail_z_m", "m", "轨道位移"),
-    ("_sleeper_y_m", "m", "轨道位移"),
-    ("_sleeper_z_m", "m", "轨道位移"),
+    ("_nm", "N·m", "力矩"),
+    ("_penetration_m", "m", "侵入深度"),
+    ("_active", "—", "接触状态"),
     ("_rad", "rad", "转角"),
     ("_m", "m", "位移"),
     ("_s", "s", "时间"),
 )
 
+#: Body/owner words.  ``第1轴`` reads better than ``1 轴`` and keeps the number attached.
+_OWNER = {
+    "time": "时间",
+    "carbody": "车体",
+    "bogie1": "前转向架",
+    "bogie2": "后转向架",
+    "bogie": "转向架",
+}
+for _index in range(1, 9):
+    _OWNER[f"axle{_index}"] = f"第{_index}轴"
+
+#: Side words for the four wheel-rail contacts of one wheelset.
+_SIDE = {"left": "左轨", "right": "右轨"}
+
+#: Quantity words, keyed by the token that follows the owner (and optional side).
+_QUANTITY = {
+    "normal": "法向力",
+    "fx": "纵向蠕滑力",
+    "fy": "横向蠕滑力",
+    "fz": "垂向轮轨力",
+    "penetration": "侵入深度",
+    "active": "接触状态",
+    "x": "里程",
+    "y": "横移",
+    "z": "沉浮",
+    "roll": "侧滚角",
+    "pitch": "点头角",
+    "yaw": "摇头角",
+    "spin": "自转角",
+    "mode": "模态位移",
+}
+
+#: Rail/sleeper channels of a flexible track, e.g. ``rail2_z_m``.
+_TRACK_OWNER = {"rail": "钢轨", "sleeper": "轨枕"}
+
+#: Quantity carried *by the unit suffix* rather than by a token of its own: in
+#: ``axle1_left_active`` the word ``active`` is the suffix, so stripping it would otherwise lose
+#: the one thing the channel means.
+_SUFFIX_QUANTITY = {
+    "_normal_n": "normal",
+    "_fx_n": "fx",
+    "_fy_n": "fy",
+    "_fz_n": "fz",
+    "_penetration_m": "penetration",
+    "_active": "active",
+}
+
+
+def _split_suffix(column: str) -> tuple[str, str, str]:
+    """``(base, unit, group)`` for a history column, by the documented suffix."""
+
+    for suffix, unit, group in _UNIT_RULES:
+        if column.endswith(suffix):
+            return column[: -len(suffix)], unit, group
+    return column, "—", "其他"
+
+
+def _split_suffix_full(column: str) -> tuple[str, str, str, str]:
+    """``(base, unit, group, suffix)`` — the suffix itself is sometimes the quantity word.
+
+    ``axle1_left_active`` has no token left once ``_active`` is stripped, so the quantity has to
+    come back out of the suffix; without this the label falls back to the raw identifier.
+    """
+
+    for suffix, unit, group in _UNIT_RULES:
+        if column.endswith(suffix):
+            return column[: -len(suffix)], unit, group, suffix
+    return column, "—", "其他", ""
+
 
 def channel_unit(column: str) -> str:
     """Unit of a history column, inferred from its documented suffix."""
 
-    for suffix, unit, _group in _UNIT_RULES:
-        if column.endswith(suffix):
-            return unit
-    return "无量纲"
+    return _split_suffix(column)[1]
 
 
 def channel_group(column: str) -> str:
     """Unit group shown as the y-axis band on the time-history screen."""
 
-    for suffix, _unit, group in _UNIT_RULES:
-        if column.endswith(suffix):
-            return group
-    return "其他"
+    return _split_suffix(column)[2]
 
 
 def channel_label(column: str) -> str:
-    """Chinese label for a channel, derived from the axle/side/quantity parts."""
+    """Chinese label for a history column.
 
-    parts = column.split("_")
-    head = parts[0]
-    body = {"axle1": "1 轴", "axle2": "2 轴", "axle3": "3 轴", "axle4": "4 轴",
-            "bogie1": "前转向架", "bogie2": "后转向架", "carbody": "车体",
-            "time": "时间"}.get(head, head)
-    side = {"left": "左", "right": "右"}.get(parts[1], "") if len(parts) > 1 else ""
-    quantity = {"normal": "法向力", "fx": "纵向力", "fy": "横向力", "fz": "垂向力",
-                "penetration": "侵入量", "active": "接触标志",
-                "x": "纵向位置", "y": "横向位置", "z": "垂向位置",
-                "roll": "侧滚", "pitch": "点头", "yaw": "摇头", "spin": "自转",
-                "rail": "钢轨", "sleeper": "轨枕"}.get(
-                    parts[2] if len(parts) > 2 else parts[-1],
-                    parts[2] if len(parts) > 2 else "")
-    unit = channel_unit(column)
-    spoken = f"{body} {side} {quantity}".replace("  ", " ").strip()
-    return f"{spoken} [{unit}]" if spoken else f"{column} [{unit}]"
+    The label is built from the documented channel grammar rather than guessed:
+
+        ``axle2_right_normal_n``   -> ``第2轴右轨 法向力 [N]``
+        ``axle1_y_m_per_s``        -> ``第1轴 横移速度 [m/s]``
+        ``carbody_yaw_rad``        -> ``车体 摇头角 [rad]``
+        ``track_mode12_m``         -> ``钢轨 模态位移 12 [m]``
+
+    An unrecognised column falls back to the raw name with its unit, never to a guess: a wrong
+    Chinese word is worse than an untranslated identifier, because it reads like a definition.
+    """
+
+    base, unit, _group, suffix = _split_suffix_full(column)
+    tokens = base.split("_")
+    if not tokens:
+        return column
+    velocity = unit in {"m/s", "rad/s"}
+    suffix_word = "速度" if velocity else ""
+
+    head = tokens[0]
+    remainder = tokens[1:]
+    if head == "time" and not remainder:
+        return f"时间 [{unit}]"
+    if head == "track" and remainder and remainder[0].startswith("mode"):
+        digits = remainder[0][len("mode"):]
+        return f"钢轨 模态位移 {digits} [{unit}]" if digits else f"钢轨 模态位移 [{unit}]"
+
+    owner = _OWNER.get(head)
+    track_kind = _TRACK_OWNER.get(head.rstrip("0123456789"))
+    if owner is None and track_kind and remainder:
+        index = head[len(head.rstrip("0123456789")):]
+        quantity = _QUANTITY.get(remainder[0], "")
+        spoken = f"{track_kind}{index} {quantity}{suffix_word}".strip()
+        return f"{spoken} [{unit}]" if quantity else f"{column} [{unit}]"
+    if owner is None:
+        return f"{column} [{unit}]"
+
+    side = ""
+    if remainder[:1] and remainder[0] in _SIDE:
+        side = _SIDE[remainder[0]]
+        remainder = remainder[1:]
+    # Flexible-track channels name the structural part after the side: ``axle1_left_rail_z_m``
+    # is the rail's vertical displacement under wheel 1's left contact, not the wheel's motion.
+    part = ""
+    quantity = ""
+    if remainder and remainder[0] in _TRACK_OWNER:
+        part = _TRACK_OWNER[remainder[0]]
+        remainder = remainder[1:]
+        direction = remainder[0] if remainder else ""
+        quantity = {"y": "横向位移", "z": "垂向位移"}.get(direction, "")
+    else:
+        quantity_token = remainder[0] if remainder else _SUFFIX_QUANTITY.get(suffix, "")
+        quantity = _QUANTITY.get(quantity_token, "")
+    if not quantity:
+        return f"{column} [{unit}]"
+    spoken = f"{owner}{side} {part}{quantity}{suffix_word}".strip()
+    return f"{spoken} [{unit}]"
+
+
+def channel_short_label(column: str) -> str:
+    """``channel_label`` without the trailing unit, for tight tables."""
+
+    label = channel_label(column)
+    return label.rsplit(" [", 1)[0] if " [" in label else label
 
 
 def group_channels(columns: Iterable[str]) -> dict[str, list[str]]:
@@ -386,6 +493,40 @@ def history_columns(path: Path) -> list[str]:
     if problem:
         raise StoreError(problem)
     return columns
+
+
+#: Solver names as a person reads them.  The name itself stays in the label, the words explain it.
+_METHOD_WORDS = {
+    "DOP853": "显式 8 阶 DOP853",
+    "Radau": "隐式 Radau",
+    "BDF": "隐式 BDF",
+}
+
+
+def run_label(run: RunInfo) -> str:
+    """One run in words: ``名称 · 帧数 · 通道 · 方法 · 门 7/7``.
+
+    The directory name stays first and untranslated — it is the identifier a person types to
+    reopen the run, and two runs can only be told apart by it.  The words after it are what
+    makes the row readable without opening the docs.
+    """
+
+    parts = [run.name]
+    if run.samples:
+        parts.append(f"{run.samples} 帧")
+    if run.columns:
+        parts.append(f"{run.columns} 通道")
+    if run.method:
+        parts.append(_METHOD_WORDS.get(run.method, run.method))
+    if run.gates:
+        parts.append(f"门 {run.gates_passed}/{len(run.gates)}")
+    if run.problem:
+        parts.append(f"（{run.problem}）")
+    elif len(parts) == 1:
+        # A run directory with no readable manifest still has to say *something* in words, or
+        # the dropdown reads as a pile of identifiers.
+        parts.append("（无 history 表头）" if not run.history.is_file() else "（未解析通道）")
+    return " · ".join(parts)
 
 
 @dataclass

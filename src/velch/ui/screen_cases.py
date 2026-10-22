@@ -75,11 +75,11 @@ class CasesScreen(Screen):
         grid = ttk.Frame(detail, style="Card.TFrame")
         grid.pack(fill="x")
         grid.columnconfigure(1, weight=1)
-        spec = (("case_id", "算例 ID"), ("schema", "schema"),
+        spec = (("case_id", "算例编号"), ("schema", "算例格式"),
                 ("purpose", "目的"), ("duration", "时长"),
                 ("dof", "自由度"), ("x_start", "起始里程"),
                 ("step", "输出步长"), ("size", "文件大小"),
-                ("sha", "SHA-256"), ("path", "文件路径"))
+                ("sha", "文件哈希（SHA-256）"), ("path", "文件路径"))
         for row, (key, label) in enumerate(spec):
             ttk.Label(grid, text=label, style="Dim.TLabel",
                       font=ui_font(theme.FONT_SIZE["micro"])).grid(

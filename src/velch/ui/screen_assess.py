@@ -140,9 +140,7 @@ class AssessScreen(Screen):
     # -- data --------------------------------------------------------------
     def refresh(self) -> None:
         self.runs = store.scan_runs()
-        self.run_combo.configure(values=[f"{run.name}  "
-                                         f"{run.gates_passed}/{run.gates_total} 门"
-                                         for run in self.runs])
+        self.run_combo.configure(values=[store.run_label(run) for run in self.runs])
         wanted = self.app.context.get("run")
         index = 0
         if wanted is not None:

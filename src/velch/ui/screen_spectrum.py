@@ -27,6 +27,10 @@ class SpectrumScreen(Screen):
     def _build(self) -> None:
         self.runs: list[store.RunInfo] = []
         self.columns: list[str] = []
+        #: ``中文标签 -> 原始列名``。The combobox must show words a person can read while the
+        #: maths keeps needing the exact column name, so the mapping lives next to the widget
+        #: instead of being re-derived from the label (labels are not guaranteed injective).
+        self._column_by_label: dict[str, str] = {}
         self.result: store.SpectrumResult | None = None
         self.run_var = tk.StringVar()
         self.channel_var = tk.StringVar()
@@ -106,8 +110,7 @@ class SpectrumScreen(Screen):
     # -- data --------------------------------------------------------------
     def refresh(self) -> None:
         self.runs = [run for run in store.scan_runs() if run.columns and not run.problem]
-        self.run_combo.configure(values=[f"{run.name}  ({run.columns} 通道)"
-                                         for run in self.runs])
+        self.run_combo.configure(values=[store.run_label(run) for run in self.runs])
         wanted = self.app.context.get("run")
         index = 0
         if wanted is not None:
@@ -133,8 +136,20 @@ class SpectrumScreen(Screen):
             return
         ordered = [name for name in self.columns if name.endswith("_normal_n")]
         ordered += [name for name in self.columns if name not in ordered]
-        self.channel_combo.configure(values=ordered)
-        pick = DEFAULT_CHANNEL if DEFAULT_CHANNEL in ordered else (ordered[0] if ordered else "")
+        labels: list[str] = []
+        self._column_by_label = {}
+        for column in ordered:
+            label = store.channel_label(column)
+            if label in self._column_by_label:
+                # Two columns that read the same in words must stay distinguishable in the
+                # dropdown, otherwise one of them becomes unreachable.
+                label = f"{label}（{column}）"
+            self._column_by_label[label] = column
+            labels.append(label)
+        self.channel_combo.configure(values=labels)
+        pick_column = DEFAULT_CHANNEL if DEFAULT_CHANNEL in ordered else (ordered[0] if ordered else "")
+        pick = next((label for label, column in self._column_by_label.items()
+                     if column == pick_column), "")
         self.channel_var.set(pick)
         self.app.set_context(run=run.path)
         self.set_rows(len(ordered), f"{run.name} · {len(ordered)} 个可分析通道")
@@ -142,7 +157,8 @@ class SpectrumScreen(Screen):
 
     def compute(self) -> None:
         index = self.run_combo.current()
-        channel = self.channel_var.get()
+        # The dropdown holds Chinese labels; the maths needs the exact column name.
+        channel = self._column_by_label.get(self.channel_var.get(), self.channel_var.get())
         if not (0 <= index < len(self.runs)) or not channel:
             self.app.set_status("先选运行目录与通道", tone="warn")
             return
@@ -156,7 +172,10 @@ class SpectrumScreen(Screen):
         if high <= low:
             self.app.set_status("上限必须大于下限", tone="fail")
             return
-        self.app.set_status(f"计算 {run.name} / {channel} 的 1/3 倍频程 …", tone="run")
+        self.app.set_status(
+            f"计算 {run.name} / {store.channel_short_label(channel)}（{channel}）的 1/3 倍频程 …",
+            tone="run",
+        )
 
         def work() -> store.SpectrumResult:
             series = store.read_history(run.history, ["time_s", channel])
@@ -201,7 +220,8 @@ class SpectrumScreen(Screen):
         self.card_p999.set(f"{metrics.p999_abs:.4g}", unit)
         self.card_dom.set("-" if result.dominant_hz is None
                           else f"{result.dominant_hz:.0f}", "Hz")
-        caption = (f"{result.column} · 采样 {result.rate_hz:.0f} Hz · "
+        caption = (f"{store.channel_short_label(result.column)}（{result.column}） · "
+                   f"采样 {result.rate_hz:.0f} Hz · "
                    f"频带 {result.low_hz:g}–{result.high_hz:g} Hz · {len(bands)} 个 1/3 倍频程带")
         if result.note:
             caption += "\n" + result.note

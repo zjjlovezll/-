@@ -87,7 +87,14 @@ def marker_candidates() -> list[Path]:
     if is_frozen():
         # A side-by-side development marker should still work when running from source.
         places.append(REPOSITORY_ROOT / MARKER_NAME)
-    return places
+    # In a frozen build ``repository_root()`` is already the folder the package was built from, so
+    # the third entry can repeat the second. Show each place once: a hint that lists the same path
+    # twice reads like a defect in the message.
+    unique: list[Path] = []
+    for place in places:
+        if place not in unique:
+            unique.append(place)
+    return unique
 
 
 def marker_path() -> Path:

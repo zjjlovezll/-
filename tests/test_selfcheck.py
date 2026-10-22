@@ -121,3 +121,17 @@ def test_the_cli_exposes_it():
 
     assert '"selfcheck"' in text
     assert "selfcheck" in text
+
+def test_a_frozen_build_looks_for_docs_under_internal(monkeypatch, tmp_path):
+    """PyInstaller 6 puts datas under _internal, so the exe's folder alone is not enough."""
+
+    from velch import data_root
+
+    monkeypatch.setattr(data_root, "is_frozen", lambda: True, raising=False)
+    monkeypatch.setattr(data_root, "frozen_install_root", lambda: tmp_path, raising=False)
+
+    roots = selfcheck._docs_roots()
+
+    assert tmp_path in roots
+    assert tmp_path / "_internal" in roots
+    assert len(roots) == len(set(roots)), "the same folder twice reads like a defect"

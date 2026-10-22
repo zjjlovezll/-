@@ -1,7 +1,9 @@
 """The Simpack import dialog must speak the CLI's language and nothing else."""
 from __future__ import annotations
 
+import os
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -16,19 +18,33 @@ _ROOT = None
 
 
 def _root():
-    """The one Tk root this module uses; ``None`` when Tk genuinely cannot open a window."""
+    """The one Tk root this module uses; never skipped silently after a transient failure.
+
+    Creating a second interpreter while another test still holds one can fail once and succeed on
+    the next try -- earlier this file turned that into a skip, which is how "seven screens green"
+    and "one random test skipped" coexisted. Retry a few times, and only then decide: skip when the
+    machine has no display at all (``VELCH_HEADLESS=1`` makes that explicit), fail otherwise.
+    """
 
     global _ROOT
     if _ROOT is not None:
         return _ROOT
     tk = pytest.importorskip("tkinter")
-    try:
-        root = tk.Tk()
-    except tk.TclError as error:  # pragma: no cover - headless CI only
-        pytest.skip(f"no Tk display: {error}")
-    root.withdraw()
-    _ROOT = root
-    return root
+    last: Exception | None = None
+    for _attempt in range(3):
+        try:
+            root = tk.Tk()
+        except tk.TclError as error:  # pragma: no cover - headless CI only
+            last = error
+            time.sleep(0.2)
+            continue
+        root.withdraw()
+        _ROOT = root
+        return root
+    if os.environ.get("VELCH_HEADLESS"):
+        pytest.skip(f"headless: {last}")
+    pytest.fail(f"Tk could not open a window after 3 tries: {last} "
+                "(set VELCH_HEADLESS=1 if this machine really has no display)")
 
 
 def _dialog(monkeypatch, tmp_path: Path):

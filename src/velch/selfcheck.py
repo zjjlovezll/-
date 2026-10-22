@@ -50,21 +50,28 @@ def _module_missing(name: str) -> bool:
 
 
 def _docs_roots() -> list[Path]:
-    """Where a release note may live: the source checkout, or the unpacked build's root.
+    """Every folder that could hold ``docs/``: the checkout, and the build's two levels.
 
-    A frozen build keeps ``docs/`` beside the exe, not inside ``_internal``, so ``parents[2]`` of
-    this file lands one level too deep there.
+    PyInstaller 6 puts ``datas`` under ``_internal``, so a frozen build's notes live at
+    ``<install>/_internal/docs`` while the exe sits at ``<install>``. ``parents[2]`` happened to
+    work for one layout and not the other, so ask all of them instead of guessing.
     """
 
-    roots = [Path(__file__).resolve().parents[2]]
+    file = Path(__file__).resolve()
+    roots: list[Path] = [parent for parent in file.parents[:3]]
     try:
         from velch.data_root import frozen_install_root, is_frozen
 
         if is_frozen():
             roots.insert(0, frozen_install_root())
+            roots.insert(1, frozen_install_root() / "_internal")
     except Exception:  # noqa: BLE001 - a missing helper must not break the check
         pass
-    return roots
+    unique: list[Path] = []
+    for root in roots:
+        if root not in unique:
+            unique.append(root)
+    return unique
 
 
 def _version_check() -> Check:

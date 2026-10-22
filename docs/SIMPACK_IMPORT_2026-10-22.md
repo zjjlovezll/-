@@ -227,3 +227,50 @@ The nearest start that measures within 3 mm is 72.7 m (worst 1.24 mm). Or use --
 
 派生失败（静平衡坐不住）时退出码为 2，界面**不会**把它当成功去刷新列表——这一点有测试
 （`tests/test_ui_simpack_dialog.py::test_derive_does_not_swallow_a_failing_command`）。
+
+## 九、横向布置：试了一次，被自己的量测挡下来了（0.4.8）
+
+O008 说"冠部横向漂移最多 103 mm，而横向布置尚未导入"。这一轮真的把它导进去，结论是**不能这样导**。
+
+### 做法
+
+`simpack-case --import-lateral` 会把每个站位的冠部横向位置写进该站位自己的 `y_offset_m`
+（`y_offset_from: "simpack crown"`），侧挂记录 `crown_lateral_m`（最大位移、发生里程、被改站位数）。
+
+### 量到的事
+
+在 80–90 m 窗口量两侧冠部相对模板的横向差：
+
+| 侧 | 有站位 | 横向修正范围 |
+|---|---|---|
+| 右轨 | 38 个 | **−73.78 mm … +102.99 mm**（相邻站位来回跳） |
+| 左轨 | **0 个** | 无数据 |
+
+### 为什么必须拒绝
+
+只改一侧的横向位置，**不是布置修正，而是轨距修正**：右侧 +103 mm、左侧 +0 mm，等于把轨距拉宽
+103 mm。第一次实跑就是这样——`seats: false`，一侧四个接触全部脱空（
+`the lightest contact patch carries only 0.0 N while the heaviest carries 119330.9 N`）。
+
+所以新加两道：`build_case(..., import_lateral=..., allow_gauge_change=...)` 先量**两侧**在该里程上的
+横向差，只要 `|右 − 左| > LATERAL_GAUGE_LIMIT_MM`（5 mm）就抛错并报出数字：
+
+```
+importing this side's crown lateral positions changes the gauge by +103.0 mm at 80.911 m
+(this side +103.0 mm, other side +0.0 mm), beyond the 5 mm a run can absorb: on one side a
+placement correction is a gauge change and rolls the vehicle onto one rail. Import both sides
+in one go, or pass --allow-gauge-change to say you mean it.
+```
+
+`--allow-gauge-change` 可以放行（侧挂留下 `lateral_gauge_mm`），用于"我就是要看 103 mm 轨距差会怎样"
+这种研究。默认不放行。
+
+### 还没解决的问题（记在 O008）
+
+1. 同一里程上有**两个不同表面**（`coincident_stations`，本模型 10 处）——"这一站的冠部"到底是基本轨
+   还是尖轨，catalog 不回答，需要双体交接（基本轨/尖轨各自一个 body）。0.4.8 的单侧修正之所以在
+   80.278 m 出现两个不同值（+81.69 mm 两次），就是这两个表面。
+2. 左轨在该窗口根本没有站位数据，所以"两侧同时导入"在当前模型上做不到。
+
+结论：横向布置**不是一条可以顺路补上的活**，它是双体交接的一部分。这一轮把它从"未做"变成"做了、
+被量测挡住、并装上了拒绝"，这才是诚实的进度。

@@ -56,6 +56,28 @@ def template() -> Path:
     return TEMPLATE
 
 
+def _gauge_catalog(root: Path) -> Path:
+    """A right-side catalog covering the 74–86 m window the gauge tests run in."""
+
+    profile = Path(json.loads(TEMPLATE.read_text(encoding="utf-8"))["rail_templates"][1]
+                   ["stations"][0]["profile"]["file"])
+    catalog = {
+        "schema_version": simpack_case.CATALOG_SCHEMA,
+        "model": {"path": str(root / "model.spck"), "sha256": "0" * 64},
+        "model_root": str(root),
+        "profile_references": [
+            {"source_model": str(root / "model.spck"), "rail": "$RWR_Rail_2", "side": "right",
+             "index": index, "filename": profile.name, "station_m": float(station),
+             "station_expression": None, "path": str(profile), "sha256": "1" * 64}
+            for index, station in enumerate(range(74, 87), start=1)
+        ],
+        "summary": {"geometry_readable": True, "missing_profile_references": 0},
+    }
+    path = root / "gauge_catalog.json"
+    path.write_text(json.dumps(catalog), encoding="utf-8")
+    return path
+
+
 def test_the_crown_is_the_lowest_point_not_a_fixed_offset(tmp_path, monkeypatch):
     """A section whose crown sits 70 mm outboard still reports its own height, not the flank's."""
 
@@ -157,3 +179,47 @@ def test_build_case_refuses_a_template_without_profile_metadata(tmp_path, templa
     with pytest.raises(SimpackCaseError):
         build_case(catalog_path=_catalog(tmp_path), template_path=broken,
                    out_path=tmp_path / "case.json", side="left", x_start_m=0.0)
+
+
+def test_a_one_sided_lateral_import_is_refused_as_a_gauge_change(tmp_path, monkeypatch,
+                                                                 template) -> None:
+    """O008: on this model the right rail asks for +103 mm over 80–90 m and the left has no
+    stations there, so importing one side "correctly" would widen the gauge by 103 mm and roll the
+    vehicle onto one rail.  The gate names the number instead of letting it happen."""
+    monkeypatch.setattr(simpack_case, "_crown_lateral_delta", lambda entry, template: 0.103
+                        if entry.side == "right" else None)
+    catalog = _gauge_catalog(tmp_path)
+    out = tmp_path / "gauge_refused.json"
+    with pytest.raises(simpack_case.SimpackCaseError) as caught:
+        simpack_case.build_case(catalog_path=catalog, template_path=template,
+                                out_path=out, side="right", rail=None, sample=None,
+                                x_start_m=80.0, duration_s=0.05, keep_profiles=False,
+                                import_lateral=True, allow_gauge_change=False)
+    message = str(caught.value)
+    assert "gauge" in message
+    assert "103.0 mm" in message, message
+    assert "--allow-gauge-change" in message
+    assert not out.exists(), "a refused case must not be written"
+
+
+def test_allow_gauge_change_lets_it_through_and_records_the_number(tmp_path, monkeypatch,
+                                                                   template) -> None:
+    monkeypatch.setattr(simpack_case, "_crown_lateral_delta", lambda entry, template: 0.103
+                        if entry.side == "right" else None)
+    catalog = _gauge_catalog(tmp_path)
+    out = tmp_path / "gauge_allowed.json"
+    built = simpack_case.build_case(catalog_path=catalog, template_path=template,
+                                    out_path=out, side="right", rail=None, sample=40,
+                                    x_start_m=80.0, duration_s=0.05, keep_profiles=False,
+                                    import_lateral=True, allow_gauge_change=True)
+    assert out.is_file()
+    sidecar = json.loads(Path(built.sidecar_path).read_text(encoding="utf-8"))
+    assert abs(sidecar["lateral_gauge_mm"]["gauge_mm"]) > 5.0
+    assert sidecar["lateral_gauge_mm"]["at_m"] > 0.0
+    assert sidecar["crown_lateral_m"]["shifted_stations"] == built.station_count
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    template_rail = payload["rail_templates"][1]
+    offsets = {station["profile"].get("y_offset_from") for station in template_rail["stations"]}
+    assert offsets == {"simpack crown"}
+    shifted = {round(station["profile"]["y_offset_m"], 9) for station in template_rail["stations"]}
+    assert len(shifted) == 1 and abs(next(iter(shifted)) - 0.753) > 0.05, "patched crown moved it"

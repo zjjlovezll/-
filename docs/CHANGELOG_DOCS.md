@@ -1298,3 +1298,23 @@ assess」按钮起 CLI 时**没带**轴重——同一屏上，卡片用你填�
 证明 ACL 拒绝时给出的是人话——那仍是 `docs/PACKAGING_2026-10-22.md` 末尾的四步手工清单。
 
 冒烟现在 **5 步全跑、0 跳过**。
+
+## 第 44 轮：横向布置不是顺手能补的一活
+
+O008 剩下的那一层（冠部横向漂移 103 mm 未导入）看起来像"再写个 delta 就行"。这一轮真做了，然后被
+自己的量测挡下来——**这才是它该有的结局**。
+
+- 新增 `--import-lateral`：每个站位的冠部横向位置写进该站自己的 `y_offset_m`，侧挂记
+  `crown_lateral_m`（最大位移 / 里程 / 站位数）。
+- 实测（80–90 m）：右轨 38 个站位需要 **−73.78 … +102.99 mm** 的修正；**左轨 0 个站位**，没有数据。
+- 只改一侧 = 改轨距：第一次实跑 `seats: false`，一侧四个接触全脱空
+  （`0.0 N` vs `119330.9 N`）。
+- 因此加 `LATERAL_GAUGE_LIMIT_MM = 5.0`：`build_case` 先量两侧差，超限抛错并报出
+  `+103.0 mm at 80.911 m (this side +103.0 mm, other side +0.0 mm)`，指向 `--allow-gauge-change`
+  （放行则侧挂留 `lateral_gauge_mm`）。
+- 两条测试钉住：超限必拒且消息含 `103.0 mm` 与 `--allow-gauge-change`、拒绝时不写算例文件；放行时
+  侧挂有 `lateral_gauge_mm`、算例里 `y_offset_from == "simpack crown"` 且偏移确实动了。
+- 仍未解决（写进 O008）：同一里程上有两个表面（10 处 `coincident_stations`），"冠部属于基本轨还是
+  尖轨"catalog 不回答——横向布置属**双体交接**，不是单侧修正。
+
+`pytest` **522 passed, 1 skipped**。

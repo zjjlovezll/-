@@ -76,6 +76,12 @@ def main(argv: list[str] | None = None) -> int:
     simpack_case.add_argument("--case-id", default=None)
     simpack_case.add_argument("--keep-profiles", action="store_true",
                               help="import only the station layout; keep the template's surface file")
+    simpack_case.add_argument("--import-lateral", action="store_true",
+                              help="also import each station's crown lateral position into its "
+                                   "y_offset_m (the surface moves; compare before quoting)")
+    simpack_case.add_argument("--allow-gauge-change", action="store_true",
+                              help="accept a one-sided lateral import that moves the gauge by more "
+                                   "than 5 mm (it rolls the vehicle onto one rail)")
     simpack_case.add_argument("--no-seat-check", action="store_true",
                               help="write the case without running the vertical preload equilibrium "
                                    "on it (the check is the only thing that knows whether the "
@@ -156,7 +162,9 @@ def main(argv: list[str] | None = None) -> int:
                     catalog_path=args.catalog, template_path=args.template, out_path=args.out,
                     side=args.side, rail=args.rail, sample=args.sample,
                     x_start_m=args.x_start, duration_s=args.duration, case_id=args.case_id,
-                    keep_profiles=args.keep_profiles)
+                    keep_profiles=args.keep_profiles,
+                    import_lateral=args.import_lateral,
+                    allow_gauge_change=args.allow_gauge_change)
             except SimpackCaseError as error:
                 print(json.dumps({"status": "failed", "error_type": type(error).__name__,
                                   "message": str(error)}, ensure_ascii=False, indent=2),

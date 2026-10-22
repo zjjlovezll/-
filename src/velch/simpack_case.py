@@ -31,6 +31,11 @@ SCHEMA_VERSION = "velch-simpack-case-v2"
 #: Crown heights match to well under a tenth of a millimetre on this model, so a crown difference
 #: beyond this is worth saying out loud.  It is a *reporting* threshold, not a refusal: no crown
 #: measurement predicts whether eight patches will seat (see docs/SIMPACK_IMPORT_2026-10-22.md).
+#: A crown correction moves the running surface.  Imported on one side only, it is a *gauge*
+#: change, and on this model the right rail asks for -74 mm…+103 mm over 80–90 m while the left rail
+#: has no stations at all in that window.  Anything beyond this is refused unless the caller says
+#: out loud that they mean it.
+LATERAL_GAUGE_LIMIT_MM = 5.0
 CROWN_WARN_MM = 0.5
 CATALOG_SCHEMA = "velch-simpack-track-catalog-v1"
 
@@ -189,6 +194,69 @@ def _crown_of(spec: dict[str, Any]) -> tuple[float, float] | None:
         return None
     index = int(np.argmin(z))
     return float(z[index]), float(y[index])
+
+
+def _gauge_implication(catalog: list[dict[str, Any]], *, side: str, chosen_entries,
+                       profile_template: dict[str, Any],
+                       other_template: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Gauge change implied by importing this side's crown lateral positions.
+
+    ``None`` when nothing can be measured.  The other side is measured from the catalog too: a
+    correction is only a *placement* when both rails move; on its own it widens or narrows the
+    gauge, and a 100 mm gauge change quietly rolls the vehicle onto one rail.
+    """
+
+    mine = [abs(delta) for delta in
+            (_crown_lateral_delta(entry, profile_template) for entry in chosen_entries)
+            if delta is not None]
+    if not mine:
+        return None
+    signed = [delta for delta in
+              (_crown_lateral_delta(entry, profile_template) for entry in chosen_entries)
+              if delta is not None]
+    worst_index = max(range(len(signed)), key=lambda index: abs(signed[index]))
+    station_m = list(chosen_entries)[worst_index].station_m
+
+    other_side = "left" if side == "right" else "right"
+    other: list[float] = []
+    if other_template is not None:
+        for item in catalog:
+            if item.get("side") != other_side:
+                continue
+            entry = CatalogStation(rail=item["rail"], side=item["side"], index=int(item["index"]),
+                                   station_m=float(item.get("station_m") or 0.0),
+                                   path=item["path"], sha256=item.get("sha256", ""))
+            if abs(entry.station_m - station_m) > 1.0:
+                continue
+            delta = _crown_lateral_delta(entry, other_template)
+            if delta is not None:
+                other.append(delta)
+    other_delta = (sum(other) / len(other)) if other else 0.0
+    gauge = signed[worst_index] - other_delta
+    return {"max_abs_mm": round(max(mine) * 1000.0, 2),
+            "signed_mm": round(signed[worst_index] * 1000.0, 2),
+            "at_m": round(station_m, 3),
+            "other_side_mm": round(other_delta * 1000.0, 2),
+            "gauge_mm": round(gauge * 1000.0, 2)}
+
+
+def _crown_lateral_delta(entry: CatalogStation,
+                         profile_template: dict[str, Any]) -> float | None:
+    """How far this station's crown sits from the template's, laterally, in track coordinates.
+
+    ``None`` when either crown cannot be measured.  A turnout section's crown wanders in y as the
+    blade opens and closes; ignoring that shift leaves the wheel running on a flank and the contact
+    point at the wrong distance from the crown, which is a difference the forces can feel even when
+    the crown *height* matches to a tenth of a millimetre.
+    """
+
+    base = _crown_of(profile_template)
+    if base is None:
+        return None
+    station = _crown_of({**profile_template, "file": entry.path})
+    if station is None:
+        return None
+    return float(station[1]) - float(base[1])
 
 
 def _crown_delta_mm(entries: Sequence[CatalogStation],
@@ -368,12 +436,18 @@ def _advice(entries: Sequence[CatalogStation], profile_template: dict[str, Any],
 def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path: str | Path,
                side: str = "left", rail: str | None = None, sample: int | None = None,
                x_start_m: float, duration_s: float | None = None,
-               case_id: str | None = None, keep_profiles: bool = False) -> CaseBuild:
+               case_id: str | None = None, keep_profiles: bool = False,
+               import_lateral: bool = False, allow_gauge_change: bool = False) -> CaseBuild:
     """Write a case whose rail geometry comes from the catalog and whose physics comes from a case.
 
     ``x_start_m`` is required and must lie inside the model's own mileage span, because the station
     mileages are imported unchanged: shifting them is what makes a rail stop covering the first
     wheel position.  The sidecar records the span the case actually covers.
+
+    ``import_lateral`` also writes each station's crown lateral position into its own
+    ``y_offset_m``, so the wheel meets the crown where the model says it is instead of on a flank
+    offset by the template's constant.  Off by default: it moves the running surface, and the two
+    runs must be compared before either is quoted.
 
     This function does not judge whether the imported section will *seat*: no crown measurement
     predicts that (see ``docs/SIMPACK_IMPORT_2026-10-22.md``).  ``velch simpack-case`` therefore runs
@@ -448,14 +522,41 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
     # and the run then fails the vertical preload equilibrium — loudly, in the summary.
     source_files = [str(profile_template.get("file", ""))] * len(chosen) if keep_profiles \
         else [entry.path for entry in chosen]
-    new_stations = [
-        {
+    lateral: list[tuple[float, float]] = []
+    gauge: dict[str, Any] | None = None
+    if import_lateral and not keep_profiles:
+        other_position = 1 - rail_templates.index(target)
+        other_template = None
+        if 0 <= other_position < len(rail_templates):
+            other_template = dict((rail_templates[other_position].get("stations") or [{}])[0]
+                                  .get("profile") or {}) or None
+        gauge = _gauge_implication(catalog.get("profile_references") or [], side=side,
+                                   chosen_entries=chosen, profile_template=profile_template,
+                                   other_template=other_template)
+        if gauge is not None and abs(gauge["gauge_mm"]) > LATERAL_GAUGE_LIMIT_MM \
+                and not allow_gauge_change:
+            raise SimpackCaseError(
+                f"importing this side's crown lateral positions changes the gauge by "
+                f"{gauge['gauge_mm']:+.1f} mm at {gauge['at_m']:.3f} m (this side "
+                f"{gauge['signed_mm']:+.1f} mm, other side {gauge['other_side_mm']:+.1f} mm), "
+                f"beyond the {LATERAL_GAUGE_LIMIT_MM:.0f} mm a run can absorb: on one side a "
+                "placement correction is a gauge change and rolls the vehicle onto one rail. "
+                "Import both sides in one go, or pass --allow-gauge-change to say you mean it.")
+
+    new_stations = []
+    for entry, path in zip(chosen, source_files):
+        profile = _template_profile(profile_template, path)
+        if import_lateral and not keep_profiles:
+            delta = _crown_lateral_delta(entry, profile_template)
+            if delta is not None:
+                profile["y_offset_m"] = round(float(profile.get("y_offset_m", 0.0)) + delta, 9)
+                profile["y_offset_from"] = "simpack crown"
+                lateral.append((abs(delta), entry.station_m))
+        new_stations.append({
             "id": f"SP{entry.index:03d}",
             "s_m": round(entry.station_m + shift, 6),
-            "profile": _template_profile(profile_template, path),
-        }
-        for entry, path in zip(chosen, source_files)
-    ]
+            "profile": profile,
+        })
     target["stations"] = new_stations
 
     run = dict(template.get("run") or {})
@@ -501,6 +602,11 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
         "x_start_m": float(x_start_m),
         "duration_s": run.get("duration_s"),
         "station_count": len(new_stations),
+        "lateral_gauge_mm": gauge,
+        "crown_lateral_m": (None if not lateral else {
+            "max_abs": round(max(item[0] for item in lateral), 4),
+            "at_m": round(max(lateral, key=lambda item: item[0])[1], 3),
+            "shifted_stations": len(lateral)}),
         "crown_delta_mm": (None if crowns is None
                            else {"max_abs": round(crowns[0], 3), "at_m": round(crowns[1], 3),
                                  "max_lateral_m": round(crowns[2], 4),

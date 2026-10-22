@@ -1414,3 +1414,21 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 旁挂 `lateral_gauge_mm.other_side_stations` 让脚本能区分"不对称模型"与"调用方少传了一侧"。
 新增 1 项测试（右 13 站 / 左 2 站的合成 catalog，断言消息含 `defines only 2 station(s) on the left rail`
 与 `--keep-profiles`）。`pytest` **533 passed, 2 skipped**。
+
+## 第 48 轮：⑤ 的第二半——与 Simpack 的定量对照（只描述不调参）
+
+目标里唯一还没有证据链的一步。做法：从 Simpack 结果 `350.mat`（HDF5，sha256 见报告）读出
+`SRS_RWT_WS/ch_001 SumQ`（前轮对垂向支反力之和）与 `ch_003 s`（里程），与已归档的
+`out_full12_cap05` 的 `axle1_left_normal_n + axle1_right_normal_n` 在 **79.0–138.5 m** 重叠段、
+0.05 m 等距网格上逐点比较。
+
+六条读数：均值差 −0.97 kN（0.8%）、峰值 194.29 对 136.29 kN（**差 58 kN，同在 80 m 道岔区**）、
+整段差值 rms 4.57 kN 而单点最大偏差 −66.0 kN（**不是整体偏移，是尖峰**）、三个频带 0.62×/0.31×/0.74×
+（越往高频差得越多）、允许平移时最优位移只有 +0.2 m（**里程轴配准正确**）、主导频率 31.65 对 37.19 Hz。
+
+两处方法学修正都记在报告里：①空域 FFT 的"Hz"要先乘速度，改成直接用两侧各自的时间轴
+（都是 0.5 ms 采样）；②频带 rms 必须走 Parseval（首版算出 118 kN 的"30–60 Hz rms"，超过信号
+自身的 4.8 kN，一眼就是错的）。
+
+产出 `docs/SIMPACK_COMPARE_2026-10-23.md`：出处表（含 sha256）、数字表、六条读数、**这页不能证明什么**
+（不能证明谁对；不是同工况验证；不构成标定）。`pytest` 534 passed / 1 skipped。

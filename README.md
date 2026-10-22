@@ -1,38 +1,81 @@
 # Velch 道岔车辆动力学研究软件（v0.4.0）
 
-Velch 是一个**独立实现、可运行的降阶正向求解器**。v0.2 新增“车体—前后转向架—4 轮对—道岔钢轨”联合模型：车辆 35 自由度，轨道按每个轮对的候选截面补丁增加自由度。v0.1 的单轮对求解器继续作为较小的核对算例使用。两个版本的车辆纵向速度均由外部规定。
+Velch 是一个**独立实现、可运行的降阶正向求解器**，带一套中文桌面工作台与面向 AI 的调用接口。
+车辆 35 自由度（车体—前后转向架—4 轮对），道岔钢轨按每个轮对的候选截面补丁增加自由度；
+两个版本的车辆纵向速度均由外部规定。v1 单轮对求解器继续作为较小的核对算例。
 
-v0.3 增加 Windows 桌面工作台，提供模型树、参数编辑、输入校验、案例另存、仿真运行、停止、结果曲线与日志。v0.4 为 v2 车辆案例增加刚性、局部柔度和独立模态轨道选项，以及 Simpack 道岔截面目录只读导入。界面调用同一套 Python 求解器。
+![三维模型屏：钢轨型面与车轮](/Velch/docs/images/model3d_preview.png)
 
-![Velch 桌面工作台预览](docs/velch_gui_preview.png)
+## 三十秒上手
 
-## 打开桌面界面
+1. **双击** [启动Velch界面.cmd](启动Velch界面.cmd)（或桌面上的 `Velch 道岔动力学.cmd`）。
+2. 在 ① 算例屏挑一个算例（`case_frog_N_strip05.json` 只要几秒），双击或按「在『运行』屏打开」。
+3. ② 运行屏按 **Ctrl+R** 开始跑；跑完 ③ 时程 / ④ 频谱 / ⑤ 评价 / ⑥ 对照 各自加载该次运行。
+4. 字号看不清：**Ctrl+=** 放大、**Ctrl+-** 缩小、**Ctrl+0** 还原（0.9–1.6 倍）。
 
-在 PowerShell 中进入本目录，安装本地包并启动：
+命令行等价物：
 
 ```powershell
 cd 'F:\ai道岔状态反演辨识\Velch'
-python -m pip install -e .
-velch-gui .\examples\vehicle_v2\case.json
+$env:PYTHONPATH = "$PWD\src"
+python -X utf8 -m velch.ui                  # 打开界面
+python -X utf8 -m velch.ui --selftest       # 无头自检：7 屏逐个加载数据
 ```
 
-也可以安装已生成的 v0.4 wheel：`python -m pip install .\dist\velch_turnout_dynamics-0.4.0-py3-none-any.whl`。
+`python -m pip install -e .` 之后也可以直接用 `velch-ui` 入口。界面只用标准库 Tkinter；
+三维屏需要 `matplotlib`（`pip install -e ".[ui]"`，缺失时该屏降级为一句提示，其余六屏照常）。
 
-本机可直接双击 [启动Velch界面.cmd](启动Velch界面.cmd)，默认打开四轴车辆演示案例。它使用当前 `python` 命令和本目录 `src` 代码；需已有 NumPy、SciPy 和 Tkinter。
+## 七个屏各自回答什么
 
-如果 `velch-gui` 尚未进入当前终端的 PATH，可以直接运行：
+| 屏 | 回答的问题 | 数据来源 |
+|---|---|---|
+| ① 算例 | 有哪些算例、自由度多少、参数哈希是多少，怎么派生新算例 | `case_*.json` 清单 |
+| ② 运行 | 用哪个算例、什么求解器、要不要多进程，跑得怎么样 | 启动 CLI 子进程，日志流式回显 |
+| ③ 时程 | 哪条通道随时间怎么变（多选，按单位分组，各带独立纵轴） | `history.csv` |
+| ④ 频谱 | 某个通道的能量落在哪些 1/3 倍频程带 | `velch.inverse.bands` |
+| ⑤ 评价 | 这次运行过没过数值门，七项判据逐条是什么 | `manifest.json` + `summary` |
+| ⑥ 对照 | 与 Simpack 或另一次运行差多少 | 两个运行目录的共里程比 |
+| ⑦ 三维 | 钢轨型面和车轮长什么样、轮对怎么走 | 算例引用的型面文件 |
+
+界面里的字是中文，通道名（`axle1_right_normal_n`）仍按原始列名保留 —— 它是数据契约，
+翻译后无法再与 `history.csv`、manifest 对账；中文解释显示在标签与说明行。
+
+## 提交前闸门（本仓库没有远端，闸门就是 CI）
 
 ```powershell
-python -m velch.gui .\examples\vehicle_v2\case.json
+git config core.hooksPath .githooks     # 每个克隆做一次
 ```
 
-已建立虚拟环境的用户也可以安装本地构建的 wheel，再运行该环境的 `Scripts\velch-gui.exe`。Windows Python 需要包含 Tkinter（`python -m tkinter` 可检查）。界面使用标准库 Tkinter，没有新增 UI 依赖。
+之后每次 `git commit` 会先跑 `scripts/auto_accept.py --skip-run`（pytest 全绿 → agent doctor →
+契约 → 跳过端到端），实测 **16 s**；任一步失败即阻断提交。完整验收（含一次真实仿真）用
+`python -X utf8 scripts/auto_accept.py`。临时跳过：`VELCH_SKIP_HOOK=1 git commit ...`。
 
-工作步骤：打开案例 → 左侧选择具体参数 → 右侧修改并应用 → 校验 → 运行仿真。选中 `profile.file` 时，可在右侧更换轮廓文件并预览截面。若参数尚未保存，运行时会在案例旁生成带时间戳的运行快照，保留原始案例。结果页可选择任意 CSV 列绘图；记录数很大时抽样显示并尽量保留局部峰值，完整数据仍在 `history.csv` 中。另存案例到其他目录时，界面将相对轮廓路径改为原资源的绝对路径；若要迁移到另一台机器，需要同步轮廓文件并重新指定路径。
+没有挂 1.4 GB 语料的克隆上，端到端一步会打印 `SKIP` 而不是假 PASS —— 那是较弱的闸门，但要明说。
 
-界面目前属于研究工作台，不含 Simpack 的 3D 建模器、完整元件库或实时三维动画。输入校验表示算例结构和资源可读取；动力学物理有效性仍需独立标定与对照。
+## 让 AI 调用这套软件
 
-**当前通过的是合成算例的数值检查，尚未完成真实道岔的几何/材料标定或与 Simpack、实测数据的物理验证。** 车体与转向架采用小转角降阶坐标；轴箱并入轮对。它不能代替完整 3D 多体车辆、柔性轨道有限元、齿轮齿条啮合或状态反演求解器。第二版的来源、方程、Simpack 只读连接证据与限制见 [车辆模型说明](docs/VEHICLE_V2_DESIGN_AND_EVIDENCE.md)。
+```powershell
+python -X utf8 -m velch.agent doctor        # 自检：注册表 72 参数 / 语料 358 算例 / 可写目录
+python -X utf8 -m velch.agent manifest      # 12 个工具的 JSON Schema 清单
+python -X utf8 -m velch.agent serve         # MCP stdio 服务（2024-11-05 协议）
+python -X utf8 -m velch.agent call '{"tool":"capabilities"}'
+```
+
+写入口只有一个（`derive_case`：派生新算例，绝不原地改父算例），仿真一律走子进程，
+失败给错误码（`gate_failed` 是状态不是错误）。设计与契约见
+[AI 接口架构](docs/AI_INTERFACE_ARCHITECTURE_2026-10-22.md) 与
+[工具层契约](docs/AGENT_TOOL_LAYER_2026-10-22.md)。
+
+## 语料（算例与运行产物）放在仓库外
+
+1.4 GB 的 `validation/` 语料在 `F:\velch_data\validation\crh380a_m`，仓库里只留判据长文与
+`.velch-data.example.json` 模板。解析顺序：`VELCH_DATA_ROOT` → `.velch-data.json` 标记 → 仓内
+`validation/`；缺语料时测试整体 skip 而不是报错。详见 [validation/INDEX.md](validation/INDEX.md)。
+
+**当前通过的是合成算例的数值检查，尚未完成真实道岔的几何/材料标定或与 Simpack、实测数据的物理验证。**
+车体与转向架采用小转角降阶坐标；轴箱并入轮对。它不能代替完整 3D 多体车辆、柔性轨道有限元、
+齿轮齿条啮合或状态反演求解器。第二版的来源、方程、Simpack 只读连接证据与限制见
+[车辆模型说明](docs/VEHICLE_V2_DESIGN_AND_EVIDENCE.md)。
 
 ## 快速运行（Windows PowerShell）
 

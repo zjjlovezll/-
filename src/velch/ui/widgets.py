@@ -17,6 +17,7 @@ from tkinter import ttk
 from typing import Callable, Sequence
 
 from . import theme
+from .fmt import fmt_number, fmt_pair, fmt_percent
 
 try:  # optional: only the chart needs it
     import warnings
@@ -127,11 +128,16 @@ class LimitBar(tk.Canvas):
     """``value`` against ``limit`` as a filled bar with a hard limit marker."""
 
     def __init__(self, parent: tk.Misc, label: str, *, caption: str = "",
-                 height: int = 52):
-        super().__init__(parent, height=height, bg=theme.SURFACE,
+                 height: int = 64, unit: str = ""):
+        # ``width=1`` keeps the canvas from demanding its default 378 px: the bar's width is
+        # whatever the card gives it.  Without this the reading was laid out past the card edge
+        # and "3896 / 4.979e+04" arrived on screen as "3896 / 4.97" — off by four orders of
+        # magnitude, in an engineering verdict.
+        super().__init__(parent, height=int(height * theme.SCALE), width=1, bg=theme.SURFACE,
                          highlightthickness=0, bd=0)
         self._label = label
         self._caption = caption
+        self._unit = unit
         self._value = 0.0
         self._limit = 1.0
         self._passed = True
@@ -145,25 +151,38 @@ class LimitBar(tk.Canvas):
 
     def _draw(self) -> None:
         self.delete("all")
-        width = max(self.winfo_width(), 220)
+        width = self.winfo_width()
+        if width <= 1:            # not mapped yet: <Configure> will call us again
+            return
         ratio = 0.0 if self._limit <= 0 else min(self._value / self._limit, 1.35)
-        colour = theme.PASS if self._passed else theme.FAIL
-        left, right = 0, width - 6
-        top = 26
-        track_h = 10
-        self.create_text(left, 8, text=self._label, anchor="w", fill=theme.INK,
+        if not self._passed or ratio >= 1.0:
+            colour = theme.FAIL
+        elif ratio >= 0.8:
+            colour = theme.WARN
+        else:
+            colour = theme.PASS
+        left, right = 0, width - 2
+        top = int(26 * theme.SCALE)
+        track_h = int(10 * theme.SCALE)
+        self.create_text(left, 0, text=self._label, anchor="nw", fill=theme.INK,
                          font=ui_font(theme.FONT_SIZE["tiny"]))
-        self.create_text(right, 8, text=f"{self._value:.4g} / {self._limit:.4g}",
-                         anchor="e", fill=colour, font=mono_font(theme.FONT_SIZE["tiny"]))
+        reading = fmt_pair(self._value, self._limit, self._unit)
+        self.create_text(right, 0, text=reading, anchor="ne", fill=colour,
+                         font=mono_font(theme.FONT_SIZE["tiny"]))
         self.create_rectangle(left, top, right, top + track_h, fill=theme.RAISED, outline="")
         span = right - left
+        warn_x = left + span * 0.8
+        self.create_line(warn_x, top - 2, warn_x, top + track_h + 2,
+                         fill=theme.WARN, width=1, dash=(2, 2))
         bar_right = left + span * min(ratio, 1.0)
         self.create_rectangle(left, top, max(bar_right, left + 1), top + track_h,
                               fill=colour, outline="")
         self.create_line(right, top - 3, right, top + track_h + 3, fill=theme.FAIL, width=2)
+        detail = fmt_percent(ratio) + ("  超限" if ratio >= 1.0 else "")
         if self._caption:
-            self.create_text(left, top + track_h + 9, text=self._caption, anchor="w",
-                             fill=theme.INK_DIM, font=ui_font(theme.FONT_SIZE["micro"]))
+            detail = f"{detail} · {self._caption}"
+        self.create_text(left, top + track_h + int(6 * theme.SCALE), text=detail, anchor="nw",
+                         fill=theme.INK_MUTED, font=ui_font(theme.FONT_SIZE["micro"]))
 
 
 class GateList(ttk.Frame):
@@ -208,30 +227,41 @@ class GateList(ttk.Frame):
 
 
 class ListPanel(ttk.Frame):
-    """Labelled list of selectable text items with a scrollbar (filterable)."""
+    """Labelled list of selectable text items with scrollbars (filterable)."""
 
     def __init__(self, parent: tk.Misc, *, height: int = 12, selectmode: str = "browse",
                  mono: bool = False):
         super().__init__(parent, style="Card.TFrame")
         self.tree = ttk.Treeview(self, show="headings", selectmode=selectmode, height=height,
                                  style="Data.Treeview")
-        scroll = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scroll.set)
-        scroll.pack(side="right", fill="y")
-        self.tree.pack(side="left", fill="both", expand=True)
-        self._scroll = scroll
+        vertical = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
+        # A table whose columns are declared wider than its panel is not "slightly clipped" —
+        # the last column simply cannot be read, and on the cases screen that column is the file
+        # hash.  The horizontal bar is cheap; guessing a width that always fits is not.
+        horizontal = ttk.Scrollbar(self, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        vertical.grid(row=0, column=1, sticky="ns")
+        horizontal.grid(row=1, column=0, sticky="ew")
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self._scroll = vertical
+        self._scroll_x = horizontal
         self._mono = mono
 
-    def columns(self, spec: Sequence[tuple[str, str, int]], *, anchor: str = "w") -> None:
+    def columns(self, spec: Sequence[tuple[str, str, int]], *, anchor: str = "w",
+                stretch_weights: Sequence[float] | None = None) -> None:
         ids = [name for name, _title, _width in spec]
         self.tree.configure(columns=ids)
-        for name, title, width in spec:
+        weights = list(stretch_weights or [1.0] * len(ids))
+        for index, (name, title, width) in enumerate(spec):
             self.tree.heading(name, text=title, anchor=anchor)
             # Column widths are declared at the 100 % scale; the type inside them is not.  Without
             # this the header grows past its column and the last cell is cut off — the exact
             # failure mode that made 130 % look broken.
             self.tree.column(name, width=int(width * theme.SCALE), anchor=anchor,
-                             stretch=(name == ids[-1]))
+                             minwidth=int(width * 0.7 * theme.SCALE),
+                             stretch=weights[index] > 0)
 
     def clear(self) -> None:
         self.tree.delete(*self.tree.get_children())
@@ -437,7 +467,10 @@ class Chart(ttk.Frame):
             axes.tick_params(axis="x", labelsize=theme.FONT_SIZE["micro"] - 1, labelrotation=90)
         if self.y_window is not None:
             axes.set_ylim(*self.y_window)
-        if len(self.series) > 1 and not self._is_bar_chart():
+        named = [line for line in self.series if line.label]
+        if named and not self._is_bar_chart():
+            # One series still needs its name: on the time-history screen three curves share a
+            # window, and without a legend nothing said which axle and which rail each one was.
             legend = axes.legend(loc="upper right", fontsize=theme.FONT_SIZE["micro"],
                                  facecolor=theme.OVERLAY, edgecolor=theme.BORDER)
             for text in legend.get_texts():
@@ -462,7 +495,7 @@ class Chart(ttk.Frame):
                 return "0"
             magnitude = abs(value)
             if 1e-3 <= magnitude < 1e4:
-                return f"{value:.4g}"
+                return fmt_number(value)
             return f"{value:.2e}".replace("e+0", "e+").replace("e-0", "e-")
 
         formatter = FuncFormatter(text)
@@ -518,9 +551,11 @@ class Chart(ttk.Frame):
             yy = bottom - (bottom - top) * index / 4
             canvas.create_line(xx, top, xx, bottom, fill=theme.RAISED)
             canvas.create_line(left, yy, right, yy, fill=theme.RAISED)
-            canvas.create_text(xx, bottom + 14, text=f"{low + (high - low) * index / 4:.4g}",
+            canvas.create_text(xx, bottom + 14,
+                                text=fmt_number(low + (high - low) * index / 4),
                                fill=theme.INK_DIM, font=mono_font())
-            canvas.create_text(left - 8, yy, text=f"{v_low + (v_high - v_low) * index / 4:.4g}",
+            canvas.create_text(left - 8, yy,
+                                text=fmt_number(v_low + (v_high - v_low) * index / 4),
                                fill=theme.INK_DIM, anchor="e", font=mono_font())
         if self.x_ticks:  # bar charts label each band instead of the 4-way split
             for pos, label in self.x_ticks:

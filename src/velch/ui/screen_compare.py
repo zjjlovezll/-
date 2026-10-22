@@ -12,6 +12,7 @@ from pathlib import Path
 from tkinter import filedialog, ttk
 
 from . import store, theme
+from .fmt import fmt_number
 from .screen import Screen
 from .widgets import Card, Chart, ChartSeries, Chip, ListPanel, ui_font
 
@@ -91,10 +92,13 @@ class CompareScreen(Screen):
 
         map_row = ttk.Frame(body, style="Card.TFrame")
         map_row.pack(fill="x", pady=(2, 0))
+        ttk.Label(map_row, text="站点列", style="Muted.TLabel").pack(side="left")
         self.station_combo = ttk.Combobox(map_row, textvariable=self.station_col,
                                           state="readonly", width=14)
         self.station_combo.pack(side="left")
         ttk.Label(map_row, text="→", style="Dim.TLabel").pack(side="left", padx=2)
+        ttk.Label(map_row, text="力列", style="Muted.TLabel").pack(
+            side="left", padx=(theme.PAD, 0))
         self.force_combo = ttk.Combobox(map_row, textvariable=self.force_col,
                                         state="readonly", width=14)
         self.force_combo.pack(side="left")
@@ -141,11 +145,15 @@ class CompareScreen(Screen):
         right.rowconfigure(1, weight=1)
         right.rowconfigure(2, weight=1)
 
+        # One empty state, one sentence: two different phrasings for the same condition read as
+        # two different states.
         self.chart_force = Chart(right, height=200, ylabel="法向力 [kN]",
-                                 xlabel="里程 [m]", empty_hint="点「计算对照」叠加曲线")
+                                 xlabel="里程 [m]",
+                                 empty_hint="点「计算对照」叠加曲线与差值")
         self.chart_force.grid(row=0, column=0, sticky="nsew", pady=(0, theme.SPACE["2"]))
         self.chart_z = Chart(right, height=170, ylabel="轮对垂向位移（相对均值）[mm]",
-                             xlabel="里程 [m]", empty_hint="等待对照数据")
+                             xlabel="里程 [m]",
+                             empty_hint="点「计算对照」叠加曲线与差值")
         self.chart_z.grid(row=1, column=0, sticky="nsew", pady=(0, theme.SPACE["2"]))
 
         stats_card = Card(right, "差值统计")
@@ -279,7 +287,7 @@ class CompareScreen(Screen):
         for order, (metric, ours, theirs, delta) in enumerate(result.summary_rows()):
             pct = "—" if abs(theirs) < 1e-9 else f"{delta / theirs * 100:+.1f} %"
             self.stats_panel.tree.insert("", "end", iid=str(order),
-                                         values=(metric, f"{ours:.4g}", f"{theirs:.4g}",
+                                         values=(metric, fmt_number(ours), fmt_number(theirs),
                                                  f"{delta:+.4g}", pct))
         self.caveat_var.set(result.caveat or STATIC_CAVEAT)
         rows = len(result.summary_rows())

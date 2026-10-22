@@ -185,9 +185,15 @@ class Model3DScreen(Screen):
         self.stage.columnconfigure(0, weight=1)
         self.stage.rowconfigure(0, weight=1)
 
-        ttk.Label(right, textvariable=self.notes_var, style="Dim.TLabel",
-                  background=theme.BG, wraplength=880,
-                  justify="left").grid(row=2, column=0, sticky="ew", pady=(theme.SPACE["1"], 0))
+        ttk.Label(right, text="坐标：里程 x / 横向 y / 高程 z，单位 m；虚线框为车厢轮廓（示意）",
+                  style="Dim.TLabel", background=theme.BG).grid(
+            row=3, column=0, sticky="w", pady=(theme.SPACE["1"], 0))
+        self.notes_label = ttk.Label(right, textvariable=self.notes_var, style="Dim.TLabel",
+                                     background=theme.BG, justify="left")
+        self.notes_label.grid(row=2, column=0, sticky="ew", pady=(theme.SPACE["1"], 0))
+        # The note is the honest caption of the drawing (schematic carbody, shared profile files).
+        # A fixed 880 px wrap ran past the canvas edge and cut it mid-sentence.
+        self.wrap_with(self.notes_label, right, reserve=16)
 
         self.axes = None
         self.canvas = None
@@ -198,6 +204,7 @@ class Model3DScreen(Screen):
             self.canvas.get_tk_widget().configure(background=theme.SURFACE,
                                                   highlightthickness=0)
             self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+            self.figure.subplots_adjust(left=0.0, right=1.0, bottom=0.0, top=1.0)
             self._label_axes()
         else:  # pragma: no cover - only without matplotlib
             ttk.Label(self.stage, text="未安装 matplotlib，三维视图不可用。\n"
@@ -216,10 +223,26 @@ class Model3DScreen(Screen):
     def _label_axes(self) -> None:
         if self.axes is None:
             return
-        self.axes.set_xlabel("里程 x / m", fontsize=9, color=theme.INK_MUTED)
-        self.axes.set_ylabel("横向 y / m", fontsize=9, color=theme.INK_MUTED)
-        self.axes.set_zlabel("高程 z / m", fontsize=9, color=theme.INK_MUTED)
-        self.axes.tick_params(labelsize=8, colors=theme.INK_MUTED)
+        # These were the only hard-coded point sizes left in the interface, so ⑦ ignored
+        # Ctrl+= entirely: at 130 % every other panel grew and this one stayed 9 pt.
+        # 3D axis titles are placed by the renderer along the projected edges, where they land on
+        # top of the rails and on each other.  The coordinate meaning is stated once in the caption
+        # above the note line; the axes keep only their tick numbers.
+        self.axes.set_xlabel("")
+        self.axes.set_ylabel("")
+        self.axes.set_zlabel("")
+        self.axes.tick_params(labelsize=theme.FONT_SIZE["micro"] - 1,
+                              colors=theme.INK_MUTED, pad=2)
+        # Nine projected tick labels per axis do not fit in the width a 3D view leaves them; four
+        # is what the eye can associate with a grid line.
+        from matplotlib.ticker import MaxNLocator
+        locator = MaxNLocator(nbins=4, prune=None)
+        for axis in (self.axes.xaxis, self.axes.yaxis, self.axes.zaxis):
+            axis.set_major_locator(locator)
+        # Fill the canvas: by default a 3D axes is drawn at roughly half the panel size, which is
+        # what made this screen look like a thumbnail in a large empty box.
+        if hasattr(self.axes, "set_box_aspect"):
+            self.axes.set_box_aspect(None, zoom=1.45)
 
     # -- data --------------------------------------------------------------
     def refresh(self) -> None:
@@ -389,7 +412,7 @@ class Model3DScreen(Screen):
             axes.set_box_aspect((span_x + 2 * pad_x, span_y + 2 * pad_y,
                                  max(span_z + 2 * pad_z, 0.5)))
         axes.set_title(f"{scene.case_id}   x {scene.x_lo_m:.2f}–{scene.x_hi_m:.2f} m",
-                       fontsize=10, color=theme.INK)
+                       fontsize=theme.FONT_SIZE["tiny"], color=theme.INK)
         axes.set_facecolor(theme.SURFACE)
         for pane in (axes.xaxis, axes.yaxis, axes.zaxis):
             pane.pane.set_facecolor(theme.RAISED)

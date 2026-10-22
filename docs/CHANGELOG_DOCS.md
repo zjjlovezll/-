@@ -997,3 +997,18 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
   以及"该屏源码里没有 `write_text`/`json.dump`/`replace(`"——不碰算例文件这条要能被测试证明；
 - `pytest` **435 passed**（429 + 6）；
 - 截图：`reports/` 下 ② 运行屏（可再生产物）。
+
+## 2026-10-22 界面可读性二轮（第 32 轮）
+
+**触发**：`@UI 设计师 @UI 视觉验收设计师 @软件架构师` 三位专家评审，视觉验收给出 **HOLD，7 屏全 FAIL**（② 阻断级），并逐条给出触发条件与证据。处置见 `docs/UI_READABILITY_2026-10-22.md` 的"二轮"一节。
+
+**会读错数/找不到的三处（本轮全部修掉）**：
+1. ② 运行屏四个按钮在 1280×820 上 `mapped=0`，"启动单次运行"根本点不到 —— 左卡改 `grid`，列表是唯一弹性行。
+2. ⑤ 评价屏限值条画布比列宽宽 30 px，`3896 / 4.979e+04` 被裁成 `3896 / 4.97`，看起来像 4.97 —— 画布宽度交给布局，数值改由 `fmt.fmt_pair` 与限值同量级渲染（`3.896 / 49.79 kN`），并补 80% 预警刻度与"超限"字样。
+3. ① 算例表哈希列被切掉两个字符 —— 六列改四列，哈希移入右侧契约卡；`ListPanel` 加横向滚动与 `minwidth`。
+
+**两处状态缺陷**：`app._job_done` 是单槽，两个异步作业会互相覆盖回调（频谱屏因此抛 `AttributeError: 'Series' object has no attribute 'column'` 并静默显示上一次的数）；`tests/conftest.py` 在语料缺失时把**全部**用例 skip，连架构规则都不跑 —— 闸门"绿得虚假"。前者改 `_job_handlers[job_id]`，后者只 skip 真正读语料的模块。
+
+**新增**：`src/velch/ui/fmt.py`（全局唯一的数字格式出口，支持 SI 前缀、缺测显示 `—`、`fmt_pair` 保证两侧同量级）、`tests/test_ui_readability.py`（19 项）。
+
+**验证**：`pytest` **454 passed**；`--selftest` 7 屏 0 报错；`scripts/auto_accept.py --skip-run` → **ACCEPT**。

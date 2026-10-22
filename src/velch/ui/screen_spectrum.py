@@ -12,7 +12,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
 
-from . import store, theme
+from . import fmt, store, theme
 from .screen import Screen
 from .widgets import Card, Chart, ChartSeries, ListPanel, MetricCard, ui_font
 
@@ -208,7 +208,7 @@ class SpectrumScreen(Screen):
                          theme.ACCENT, kind="bar", width=0.8)],
             ylabel=f"带宽 RMS [{unit}]",
             xlabel="1/3 倍频程中心频率 [Hz]（对数等宽）",
-            x_ticks=[(position, f"{centre:g}") for position, centre in zip(positions, centres)])
+            x_ticks=[(position, fmt.fmt_number(centre)) for position, centre in zip(positions, centres)])
 
         total = sum(level * level for level in levels) or 1.0
         self.table.clear()
@@ -217,17 +217,19 @@ class SpectrumScreen(Screen):
             high = centre * 2 ** (1 / 6)
             share = (level * level / total) * 100.0
             self.table.tree.insert("", "end", iid=str(order),
-                                   values=(f"{centre:.1f}", f"{low:.1f} – {high:.1f}",
-                                           f"{level:.4g}", f"{share:.2f} %"))
-        self.card_rms.set(f"{metrics.rms:.4g}", unit)
-        self.card_peak.set(f"{metrics.peak:.4g}", unit)
-        self.card_p2p.set(f"{metrics.peak_to_peak:.4g}", unit)
-        self.card_p999.set(f"{metrics.p999_abs:.4g}", unit)
+                                   values=(fmt.fmt_number(centre),
+                                           f"{fmt.fmt_number(low)} – {fmt.fmt_number(high)}",
+                                           fmt.fmt_number(level), f"{share:.2f} %"))
+        self.card_rms.set(fmt.fmt_number(metrics.rms), unit)
+        self.card_peak.set(fmt.fmt_number(metrics.peak), unit)
+        self.card_p2p.set(fmt.fmt_number(metrics.peak_to_peak), unit)
+        self.card_p999.set(fmt.fmt_number(metrics.p999_abs), unit)
         self.card_dom.set("-" if result.dominant_hz is None
                           else f"{result.dominant_hz:.0f}", "Hz")
         caption = (f"{store.channel_short_label(result.column)}（{result.column}） · "
                    f"采样 {result.rate_hz:.0f} Hz · "
-                   f"频带 {result.low_hz:g}–{result.high_hz:g} Hz · {len(bands)} 个 1/3 倍频程带")
+                   f"频带 {fmt.fmt_number(result.low_hz)}–{fmt.fmt_number(result.high_hz)} Hz · "
+                   f"{len(bands)} 个 1/3 倍频程带")
         if result.note:
             caption += "\n" + result.note
         self.caption_var.set(caption)

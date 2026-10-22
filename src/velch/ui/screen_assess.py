@@ -18,16 +18,17 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
 
-from . import store, theme
+from . import fmt, store, theme
+from .fmt import fmt_number
 from .screen import Screen
 from .widgets import Card, Chip, GateList, LimitBar, ListPanel, MetricCard, ui_font
 
 AXLE_COLUMNS = (
     ("axle", "轴", 40),
-    ("normal", "法向力范围 kN（左 / 右）", 168),
-    ("derail", "脱轨系数", 84),
-    ("reduce", "减载率", 72),
-    ("lateral", "轮轴横向力 kN", 96),
+    ("normal", "法向力范围 kN（左 / 右）", 150),
+    ("derail", "脱轨系数", 80),
+    ("reduce", "减载率", 62),
+    ("lateral", "轮轴横向力 kN", 80),
 )
 
 
@@ -107,7 +108,7 @@ class AssessScreen(Screen):
         panes = ttk.Frame(right, style="Bg.TFrame")
         panes.grid(row=1, column=0, sticky="nsew")
         panes.columnconfigure(0, weight=1, minsize=int(340 * theme.SCALE))
-        panes.columnconfigure(1, weight=1, minsize=int(420 * theme.SCALE))
+        panes.columnconfigure(1, weight=1, minsize=int(300 * theme.SCALE))
         panes.rowconfigure(0, weight=1)
 
         gates = Card(panes, "七项数值门")
@@ -222,7 +223,7 @@ class AssessScreen(Screen):
         value = summary.get(field)
         unit = store.GATE_UNITS.get(field, "")
         if isinstance(value, (int, float)):
-            return f"{value:.4g} {unit}".strip()
+            return fmt_number(value, unit).strip()
         return "—"
 
     def _render_gates(self, run: store.RunInfo) -> None:
@@ -255,8 +256,8 @@ class AssessScreen(Screen):
         for bar in self.bars.values():
             bar.destroy()
         self.bars.clear()
-        for label, value, limit, passed, caption in bars:
-            bar = LimitBar(self.bar_row, label, caption=caption)
+        for label, value, limit, passed, caption, unit in bars:
+            bar = LimitBar(self.bar_row, label, caption=caption, unit=unit)
             bar.pack(fill="x", pady=(0, theme.SPACE["2"]))
             bar.set(value, limit, passed, caption)
             self.bars[label] = bar
@@ -270,8 +271,8 @@ class AssessScreen(Screen):
         self.card_load.set(f"{assessment.static_axle_load_n:.0f}")
         self.verdict_chip.set("全部限值通过" if view.passed else "存在超限项",
                               "pass" if view.passed else "fail")
-        worst = [f"{label} {value:.4g} > {limit:.4g}"
-                 for label, value, limit, passed, _caption in bars if not passed]
+        worst = [f"{label} {fmt.fmt_pair(value, limit, unit)}"
+                 for label, value, limit, passed, _caption, unit in bars if not passed]
         self.verdict_var.set("；".join(worst) if worst else "三项限值均在界内")
 
         self.axle_panel.clear()

@@ -125,6 +125,8 @@ class VelchUI:
         self.process: ProcessJob | None = None
         self._job_started = 0.0
         self._job_label = ""
+        self._job_handlers = {}
+        self._job_seq = 0
         self._tick_job: str | None = None
         root.title("Velch 道岔动力学工作台 · v0.4")
         root.configure(background=theme.BG)
@@ -265,9 +267,14 @@ class VelchUI:
         ttk.Label(rail, text="快捷键", style="Dim.TLabel", background=theme.BG).pack(
             anchor="w", padx=theme.SPACE["2"], pady=(theme.SPACE["8"], 0))
         for keys, what in SHORTCUTS[:5]:
-            ttk.Label(rail, text=f"{keys}  {what}", style="Dim.TLabel",
-                      background=theme.BG, font=ui_font(theme.FONT_SIZE["micro"]),
-                      wraplength=170, justify="left").pack(anchor="w", padx=theme.SPACE["2"])
+            hint = ttk.Label(rail, text=f"{keys}  {what}", style="Dim.TLabel",
+                             background=theme.BG, font=ui_font(theme.FONT_SIZE["micro"]),
+                             justify="left")
+            hint.pack(anchor="w", fill="x", padx=theme.SPACE["2"])
+            # A fixed 170 px wrap guessed the rail width; at 130 % it broke "Ctrl+1 … Ctrl+7
+            # 切换到第 1–7 屏" into single-character orphans.  Follow the rail instead.
+            hint.bind("<Configure>", lambda event, widget=hint: widget.configure(
+                wraplength=max(120, event.width - 8)))
 
         header = ttk.Frame(self.root, style="Bg.TFrame",
                            padding=(theme.PAD_LG, theme.SPACE["3"], theme.PAD_LG, theme.SPACE["2"]))
@@ -495,16 +502,25 @@ class VelchUI:
                done: Callable[[bool, Any], None]) -> None:
         """Run ``work`` off the UI thread and hand the result back on the Tk thread."""
 
+        # One slot per job, not one slot total.  With a single shared callback a second submit
+        # (any screen refresh also submits) overwrote the first handler, and whichever job
+        # finished first delivered its payload to the *other* handler — that is how the spectrum
+        # screen ended up raising ``AttributeError: 'Series' object has no attribute 'column'``
+        # and then showing nothing while the KPI cards kept the previous run's numbers.
+        self._job_seq += 1
+        job_id = self._job_seq
+
         def runner() -> None:
             try:
                 result = work()
-                self.queue.put(("job", (label, True, result, None)))
+                self.queue.put(("job", (job_id, label, True, result, None)))
             except Exception as exc:  # reported, never raised into the loop
-                self.queue.put(("job", (label, False, None, f"{type(exc).__name__}: {exc}")))
+                self.queue.put(("job", (job_id, label, False, None,
+                                        f"{type(exc).__name__}: {exc}")))
 
+        self._job_handlers[job_id] = done
         self._job_label = label
         self._job_started = time.monotonic()
-        self._job_done = done
         self.set_state("running")
         self.set_status(f"{label} …", tone="run")
         threading.Thread(target=runner, name=f"velch-{label}", daemon=True).start()
@@ -533,10 +549,9 @@ class VelchUI:
             self.on_exit(*payload)
             return
         if kind == "job":
-            label, ok, result, error = payload
+            job_id, label, ok, result, error = payload
             self.set_state("done" if ok else "failed")
-            handler = self._job_done
-            self._job_done = None
+            handler = self._job_handlers.pop(job_id, None)
             if handler is not None:
                 handler(ok, result, error)
             return
@@ -549,8 +564,9 @@ class VelchUI:
         if handler is not None:
             handler(kind, payload)
 
-    # screens that submit one job override this through ``on_job``
-    _job_done: Callable[[bool, Any, str | None], None] | None = None
+    # per-job callbacks: one slot each, keyed by the id carried through the queue
+    _job_handlers: dict[int, Callable[[bool, Any, str | None], None]] = {}
+    _job_seq: int = 0
 
     def on_log(self, line: str) -> None:
         screen = self._owner_screen()

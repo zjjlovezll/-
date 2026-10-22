@@ -704,21 +704,26 @@ class AssessmentView:
     def passed(self) -> bool:
         return bool(self.verdict.get("pass"))
 
-    def bars(self) -> list[tuple[str, float, float, bool, str]]:
-        """``(kind, value, limit, pass, caption)`` for the three limit bars."""
+    def bars(self) -> list[tuple[str, float, float, bool, str, str]]:
+        """``(label, value, limit, pass, caption, unit)`` for the three limit bars.
+
+        The unit travels with the bar so the reading can take an SI prefix instead of printing
+        ``4.979e+04``: "49.79 kN" is a number an engineer can check against a code, and a clipped
+        "4.97" is a number that lies by four orders of magnitude.
+        """
 
         limits = self.verdict.get("checks", {})
         out: list[tuple[str, float, float, bool, str]] = []
         names = {
-            "derailment_coefficient": ("脱轨系数 Q/P", "限值 0.80 (GB/T 5599 客车)"),
-            "wheel_load_reduction": ("轮重减载率 ΔP/P̄", "限值 0.60"),
-            "axle_lateral_force_n": ("轮轴横向力 H", "限值 10 + P0/3 kN"),
+            "derailment_coefficient": ("脱轨系数 Q/P", "限值 0.80 (GB/T 5599 客车)", ""),
+            "wheel_load_reduction": ("轮重减载率 ΔP/P̄", "限值 0.60", ""),
+            "axle_lateral_force_n": ("轮轴横向力 H", "限值 10 + P0/3 kN", "N"),
         }
-        for key, (label, caption) in names.items():
+        for key, (label, caption, unit) in names.items():
             check = limits.get(key) or {}
             value = float(check.get("value") or 0.0)
             limit = float(check.get("limit") or 0.0)
-            out.append((label, value, limit, bool(check.get("pass")), caption))
+            out.append((label, value, limit, bool(check.get("pass")), caption, unit))
         return out
 
 

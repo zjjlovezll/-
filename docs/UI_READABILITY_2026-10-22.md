@@ -61,3 +61,22 @@
   改字体格式化的这类"绘图副产物"必须靠截图核对。
 - 给某轴换了全局 `FuncFormatter` 会覆盖 `set_xticks` 的显式标签：频谱横轴会从 `6.2079 … 793.7 Hz`
   变成 log10 位置 `0.7924 … 2.9`。显式刻度优先，格式化只负责其余轴。
+
+## 二轮：按视觉验收 HOLD 的逐条处置（2026-10-22 晚）
+
+一轮解决的是"字号能缩放"，视觉验收仍判 HOLD，理由是**有四处在 1280×820 上会读错数或找不到**。二轮的处置：
+
+| 验收条目 | 处置 | 证据 |
+|---|---|---|
+| ② 四个按钮 `mapped=0 h=13`，"启动单次运行"不可见 | 左卡从 `pack` 改 `grid`，只有算例列表 `rowconfigure(weight=1)`；按钮改两行等宽 grid | `ui_run_v2.png` 两行按钮全部可见 |
+| ⑤ 限值条 `3896 / 4.979e+04` 被裁成 `3896 / 4.97`（差 10⁴） | `LimitBar` 改 `width=1` + 由布局给宽度；数值走 `fmt.fmt_pair` 与限值同量级（`3.896 / 49.79 kN`）；补 80% WARN 刻度与"超限"字样 | `ui_assess_v2.png` 三条限值可读，ΔP/P 显示 79% 不再是 96% |
+| ① 哈希列被切、列宽合计超容器 | 六列改四列，哈希/输出步长移入右侧契约卡（各有整行）；`ListPanel` 加横向滚动条、`minwidth`、`stretch_weights`；进入即默认选中首行（不再十个"—"） | `ui_cases_v2.png` |
+| ③ 单序列无图例、三曲线说不出是哪一轴哪一轨 | 图例条件从 `len(series) > 1` 改为"任一序列有标签" | `ui_timeseries_v2.png` 三张子图各有图例 |
+| ④ 同一频带在轴/表/卡片是 39.3725 / 39.4 / 39 Hz | 新增 `velch/ui/fmt.py`，四个调用点全部改走 `fmt_number` | `test_ui_readability.py` 断言全屏无 `:.4g` 直写 |
+| ⑦ 唯一不跟缩放的屏（`fontsize=9/labelsize=8`） | 字号改 `theme.FONT_SIZE`；轴标题压在几何上 → 三根轴标题改为画布外一行"坐标：里程 x / 横向 y / 高程 z"；`set_box_aspect(zoom=1.45)` 填满画布；刻度 4 档 | `ui_model3d_v2.png` |
+| ⑥ 两个下拉无 label、两种空态文案 | 加"站点列 / 力列"标签；两个 `empty_hint` 统一成一句 | `r_cmp` 截图 |
+| 侧栏 `wraplength=170` 在 130% 出孤字行 | 改为跟随侧栏宽度的 `<Configure>` 重算 | 130% 截图 |
+| **状态缺陷**：`_job_done` 单槽 → 两个作业互相覆盖回调 | 改为 `_job_handlers[job_id]`，队列带 id，`submit` 每次自增 | `test_every_job_keeps_its_own_callback` |
+| **闸门虚假绿**：`conftest` 对全部用例加 skip | 只 skip 源码里引用 `case_dir(` / `case_path(` / `VALIDATION_DIR` / `oracle_dir(` 的模块，架构规则与标签语法在无语料时仍会失败 | `tests/conftest.py` |
+
+未做（明确留待下一轮）：控件边界对比度 `BORDER/SURFACE` 1.37:1 → 目标 3:1、表格斑马纹 `ROW_ALT`、焦点环 1→2 px、字号阶梯整体抬一档（`-12/-14/-16/-18/-20/-26/-34`）。这四项是"更好看"，不是"读错数"，先让会读错数的部分归零。

@@ -17,14 +17,17 @@ from . import store, theme
 from .screen import Screen
 from .widgets import Card, ListPanel, ui_font
 
+#: Four columns, not six.  Beside the contract card the six-column table put the hash — the one
+#: column that decides whether two runs are the same evidence — past the panel edge, where all
+#: that showed was a truncated ``ed42f7ff7``.  The hash and the output step now live in the
+#: contract card, one full line each.
 COLUMNS = (
-    ("case_id", "算例 ID", 240),
-    ("duration", "时长", 76),
-    ("dof", "自由度", 66),
-    ("xstart", "起始里程 m", 96),
-    ("step", "输出步长 s", 92),
-    ("sha", "资产哈希", 116),
+    ("case_id", "算例编号", 232),
+    ("duration", "时长 s", 84),
+    ("dof", "自由度", 68),
+    ("xstart", "起始里程 m", 92),
 )
+STRETCH = (1.0, 0.0, 0.0, 0.0)
 DEFAULT_FILTER_HINT = "按 ID / 目的 / 自由度 过滤，例如 frog 或 35"
 
 
@@ -63,7 +66,7 @@ class CasesScreen(Screen):
         self.filter_var.trace_add("write", lambda *_a: self._apply_filter())
         self.table = ListPanel(body, height=18)
         self.table.pack(fill="both", expand=True)
-        self.table.columns(COLUMNS)
+        self.table.columns(COLUMNS, stretch_weights=STRETCH)
         self.table.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.table.tree.bind("<Double-1>", lambda _e: self.open_in_run())
 
@@ -157,6 +160,14 @@ class CasesScreen(Screen):
         detail = (f"{len(self.infos)} 个算例 · {sum(i.size_bytes for i in self.infos)/1024/1024:.1f} MB"
                   f" · 含故障 {len(faults)}")
         self.set_rows(len(self.infos), detail)
+        # Arriving with the contract card full of em dashes reads as "this screen is broken".
+        # Pre-select the first row so the card always explains *some* case.
+        if self.visible and not self.table.tree.selection():
+            first = self.table.tree.get_children()
+            if first:
+                self.table.tree.selection_set(first[0])
+                self.table.tree.focus(first[0])
+                self._on_select()
 
     def _fill_overview(self) -> None:
         for child in self.overview_row.winfo_children():
@@ -183,9 +194,7 @@ class CasesScreen(Screen):
         self.table.clear()
         for index, info in enumerate(self.visible):
             values = (info.case_id, info.duration_label, info.dof or "—",
-                      "—" if info.x_start_m is None else f"{info.x_start_m:.2f}",
-                      "—" if info.output_step_s is None else f"{info.output_step_s:g}",
-                      info.sha_short)
+                      "—" if info.x_start_m is None else f"{info.x_start_m:.2f}")
             tags = ("bad",) if info.problem else ()
             self.table.tree.insert("", "end", iid=str(index), values=values, tags=tags)
         self.table.tree.tag_configure("bad", foreground=theme.FAIL)

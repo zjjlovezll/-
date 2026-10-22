@@ -53,15 +53,18 @@ class RunScreen(Screen):
         left.grid(row=0, column=0, sticky="nsew", padx=(0, theme.SPACE["3"]))
         body = left.body()
 
+        body.columnconfigure(0, weight=1)
+        body.rowconfigure(1, weight=1)   # the case list is the only elastic row
+
         ttk.Label(body, text="算例（多选即批量）", style="Muted.TLabel",
-                  font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w")
-        self.case_list = ListPanel(body, height=12, selectmode="extended")
-        self.case_list.pack(fill="both", expand=True, pady=(2, theme.SPACE["2"]))
+                  font=ui_font(theme.FONT_SIZE["micro"])).grid(row=0, column=0, sticky="w")
+        self.case_list = ListPanel(body, height=10, selectmode="extended")
+        self.case_list.grid(row=1, column=0, sticky="nsew", pady=(2, theme.SPACE["2"]))
         self.case_list.columns((("case_id", "算例", 200), ("duration", "时长", 70),
-                               ("dof", "自由度", 60)))
+                                ("dof", "自由度", 60)))
 
         out_row = ttk.Frame(body, style="Card.TFrame")
-        out_row.pack(fill="x", pady=(theme.SPACE["2"], 0))
+        out_row.grid(row=2, column=0, sticky="ew", pady=(theme.SPACE["2"], 0))
         ttk.Label(out_row, text="输出目录 / 批量根目录", style="Muted.TLabel",
                   font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w")
         entry_row = ttk.Frame(out_row, style="Card.TFrame")
@@ -72,7 +75,7 @@ class RunScreen(Screen):
                    command=self.choose_dir).pack(side="left", padx=(theme.GAP, 0))
 
         jobs_row = ttk.Frame(body, style="Card.TFrame")
-        jobs_row.pack(fill="x", pady=theme.SPACE["2"])
+        jobs_row.grid(row=3, column=0, sticky="ew", pady=theme.SPACE["2"])
         ttk.Label(jobs_row, text="并行 --jobs", style="Muted.TLabel",
                   font=ui_font(theme.FONT_SIZE["micro"])).pack(side="left")
         ttk.Spinbox(jobs_row, from_=1, to=16, textvariable=self.jobs_var, width=4,
@@ -81,7 +84,7 @@ class RunScreen(Screen):
                         style="TCheckbutton").pack(side="left", padx=(theme.PAD, 0))
 
         solver_row = ttk.Frame(body, style="Card.TFrame")
-        solver_row.pack(fill="x", pady=(0, theme.SPACE["2"]))
+        solver_row.grid(row=4, column=0, sticky="ew", pady=(0, theme.SPACE["2"]))
         ttk.Label(solver_row, text="求解器（算例文件本身不改，另派生 case_used.json）",
                   style="Muted.TLabel",
                   font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w")
@@ -90,7 +93,7 @@ class RunScreen(Screen):
                         variable=self.fast_var, style="TCheckbutton").pack(anchor="w")
         hint = ttk.Label(solver_row, text="约 4–5× 墙钟，八接触峰值偏差 ≤0.2%；派生算例写在输出目录的 "
                                           "case_used.json，原算例文件不动。",
-                         style="Dim.TLabel", font=ui_font(theme.FONT_SIZE["micro"]),
+                         style="Muted.TLabel", font=ui_font(theme.FONT_SIZE["micro"]),
                          justify="left")
         hint.pack(anchor="w", fill="x")
         self.wrap_with(hint, solver_row, reserve=8)
@@ -115,26 +118,31 @@ class RunScreen(Screen):
                   style="Field.TEntry").pack(side="left", padx=(theme.GAP, 0))
 
         actions = ttk.Frame(body, style="Card.TFrame")
-        actions.pack(fill="x", pady=(theme.SPACE["2"], 0))
+        actions.grid(row=5, column=0, sticky="ew", pady=(theme.SPACE["2"], 0))
+        actions.columnconfigure(0, weight=1, uniform="run-actions")
+        actions.columnconfigure(1, weight=1, uniform="run-actions")
         self.start_button = ttk.Button(actions, text="启动单次运行", style="Primary.TButton",
-                                      command=self.start_single)
-        self.start_button.pack(side="left")
+                                       command=self.start_single)
+        self.start_button.grid(row=0, column=0, sticky="ew", padx=(0, theme.GAP))
         self.batch_button = ttk.Button(actions, text="批量运行", style="Ghost.TButton",
-                                      command=self.start_batch)
-        self.batch_button.pack(side="left", padx=(theme.GAP, 0))
+                                       command=self.start_batch)
+        self.batch_button.grid(row=0, column=1, sticky="ew")
         self.cancel_button = ttk.Button(actions, text="取消", style="Danger.TButton",
-                                       command=self.cancel, state="disabled")
-        self.cancel_button.pack(side="left", padx=(theme.GAP, 0))
+                                        command=self.cancel, state="disabled")
+        self.cancel_button.grid(row=1, column=0, sticky="ew", pady=(theme.GAP, 0),
+                                padx=(0, theme.GAP))
         ttk.Button(actions, text="打开输出目录", style="Ghost.TButton",
-                   command=self.open_output).pack(side="left", padx=(theme.GAP, 0))
+                   command=self.open_output).grid(row=1, column=1, sticky="ew",
+                                                  pady=(theme.GAP, 0))
 
         ttk.Label(body, text="命令行预览", style="Muted.TLabel",
-                  font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w",
-                                                               pady=(theme.SPACE["3"], 0))
+                  font=ui_font(theme.FONT_SIZE["micro"])).grid(
+            row=6, column=0, sticky="w", pady=(theme.SPACE["3"], 0))
         self.cmd_label = tk.Label(body, text="—", bg=theme.RAISED, fg=theme.INK_MUTED,
                                   font=(theme.FONT_MONO, theme.FONT_SIZE["micro"]),
-                                  justify="left", anchor="w", wraplength=380, padx=6, pady=4)
-        self.cmd_label.pack(fill="x")
+                                  justify="left", anchor="w", padx=6, pady=4)
+        self.cmd_label.grid(row=7, column=0, sticky="ew")
+        self.wrap_with(self.cmd_label, body, reserve=16)
 
         # -- right: live log ---------------------------------------------
         right = Card(self, "实时输出")

@@ -38,7 +38,7 @@ class SpectrumScreen(Screen):
         self.high_var = tk.StringVar(value="1000")
         self.caption_var = tk.StringVar(value="尚未计算")
 
-        self.columnconfigure(0, minsize=320)
+        self.columnconfigure(0, minsize=int(320 * theme.SCALE))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
@@ -69,13 +69,18 @@ class SpectrumScreen(Screen):
 
         ttk.Button(body, text="计算频谱", style="Primary.TButton",
                    command=self.compute).pack(anchor="w", pady=theme.SPACE["3"])
-        ttk.Label(body, text="方法：4 阶 Butterworth 带通 → 1/3 倍频程带内 RMS → "
-                             "peak / p-p / rms / median|x| / p99.9 / 主导频带。",
-                  style="Dim.TLabel", font=ui_font(theme.FONT_SIZE["micro"]),
-                  wraplength=280, justify="left").pack(anchor="w")
+        method_note = ttk.Label(body, text="方法：4 阶 Butterworth 带通 → 1/3 倍频程带内 RMS → "
+                                           "peak / p-p / rms / median|x| / p99.9 / 主导频带。",
+                                style="Dim.TLabel", font=ui_font(theme.FONT_SIZE["micro"]),
+                                justify="left")
+        method_note.pack(anchor="w", fill="x")
         self.note_label = ttk.Label(body, textvariable=self.caption_var, style="Muted.TLabel",
-                                    wraplength=280, justify="left")
-        self.note_label.pack(anchor="w", pady=(theme.SPACE["2"], 0))
+                                    justify="left")
+        self.note_label.pack(anchor="w", fill="x", pady=(theme.SPACE["2"], 0))
+        # A fixed 280 px wrap guessed the panel width; the panel now scales with the type size, so
+        # the wrap has to follow the widget instead of a number.
+        self.wrap_with(method_note, body, reserve=8)
+        self.wrap_with(self.note_label, body, reserve=8)
 
         right = ttk.Frame(self, style="Bg.TFrame")
         right.grid(row=0, column=1, sticky="nsew")

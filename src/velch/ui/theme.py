@@ -38,7 +38,9 @@ SERIES = ("#4CC2FF", "#F2B134", "#B48EFF", "#46C46A", "#FF8FA3",
 # --- typography ------------------------------------------------------------
 FONT_UI = "Microsoft YaHei UI"
 FONT_MONO = "Consolas"
-FONT_SIZE = {
+#: The declared sizes are the 100 % scale.  ``set_scale()`` rewrites ``FONT_SIZE`` from this table,
+#: so a HiDPI screen (or a projector) can be served without touching a single screen file.
+BASE_FONT_SIZE = {
     "micro": 9,      # table meta, axis ticks
     "tiny": 10,      # dense tables
     "body": 11,      # default UI text
@@ -47,8 +49,49 @@ FONT_SIZE = {
     "title": 18,     # screen titles
     "display": 24,   # hero metric numerals
 }
+FONT_SIZE = dict(BASE_FONT_SIZE)
 LINE_HEIGHT = {"micro": 14, "tiny": 16, "body": 18, "section": 22, "title": 26}
 TREE_ROW_HEIGHT = 26
+
+#: Current display scale.  ``1.0`` is the design size; the UI offers 0.9 … 1.6 so the same layout
+#: stays usable on a 1280 px laptop panel and on a 4 K monitor without a second theme.
+SCALE = 1.0
+SCALE_MIN = 0.9
+SCALE_MAX = 1.6
+SCALE_STEP = 0.1
+
+
+def set_scale(factor: float) -> float:
+    """Rescale every typographic token; returns the scale actually applied.
+
+    Only sizes are scaled, not paddings: growing the font inside the same 4 px grid keeps the
+    layout honest (a control grows because its text did), while scaling padding too would make a
+    1.6× UI spill outside an 1180 px window.
+    """
+
+    global SCALE, TREE_ROW_HEIGHT, LINE_HEIGHT
+    factor = max(SCALE_MIN, min(SCALE_MAX, round(float(factor), 2)))
+    SCALE = factor
+    for key, base in BASE_FONT_SIZE.items():
+        FONT_SIZE[key] = max(8, round(base * factor))
+    for key in LINE_HEIGHT:
+        LINE_HEIGHT[key] = max(12, round(LINE_HEIGHT[key] * factor))
+    TREE_ROW_HEIGHT = max(24, round(26 * factor))
+    return factor
+
+
+def scale_from_environment() -> float:
+    """``VELCH_UI_SCALE`` for a launcher, so a shortcut can pin the size its owner prefers."""
+
+    import os
+
+    raw = os.environ.get("VELCH_UI_SCALE", "").strip()
+    if not raw:
+        return SCALE
+    try:
+        return set_scale(float(raw))
+    except ValueError:
+        return SCALE
 
 # --- spacing (4 px base scale) --------------------------------------------
 SPACE = {"1": 4, "2": 8, "3": 12, "4": 16, "6": 24, "8": 32, "12": 48}

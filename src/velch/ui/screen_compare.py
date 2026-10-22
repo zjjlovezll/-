@@ -46,7 +46,7 @@ class CompareScreen(Screen):
         self.points_var = tk.IntVar(value=400)
         self.caveat_var = tk.StringVar(value=STATIC_CAVEAT)
 
-        self.columnconfigure(0, minsize=340)
+        self.columnconfigure(0, minsize=int(340 * theme.SCALE))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(1, weight=1)
 

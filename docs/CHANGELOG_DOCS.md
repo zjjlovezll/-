@@ -91,7 +91,7 @@ numpy 手写实现，未改动环境。
 | 单次 RHS 成本（单核） | 1.19 ms | 4.25 ms CPU |
 | 整程墙钟 | ≈850 s（67 DOF） | 85.08 s（32 线程） |
 | 多进程批量 | 8 工况 8.58× | — |
-| 测试 | 389 passed（2026-10-22 19:10 实测，含 16 条架构规则 + 20 条 agent 契约 + 8 条三维几何；会随并行会话增加，验收只认 0 failed） | — |
+| 测试 | 423 passed（2026-10-22 20:05 实测，含 16 条架构规则 + 20 条 agent 契约 + 8 条三维几何 + 8 条字号缩放；会随并行会话增加，验收只认 0 failed） | — |
 
 基线组合：条带积分法向律 + 钢轨垂向自由度 + 柔性扣件 5e7/4e4 + 接触阻尼 3e7 且
 `damping_force_cap_ratio=0.5`。
@@ -120,6 +120,7 @@ numpy 手写实现，未改动环境。
 | `docs/S2_REMAINING_PATHS_2026-10-21.md` | 两条路的**施工规格与最终实测**：口径校正、逐文件落点、分步验收门、文件所有权、B0/B1 实测结果与**路线 B 结案判定**、§3.5 的 **A3–A6 全部结果**（解析雅可比落地、整车 1.2 s 140.3 s 跑通、与 oracle 等价） | ✅ 两条路都已收口；现在只剩 §7 第 7 条（能量频段分布）是活问题 |
 | `docs/UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md` | **统一口径复核 + 代码体检**：五配置（DOP853 / BDF 解析 4 档容差 / BDF 稀疏差分）在整车 1.2 s 上的 nfev·墙钟·八接触峰值·脱空·四频带全表；两个会话数字差异的定案（nfev 81 647 逐位相同 → 差异只在墙钟负载，不是雅可比项集）；src 15 320 行/48 模块、tests 4 637 行/47 文件、validation 1.4 GB/207 个 out_* 的规模；P0/P1/P2 缺口与 6 步落地顺序 | ✅ 新增。A 部分：nfev 可跨会话比，秒数不可 |
 | `docs/UI_CHINESE_LABELS_2026-10-22.md` | 界面中文怎么来的：通道/运行目录标签规则、新通道该在哪儿起名、自查命令 | ✅ 2026-10-22 新增 |
+| `docs/UI_READABILITY_2026-10-22.md` | 界面可读性：字号令牌表与 `set_scale`（0.9–1.6，Ctrl+=/-/0、`--scale`、`VELCH_UI_SCALE`）、为什么缩放必须重建控件树、四处"字号放大必然截断"的修法、无头截图验证方式 | ✅ 2026-10-22 新增 |
 | `docs/AI_INTERFACE_ARCHITECTURE_2026-10-22.md` | **AI 怎么调用这套软件**（架构）：L0–L4 分层与依赖方向、进程内 `VelchService` 只做编排 + 算的一律 subprocess（import 0.078 s vs 0.489 s 实测）、MCP stdio 是对 AI 的正式形态而 HTTP 等消费者、`gate_failed` 不是 error、幂等键与四道可回退、Phase 0–6 分期与每期下限 | ✅ 新增。Phase 0 已落地，Phase 1 被本切片绕过（registry 是 stdlib 叶子，不必外移） |
 | `docs/AGENT_TOOL_LAYER_2026-10-22.md` | **AI 具体能调哪些工具**（契约）：20 个工具 6 域的设计、三层白名单与通配 `[]` 这颗雷、`solver_patch` 第二命名空间、错误码闭集与 `gate_failed` 例外、ledger 只追加成链、成本模型与路由（<60 s 同步 / ≥60 s 后台 / 预算先拒）、三条"自动化下必崩"的实证；**§8 是设计 vs 代码对照（12 个工具已实现、未做的逐条列出、`physics_changed` 认"采样≠物理"、auto_accept 四步）** | ✅ 新增。§1 的 20 个工具里 12 个已实现，其余见 §8.3 |
 
@@ -889,3 +890,37 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 2. 先装的 `FuncFormatter` 把 ④ 频谱的 `set_xticks(pos, freq)` 覆盖掉了，横轴标签从
    `6.2079 … 793.7` 变成 `0.7924 … 2.9`（即 log10 位置）——**图看着正常，轴是错的**。
    这是"显式标签必须优先于全局格式化"的教训。
+
+## 2026-10-22 本地闸门与界面可读性（第 29 轮）
+
+**起因**：仓库没有远端，"CI"只能是本地闸门；此后要把界面的可读性提高。
+
+### 一、提交前闸门（`.githooks/pre-commit`）
+
+- `scripts/auto_accept.py` 的四步（pytest / agent doctor / 契约 / 端到端）本来就存在，这一轮把它接到
+  唯一每次都会发生的动作上：`git config core.hooksPath .githooks`，`pre-commit` 跑 `--skip-run` 版，
+  **本机实测 16.0 s**（pytest 15.5 s + doctor 0.1 s + 契约 0.05 s）。
+- 失败即阻断提交，并提示报告位置（`reports/auto_accept_*.json`）与临时跳过方式（`VELCH_SKIP_HOOK=1`）。
+- 顺手修掉一个**已经失效**的路径：`auto_accept.py` 里的 `FAST_CASE` 仍是
+  `validation/crh380a_m/case_frog_N_strip05.json`，而语料已在第 1 项外移到 `F:\velch_data`；现在改为
+  经 `velch.data_root.case_dir()` 解析。**没有语料的新克隆**上，端到端一步打印 `SKIP` 而不是假 PASS
+  （其余三步照跑），这是"较弱的闸门"，要在输出里说出来。
+
+### 二、界面可读性
+
+- 字号从写死的常数变成**参数**：`theme.BASE_FONT_SIZE` + `set_scale(factor)`（0.9–1.6，步长 0.1），
+  同步缩放 `LINE_HEIGHT` 与 `TREE_ROW_HEIGHT`；`VELCH_UI_SCALE` 环境变量与 `--scale` 都能在启动时设定。
+- 窗口内快捷键 **Ctrl+= / Ctrl+- / Ctrl+0**；缩放后**重建控件树**，因为 Tk 在创建时就把字体烤进去了，
+  只改令牌会让界面声称 130 % 而一半控件仍是 100 %。
+- 修掉四处**字号放大必然截断**的地方：表格列宽按缩放（`widgets.ListPanel.columns`）、固定侧栏宽度
+  （③④⑤⑥⑦ 的 `minsize`/`width`）、写死的 `wraplength` 改为跟随容器（`screen.py:wrap_with`）、
+  ① 算例屏三个按钮由向左堆叠改为等宽网格。
+- 顺带给顶部统计条减负：自由度分布只显示前 4 名 + `等 N 种`，不再把 13 种拼成一条被裁掉的长条。
+- 文档：`docs/UI_READABILITY_2026-10-22.md`（令牌表、用法、四处截断、验证方式、两个不再重复的坑）。
+
+### 三、验证
+
+- `pytest` **423 passed**（415 + 8 项 `tests/test_ui_scale.py`）；
+- `python -m velch.ui --selftest` → 7 屏 / 0 报错；
+- 截图对比：100 % 与 130 % 的 ① 算例屏、125 % 的 ④ 频谱屏（`reports/` 下，可再生的验证件）；
+- `pre-commit` 实跑：16.0 s，`verdict: ACCEPT`。

@@ -45,7 +45,7 @@ class AssessScreen(Screen):
         self.cli_var = tk.StringVar(value="velch assess 尚未运行")
         self.verdict_var = tk.StringVar(value="未评价")
 
-        self.columnconfigure(0, minsize=330)
+        self.columnconfigure(0, minsize=int(330 * theme.SCALE))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
@@ -106,8 +106,8 @@ class AssessScreen(Screen):
 
         panes = ttk.Frame(right, style="Bg.TFrame")
         panes.grid(row=1, column=0, sticky="nsew")
-        panes.columnconfigure(0, weight=1, minsize=340)
-        panes.columnconfigure(1, weight=1, minsize=420)
+        panes.columnconfigure(0, weight=1, minsize=int(340 * theme.SCALE))
+        panes.columnconfigure(1, weight=1, minsize=int(420 * theme.SCALE))
         panes.rowconfigure(0, weight=1)
 
         gates = Card(panes, "七项数值门")

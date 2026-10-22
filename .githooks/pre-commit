@@ -1,0 +1,44 @@
+#!/bin/sh
+# Local gate: this repository has no remote, so this hook *is* the CI.
+#
+# It runs the four-step acceptance check from scripts/auto_accept.py without the end-to-end
+# simulation (about 17 s instead of a few minutes), and blocks the commit on any step failing.
+# The reasoning is that a check nobody runs is not a check: `pytest` is only a claim until it is
+# wired to the one action that happens every time.
+#
+#   skip once:   VELCH_SKIP_HOOK=1 git commit -m "..."
+#   choose python: VELCH_PYTHON=D:\Anaconda3\python.exe git commit ...
+#   full gate:   python -X utf8 scripts/auto_accept.py      (adds the end-to-end run)
+#
+# Enabled by:  git config core.hooksPath .githooks
+set -u
+
+if [ -n "${VELCH_SKIP_HOOK:-}" ]; then
+    echo "pre-commit: skipped (VELCH_SKIP_HOOK is set)"
+    exit 0
+fi
+
+root=$(git rev-parse --show-toplevel) || {
+    echo "pre-commit: not inside a git work tree" >&2
+    exit 1
+}
+
+python_bin=${VELCH_PYTHON:-python}
+
+echo "pre-commit: 本地闸门（pytest + agent doctor + 契约 + 跳过端到端）…"
+cd "$root" || exit 1
+"$python_bin" -X utf8 scripts/auto_accept.py --skip-run
+status=$?
+
+if [ "$status" -ne 0 ]; then
+    cat <<'EOF' >&2
+
+pre-commit: 闸门未通过，提交被阻止。
+  · 完整报告在 reports/auto_accept_*.json（每次一个文件，失败步骤带命令与 stderr 尾部）
+  · 确认只是本地环境问题（比如没挂语料）可以临时跳过：VELCH_SKIP_HOOK=1 git commit ...
+EOF
+    exit 1
+fi
+
+echo "pre-commit: 闸门通过。"
+exit 0

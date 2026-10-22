@@ -46,7 +46,7 @@ class TimeSeriesScreen(Screen):
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
-        left = ttk.Frame(self, style="Bg.TFrame", width=330)
+        left = ttk.Frame(self, style="Bg.TFrame", width=int(330 * theme.SCALE))
         left.grid(row=0, column=0, sticky="nsew", padx=(0, theme.SPACE["3"]))
         left.grid_propagate(False)
         left.columnconfigure(0, weight=1)

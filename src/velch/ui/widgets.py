@@ -227,7 +227,11 @@ class ListPanel(ttk.Frame):
         self.tree.configure(columns=ids)
         for name, title, width in spec:
             self.tree.heading(name, text=title, anchor=anchor)
-            self.tree.column(name, width=width, anchor=anchor, stretch=(name == ids[-1]))
+            # Column widths are declared at the 100 % scale; the type inside them is not.  Without
+            # this the header grows past its column and the last cell is cut off — the exact
+            # failure mode that made 130 % look broken.
+            self.tree.column(name, width=int(width * theme.SCALE), anchor=anchor,
+                             stretch=(name == ids[-1]))
 
     def clear(self) -> None:
         self.tree.delete(*self.tree.get_children())

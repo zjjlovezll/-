@@ -97,8 +97,23 @@ class Screen(ttk.Frame):
         return ttk.Label(parent, text=text, style="Section.TLabel")
 
     def explain(self, parent: tk.Misc, text: str) -> ttk.Label:
-        return ttk.Label(parent, text=text, style="Dim.TLabel", wraplength=760,
-                         justify="left")
+        return ttk.Label(parent, text=text, style="Dim.TLabel",
+                         wraplength=int(760 * theme.SCALE), justify="left")
+
+    def wrap_with(self, label: tk.Misc, container: tk.Misc, *, reserve: int = 96) -> None:
+        """Keep a wrapping label inside its container as the window *or the type size* changes.
+
+        A fixed ``wraplength`` is a promise about the width of a parent that a bigger type size
+        breaks: the text then runs under the panel edge, which reads as a rendering bug.
+        """
+
+        def resize(event, *, target: tk.Misc = label, pad: int = reserve) -> None:
+            try:
+                target.configure(wraplength=max(160, event.width - pad))
+            except tk.TclError:  # pragma: no cover - widget already destroyed
+                pass
+
+        container.bind("<Configure>", resize, add="+")
 
 
 class PlaceholderScreen(Screen):
@@ -111,7 +126,8 @@ class PlaceholderScreen(Screen):
 
     def _build(self) -> None:
         ttk.Label(self, text=self.title, style="Title.TLabel").pack(anchor="w")
-        ttk.Label(self, text=self._reason, style="Muted.TLabel", wraplength=760,
+        ttk.Label(self, text=self._reason, style="Muted.TLabel",
+                  wraplength=int(760 * theme.SCALE),
                   justify="left").pack(anchor="w", pady=theme.SPACE["3"])
 
     def refresh(self) -> None:

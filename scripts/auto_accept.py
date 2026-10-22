@@ -28,7 +28,24 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SOURCE = REPO / "src"
-FAST_CASE = "validation/crh380a_m/case_frog_N_strip05.json"
+#: The frog window, resolved through ``velch.data_root`` rather than through the checkout: the
+#: 1.4 GB corpus lives outside the package now, and a relative path here silently pointed at a
+#: directory that no longer exists.
+FAST_CASE_NAME = "case_frog_N_strip05.json"
+
+
+def _fast_case() -> Path | None:
+    """The smoke-test case, or ``None`` when the corpus is not mounted on this machine."""
+
+    sys.path.insert(0, str(SOURCE))
+    try:
+        from velch.data_root import case_dir
+    except Exception as exc:  # noqa: BLE001 - the gate must report, not crash
+        print(f"auto_accept: cannot import velch.data_root: {exc}")
+        return None
+    path = case_dir() / FAST_CASE_NAME
+    return path if path.is_file() else None
+
 
 
 def _environment() -> dict[str, str]:
@@ -67,6 +84,32 @@ def _agent_call(payload: dict, *, timeout: float = 120.0) -> dict:
     return envelope
 
 
+def _run_end_to_end(steps: list[dict], case_path: Path) -> None:
+    """Derive a case, run it through the job layer, and demand a manifest back.
+
+    ``derive_case`` refuses a no-op on purpose ("nothing to derive"), so the smoke test has to
+    perturb something.  Output sampling is the least invasive knob there is: it changes how often
+    the dense solution is written out, not the solution itself, so a failure here is a plumbing
+    failure and never a physics failure.
+    """
+
+    derived = _agent_call({"tool": "derive_case",
+                           "arguments": {"parent": str(case_path), "tag": "auto-accept",
+                                         "solver_patch": {"output_step_s": 0.001}}})
+    if not derived.get("ok"):
+        steps.append({"step": "end-to-end", "ok": False, "detail": derived.get("error")})
+        return
+    run = _agent_call({"tool": "submit_run",
+                       "arguments": {"case": derived["data"]["path"], "workers": 1}},
+                      timeout=1800)
+    data = run.get("data") or {}
+    steps.append({"step": "end-to-end", "ok": bool(run.get("ok")) and bool(data.get("manifest")),
+                  "detail": {"status": data.get("status"),
+                             "result_status": data.get("result_status"),
+                             "job": data.get("job_id"),
+                             "seconds": data.get("finished")}})
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--skip-run", action="store_true",
@@ -87,25 +130,14 @@ def main(argv: list[str] | None = None) -> int:
                   "detail": {"tools": len((capabilities.get("data") or {}).get("tools", []))}})
 
     if not args.skip_run:
-        # derive_case refuses a no-op on purpose ("nothing to derive"), so the smoke test has to
-        # perturb something.  Output sampling is the least invasive knob there is: it changes how
-        # often the dense solution is written out, not the solution itself, so a failure here is a
-        # plumbing failure and never a physics failure.
-        derived = _agent_call({"tool": "derive_case",
-                               "arguments": {"parent": FAST_CASE, "tag": "auto-accept",
-                                             "solver_patch": {"output_step_s": 0.001}}})
-        if not derived.get("ok"):
-            steps.append({"step": "end-to-end", "ok": False, "detail": derived.get("error")})
+        case_path = _fast_case()
+        if case_path is None:
+            # A fresh clone has the package but not the 1.4 GB corpus.  That is a weaker gate, not
+            # a failing one — say so out loud instead of pretending the step ran.
+            steps.append({"step": "end-to-end", "ok": True, "skipped": True,
+                          "detail": {"reason": f"{FAST_CASE_NAME} 未挂载（VELCH_DATA_ROOT）"}})
         else:
-            run = _agent_call({"tool": "submit_run",
-                               "arguments": {"case": derived["data"]["path"], "workers": 1}},
-                              timeout=1800)
-            data = run.get("data") or {}
-            steps.append({"step": "end-to-end", "ok": bool(run.get("ok")) and bool(data.get("manifest")),
-                          "detail": {"status": data.get("status"),
-                                     "result_status": data.get("result_status"),
-                                     "job": data.get("job_id"),
-                                     "seconds": data.get("finished")}})
+            _run_end_to_end(steps, case_path)
 
     ok = all(step.get("ok") for step in steps)
     report = {
@@ -120,6 +152,10 @@ def main(argv: list[str] | None = None) -> int:
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     for step in steps:
+        if step.get("skipped"):
+            reason = (step.get("detail") or {}).get("reason", "")
+            print(f"SKIP  {'      -':>8}  {step['step']}  {reason}")
+            continue
         mark = "PASS" if step.get("ok") else "FAIL"
         seconds = f"{step['seconds']:7.1f}s" if "seconds" in step else "      -"
         print(f"{mark}  {seconds}  {step['step']}")

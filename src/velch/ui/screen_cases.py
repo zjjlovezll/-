@@ -86,14 +86,19 @@ class CasesScreen(Screen):
                 row=row, column=0, sticky="w", pady=1, padx=(0, theme.SPACE["3"]))
             value = tk.Label(grid, text="—", bg=theme.SURFACE, fg=theme.INK,
                              font=(theme.FONT_MONO, theme.FONT_SIZE["micro"]),
-                             anchor="w", justify="left", wraplength=420)
+                             anchor="w", justify="left", wraplength=int(420 * theme.SCALE))
             value.grid(row=row, column=1, sticky="w", pady=1)
             self.fields[key] = value
+        self.wrap_with(self.fields["path"], grid, reserve=110)
 
         ttk.Separator(detail).pack(fill="x", pady=theme.SPACE["4"])
         ttk.Label(detail, text="复制派生", style="Section.TLabel").pack(anchor="w")
-        ttk.Label(detail, text="派生只写出一个新的 case_*.json；原算例与数值代码保持不变。",
-                  style="Dim.TLabel", font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w")
+        derive_note = ttk.Label(detail,
+                                text="派生只写出一个新的 case_*.json；原算例与数值代码保持不变。",
+                                style="Dim.TLabel", font=ui_font(theme.FONT_SIZE["micro"]),
+                                justify="left")
+        derive_note.pack(anchor="w", fill="x")
+        self.wrap_with(derive_note, detail, reserve=24)
 
         self.derive_id = tk.StringVar()
         self.derive_duration = tk.StringVar()
@@ -117,25 +122,30 @@ class CasesScreen(Screen):
 
         actions = ttk.Frame(detail, style="Card.TFrame")
         actions.pack(fill="x", pady=(theme.SPACE["2"], 0))
-        ttk.Button(actions, text="派生新算例", style="Primary.TButton",
-                   command=self.derive_case).pack(side="left")
-        ttk.Button(actions, text="复制路径", style="Ghost.TButton",
-                   command=lambda: self._copy(self.selected.path if self.selected else "",
-                                              "已复制算例路径")).pack(side="left",
-                                                                      padx=(theme.GAP, 0))
-        ttk.Button(actions, text="复制命令", style="Ghost.TButton",
-                   command=self.copy_command).pack(side="left", padx=(theme.GAP, 0))
+        for column, (text, style, command) in enumerate((
+                ("派生新算例", "Primary.TButton", self.derive_case),
+                ("复制路径", "Ghost.TButton",
+                 lambda: self._copy(self.selected.path if self.selected else "", "已复制算例路径")),
+                ("复制命令", "Ghost.TButton", self.copy_command))):
+            # Share the row instead of stacking left: three buttons plus a 130 % type size do not
+            # fit 360 px, and a clipped button is a button the user cannot find.
+            actions.columnconfigure(column, weight=1, uniform="case-actions")
+            ttk.Button(actions, text=text, style=style, command=command).grid(
+                row=0, column=column, sticky="ew", padx=(0 if column == 0 else theme.GAP, 0))
 
         nav = ttk.Frame(detail, style="Card.TFrame")
         nav.pack(fill="x", pady=(theme.SPACE["1"], 0))
-        ttk.Button(nav, text="在「运行」屏打开", style="Ghost.TButton",
-                   command=self.open_in_run).pack(side="left")
-        ttk.Button(nav, text="刷新列表", style="Ghost.TButton",
-                   command=self.reload).pack(side="left", padx=(theme.GAP, 0))
+        for column, (text, command) in enumerate((
+                ("在「运行」屏打开", self.open_in_run),
+                ("刷新列表", self.reload))):
+            nav.columnconfigure(column, weight=1, uniform="case-nav")
+            ttk.Button(nav, text=text, style="Ghost.TButton", command=command).grid(
+                row=0, column=column, sticky="ew", padx=(0 if column == 0 else theme.GAP, 0))
 
         self.result_label = ttk.Label(detail, text="", style="Muted.TLabel",
-                                      wraplength=560, justify="left")
+                                      wraplength=int(560 * theme.SCALE), justify="left")
         self.result_label.pack(anchor="w", pady=(theme.SPACE["3"], 0))
+        self.wrap_with(self.result_label, detail, reserve=24)
 
     # -- data --------------------------------------------------------------
     def refresh(self) -> None:
@@ -155,8 +165,12 @@ class CasesScreen(Screen):
         dofs: dict[int, int] = {}
         for info in self.infos:
             dofs[info.dof] = dofs.get(info.dof, 0) + 1
-        dof_text = " · ".join(f"{dof} 自由度 ×{count}"
-                              for dof, count in sorted(dofs.items()))
+        # Four counts plus a total, not all of them: the strip is a summary, and a chip long enough
+        # to be clipped says less than a short one that ends in "等 N 种".
+        ranked = sorted(dofs.items(), key=lambda item: (-item[1], item[0]))
+        dof_text = " · ".join(f"{dof} 自由度 ×{count}" for dof, count in ranked[:4])
+        if len(ranked) > 4:
+            dof_text += f" · 等 {len(ranked)} 种"
         for text, tone in ((f"{len(self.infos)} 个算例", "info"),
                            (f"总大小 {sum(i.size_bytes for i in self.infos)/1024/1024:.1f} MB",
                             "idle"),

@@ -53,7 +53,7 @@ SHORTCUTS: tuple[tuple[str, str], ...] = (
     ("Esc", "取消正在运行的子进程"),
     ("Ctrl+L", "跳到当前屏的筛选/搜索框"),
     ("Ctrl+E", "导出当前图（仅 Matplotlib 后端）"),
-    ("F1", "快捷键与数据口径说明"),
+    ("Ctrl+= / Ctrl+-", "放大 / 缩小界面字号（Ctrl+0 还原）"),    ("F1", "快捷键与数据口径说明"),
     ("Ctrl+Q", "退出"),
 )
 
@@ -128,7 +128,7 @@ class VelchUI:
         self._tick_job: str | None = None
         root.title("Velch 道岔动力学工作台 · v0.4")
         root.configure(background=theme.BG)
-        root.minsize(1180, 720)
+        root.minsize(int(1180 * theme.SCALE), int(720 * theme.SCALE))
         self.build_style()
         self._build_layout()
         self._bind_keys()
@@ -317,6 +317,43 @@ class VelchUI:
         self.root.bind_all("<Control-l>", lambda _e: self.focus_filter())
         self.root.bind_all("<Escape>", lambda _e: self.cancel_job())
         self.root.bind_all("<Control-e>", lambda _e: self.export_current())
+        # Text size: three keys, no preferences file to find.  Both the "=" and "+" spellings are
+        # bound because whether Shift is needed depends on the keyboard layout.
+        for spelling in ("<Control-plus>", "<Control-equal>", "<Control-KP_Add>"):
+            self.root.bind_all(spelling, lambda _e: self.zoom(+theme.SCALE_STEP))
+        for spelling in ("<Control-minus>", "<Control-KP_Subtract>"):
+            self.root.bind_all(spelling, lambda _e: self.zoom(-theme.SCALE_STEP))
+        self.root.bind_all("<Control-Key-0>", lambda _e: self.zoom(0.0, absolute=1.0))
+
+    # -- display scale -----------------------------------------------------
+    def zoom(self, delta: float, *, absolute: float | None = None) -> None:
+        """Grow or shrink the type, then rebuild the window so the new size is real.
+
+        Tk bakes the font into each widget at creation, so changing a token afterwards only
+        affects widgets built later.  Rebuilding the frame tree is the honest way to apply it:
+        the alternative is a UI that claims 130 % while half of it still draws at 100 %.
+        """
+
+        target = absolute if absolute is not None else theme.SCALE + delta
+        applied = theme.set_scale(target)
+        if applied == getattr(self, "_scale_applied", None):
+            self.set_status(f"界面字号已是 {applied:.0%}", tone="idle")
+            return
+        self._scale_applied = applied
+        current = self.current or "cases"
+        for child in list(self.root.winfo_children()):
+            try:
+                child.destroy()
+            except tk.TclError:  # pragma: no cover - already gone
+                pass
+        self.screens.clear()
+        self.nav_buttons.clear()
+        self.current = ""
+        self.build_style()
+        self._build_layout()
+        self.show(current)
+        self.set_status(f"界面字号 {applied:.0%}（Ctrl+= 放大 · Ctrl+- 缩小 · Ctrl+0 还原）",
+                        tone="pass")
 
     # -- navigation --------------------------------------------------------
     def _build_screen(self, name: str) -> Screen:
@@ -584,38 +621,54 @@ class VelchUI:
             pass
 
 
-def build_app(headless: bool = False) -> tuple[tk.Tk, VelchUI]:
+def build_app(headless: bool = False, *, scale: float | None = None) -> tuple[tk.Tk, VelchUI]:
     """Create the Tk root and the window; raises ``tk.TclError`` when Tk is unusable."""
 
+    if scale is not None:
+        theme.set_scale(scale)
+    else:
+        theme.scale_from_environment()
     root = tk.Tk()
     if headless:
         root.withdraw()
     else:
-        root.geometry("1360x860")
+        # A bigger type needs a bigger window, but never one the screen cannot show: at 160 % a
+        # 1360 px window would be 2176 px wide, which is simply off the monitor.
+        width, height = int(1360 * theme.SCALE), int(860 * theme.SCALE)
+        screen_w, screen_h = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"{min(width, screen_w - 80)}x{min(height, screen_h - 120)}")
     app = VelchUI(root, headless=headless)
+    app._scale_applied = theme.SCALE
     return root, app
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -X utf8 -m velch.ui",
-        description="Velch 道岔动力学工作台（六屏）")
+        description="Velch 道岔动力学工作台（七屏）")
     parser.add_argument("--selftest", action="store_true",
                         help="无头自检：构造窗口、逐屏加载数据、打印统计后退出")
     parser.add_argument("--json", action="store_true", help="自检结果以 JSON 输出")
     parser.add_argument("--screens", default="",
-                        help="只自检指定屏，逗号分隔（1-6 或屏名）")
+                        help="只自检指定屏，逗号分隔（1-7 或屏名）")
     parser.add_argument("--timeout", type=float, default=180.0,
                         help="自检总超时秒数（默认 180）")
+    parser.add_argument("--scale", type=float, default=None,
+                        help="界面字号缩放 0.9–1.6（默认取环境变量 VELCH_UI_SCALE，否则 1.0）；"
+                             "窗口里也可用 Ctrl+= / Ctrl+- / Ctrl+0")
     args = parser.parse_args(argv)
 
     if args.selftest or args.json:
+        if args.scale is not None:
+            theme.set_scale(args.scale)
+        else:
+            theme.scale_from_environment()
         from . import selftest
         return selftest.run(screens=args.screens, as_json=args.json,
                             timeout=args.timeout)
 
     try:
-        root, app = build_app(headless=False)
+        root, app = build_app(headless=False, scale=args.scale)
     except tk.TclError as exc:
         print(f"[velch.ui] 无法创建 Tk 窗口：{exc}", file=sys.stderr)
         print("[velch.ui] 该环境没有可用显示；请使用 --selftest 做无头自检。",

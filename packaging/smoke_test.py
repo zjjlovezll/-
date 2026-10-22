@@ -183,11 +183,47 @@ def step_unicode_paths(root: Path, data_root: Path, work: Path, case_name: str) 
     return {"step": "unicode-path", "ok": ok, "detail": detail}
 
 
-def step_readonly_install(root: Path) -> dict:
-    return {"step": "readonly-install", "ok": True, "skipped": True,
-            "detail": {"reason": "需要把 186 MB 安装目录复制到只读位置，属手工步骤（见 PACKAGING 文档）。"
-                                 "只读安装时唯一要验证的是：语料标记写在 %LOCALAPPDATA%\\Velch，"
-                                 "而不是安装目录。"}}
+def _tree_signature(root: Path) -> dict[str, int]:
+    """Path -> size for every file in the install tree (sizes catch an in-place rewrite)."""
+    return {str(path.relative_to(root)): path.stat().st_size
+            for path in root.rglob("*") if path.is_file()}
+
+
+def step_install_dir_untouched(root: Path, data_root: str, out: Path, case: str) -> dict:
+    """The install directory is somebody else's folder: running the app must not write into it.
+
+    A real read-only install lives under ``C:\\Program Files`` and is enforced by ACLs; the cheap,
+    repeatable proxy is a before/after tree signature.  It catches the failure mode that actually
+    breaks a locked-down install — a config written next to the exe — without copying 195 MB or
+    requiring an elevated ACL change.  What it does *not* prove is that the ACL denial produces a
+    readable message; that stays a manual step in ``PACKAGING``.
+    """
+    before = _tree_signature(root)
+    detail: dict[str, object] = {"files_before": len(before)}
+
+    selftest = step_selftest(root, data_root)
+    detail["selftest_ok"] = bool(selftest.get("ok"))
+
+    log_out = out / "readonly_probe"
+    log_out.mkdir(parents=True, exist_ok=True)
+    cli = step_cli_run(root, data_root, log_out, case)
+    detail["cli_run_ok"] = bool(cli.get("ok"))
+
+    after = _tree_signature(root)
+    added = sorted(set(after) - set(before))
+    removed = sorted(set(before) - set(after))
+    resized = sorted(name for name in set(before) & set(after) if before[name] != after[name])
+    detail.update({
+        "files_after": len(after),
+        "added": added[:5],
+        "removed": removed[:5],
+        "resized": resized[:5],
+        "added_count": len(added),
+        "removed_count": len(removed),
+        "resized_count": len(resized),
+    })
+    ok = detail["selftest_ok"] and detail["cli_run_ok"] and not (added or removed or resized)
+    return {"step": "install-dir-untouched", "ok": bool(ok), "detail": detail}
 
 
 def main() -> int:
@@ -212,7 +248,7 @@ def main() -> int:
         step_cli_run(root, data_root, out, arguments.case),
         step_missing_corpus(root, out, arguments.case, data_root),
         step_unicode_paths(root, data_root, out, arguments.case),
-        step_readonly_install(root),
+        step_install_dir_untouched(root, data_root, out, arguments.case),
     ]
     failed = [step for step in steps if not step["ok"]]
     skipped = [step for step in steps if step.get("skipped")]

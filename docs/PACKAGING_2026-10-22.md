@@ -86,3 +86,14 @@ python -X utf8 packaging\smoke_test.py --root dist_installer\Velch
 | readonly-install | SKIP · 见"已知限制" |
 
 产物：目录 195.5 MB / 1613 文件；`Velch-0.4.1-win64.zip` 88.9 MB。
+
+## 仍然手工的一步：真·只读安装目录
+
+`smoke_test.py` 的 `install-dir-untouched` 用"运行前后安装树签名不变"证明**程序不往自己脚下写**
+（新增/删除/改大小都会被列出）。它**不能**证明 ACL 拒绝时给出的是人话——那需要把目录放到
+`C:\Program Files\Velch` 并把当前用户设为只写拒绝，属需要管理员的手工步骤：
+
+1. 复制 `Velch\` 到 `C:\Program Files\Velch\`；
+2. `icacls "C:\Program Files\Velch" /deny "%USERNAME%":(W,AD)`；
+3. 双击 `启动 Velch.cmd`，① 屏应当正常出算例（数据根在 `F:\velch_data`），④ 屏不报写失败；
+4. 把语料根写成不存在的路径，确认界面显示 `data_root.hint()` 的中文指引而不是 traceback。

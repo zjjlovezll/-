@@ -19,6 +19,9 @@ import pytest
 from velch.data_root import case_dir
 from velch.ui import store
 
+pytestmark = pytest.mark.corpus
+
+
 CJK = re.compile(r"[\u4e00-\u9fff]")
 
 #: ``(column, expected label)`` — the documented channel grammar, spoken.

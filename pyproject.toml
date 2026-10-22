@@ -33,4 +33,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "corpus: the test reads the external case corpus (see validation/INDEX.md)",
+]
 pythonpath = ["src"]

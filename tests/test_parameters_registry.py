@@ -10,6 +10,7 @@ import pytest
 
 from velch.data_root import case_dir
 from velch.ui.parameters import (
+
     REGISTRY,
     ParameterError,
     ParameterSpec,
@@ -19,6 +20,8 @@ from velch.ui.parameters import (
     registry_by_path,
     to_chinese,
 )
+
+pytestmark = pytest.mark.corpus
 
 CASE = case_dir() / "case_full12_cap05.json"
 

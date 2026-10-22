@@ -24,6 +24,9 @@ from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import VehicleDynamics, _static_vertical_equilibrium
 from velch.data_root import case_dir
 
+pytestmark = pytest.mark.corpus
+
+
 CASE = case_dir() / "case_A_plain.json"
 
 ORACLE_CONTACT_N = 59_680.577

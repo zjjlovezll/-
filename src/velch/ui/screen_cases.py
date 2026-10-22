@@ -73,8 +73,12 @@ class CasesScreen(Screen):
         self.problem_var = tk.StringVar(value="")
         self.problem_label = tk.Label(body, textvariable=self.problem_var, bg=theme.SURFACE,
                                       fg=theme.WARN, justify="left", anchor="w",
+                                      wraplength=int(360 * theme.SCALE),
                                       font=ui_font(theme.FONT_SIZE["tiny"]))
         self.problem_label.pack(fill="x", pady=(theme.SPACE["2"], 0))
+        # Wrap to the card instead of to a guess: an unwrapped hint asks for the width of its whole
+        # sentence, and pack gives it, which squeezes the right card until its buttons clip.
+        self.wrap_with(self.problem_label, body, reserve=16)
 
         # -- right: detail + derive --------------------------------------
         right = Card(self, "算例契约")
@@ -145,7 +149,7 @@ class CasesScreen(Screen):
         nav = ttk.Frame(detail, style="Card.TFrame")
         nav.pack(fill="x", pady=(theme.SPACE["1"], 0))
         for column, (text, command) in enumerate((
-                ("在「运行」屏打开", self.open_in_run),
+                ("在运行屏打开", self.open_in_run),
                 ("刷新列表", self.reload),
                 ("Simpack 导入", self.import_from_simpack))):
             nav.columnconfigure(column, weight=1, uniform="case-nav")

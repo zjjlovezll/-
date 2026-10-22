@@ -15,6 +15,9 @@ import pytest
 
 from velch import data_root
 
+pytestmark = pytest.mark.corpus
+
+
 
 @pytest.fixture()
 def sandbox(tmp_path, monkeypatch) -> Path:

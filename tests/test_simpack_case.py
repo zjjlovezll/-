@@ -9,6 +9,9 @@ import pytest
 from velch import simpack_case
 from velch.simpack_case import SimpackCaseError
 
+pytestmark = pytest.mark.corpus
+
+
 REPO = Path(__file__).resolve().parents[1]
 
 

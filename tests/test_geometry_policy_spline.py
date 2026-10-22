@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+
 BASE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE / "src"))
 
@@ -23,6 +24,8 @@ from velch.contact import (  # noqa: E402
 )
 from velch.vehicle import load_vehicle_case  # noqa: E402
 from velch.data_root import case_dir
+
+pytestmark = pytest.mark.corpus
 
 CASE = case_dir() / "case_A_plain.json"
 

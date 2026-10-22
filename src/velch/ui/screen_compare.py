@@ -23,6 +23,48 @@ STATS_COLUMNS = (("metric", "指标", 150), ("ours", "Velch", 100),
                  ("pct", "相对差", 84))
 
 
+STATION_TOKENS = ("station", "里程", "s_m", "x")
+FORCE_TOKENS = ("force", "normal", "力", "_n")
+
+
+class Guess:
+    """One column picked out of a CSV header, plus how much choice there was."""
+
+    __slots__ = ("name", "alternatives", "fallback")
+
+    def __init__(self, name: str, alternatives: int, fallback: bool = False) -> None:
+        self.name = name
+        self.alternatives = alternatives
+        self.fallback = fallback
+
+
+def _guess_column(columns: list[str], tokens: tuple[str, ...], *,
+                  prefer_last: bool = False) -> Guess:
+    """Pick the column whose name contains one of ``tokens``; report the competition.
+
+    ``x`` alone matches nearly everything, so the station guess requires the token to be the whole
+    name or a prefix of it when the token is a single letter -- otherwise a header like ``max_force``
+    would win the station slot.
+    """
+
+    matches = []
+    for index, name in enumerate(columns):
+        lowered = name.lower()
+        for token in tokens:
+            if len(token) <= 1:
+                if lowered == token or lowered.startswith(token + "_") \
+                        or lowered.startswith(token + "."):
+                    matches.append(index)
+                    break
+            elif token in lowered:
+                matches.append(index)
+                break
+    if not matches:
+        return Guess(columns[-1 if prefer_last else 0], alternatives=0, fallback=True)
+    chosen = matches[-1] if prefer_last else matches[0]
+    return Guess(columns[chosen], alternatives=len(matches))
+
+
 class CompareScreen(Screen):
     name = "compare"
     title = "与 Simpack / 实测同轴叠加"
@@ -203,14 +245,25 @@ class CompareScreen(Screen):
             return
         self.station_combo.configure(values=self.csv_columns)
         self.force_combo.configure(values=self.csv_columns)
-        numeric = [name for name in self.csv_columns
-                   if any(token in name.lower() for token in ("station", "x", "里程", "s_m"))]
-        self.station_col.set(numeric[0] if numeric else self.csv_columns[0])
-        force = [name for name in self.csv_columns
-                 if any(token in name.lower() for token in ("force", "normal", "力", "_n"))]
-        self.force_col.set(force[-1] if force else self.csv_columns[-1])
+        station = _guess_column(self.csv_columns, STATION_TOKENS)
+        force = _guess_column(self.csv_columns, FORCE_TOKENS, prefer_last=True)
+        self.station_col.set(station.name)
+        self.force_col.set(force.name)
         self.source_var.set("csv")
         self.on_source()
+        # A guess that silently picks one of five matching columns is how a comparison file ends up
+        # plotting the wrong axle.  Say what was picked, and say how many were passed over.
+        notes = [f"里程列 {station.name}", f"力列 {force.name}"]
+        skipped = []
+        if station.alternatives > 1:
+            skipped.append(f"里程列还有 {station.alternatives - 1} 个候选")
+        if force.alternatives > 1:
+            skipped.append(f"力列还有 {force.alternatives - 1} 个候选")
+        if station.fallback or force.fallback:
+            notes.append("有列名不认识")
+        detail = "（" + "，".join(skipped) + "，可在下拉里改）" if skipped else ""
+        tone = "warn" if (skipped or station.fallback or force.fallback) else "info"
+        self.app.set_status(f"已选择 {' / '.join(notes)}{detail}", tone=tone)
 
     # -- compute -----------------------------------------------------------
     def compute(self) -> None:

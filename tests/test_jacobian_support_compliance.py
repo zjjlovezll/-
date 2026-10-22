@@ -29,6 +29,9 @@ from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import VehicleDynamics, _static_vertical_equilibrium
 from velch.data_root import case_dir
 
+pytestmark = pytest.mark.corpus
+
+
 BASE = case_dir()
 SETTINGS = {
     "method": "BDF",

@@ -1318,3 +1318,33 @@ O008 剩下的那一层（冠部横向漂移 103 mm 未导入）看起来像"再
   尖轨"catalog 不回答——横向布置属**双体交接**，不是单侧修正。
 
 `pytest` **522 passed, 1 skipped**。
+
+## 第 45 轮：没有语料的那条路径，三个按钮被自己挤扁
+
+打包版首启时语料往往没挂，① 算例屏会显示一段很长的"我去哪儿找过"提示。这段提示是个
+**没有换行的 `tk.Label`**，`pack` 让它索取整句话的宽度——它索要到了，右侧卡片被压窄到
+按钮文字放不下，`在「运行」屏打开` 只剩 94 px（需要 152 px），五个按钮全部被裁。
+
+**为什么一直没发现**：所有界面测试都在"语料在"的环境里跑，那条分支根本不会显示；而布局闸门
+（第 42 轮）也只在同一套环境下量过一次。这一轮把闸门扩成**两种环境各量一遍**：
+
+- `VELCH_DATA_ROOT=F:\velch_tmp\no_corpus`（空目录）→ 之前 **3 failed / 385 passed / 141 skipped**，
+  现在 **389 passed / 140 skipped / 0 failed**；
+- 正常语料 → **528 passed / 1 skipped**。
+
+### 修的两处
+
+1. `Velch/src/velch/ui/screen_cases.py` 的 `problem_label` 加 `wraplength=int(360 * theme.SCALE)`
+   并接 `wrap_with(self.problem_label, body, reserve=16)`——提示按卡片宽度折行，不再索取整句宽度。
+2. 同一屏导航行的 `在「运行」屏打开` 改 `在运行屏打开`（130 % 下三等分只给 174 px，需 184 px）。
+
+### 顺带把"标记"变成声明
+
+`tests/conftest.py` 原来靠**扫源码文本**判断某模块是否需要语料。文本里出现 `case_dir(` 就
+整模块跳过——既会漏（间接读语料的模块照跑照炸），也会误（文档字符串提到 `VALIDATION_DIR` 就跳过）。
+现在模块显式声明 `pytestmark = pytest.mark.corpus`（12 个模块已加），文本扫描只作**遗漏兜底**；
+`tests/test_corpus_marker.py` 断言"扫描会跳的模块必须带标记"，漂移会先在 CI 暴露。标记已在
+`pyproject.toml` 的 `markers` 里注册，不再有 `PytestUnknownMarkWarning`。
+
+同时把 O003 收尾：CSV 列不再"默默猜"，选择后在状态栏报出选中的里程列/力列，并报**还有几个候选**、
+可下拉改；`x` 这种单字母 token 只匹配 `x` / `x_m` / `x.…`，不会把 `max_force` 抢成里程列。

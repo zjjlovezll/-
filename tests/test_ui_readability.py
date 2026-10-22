@@ -138,3 +138,28 @@ def test_zoom_scale_is_a_theme_decision_not_a_screen_constant() -> None:
             if "labelsize=" in stripped and "theme.FONT_SIZE" not in stripped:
                 offenders.append(f"{path.name}:{number}: {stripped[:80]}")
     assert offenders == [], "screen type sizes must come from theme.FONT_SIZE:\n" + "\n".join(offenders)
+
+
+def test_csv_column_guessing_reports_itself_and_rejects_single_letter_traps() -> None:
+    """O003: a guess that silently wins among five candidates is how the wrong axle gets plotted.
+
+    ``x`` as a station token must match ``x``/``x_m`` and *not* ``max_force`` -- a substring rule
+    would hand the station slot to whichever column merely contains the letter.
+    """
+    from velch.ui.screen_compare import FORCE_TOKENS, STATION_TOKENS, _guess_column
+
+    columns = ["time_s", "x_m", "max_force_n", "axle1_right_normal_n", "axle2_right_normal_n"]
+    station = _guess_column(columns, STATION_TOKENS)
+    assert station.name == "x_m", station.name
+    assert not station.fallback
+
+    force = _guess_column(columns, FORCE_TOKENS, prefer_last=True)
+    assert force.name == "axle2_right_normal_n", force.name
+    assert force.alternatives == 3, force.alternatives
+
+    nothing = _guess_column(["a", "b"], STATION_TOKENS)
+    assert nothing.fallback, "an unrecognised header must be flagged, not silently accepted"
+
+    source = (UI / "screen_compare.py").read_text(encoding="utf-8")
+    assert "alternatives - 1" in source, "the status line must count the rejected candidates"
+    assert "可在下拉里改" in source, "it must point at the override"

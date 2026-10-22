@@ -18,6 +18,9 @@ from velch.agent.jobs import read_result, submit_run
 from velch.agent.server import handle
 from velch.data_root import case_dir
 
+pytestmark = pytest.mark.corpus
+
+
 CASE = str(case_dir() / "case_frog_N_strip05.json")
 
 

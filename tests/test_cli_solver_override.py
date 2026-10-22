@@ -11,10 +11,13 @@ from pathlib import Path
 import pytest
 
 from velch.case.derive import (absolutise_profile_paths, relative_profile_references,
+
                                solver_override, write_derived_case)
 from velch.cli import main
 from velch.model import RunSettings
 from velch.data_root import case_dir
+
+pytestmark = pytest.mark.corpus
 
 CASE = case_dir() / "case_frog_N_strip05.json"
 

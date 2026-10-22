@@ -15,6 +15,9 @@ from velch.ui import model3d
 from velch.vehicle import load_vehicle_case
 from velch.data_root import case_dir
 
+pytestmark = pytest.mark.corpus
+
+
 CASE = case_dir() / "case_frog_N_strip05.json"
 
 

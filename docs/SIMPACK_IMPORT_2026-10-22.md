@@ -138,7 +138,19 @@ the lightest contact patch carries only 0.0 N while the heaviest carries 119357.
 阈值只是把已知不可能的情形挡在前面：**11.24 mm 那两档被拒是对的，5.18 mm 那档跑通了也是真的，
 但 0.09 mm 那档照样能失败**（见上表）。所以这个判据既不声称充分，也不替用户做"这段模型能不能算"的结论。
 
-三条出路写在报错里：换一段断面与模板相符的窗口；`--keep-profiles` 只用模型的里程布置；或
+三条出路写在报错里，而且**第一条会给一个具体里程**——派生时会扫一遍模型的站位，找最近的、
+窗口内下沉不超过 3 mm 的起点，直接写进消息：
+
+```
+… beyond the 8.0 mm this run can plausibly seat (measured here: 5.18 mm seated, 11.91 mm did not).
+The nearest start that measures within 3 mm is 72.7 m (worst 1.24 mm). Or use --keep-profiles, …
+```
+
+它只是建议，不会替你换窗口；如果整个模型没有这样的窗口，消息会明说
+`No window in this model measures within 3 mm of the template`。**注意"量的结果干净"不等于"一定跑得通"**——
+60–70 m 三档就是反例，见上表。
+
+三条出路还有：换一段断面与模板相符的窗口；`--keep-profiles` 只用模型的里程布置；或
 `--allow-surface-drop` 强制放行并自己读一遍结果（放行会记 `surface_drop_allowed: true`）。
 
 旁挂 `*.simpack.json` 的字段：

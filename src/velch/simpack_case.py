@@ -208,6 +208,50 @@ def _template_profile(profile: dict[str, Any], path: str) -> dict[str, Any]:
     return clone
 
 
+def suggest_window(entries: Sequence[CatalogStation], profile_template: dict[str, Any], *,
+                   travel_s: float, ride_s: float, span_lo: float, span_hi: float,
+                   wanted_m: float, limit_mm: float = SURFACE_DROP_WARN_MM,
+                   ) -> tuple[float, float] | None:
+    """The nearest model station whose ride window measures at or below ``limit_mm``.
+
+    Returns ``(x_start_m, max_abs_drop_mm)`` or ``None`` when no candidate window qualifies.  This is
+    advice for the message, not a substitution: the caller still decides.
+    """
+
+    best: tuple[float, float] | None = None
+    for entry in entries:
+        start = entry.station_m
+        if not (span_lo <= start and start + travel_s * ride_s <= span_hi):
+            continue
+        lo, hi = start - 2.0, start + travel_s * ride_s + 2.0
+        window = [candidate for candidate in entries if lo <= candidate.station_m <= hi]
+        if not window:
+            continue
+        delta = _surface_delta_mm(window, profile_template)
+        if delta is None or abs(delta[0]) > limit_mm:
+            continue
+        distance = abs(start - wanted_m)
+        candidate = (start, abs(delta[0]))
+        if best is None or distance < abs(best[0] - wanted_m):
+            best = candidate
+    return best
+
+
+def _advice(entries: Sequence[CatalogStation], profile_template: dict[str, Any], *,
+            travel_s: float, ride_s: float, span_lo: float, span_hi: float, wanted_m: float,
+            limit_mm: float) -> str:
+    """One sentence naming a window that measures clean, or admitting there is none."""
+
+    found = suggest_window(entries, profile_template, travel_s=travel_s, ride_s=ride_s,
+                           span_lo=span_lo, span_hi=span_hi, wanted_m=wanted_m, limit_mm=limit_mm)
+    if found is None:
+        return ("No window in this model measures within "
+                f"{limit_mm:.0f} mm of the template, so geometry alone cannot seat this model. ")
+    start, worst = found
+    return (f"The nearest start that measures within {limit_mm:.0f} mm is {start:.1f} m "
+            f"(worst {worst:.2f} mm). ")
+
+
 def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path: str | Path,
                side: str = "left", rail: str | None = None, sample: int | None = None,
                x_start_m: float, duration_s: float | None = None,
@@ -285,8 +329,11 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
                 f"the imported surface sits {drop[0]:+.2f} mm against the template's at "
                 f"{drop[1]:.3f} m, beyond the {max_surface_drop_mm:.1f} mm this run can plausibly "
                 "seat (measured here: 5.18 mm seated, 11.91 mm did not). Those stations are "
-                "switch/blade surfaces rather than one running surface. Pick a window where they "
-                "agree, use --keep-profiles, or pass --allow-surface-drop and read the run before "
+                "switch/blade surfaces rather than one running surface. "
+                + _advice(chosen, profile_template, travel_s=travel, ride_s=ride_s,
+                          span_lo=span_lo, span_hi=span_hi, wanted_m=float(x_start_m),
+                          limit_mm=SURFACE_DROP_WARN_MM)
+                + " Or use --keep-profiles, or pass --allow-surface-drop and read the run before "
                 "quoting it")
         if magnitude > SURFACE_DROP_WARN_MM:
             warning = (f"imported surface sits {drop[0]:+.2f} mm against the template's at "

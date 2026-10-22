@@ -1136,3 +1136,24 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 
 **文档**：`docs/SIMPACK_IMPORT_2026-10-22.md` 增第五节"断面下沉判据"（量法、两个实测边界、两级阈值表、
 旁挂字段样例、以及"这一层也不导入物理"）。
+
+## 第 39 轮（2026-10-22 深夜）：拒绝的时候给一个能用的里程
+
+**问题**：断面下沉判据拒绝窗口时只说"换个窗口"，用户并不知道往哪换——尤其模型有 236 个站位、
+可起点是连续量。
+
+**做法**（`Velch/src/velch/simpack_case.py` 新增 `suggest_window()` 与 `_advice()`）：
+
+1. 遍历模型自己的站位里程作为候选起点，只保留 `x_start + 车速 × 时长 ≤ 模型覆盖上界` 的；
+2. 对每个候选按行驶窗口（`±2 m` 余量）量一次下沉，取不超过 `SURFACE_DROP_WARN_MM`（3 mm）的；
+3. 在合格的候选里选**离用户请求最近**的那个，把 `起点 + 最差下沉` 写进拒绝消息；
+4. 一个都没有时明说 `No window in this model measures within 3 mm of the template`。
+
+实测（75 m 起跑被拒）：`The nearest start that measures within 3 mm is 72.7 m (worst 1.24 mm).`
+
+**它只是建议**：不会自动替换用户给的起点，也不会承诺"跑得通"——72.7 m 的冠部量得很干净，
+但 60–70 m 三档同样干净却坐不住（O008）。
+
+**测试**：`Velch/tests/test_simpack_window_advice.py` 6 项（命名合格窗口、取最近、无候选时承认、
+越界窗口不推荐、消息带里程、无解时的措辞）。全仓 **503 passed, 1 skipped**。
+| docs/RELEASE_NOTES_0.4.4.md | 0.4.4 唯一改动：被拒时给一个具体里程；为什么不承诺换过去就能跑 | ✅ 当前发布物 |

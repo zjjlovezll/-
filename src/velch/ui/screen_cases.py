@@ -63,11 +63,6 @@ class CasesScreen(Screen):
                                       style="Field.TEntry")
         self.filter_entry.pack(side="left", fill="x", expand=True, padx=(theme.GAP, 0))
         self.filter_var.trace_add("write", lambda *_a: self._apply_filter())
-        self.table = ListPanel(body, height=18)
-        self.table.pack(fill="both", expand=True)
-        self.table.columns(COLUMNS, stretch_weights=STRETCH)
-        self.table.tree.bind("<<TreeviewSelect>>", self._on_select)
-        self.table.tree.bind("<Double-1>", lambda _e: self.open_in_run())
         # Where the program looked for the corpus, shown only when it found nothing: a packaged
         # build ships no cases, so an empty table is the expected first run and needs a reason.
         self.problem_var = tk.StringVar(value="")
@@ -79,6 +74,11 @@ class CasesScreen(Screen):
         # Wrap to the card instead of to a guess: an unwrapped hint asks for the width of its whole
         # sentence, and pack gives it, which squeezes the right card until its buttons clip.
         self.wrap_with(self.problem_label, body, reserve=16)
+        self.table = ListPanel(body, height=18)
+        self.table.pack(fill="both", expand=True)
+        self.table.columns(COLUMNS, stretch_weights=STRETCH)
+        self.table.tree.bind("<<TreeviewSelect>>", self._on_select)
+        self.table.tree.bind("<Double-1>", lambda _e: self.open_in_run())
 
         # -- right: detail + derive --------------------------------------
         right = Card(self, "算例契约")

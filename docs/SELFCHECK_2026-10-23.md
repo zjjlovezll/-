@@ -45,3 +45,13 @@ Velch 自检（这台机器上这份程序能不能干活）
 - **不读 1.4 GB 语料的内容**，只数 `case_*.json`——自检要在语料挂错时给出答案，不能自己也卡住。
 - **不 import 求解器**（`vehicle_solver`/`contact`/`jacobian`），所以在一个装坏的包上也能回答。
 - **不猜**：Simpack 那一项只检查路径是否存在，不打开 `.spck`（那是 `inspect-simpack-track` 的事）。
+
+## 只读安装（`C:\Program Files\Velch`）下的预期输出
+
+```
+[FAIL] 可写目录  读不到也建不了程序状态目录：PermissionError …\.agent
+       可写目录  → 把 VELCH_AGENT_HOME 指到可写目录（例如 %LOCALAPPDATA%\Velch\agent）
+结论：1 项必须修，0 项可选。
+```
+
+界面与命令行仿真**仍然可用**（实测：只读副本里 `run-vehicle --fast` 正常产出 manifest）。只有 agent 级功能（派生算例、作业目录、revision 账本）需要 `VELCH_AGENT_HOME`。

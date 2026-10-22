@@ -49,7 +49,7 @@ def test_pump_keeps_delivering_after_a_failing_event() -> None:
     try:
         root = tk.Tk()
     except Exception:  # pragma: no cover
-        pytest.skip("no display for a Tk window")
+        root = _make_root(tk)
     root.withdraw()
     try:
         app = VelchUI(root, headless=True)
@@ -190,3 +190,23 @@ def test_assess_screen_passes_the_typed_axle_load_to_the_cli() -> None:
     assert "self.load_var.get()" in body, "it must read the same field the assessment reads"
     # A blank field must stay blank: passing 0 would ask the CLI for "auto", which it already does.
     assert "if raw:" in body
+
+
+def _make_root(tk):
+    """A Tk root, retried: a second interpreter can fail while another test still holds one.
+
+    Skipping on the first TclError is how "all screens green" and "one random test skipped"
+    coexisted. Retry, then decide: ``VELCH_HEADLESS=1`` means this machine really has no display.
+    """
+
+    last = None
+    for _attempt in range(3):
+        try:
+            return tk.Tk()
+        except tk.TclError as error:  # pragma: no cover - headless only
+            last = error
+            time.sleep(0.2)
+    if os.environ.get("VELCH_HEADLESS"):
+        pytest.skip(f"headless: {last}")
+    pytest.fail(f"Tk could not open a window after 3 tries: {last} "
+                "(set VELCH_HEADLESS=1 if this machine really has no display)")

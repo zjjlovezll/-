@@ -262,6 +262,61 @@ def step_agent_contract(root: Path, data_root: Path) -> dict:
     return {"step": "agent-contract", "ok": ok, "detail": detail}
 
 
+def step_readonly_acl(root: Path, data_root: Path, out: Path, case_name: str) -> dict:
+    """A read-only install must still compute, and must say why it cannot cache.
+
+    ``C:\\Program Files\\Velch`` is the shape of a real deployment: the folder is not writable, so
+    ``.agent`` cannot be created beside the exe. Two things have to hold, and neither is obvious:
+    a run whose output goes elsewhere still succeeds, and ``selfcheck`` reports the unwritable
+    folder instead of dying on the first write.
+    """
+
+    icacls = shutil.which("icacls")
+    if os.name != "nt" or icacls is None:
+        return {"step": "readonly-acl", "ok": True, "skipped": True,
+                "detail": {"reason": "needs Windows icacls"}}
+    user = os.environ.get("USERNAME", "")
+    destination = out / "readonly_install"
+    detail: dict[str, object] = {"root": str(destination), "user": user}
+    if destination.exists():
+        shutil.rmtree(destination, ignore_errors=True)
+    shutil.copytree(root, destination)
+    # A copy of a build that has been run before already carries ``.agent``. Leaving it in place
+    # makes the denial meaningless: the state directory exists and stays writable.
+    shutil.rmtree(destination / ".agent", ignore_errors=True)
+    # ``(W)`` is not just "write": it also denies SYNCHRONIZE, and Tcl opens its library directory
+    # with that right -- the whole GUI then reports "cannot find init.tcl" instead of "the folder is
+    # read-only". Deny only the bits that stop file creation, and inherit them into subdirectories so
+    # a state directory cannot be recreated underneath.
+    grant = f"{user}:(OI)(CI)(WD,AD,WEA,WA)"
+    _run([icacls, str(destination), "/deny", grant], cwd=out, env=_env(data_root), timeout=300)
+    try:
+        console = destination / "velch-cli.exe"
+        code, stdout, stderr = _run([str(console), "selfcheck"], cwd=out,
+                                    env=_env(data_root), timeout=300)
+        text = stdout + stderr
+        detail["selfcheck_exit"] = code
+        detail["selfcheck_failed_write_check"] = "[FAIL]" in text and "可写目录" in text
+        detail["selfcheck_survived"] = "Traceback" not in text and "status\" 未" not in text
+        run_dir = out / "readonly_run"
+        run_code, run_out, run_err = _run(
+            [str(console), "run-vehicle", str(data_root / "crh380a_m" / case_name),
+             "--output", str(run_dir), "--fast"],
+            cwd=out, env=_env(data_root), timeout=900)
+        detail["run_exit"] = run_code
+        detail["run_manifest"] = (run_dir / "manifest.json").is_file()
+        ok = (detail["run_manifest"] is True and run_code == 0
+              and detail["selfcheck_failed_write_check"] is True
+              and detail["selfcheck_survived"] is True and code == 2)
+        if not ok:
+            detail["run_tail"] = (run_out + run_err)[-300:]
+            detail["selfcheck_tail"] = text[-300:]
+        return {"step": "readonly-acl", "ok": bool(ok), "detail": detail}
+    finally:
+        _run([icacls, str(destination), "/remove:d", user], cwd=out, env=_env(data_root), timeout=300)
+        shutil.rmtree(destination, ignore_errors=True)
+
+
 def step_selfcheck(root: Path, data_root: Path) -> dict:
     """`selfcheck` is what a user runs first; if it fails, the build is not shippable."""
 
@@ -326,6 +381,8 @@ def main() -> int:
     parser.add_argument("--data", default="")
     parser.add_argument("--case", default="case_frog_N_strip05.json")
     parser.add_argument("--out", default="")
+    parser.add_argument("--readonly-acl", action="store_true",
+                        help="also run the build from a write-denied copy (O009)")
     arguments = parser.parse_args()
 
     repository = Path(__file__).resolve().parent.parent
@@ -345,6 +402,8 @@ def main() -> int:
         step_selfcheck(root, data_root),
         step_unicode_paths(root, data_root, out, arguments.case),
         step_install_dir_untouched(root, data_root, out, arguments.case),
+        *([step_readonly_acl(root, data_root, out, arguments.case)]
+          if arguments.readonly_acl else []),
     ]
     failed = [step for step in steps if not step["ok"]]
     skipped = [step for step in steps if step.get("skipped")]

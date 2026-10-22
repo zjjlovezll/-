@@ -144,7 +144,14 @@ def _simpack_check() -> Check:
 def _write_check() -> Check:
     from velch.agent import core as agent_core
 
-    home = agent_core.agent_home()
+    # ``agent_home()`` creates its own subdirectories, so on a read-only install it raises before
+    # returning a path at all -- the failure has to be caught here, or the whole self-check dies on
+    # the very machine it was written to explain.
+    try:
+        home = agent_core.agent_home()
+    except OSError as error:
+        return Check("可写目录", FAIL, f"读不到也建不了程序状态目录：{error}",
+                     "把 VELCH_AGENT_HOME 指到可写目录（例如 %LOCALAPPDATA%\\Velch\\agent）")
     try:
         home.mkdir(parents=True, exist_ok=True)
         probe = home / ".selfcheck"

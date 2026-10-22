@@ -35,7 +35,7 @@ def application():
     try:
         root = tk.Tk()
     except tk.TclError:  # pragma: no cover - no display
-        pytest.skip("no Tk display")
+        root = _make_root(tk)
     root.geometry("1360x860")
     app = app_module.VelchUI(root)
     root.update()
@@ -121,3 +121,23 @@ def test_the_layout_test_can_see_a_clipped_button(application) -> None:
     assert button.winfo_width() + TOLERANCE >= requested
     # A 1 px wide button against a request of ~200 px is exactly the failure mode we are guarding.
     assert 1 + TOLERANCE < requested
+
+
+def _make_root(tk):
+    """A Tk root, retried: a second interpreter can fail while another test still holds one.
+
+    Skipping on the first TclError is how "all screens green" and "one random test skipped"
+    coexisted. Retry, then decide: ``VELCH_HEADLESS=1`` means this machine really has no display.
+    """
+
+    last = None
+    for _attempt in range(3):
+        try:
+            return tk.Tk()
+        except tk.TclError as error:  # pragma: no cover - headless only
+            last = error
+            time.sleep(0.2)
+    if os.environ.get("VELCH_HEADLESS"):
+        pytest.skip(f"headless: {last}")
+    pytest.fail(f"Tk could not open a window after 3 tries: {last} "
+                "(set VELCH_HEADLESS=1 if this machine really has no display)")

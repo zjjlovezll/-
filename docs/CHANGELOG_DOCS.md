@@ -1495,6 +1495,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.12.md](RELEASE_NOTES_0.4.12.md) | Velch 0.4.12 发布说明 |
 | [RELEASE_NOTES_0.4.13.md](RELEASE_NOTES_0.4.13.md) | Velch 0.4.13 发布说明 |
 | [RELEASE_NOTES_0.4.14.md](RELEASE_NOTES_0.4.14.md) | Velch 0.4.14 发布说明 |
+| [RELEASE_NOTES_0.4.15.md](RELEASE_NOTES_0.4.15.md) | Velch 0.4.15 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
@@ -1745,3 +1746,30 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 需要完整证据时显式加参数，这比"每次都跑 10 s 但不看"更诚实。
 | `RELEASE_NOTES_0.4.13.md` | 0.4.13 装什么、证据版包含哪三份可复算材料、与 Simpack 的对照摘要、仍然没有的五项 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.14.md` | 0.4.14 新增 `selfcheck`（六项首次运行检查）与冒烟第 7 步 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.15.md` | 0.4.15：只读安装（O009）自动化，自检在只读目录下的预期输出 | ✅ 2026-10-23 新增 |
+
+## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
+
+`C:\Program Files\Velch` 是真实部署的形状：目录不可写，`.agent` 建不出来。以前这只是文档里
+一句"要手工试一遍"，现在是冒烟测试的第 8 步（`--readonly-acl`，Windows 专用，约 40 s：复制
+195 MB + 改 ACL + 跑两次）。
+
+它断言三件事，缺一不算过：
+
+1. **算力不受影响**：从被禁写的副本里 `run-vehicle --fast` 仍然产出 `manifest.json`（输出目录在
+   别处，安装目录只读不该妨碍计算）；
+2. **自检说得出原因**：`selfcheck` 退出码 2 且打出 `[FAIL] 可写目录`；
+3. **不是崩出来的**：输出里没有 `Traceback`。
+
+三次试错（都值得记下来）：
+
+| 试法 | 结果 | 原因 |
+|---|---|---|
+| `icacls /deny user:(OI)(CI)(W)` | 整个 GUI 报 `Can't find a usable init.tcl` | **`(W)` 里包含 SYNCHRONIZE**，而 Tcl 用它打开自己的库目录 |
+| 只禁文件夹本身 `(W)` | 自检仍然 PASS | 上一轮跑过的副本里已经带着 `.agent`，它依然可写 |
+| `(OI)(CI)(WD,AD,WEA,WA)` + 先删 `.agent` | 全过 | 只禁"建文件/建子目录/写属性"，不动 SYNCHRONIZE |
+
+顺带修掉自检里的一个真缺陷：`_write_check()` 只在 `mkdir` 外面包 `try`，而只读安装下
+`agent_home()` **自己就会抛 `PermissionError`** —— 整条自检会带着 traceback 退 2，正好在最需要
+解释的机器上死掉。现在把调用一起包住，失败时给 `[FAIL] 可写目录` 与 `VELCH_AGENT_HOME` 的指路。
+`tests/test_selfcheck.py` 增两项钉住（`agent_home` 抛错时自检不炸、报告仍给"1 项必须修"）。

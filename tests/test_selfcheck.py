@@ -135,3 +135,35 @@ def test_a_frozen_build_looks_for_docs_under_internal(monkeypatch, tmp_path):
     assert tmp_path in roots
     assert tmp_path / "_internal" in roots
     assert len(roots) == len(set(roots)), "the same folder twice reads like a defect"
+
+def test_an_unwritable_state_directory_is_reported_not_raised(monkeypatch, tmp_path):
+    """On a read-only install ``agent_home()`` itself raises; the check must survive that."""
+
+    from velch.agent import core as agent_core
+
+    def boom() -> Path:
+        raise PermissionError(13, "Access is denied", str(tmp_path / ".agent"))
+
+    monkeypatch.setattr(agent_core, "agent_home", boom)
+
+    check = selfcheck._write_check()
+
+    assert check.status == selfcheck.FAIL
+    assert "VELCH_AGENT_HOME" in check.fix
+    assert "可写目录" == check.name
+
+
+def test_the_report_never_blows_up_on_a_failing_check(monkeypatch, tmp_path):
+    """``collect()`` promises not to raise; keep that promise for the write path too."""
+
+    from velch.agent import core as agent_core
+    from velch import data_root
+
+    monkeypatch.setattr(agent_core, "agent_home",
+                        lambda: (_ for _ in ()).throw(PermissionError(13, "denied", "x")))
+    monkeypatch.setattr(data_root, "case_dir", lambda: tmp_path)
+
+    checks = selfcheck.collect()
+
+    assert any(row.name == "可写目录" and row.status == selfcheck.FAIL for row in checks)
+    assert "1 项必须修" in selfcheck.report(checks)

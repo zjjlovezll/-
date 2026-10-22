@@ -35,7 +35,7 @@
 
 ## 已知未修（不是"忘了"，是权衡）
 
-| O009 | 真·只读安装（ACL 拒绝写）未自动测 | 现在自动测的是"安装树不被修改"（`install-dir-untouched`，含负向验证）；ACL 拒绝时的报错文案仍需管理员权限手工跑一次，步骤写在 `docs/PACKAGING` 末尾 |
+| O009 ✅ 已自动化（第 53 轮） | 真·只读安装（ACL 拒绝写）未自动测 | 现在自动测的是"安装树不被修改"（`install-dir-untouched`，含负向验证）；ACL 拒绝时的报错文案仍需管理员权限手工跑一次，步骤写在 `docs/PACKAGING` 末尾 |
 | O008 | ~~转辙区断面形状差异导致坐不住~~ **已撤销**：60 m 窗口坐不住的原因是 B022（后轴无钢轨），修好后同窗口能坐能跑。仍然存在的是：**冠部横向漂移最多 103 mm，而横向布置尚未导入**（轮对初始横向位置仍取模板的 `y_offset_m = 0.753`），所以接触点相对冠部的位置与模型不完全一致 | 要消除需导入模型自己的轮对横向布置 + 双体（基本轨/尖轨）交接，属下一层 | `docs/SIMPACK_IMPORT` 第五节更正与§三 |
 
 
@@ -98,3 +98,7 @@
   正确行为。0.4.11 起拒绝消息直接指出"模型只在一侧定义变断面"并给出两条出路（`--keep-profiles`
   或换模型），旁挂增加 `other_side_stations`。
 | B025 | 频带分析在短窗上抛 `Filter not stable due to sum(a) == 0` | 70 样本、2 kHz 的窗口（78.8–82.2 m） | `band_metrics`/`band_rms` 直接崩，任何按窗口做频带分析的功能都会失败 | 已修：`bandpass` 收窄上边缘重试（0.999→0.97→0.90×Nyquist）；长记录逐位不变；`tests/test_physics_invariants.py` 钉住 |
+
+## O009 关闭（2026-10-23，第 53 轮）
+
+只读安装不再需要手工试：`packaging/smoke_test.py --readonly-acl` 复制安装目录、禁写、验证「仍能算 + 自检说得出原因 + 不崩」。两次试错的结论写在 `docs/CHANGELOG_DOCS.md` 第 53 轮：`(W)` 含 SYNCHRONIZE 会让 Tcl 找不到 init.tcl，所以只能用 `(OI)(CI)(WD,AD,WEA,WA)` 并把已存在的 `.agent` 先删掉。

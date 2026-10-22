@@ -97,3 +97,11 @@ python -X utf8 packaging\smoke_test.py --root dist_installer\Velch
 2. `icacls "C:\Program Files\Velch" /deny "%USERNAME%":(W,AD)`；
 3. 双击 `启动 Velch.cmd`，① 屏应当正常出算例（数据根在 `F:\velch_data`），④ 屏不报写失败；
 4. 把语料根写成不存在的路径，确认界面显示 `data_root.hint()` 的中文指引而不是 traceback。
+
+## 第八步（可选）：只读安装
+
+```
+python -X utf8 packaging/smoke_test.py --root dist_installer\Velch --data <语料> --readonly-acl
+```
+
+复制安装目录 → 删掉副本里的 `.agent` → `icacls /deny user:(OI)(CI)(WD,AD,WEA,WA)` → 跑 `selfcheck`（应退出 2 且 `[FAIL] 可写目录`）与 `run-vehicle --fast`（应仍产出 manifest）→ 撤销 ACL 并删除副本。**不要用 `(W)`**：它包含 SYNCHRONIZE，Tcl 用它打开库目录，整个界面会报 `Can't find a usable init.tcl`。

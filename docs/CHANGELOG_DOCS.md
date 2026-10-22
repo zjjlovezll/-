@@ -1475,6 +1475,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
+| [EVIDENCE_MAP.md](EVIDENCE_MAP.md) | 证据地图：这一版凭什么可以说「可以发布」 |
 | [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
 | [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
@@ -1665,3 +1666,42 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 - `python scripts/physics_invariants.py` → **VERDICT: UNCHANGED**
 - `python scripts/auto_accept.py --skip-run` → 四步全 PASS
 | [RELEASE_NOTES_0.4.12.md](RELEASE_NOTES_0.4.12.md) | 发布说明 | ✅ 0.4.12 |
+
+## 第 51 轮：证据地图——一页回答「凭什么可以发布」
+
+五十轮下来，证据是齐的，但散在五十条日志里：要回答"这版能不能发"，得把日志从头读到尾。
+这一轮加的是**一页能复核的东西**，不是又一份说明。
+
+### `scripts/evidence_map.py` → `docs/EVIDENCE_MAP.md`
+
+按目标的六个分项（①代码稳定 ②bug 清理 ③界面 ④安装包 ⑤Simpack + 物理不变量）各列一行：
+**凭什么 / 复核命令 / 最近一次结果 / 期望**，再列每个证据文件的**最后一次提交**。
+表里的结果都是**跑出来的**：
+
+| 分项 | 运行的东西 | 本次得到 |
+|---|---|---|
+| ① | `pytest tests/test_architecture_rules.py tests/test_docs_index.py` | 21 passed |
+| ② | `scripts/auto_accept.py --skip-run` | ACCEPT（4 步） |
+| ③ | `pytest tests/test_ui_layout.py tests/test_ui_scale.py` | 13 passed |
+| ④ | 最近一份 `reports/packaging_smoke_*.json` | ACCEPT · 6 步 · 0 失败 · 0 跳过 |
+| ⑤ | `velch inspect-simpack-track` | `geometry_readable = True`、`missing_profile_references = 0`、238 个断面引用 |
+| 不变量 | `scripts/physics_invariants.py --no-run` | UNCHANGED（整程峰值 170.61 kN） |
+
+### 生成它的过程中抓到的两个错（正是它该抓的）
+
+1. **命令名是错的**：我按记忆写了 `velch simpack-catalog`，实际子命令叫 `inspect-simpack-track`，
+   参数是 `--model-root` / `--output` 而不是 `--root` / `--out`。生成器把退出码原样写进表里，
+   于是"证据地图"第一版当场显示 `catalog 生成失败（exit 2）`——比手写的文档诚实。
+2. **①②③ 三行原本引用的是全仓测试数**（同一个数字抄三遍）。改成**各跑各的命令**，
+   于是 ① 21 passed、③ 13 passed 各自独立。
+
+### `tests/test_evidence_map.py`（6 项）
+
+分项齐全、引用的文件都存在、命令里的脚本都存在、每行都有命令与期望、必须写清"不在这张表里的
+东西"（标定 / 未签名 / 只读 ACL），以及**与本脚本 `--check` 的判定一致**——两处判断不能分叉。
+
+### 验证
+
+- `tests/test_evidence_map.py` 6 passed；全仓 **550 passed, 1 skipped**
+- `scripts/auto_accept.py --skip-run` → ACCEPT（4 步）
+- 文档索引覆盖 **76** 篇，`test_docs_index` 5 项全绿

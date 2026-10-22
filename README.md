@@ -6,6 +6,14 @@ Velch 是一个**独立实现、可运行的降阶正向求解器**，带一套�
 
 ![三维模型屏：钢轨型面与车轮](/Velch/docs/images/model3d_preview.png)
 
+## 先跑一次自检
+
+```
+python -X utf8 -m velch selfcheck
+```
+
+六项：版本与发布说明、算例语料、Tk、matplotlib、Simpack 路径、可写目录。每条失败都写着怎么补；退出码 0 可以启动、2 有必须修的东西。安装包里用 `velch-cli.exe selfcheck`（窗口版没有 stdout）。细节见 [docs/SELFCHECK_2026-10-23.md](docs/SELFCHECK_2026-10-23.md)。
+
 ## 三十秒上手
 
 1. **双击** [启动Velch界面.cmd](启动Velch界面.cmd)（或桌面上的 `Velch 道岔动力学.cmd`）。

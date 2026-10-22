@@ -104,8 +104,16 @@ def main(argv: list[str] | None = None) -> int:
                        help="manifest = the tool table; call = run one tool from JSON; "
                             "doctor = self-check; serve = MCP over stdio")
     agent.add_argument("payload", nargs="?", help="for 'call': {\"tool\": name, \"arguments\": {...}}")
+    selfcheck = sub.add_parser("selfcheck",
+                               help="check this machine: corpus, Tk, matplotlib, Simpack paths, write access")
+    selfcheck.add_argument("--json", action="store_true", help="also print the checks as JSON")
     args = parser.parse_args(argv)
     try:
+        if args.command == "selfcheck":
+            # Late import: a plain simulation run should not pay for the UI probes.
+            from .selfcheck import main as selfcheck_main
+
+            return selfcheck_main(["--json"] if args.json else [])
         if args.command == "agent":
             # The agent layer holds no state and loads in ~80 ms; importing it late keeps a
             # plain simulation run from paying for it.

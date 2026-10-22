@@ -25,7 +25,7 @@ import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, ttk
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 
@@ -56,6 +56,20 @@ VIEWS: dict[str, tuple[float, float]] = {
 }
 
 
+def contact_colour(force_n: float) -> str:
+    """Colour by carried force on the same three-step scale the limit bars use."""
+
+    kn = abs(force_n) / 1000.0
+    if kn >= 120.0:
+        return theme.FAIL
+    if kn >= 80.0:
+        return theme.WARN
+    return theme.PASS
+
+
+#: Height of the pointer drawn above each contact patch, in metres.
+CONTACT_STEM_M = 0.02
+
 class Model3DScreen(Screen):
     name = "model3d"
     title = "三维模型"
@@ -84,6 +98,7 @@ class Model3DScreen(Screen):
         self.show_rails = tk.BooleanVar(value=True)
         self.show_wheels = tk.BooleanVar(value=True)
         self.show_skeleton = tk.BooleanVar(value=True)
+        self.show_contacts = tk.BooleanVar(value=True)
         self.axle_vars = [tk.IntVar(value=1 if index in (1, 2) else 0) for index in range(4)]
         self.summary_var = tk.StringVar(value="未加载")
         self.notes_var = tk.StringVar(value="")
@@ -155,7 +170,8 @@ class Model3DScreen(Screen):
         show_card = self._card(left, "显示", 3)
         for text, variable in (("钢轨型面", self.show_rails),
                                ("车轮", self.show_wheels),
-                               ("车辆骨架", self.show_skeleton)):
+                               ("车辆骨架", self.show_skeleton),
+                               ("接触斑（按力着色）", self.show_contacts)):
             ttk.Checkbutton(show_card, text=text, variable=variable,
                             style="TCheckbutton",
                             command=self.draw).pack(anchor="w")
@@ -360,8 +376,12 @@ class Model3DScreen(Screen):
                 index = max(0, min(int(round(self.time_var.get())), self._frames - 1))
                 states = model3d.states_from_history(case, list(self.series.values),
                                                      index, self.series.values)
+                contacts = model3d.contacts_from_history(case, list(self.series.values),
+                                                         index, self.series.values,
+                                                         states=states)
             else:
                 states = model3d.initial_states(case)
+                contacts = ()
             axles = tuple(index + 1 for index, variable in enumerate(self.axle_vars)
                           if variable.get())
             start_text = self.start_var.get().strip()
@@ -370,7 +390,8 @@ class Model3DScreen(Screen):
                 path, s_lo=s_lo, length_m=float(self.length_var.get()),
                 axles=axles or (1,), stations=int(self.stations_var.get()),
                 points=int(self.points_var.get()), spin=int(self.spin_var.get()),
-                states=states, with_wheels=bool(self.show_wheels.get()), case=case)
+                states=states, with_wheels=bool(self.show_wheels.get()), case=case,
+                contacts=tuple(contacts))
         except Exception as exc:
             self.summary_var.set(f"三维视图刷新失败：{type(exc).__name__}: {exc}")
             self.set_rows(0, self.summary_var.get())
@@ -381,7 +402,7 @@ class Model3DScreen(Screen):
         counts = f"{len(scene.rails)} 个轨面 / {len(scene.wheels)} 个车轮 / " \
                  f"{scene.vertex_count} 顶点"
         self.summary_var.set(f"{scene.case_id}\n{counts}\n耗时 {self._last_ms:.0f} ms")
-        self.notes_var.set("；".join(scene.notes))
+        self.notes_var.set("；".join(scene.notes + (("接触斑圆环按 sqrt(2Rδ) 的真实半径绘制（约 7 mm，1.2 m 视窗下很小），竖直短杆是 20 mm 的指示杆、不是斑高，颜色按该接触承载的力（绿<80 kN、黄<120 kN、红≥120 kN），力与侵入取自已记录的 history.csv",) if scene.contacts else ())))
         self.set_rows(len(scene.rails) + len(scene.wheels),
                       f"{counts}  {self._last_ms:.0f} ms  "
                       f"x {scene.x_lo_m:.2f}…{scene.x_hi_m:.2f} m")
@@ -412,6 +433,8 @@ class Model3DScreen(Screen):
             zs.append(grid.z_m.ravel())
         if show_skeleton:
             self._skeleton(scene.skeleton)
+        if bool(self.show_contacts.get()) and scene.contacts:
+            self._contacts(scene.contacts)
         if not xs:  # nothing selected: still show a frame
             self.summary_var.set("已隐藏全部面片")
         else:
@@ -442,6 +465,24 @@ class Model3DScreen(Screen):
         self.axes.plot_surface(grid.x_m, grid.y_m, grid.z_m, color=grid.colour,
                                linewidth=0, antialiased=False, shade=True, alpha=alpha,
                                rcount=min(rows, 64), ccount=min(columns, 64))
+
+    def _contacts(self, marks: Sequence[model3d.ContactMark]) -> None:
+        """One disc per recorded contact, coloured by the force it carries."""
+
+        for mark in marks:
+            colour = contact_colour(mark.normal_n)
+            xs, ys, zs = model3d.contact_ring(mark)
+            self.axes.plot(xs, ys, zs, color=colour, linewidth=2.0,
+                           solid_capstyle="round", zorder=20)
+            # A pointer, not a patch: the ring is the real size, the stem is a fixed 20 mm flag so
+            # the reader can find it at a metre-scale window.
+            self.axes.plot([mark.x_m, mark.x_m], [mark.y_m, mark.y_m],
+                           [mark.z_m, mark.z_m + CONTACT_STEM_M], color=colour,
+                           linewidth=1.2, zorder=20)
+            self.axes.text(mark.x_m, mark.y_m, mark.z_m + CONTACT_STEM_M + 0.004,
+                           f"{mark.normal_n / 1000.0:.0f}", color=colour,
+                           fontsize=theme.FONT_SIZE["micro"] - 1, ha="center", zorder=21)
+
 
     def _skeleton(self, skeleton: dict[str, Any]) -> None:
         colour = theme.INK_DIM

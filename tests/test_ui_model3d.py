@@ -118,3 +118,84 @@ def test_axle_positions_follow_the_travel_speed(case):
     travel = case.vehicle.travel_speed_m_s
     assert later[0] - base[0] == pytest.approx(travel, rel=1e-9)
     assert later[0] - later[1] == pytest.approx(base[0] - base[1], rel=1e-9)
+
+
+# -- contact patches (O006) ------------------------------------------------
+
+def test_contact_marks_use_the_recorded_force_and_penetration() -> None:
+    """The picture must quote the same numbers the ⑤ screen quotes, not its own physics."""
+
+    from velch.ui import model3d
+
+    case = model3d.load_vehicle_case(CASE)
+    frames = 3
+    columns = ["time_s"]
+    data: dict[str, list[float]] = {"time_s": [0.0, 0.001, 0.002]}
+    for axle in range(1, 5):
+        for side in ("left", "right"):
+            for name, value in (("active", 1.0), ("normal_n", 59_680.5769),
+                                ("penetration_m", 65.47e-6)):
+                columns.append(f"axle{axle}_{side}_{name}")
+                data[f"axle{axle}_{side}_{name}"] = [value] * frames
+    marks = model3d.contacts_from_history(case, columns, 1, data)
+    assert len(marks) == 8
+    first = marks[0]
+    assert first.normal_n == pytest.approx(59_680.5769)
+    assert first.penetration_m == pytest.approx(65.47e-6)
+    # radius is the wheel circle's chord: sqrt(2 R d), with R = 0.43 m
+    assert first.radius_m == pytest.approx((2 * 0.43 * 65.47e-6) ** 0.5, rel=1e-9)
+    assert first.radius_m == pytest.approx(0.0075, abs=5e-4)
+
+
+def test_contact_marks_sit_under_their_own_wheel() -> None:
+    """The contact channels' y/z are local offsets; placing at them stacked all patches at y=0."""
+
+    from velch.ui import model3d
+
+    case = model3d.load_vehicle_case(CASE)
+    columns = ["time_s"]
+    data: dict[str, list[float]] = {"time_s": [0.0]}
+    for axle in range(1, 5):
+        for side in ("left", "right"):
+            for name, value in (("active", 1.0), ("normal_n", 60_000.0),
+                                ("penetration_m", 65e-6)):
+                columns.append(f"axle{axle}_{side}_{name}")
+                data[f"axle{axle}_{side}_{name}"] = [value]
+    marks = {mark.side: mark for mark in model3d.contacts_from_history(case, columns, 0, data)}
+    offsets = {("left" if wheel.lateral_offset_m < 0 else "right"): wheel.lateral_offset_m
+               for wheel in case.wheels}
+    assert marks["left"].y_m == pytest.approx(offsets["left"], abs=1e-6)
+    assert marks["right"].y_m == pytest.approx(offsets["right"], abs=1e-6)
+    assert marks["left"].y_m < 0 < marks["right"].y_m
+
+
+def test_inactive_and_unplaced_contacts_are_skipped_not_drawn_at_zero() -> None:
+    from velch.ui import model3d
+
+    case = model3d.load_vehicle_case(CASE)
+    columns = ["time_s", "axle1_left_active", "axle1_left_normal_n", "axle1_left_penetration_m",
+               "axle1_right_active", "axle1_right_normal_n", "axle1_right_penetration_m"]
+    data = {"time_s": [0.0], "axle1_left_active": [0.0], "axle1_left_normal_n": [0.0],
+            "axle1_left_penetration_m": [0.0], "axle1_right_active": [1.0],
+            "axle1_right_normal_n": [61_000.0], "axle1_right_penetration_m": [70e-6]}
+    marks = model3d.contacts_from_history(case, columns, 0, data)
+    assert [mark.side for mark in marks] == ["right"], "a detached wheel has no patch to draw"
+
+
+def test_the_contact_colour_scale_matches_the_limit_bars() -> None:
+    from velch.ui import theme
+    from velch.ui.screen_model3d import contact_colour
+
+    assert contact_colour(50_000.0) == theme.PASS
+    assert contact_colour(90_000.0) == theme.WARN
+    assert contact_colour(170_600.0) == theme.FAIL
+
+
+def test_the_3d_screen_still_does_not_import_the_solver() -> None:
+    """A contact picture drawn from ``history.csv`` must not reach for the contact model."""
+
+    text = (Path(__file__).resolve().parent.parent / "src" / "velch" / "ui"
+            / "screen_model3d.py").read_text(encoding="utf-8")
+    for forbidden in ("vehicle_solver", "velch.contact", "jacobian"):
+        assert forbidden not in text, forbidden
+    assert "contacts_from_history" in text

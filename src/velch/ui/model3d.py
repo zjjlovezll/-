@@ -84,6 +84,7 @@ class Scene:
     wheels: tuple[QuadGrid, ...]
     skeleton: dict[str, Any]
     states: tuple[WheelState, ...]
+    contacts: tuple[ContactMark, ...] = ()
     notes: tuple[str, ...] = ()
 
     @property
@@ -137,6 +138,91 @@ def states_from_history(case: VehicleCase, columns: Sequence[str], index: int,
                                  z_m=case.vehicle.wheel_center_height_m + value("z_m", 0.0),
                                  roll_rad=value("roll_rad", 0.0)))
     return tuple(states)
+
+
+@dataclass(frozen=True)
+class ContactMark:
+    """One wheel/rail contact, as ``history.csv`` recorded it."""
+
+    axle: int
+    side: str
+    x_m: float
+    y_m: float
+    z_m: float
+    normal_n: float
+    penetration_m: float
+    radius_m: float
+
+    @property
+    def label(self) -> str:
+        side = "左" if self.side == "left" else "右"
+        return f"{self.axle} 位{side} {self.normal_n / 1000.0:.1f} kN"
+
+
+#: Contact patches are drawn as circles of radius ``sqrt(2 R d)`` -- the chord of a wheel circle of
+#: radius R sunk by d.  That is geometry, not a Hertz solution, and the screen's note says so.
+def contact_radius_m(penetration_m: float, wheel_radius_m: float) -> float:
+    if penetration_m <= 0.0 or wheel_radius_m <= 0.0:
+        return 0.0
+    return float(np.sqrt(2.0 * wheel_radius_m * penetration_m))
+
+
+def contacts_from_history(case: VehicleCase, columns: Sequence[str], index: int,
+                          data: dict[str, np.ndarray], *,
+                          states: Sequence[WheelState] | None = None,
+                          time_s: float | None = None) -> tuple[ContactMark, ...]:
+    """Recorded contacts for one frame, placed under the wheel they belong to.
+
+    The contact channels carry the force and the penetration; their ``y_m``/``z_m`` are local
+    offsets (about 0 and -1.2 mm) and would stack every patch on the track centre line.  So the
+    position comes from the wheelset state plus the wheel's own lateral offset, and the height from
+    the tread: ``z_wheel - R + penetration``.  Unplaced or inactive patches are skipped.
+    """
+
+    if states is None:
+        states = states_from_history(case, columns, index, data, time_s)
+    by_axle = {state.axle: state for state in states}
+    wheel_radius = float(case.vehicle.nominal_wheel_radius_m)
+    offsets = {}
+    for wheel in case.wheels:
+        key = "left" if wheel.lateral_offset_m < 0 else "right"
+        offsets[key] = float(wheel.lateral_offset_m)
+    marks: list[ContactMark] = []
+    for axle in range(1, 5):
+        state = by_axle.get(axle)
+        if state is None:
+            continue
+        for side in ("left", "right"):
+            prefix = f"axle{axle}_{side}_"
+
+            def value(name: str, default: float = 0.0) -> float:
+                column = prefix + name
+                if column in data and column in columns:
+                    return float(data[column][index])
+                return default
+
+            if value("active", 0.0) <= 0.5:
+                continue
+            depth = value("penetration_m")
+            if depth <= 0.0 or side not in offsets:
+                continue
+            marks.append(ContactMark(
+                axle=axle, side=side, x_m=state.x_m,
+                y_m=state.y_m + offsets[side],
+                z_m=state.z_m - wheel_radius + depth,
+                normal_n=value("normal_n"), penetration_m=depth,
+                radius_m=contact_radius_m(depth, wheel_radius)))
+    return tuple(marks)
+
+
+def contact_ring(mark: ContactMark, *, segments: int = 24) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """A flat disc lying on the rail surface at the recorded contact position."""
+
+    angles = np.linspace(0.0, 2.0 * np.pi, segments, endpoint=False)
+    xs = np.full(angles.shape, mark.x_m)
+    ys = mark.y_m + mark.radius_m * np.cos(angles)
+    zs = np.full(angles.shape, mark.z_m)
+    return xs, ys, zs
 
 
 def _evenly(values: np.ndarray, count: int) -> np.ndarray:
@@ -291,7 +377,8 @@ def build_scene(case_path: str | Path, *, s_lo: float | None = None, length_m: f
                 axles: Iterable[int] = (1,), stations: int = 36, points: int = 48,
                 spin: int = 40, states: Sequence[WheelState] | None = None,
                 time_s: float = 0.0, with_wheels: bool = True,
-                case: VehicleCase | None = None) -> Scene:
+                case: VehicleCase | None = None,
+                contacts: Sequence[ContactMark] | None = None) -> Scene:
     """Read a case and return everything the 3D screen draws.
 
     ``s_lo`` defaults to the case's start mileage; the window is ``length_m`` long.  Passing
@@ -313,4 +400,5 @@ def build_scene(case_path: str | Path, *, s_lo: float | None = None, length_m: f
     if not rails:
         notes.append("所选里程窗内没有钢轨型面覆盖：请把窗口移进算例的站位范围")
     return Scene(case_id=case.case_id, x_lo_m=low, x_hi_m=high, rails=rails, wheels=wheels,
-                 skeleton=skeleton(case, used), states=used, notes=tuple(notes))
+                 skeleton=skeleton(case, used), states=used, notes=tuple(notes),
+                 contacts=tuple(contacts or ()))

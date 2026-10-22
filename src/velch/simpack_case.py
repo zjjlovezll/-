@@ -21,14 +21,17 @@ import hashlib
 import json
 from dataclasses import dataclass
 
+import numpy as np
+
 from .profiles import ProfileError, load_profile
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-SCHEMA_VERSION = "velch-simpack-case-v1"
-#: From 3 mm the imported surface is worth saying out loud; above the caller's limit the
-#: build stops.  Measured: 5.18 mm seated, 11.91 mm failed the vertical preload equilibrium.
-SURFACE_DROP_WARN_MM = 3.0
+SCHEMA_VERSION = "velch-simpack-case-v2"
+#: Crown heights match to well under a tenth of a millimetre on this model, so a crown difference
+#: beyond this is worth saying out loud.  It is a *reporting* threshold, not a refusal: no crown
+#: measurement predicts whether eight patches will seat (see docs/SIMPACK_IMPORT_2026-10-22.md).
+CROWN_WARN_MM = 0.5
 CATALOG_SCHEMA = "velch-simpack-track-catalog-v1"
 
 
@@ -61,6 +64,8 @@ class CaseBuild:
     template: str
     model: str
     profiles_from: str = "simpack"
+    crown_delta_mm: dict[str, Any] | None = None
+    crown_warning: str | None = None
 
     def summary(self) -> dict[str, Any]:
         return {
@@ -75,6 +80,8 @@ class CaseBuild:
             "simpack_model": self.model,
             "physics_source": "template case (explicit); Simpack supplies rail geometry only",
             "profiles_from": self.profiles_from,
+            "crown_delta_mm": self.crown_delta_mm,
+            "crown_warning": self.crown_warning,
             "simpack_dynamics_imported": False,
         }
 
@@ -160,46 +167,150 @@ def _thin(entries: Sequence[CatalogStation], sample: int | None) -> list[Catalog
     return unique
 
 
-def _surface_delta_mm(entries: Sequence[CatalogStation], profile_template: dict[str, Any],
-                      *, lateral_m: float | None = None) -> tuple[float, float] | None:
-    """How far the imported surfaces sit below the template's, at the wheel's lateral position.
+def _crown_of(spec: dict[str, Any]) -> tuple[float, float] | None:
+    """The lowest measured point of a rail-top profile, and where it sits laterally.
 
-    ``None`` means "could not be measured" (the lateral position falls outside a profile's measured
-    envelope); it is not the same as "no drop" and is reported as such.
+    Sampling at a fixed lateral offset was the earlier mistake: the crown of a turnout section moves
+    laterally by tens of millimetres, so a fixed-offset sample reads the *flank* (≈30 mm above the
+    crown on this model) and its value tracks the crown's lateral shift, not its height. Comparing
+    crowns compares the thing the wheel actually rides on.
     """
 
-    y_offset = float(profile_template.get("y_offset_m", 0.0))
-    y_sign = int(profile_template.get("y_sign", 1))
-    z_sign = int(profile_template.get("z_sign", 1))
-    y = float(lateral_m) if lateral_m is not None else y_offset * y_sign
+    try:
+        profile = load_profile(Path(spec["file"]), file_format=spec.get("format", "prr"),
+                               surface="rail_top", y_sign=int(spec.get("y_sign", 1)),
+                               z_sign=int(spec.get("z_sign", 1)),
+                               y_offset_m=float(spec.get("y_offset_m", 0.0)))
+    except (ProfileError, OSError, ValueError):
+        return None
+    z = np.asarray(profile.z_m, dtype=float)
+    y = np.asarray(profile.y_m, dtype=float)
+    if z.size == 0:
+        return None
+    index = int(np.argmin(z))
+    return float(z[index]), float(y[index])
 
-    def crown(spec: dict[str, Any]) -> float | None:
-        try:
-            profile = load_profile(Path(spec["file"]), file_format=spec.get("format", "prr"),
-                                   surface="rail_top", y_sign=int(spec.get("y_sign", 1)),
-                                   z_sign=int(spec.get("z_sign", 1)),
-                                   y_offset_m=float(spec.get("y_offset_m", 0.0)))
-            return float(profile.z_at(y)) * z_sign
-        except (ProfileError, OSError, ValueError):
-            return None
 
-    base = crown(profile_template)
+def _crown_delta_mm(entries: Sequence[CatalogStation],
+                    profile_template: dict[str, Any]) -> tuple[float, float, float] | None:
+    """Worst crown-height difference (mm) and worst crown lateral shift (m) against the template.
+
+    ``None`` means "could not be measured" — a profile whose file is missing or whose measured
+    envelope is empty.  That is not the same as "no difference", and it is reported as such.
+    """
+
+    base = _crown_of(profile_template)
     if base is None:
         return None
-    worst = 0.0
-    worst_at = entries[0].station_m
+    base_z, base_y = base
+    worst_dz = 0.0
+    worst_dz_at = entries[0].station_m
+    worst_dy = 0.0
     measured = 0
     for entry in entries:
-        z = crown({**profile_template, "file": entry.path})
-        if z is None:
+        point = _crown_of({**profile_template, "file": entry.path})
+        if point is None:
             continue
         measured += 1
-        delta = (z - base) * 1000.0
-        if abs(delta) > abs(worst):
-            worst, worst_at = delta, entry.station_m
+        dz = (point[0] - base_z) * 1000.0
+        dy = abs(point[1] - base_y)
+        if abs(dz) > abs(worst_dz):
+            worst_dz, worst_dz_at = dz, entry.station_m
+        worst_dy = max(worst_dy, dy)
     if measured == 0:
         return None
-    return worst, worst_at
+    return worst_dz, worst_dz_at, worst_dy
+
+
+def seat_report(case_path: str | Path, *, catalog_path: str | Path | None = None,
+                template_path: str | Path | None = None, x_start_m: float | None = None,
+                duration_s: float | None = None, side: str | None = None,
+                rail: str | None = None) -> dict[str, Any]:
+    """Run the vertical preload equilibrium and report what it measured.
+
+    This is the only honest answer to "will the imported sections seat": crown heights match to
+    within 0.1 mm at windows that seat *and* at windows that do not, so no geometric threshold
+    predicts it.  The solver's own equilibrium either finds eight loaded patches or it does not.
+
+    When it does not seat, the report carries the crown measurement, the lightest/heaviest patch from
+    the failure and a suggested other window (as advice, never as a substitution).
+    """
+
+    import numpy as np
+
+    from .vehicle import load_vehicle_case
+    from .vehicle_solver import (
+        SimulationFailure,
+        VehicleDynamics,
+        _static_vertical_equilibrium,
+    )
+
+    case_file = Path(case_path)
+    case = load_vehicle_case(case_file)
+    dynamics = VehicleDynamics(case, contact_workers=1)
+    q = np.array(case.initial_q, dtype=float)
+    v = np.array(case.initial_v, dtype=float)
+    report: dict[str, Any] = {"case": str(case_file), "x_start_m": case.run.x_start_m,
+                              "duration_s": case.run.duration_s}
+    try:
+        q_eq, residual = _static_vertical_equilibrium(case, dynamics, q, v)
+    except SimulationFailure as error:
+        report["seats"] = False
+        report["reason"] = str(error)
+        if catalog_path is not None and template_path is not None and x_start_m is not None:
+            try:
+                catalog = load_catalog(catalog_path)
+                template = json.loads(Path(template_path).read_text(encoding="utf-8"))
+                picked = stations(catalog, side=side or "left", rail=rail)
+                picked, _ = _deduplicate(picked)
+                profile_template = dict(
+                    ((template.get("rail_templates") or [{}])[0].get("stations") or [{}])[0]
+                    .get("profile") or {})
+                travel = float((template.get("vehicle") or {}).get("travel_speed_m_s", 0.0))
+                ride = float(duration_s if duration_s is not None
+                             else (template.get("run") or {}).get("duration_s", 0.0))
+                crown = _crown_delta_mm(picked, profile_template)
+                if crown is not None:
+                    report["crown_delta_mm"] = {"max_abs": round(crown[0], 3),
+                                                "at_m": round(crown[1], 3),
+                                                "max_lateral_m": round(crown[2], 4)}
+                report["footprint_m"] = [round(float(x_start_m) - _axle_reach_m(template), 3),
+                                         round(float(x_start_m) + travel * ride, 3)]
+                report["advice"] = (
+                    "Crown heights do not predict this: they match to within "
+                    f"{abs(crown[0]):.2f} mm over this window and it still cannot seat eight "
+                    "patches. Use --keep-profiles to keep the template's running surface with the "
+                    "model's station layout, or pick a window whose sections are one running surface "
+                    "rather than switch/blade geometry.")
+            except (SimpackCaseError, OSError, ValueError, KeyError) as advice_error:
+                report["advice"] = f"could not measure alternative windows: {advice_error}"
+        report["hint"] = ("nothing was wrong with the case file: the seven vertical degrees of "
+                          "freedom could not seat eight patches on these sections")
+        return report
+    _ = q_eq
+    report["seats"] = True
+    report["residual_n"] = float(residual)
+    _, responses = dynamics.evaluate(0.0, np.array(q_eq, dtype=float), v)
+    report["per_contact_kn"] = {rail_id: round(response.normal_force_n / 1000.0, 2)
+                                for rail_id, response in sorted(responses.items())}
+    penetrations = [response.geometry.penetration_m for response in responses.values()
+                    if response.geometry is not None]
+    if penetrations:
+        report["max_penetration_um"] = round(max(penetrations) * 1e6, 2)
+    return report
+
+
+def _axle_reach_m(template: dict[str, Any]) -> float:
+    """How far behind ``x_start`` the rearmost axle sits, from the template's own geometry."""
+
+    vehicle = template.get("vehicle") or {}
+    try:
+        half_spacing = float(vehicle.get("bogie_half_spacing_m", 0.0))
+        wheelbase = float(vehicle.get("wheelbase_m", 0.0))
+    except (TypeError, ValueError):
+        return 2.0
+    reach = half_spacing + wheelbase / 2.0
+    return reach if reach > 0.0 else 2.0
 
 
 def _template_profile(profile: dict[str, Any], path: str) -> dict[str, Any]:
@@ -210,12 +321,13 @@ def _template_profile(profile: dict[str, Any], path: str) -> dict[str, Any]:
 
 def suggest_window(entries: Sequence[CatalogStation], profile_template: dict[str, Any], *,
                    travel_s: float, ride_s: float, span_lo: float, span_hi: float,
-                   wanted_m: float, limit_mm: float = SURFACE_DROP_WARN_MM,
-                   ) -> tuple[float, float] | None:
-    """The nearest model station whose ride window measures at or below ``limit_mm``.
+                   wanted_m: float, limit_mm: float = CROWN_WARN_MM,
+                   reach_m: float = 2.0) -> tuple[float, float] | None:
+    """The nearest model station whose ride window has crown heights within ``limit_mm``.
 
-    Returns ``(x_start_m, max_abs_drop_mm)`` or ``None`` when no candidate window qualifies.  This is
-    advice for the message, not a substitution: the caller still decides.
+    Returns ``(x_start_m, max_abs_crown_delta_mm)`` or ``None`` when no candidate window qualifies.
+    This is advice for the message, not a substitution: the caller still decides, and matching crowns
+    do not by themselves mean the vehicle will seat.
     """
 
     best: tuple[float, float] | None = None
@@ -223,11 +335,11 @@ def suggest_window(entries: Sequence[CatalogStation], profile_template: dict[str
         start = entry.station_m
         if not (span_lo <= start and start + travel_s * ride_s <= span_hi):
             continue
-        lo, hi = start - 2.0, start + travel_s * ride_s + 2.0
+        lo, hi = start - reach_m, start + travel_s * ride_s
         window = [candidate for candidate in entries if lo <= candidate.station_m <= hi]
         if not window:
             continue
-        delta = _surface_delta_mm(window, profile_template)
+        delta = _crown_delta_mm(window, profile_template)
         if delta is None or abs(delta[0]) > limit_mm:
             continue
         distance = abs(start - wanted_m)
@@ -239,30 +351,33 @@ def suggest_window(entries: Sequence[CatalogStation], profile_template: dict[str
 
 def _advice(entries: Sequence[CatalogStation], profile_template: dict[str, Any], *,
             travel_s: float, ride_s: float, span_lo: float, span_hi: float, wanted_m: float,
-            limit_mm: float) -> str:
-    """One sentence naming a window that measures clean, or admitting there is none."""
+            limit_mm: float, reach_m: float = 2.0) -> str:
+    """One sentence naming a window whose crowns match, or admitting there is none."""
 
     found = suggest_window(entries, profile_template, travel_s=travel_s, ride_s=ride_s,
-                           span_lo=span_lo, span_hi=span_hi, wanted_m=wanted_m, limit_mm=limit_mm)
+                           span_lo=span_lo, span_hi=span_hi, wanted_m=wanted_m, limit_mm=limit_mm,
+                           reach_m=reach_m)
     if found is None:
-        return ("No window in this model measures within "
-                f"{limit_mm:.0f} mm of the template, so geometry alone cannot seat this model. ")
+        return ("No window in this model has crown heights within "
+                f"{limit_mm:.1f} mm of the template's. ")
     start, worst = found
-    return (f"The nearest start that measures within {limit_mm:.0f} mm is {start:.1f} m "
-            f"(worst {worst:.2f} mm). ")
+    return (f"The nearest start whose crowns land within {limit_mm:.1f} mm is {start:.1f} m "
+            f"(worst {worst:.3f} mm). ")
 
 
 def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path: str | Path,
                side: str = "left", rail: str | None = None, sample: int | None = None,
                x_start_m: float, duration_s: float | None = None,
-               case_id: str | None = None, keep_profiles: bool = False,
-               allow_surface_drop: bool = False, max_surface_drop_mm: float = 8.0,
-               lateral_m: float | None = None) -> CaseBuild:
+               case_id: str | None = None, keep_profiles: bool = False) -> CaseBuild:
     """Write a case whose rail geometry comes from the catalog and whose physics comes from a case.
 
     ``x_start_m`` is required and must lie inside the model's own mileage span, because the station
     mileages are imported unchanged: shifting them is what makes a rail stop covering the first
     wheel position.  The sidecar records the span the case actually covers.
+
+    This function does not judge whether the imported section will *seat*: no crown measurement
+    predicts that (see ``docs/SIMPACK_IMPORT_2026-10-22.md``).  ``velch simpack-case`` therefore runs
+    the vertical preload equilibrium on what it just wrote and refuses only on that measurement.
     """
 
     catalog = load_catalog(catalog_path)
@@ -316,28 +431,17 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
     travel = float((template.get("vehicle") or {}).get("travel_speed_m_s", 0.0))
     ride_s = float(duration_s if duration_s is not None
                    else (template.get("run") or {}).get("duration_s", 0.0))
-    park_lo = float(x_start_m) - 2.0
-    park_hi = float(x_start_m) + travel * ride_s + 2.0
+    # The whole vehicle has to be measured, not just the leading axle: the rear axle is 10 m behind
+    # the start and rides whatever section is there.
+    reach = _axle_reach_m(template)
+    park_lo = float(x_start_m) - reach
+    park_hi = float(x_start_m) + travel * ride_s
     in_window = [entry for entry in chosen if park_lo <= entry.station_m <= park_hi]
-    drop = None if keep_profiles else _surface_delta_mm(in_window or chosen, profile_template,
-                                                       lateral_m=lateral_m)
+    crowns = None if keep_profiles else _crown_delta_mm(in_window or chosen, profile_template)
     warning = None
-    if drop is not None and not allow_surface_drop:
-        magnitude = abs(drop[0])
-        if magnitude > max_surface_drop_mm:
-            raise SimpackCaseError(
-                f"the imported surface sits {drop[0]:+.2f} mm against the template's at "
-                f"{drop[1]:.3f} m, beyond the {max_surface_drop_mm:.1f} mm this run can plausibly "
-                "seat (measured here: 5.18 mm seated, 11.91 mm did not). Those stations are "
-                "switch/blade surfaces rather than one running surface. "
-                + _advice(chosen, profile_template, travel_s=travel, ride_s=ride_s,
-                          span_lo=span_lo, span_hi=span_hi, wanted_m=float(x_start_m),
-                          limit_mm=SURFACE_DROP_WARN_MM)
-                + " Or use --keep-profiles, or pass --allow-surface-drop and read the run before "
-                "quoting it")
-        if magnitude > SURFACE_DROP_WARN_MM:
-            warning = (f"imported surface sits {drop[0]:+.2f} mm against the template's at "
-                       f"{drop[1]:.3f} m; the run may seat, but say so before quoting it")
+    if crowns is not None and abs(crowns[0]) > CROWN_WARN_MM:
+        warning = (f"imported crowns differ from the template's by {crowns[0]:+.3f} mm at "
+                   f"{crowns[1]:.3f} m; the run may seat, but say so before quoting it")
 
     # ``keep_profiles`` keeps the template's surface file and imports only the station *layout*.
     # The full import (default) mixes rail sections that were never calibrated against this vehicle,
@@ -397,12 +501,12 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
         "x_start_m": float(x_start_m),
         "duration_s": run.get("duration_s"),
         "station_count": len(new_stations),
-        "surface_delta_mm": (None if drop is None
-                             else {"max_abs": round(drop[0], 3), "at_m": round(drop[1], 3),
-                                   "measured_stations": len(in_window or chosen),
-                                   "ride_window_m": [round(park_lo, 3), round(park_hi, 3)]}),
-        "surface_drop_allowed": bool(allow_surface_drop),
-        "surface_drop_warning": warning,
+        "crown_delta_mm": (None if crowns is None
+                           else {"max_abs": round(crowns[0], 3), "at_m": round(crowns[1], 3),
+                                 "max_lateral_m": round(crowns[2], 4),
+                                 "measured_stations": len(in_window or chosen),
+                                 "ride_window_m": [round(park_lo, 3), round(park_hi, 3)]}),
+        "crown_warning": warning,
 
         "dropped_duplicate_stations": dropped,
         "stations": [
@@ -430,6 +534,10 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
         template=str(template_file),
         model=str(catalog.get("model")),
         profiles_from="template" if keep_profiles else "simpack",
+        crown_delta_mm=(None if crowns is None else {
+            "max_abs": round(crowns[0], 3), "at_m": round(crowns[1], 3),
+            "max_lateral_m": round(crowns[2], 4)}),
+        crown_warning=warning,
     )
 
 

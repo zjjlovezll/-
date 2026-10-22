@@ -29,11 +29,13 @@
 | **B015** | **版本漂移 + 入口点缺失** | `pyproject.toml` 写死 `version = "0.4.0"`，且没有 UI/agent 入口 | wheel 版本与 `velch.__version__` 可能不一致；用户只能靠记模块路径打开界面 | pyproject 改 `dynamic = ["version"]`（单一事实源 `src/velch/__init__.py`）+ 新增 `velch-ui`、`velch-agent` 两个 script |
 | **B016** | **自检的流式探针用 `-c` 内联源码** | 冻结构建 | 打包后的 exe 不接受 `-c`，自检的"子进程通路"项直接失败 | 新建 `ui/stream_probe.py`（`stream_probe_argv()`），自检与 `packaging/entry_console.py` 的 `--selftest-stream` 对应 |
 
-| B021 | `simpack-case` 的默认模式（型面取自模型）在转辙区窗口必然失败，报的是静平衡偏载 `the lightest contact patch carries only 0.0 N while the heaviest carries 119357.0 N`，没说是几何问题、也没说差多少 | 派生阶段量出行驶窗口内的断面下沉并与模板比较；>8 mm 直接拒（消息给下沉量/里程/阈值/实测边界），3–8 mm 记 `surface_drop_warning`，量不到记 `null` | `tests/test_simpack_surface_drop.py` 5 项 + `docs/SIMPACK_IMPORT` 第五节 | 8a00009 |
+| B021 | `simpack-case` 的默认模式（型面取自模型）在转辙区窗口必然失败，报的是静平衡偏载 `the lightest contact patch carries only 0.0 N while the heaviest carries 119357.0 N`，没说是几何问题、也没说差多少 | **两轮修正**：①先量断面差并把明显不可能挡在积分器之前；②发现该量法本身错（见 B022/B023）后改为"量冠部（仅报告）+ 真跑静平衡裁决"，`seat_report` 坐不住就退出码 2 并打印原因/冠部差/整车足迹与一句明确不推荐窗口的建议 | `tests/test_simpack_crown.py` 7 项 + `docs/SIMPACK_IMPORT` 第五节（含更正） | 8a00009 / 本轮 |
+| B022 | 派生算例只导入 `[x_start − 2, x_start + 车速×时长 + 2]` 内的站位，而后轴在 `x_start` 之后 **10 m**（`bogie_half_spacing_m + wheelbase_m/2`）→ 后轴下面没有钢轨，静平衡必然单侧脱空 | 窗口改成整车足迹 `[x_start − 10, x_start + 车速×时长]`（`_axle_reach_m`）；修后 60 m 窗口`seats: true`、`residual 1.1e-07`、`axle1_right 59.68 kN`、`run-vehicle --fast` → `numerically_checked`、`nfev 116`、`max_penetration 65.466 µm` | `tests/test_simpack_window_advice.py::test_a_window_whose_rear_axle_rides_the_step_is_not_offered` + `docs/SIMPACK_IMPORT` 第五节更正 | 本轮 |
+| B023 | 断面差量的横向位置错了：在固定 `y = 0.753 m` 取轨顶，而模板包络是 `[−0.790, −0.717] m`、冠部在 `−0.7896 m`，该点落在**轨顶侧面**上、比冠部高 +29.86 mm → 报出的"下沉 5.18/11.24 mm"其实是冠部横向漂移 × 侧面坡度 | 改成量**冠部**（逐站 `argmin(z)` 的高度与横向位置）；冠部高度差实测 0.000–0.155 mm、冠部横移最多 103 mm；阈值降级为 `CROWN_WARN_MM = 0.5` **只报告不拒绝** | `tests/test_simpack_crown.py::test_the_crown_is_the_lowest_point_not_a_fixed_offset` + `docs/SIMPACK_IMPORT` 第五节更正 | 本轮 |
 
 ## 已知未修（不是"忘了"，是权衡）
 
-| O008 | 转辙区（约 58–72 m）的断面**形状**差异未被判据覆盖：冠部高度对齐（≤0.1 mm）仍可能静平衡失败 | 需要比冠部高度更强的形状不变量（承载面宽度/曲率/轨距面位置逐站比较），或在该区段直接用 `--keep-profiles` | 实测矩阵见 `docs/SIMPACK_IMPORT` 第五节；`tests/test_simpack_surface_drop.py` 只钉高度判据 |
+| O008 | ~~转辙区断面形状差异导致坐不住~~ **已撤销**：60 m 窗口坐不住的原因是 B022（后轴无钢轨），修好后同窗口能坐能跑。仍然存在的是：**冠部横向漂移最多 103 mm，而横向布置尚未导入**（轮对初始横向位置仍取模板的 `y_offset_m = 0.753`），所以接触点相对冠部的位置与模型不完全一致 | 要消除需导入模型自己的轮对横向布置 + 双体（基本轨/尖轨）交接，属下一层 | `docs/SIMPACK_IMPORT` 第五节更正与§三 |
 
 
 | ID | 症状 | 为什么不修 / 什么时候修 |

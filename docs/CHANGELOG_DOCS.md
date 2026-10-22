@@ -1157,3 +1157,46 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 **测试**：`Velch/tests/test_simpack_window_advice.py` 6 项（命名合格窗口、取最近、无候选时承认、
 越界窗口不推荐、消息带里程、无解时的措辞）。全仓 **503 passed, 1 skipped**。
 | docs/RELEASE_NOTES_0.4.4.md | 0.4.4 唯一改动：被拒时给一个具体里程；为什么不承诺换过去就能跑 | ✅ 当前发布物 |
+
+## 第 40 轮：Simpack 断面——两次量错，一次改对
+
+起因是上一轮留下的那个反直觉事实：**只差 0.09 mm 的 60 m 窗口坐不住，差 5.18 mm 的 82 m 窗口反而跑通**。
+追下去发现不是物理问题，是我自己量错了两次：
+
+1. **量的位置在轨顶侧面上。** 旧代码在固定横向 `y = 0.753 m` 取轨顶高度，而模板断面载入后的测量包络是
+   `y ∈ [−0.790, −0.717] m`、冠部在 `−0.7896 m`：`0.753` 落在 flank 上，比冠部高 **+29.86 mm**。
+   于是"下沉 5.18 / 11.24 mm"记录的其实是**冠部横向漂移 × 侧面坡度**。按冠部重测：226 个右轨站位冠部
+   高度差 **0.000–0.155 mm**，真正在动的是**冠部横向位置**（0.714–0.868 m，最多漂移 **103 mm**）。
+2. **行驶窗口只向后看了 2 m。** 后轴在 `x_start` 之后 **10 m**，旧窗口里没有后轴要压的断面 → 导入的站位表
+   缺了后轴下面那段 → 静平衡必然报"单侧脱空、最重接触 119 315 N"。窗口改成整车足迹
+   `[x_start − 10, x_start + 车速×时长]` 后，**同一个 60 m 窗口能坐也能跑**。
+
+### 改法（`simpack_case.py` / `cli.py`）
+
+| 项 | 之前 | 现在 |
+|---|---|---|
+| 几何量 | `_surface_delta_mm`：固定横向位置减模板 | `_crown_delta_mm`：逐站 `argmin(z)` 得冠部高度与横向位置 |
+| 阈值 | 3 mm 警告 / 8 mm **拒绝** | `CROWN_WARN_MM = 0.5`，**只报告不拒绝** |
+| 窗口 | `[x_start−2, +2]` | `[x_start − 10, x_start + 车速×时长]`（`_axle_reach_m`） |
+| 裁决 | 几何阈值 | `seat_report()` 真跑一次静平衡；坐不住 → 退出码 2 + 原因/冠部差/足迹 + 不推荐窗口的建议 |
+| 开关 | `--allow-surface-drop` / `--max-surface-drop` / `--lateral-m` | `--no-seat-check`（跳过静平衡裁决） |
+| schema | `velch-simpack-case-v1` | `velch-simpack-case-v2`，旁挂 `crown_delta_mm` / `crown_warning` |
+
+### 实测
+
+| 窗口 | `crown_delta_mm.max_abs` | 足迹 | `seats` | 结果 |
+|---|---|---|---|---|
+| 60 m | 0.155 mm | 50.0–64.861 m | **true** | `numerically_checked`、`nfev 116`、最大侵入 **65.466 µm**、`axle1_right 59.68 kN` |
+| 82 m | 0.155 mm | 80.0–88.861 m | true | `numerically_checked`、`nfev 1094`、最大侵入 88.63 µm、八接触 60.59–71.89 kN |
+
+60 m 那次的最大侵入与 `axle1_right` 恰好是冻结静载门（65.47 µm / 59 680.5769 N），说明导入链路没动物理。
+
+### 顺带
+
+- 删 `tests/test_simpack_surface_drop.py`（随阈值一起废），新增 `tests/test_simpack_crown.py`（7 项，含
+  "冠部是最低点而不是固定横向位置"与"大冠部差只报告不拒绝"）。
+- 重写 `tests/test_simpack_window_advice.py`（7 项）：核心用例是"起步 65 m 的后轴压到 55 m 的台阶，因此
+  推荐 80 m"——这条正是 B022 的回归。
+- `docs/SIMPACK_IMPORT_2026-10-22.md` 第五节加"更正"块并给旧表加注；`docs/BUGS.md` 记 **B022**、**B023**、
+  重写 B021、**撤销 O008**（改为"冠部横移未导入"）。
+- `pytest` **506 passed, 1 skipped**。

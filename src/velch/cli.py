@@ -76,13 +76,10 @@ def main(argv: list[str] | None = None) -> int:
     simpack_case.add_argument("--case-id", default=None)
     simpack_case.add_argument("--keep-profiles", action="store_true",
                               help="import only the station layout; keep the template's surface file")
-    simpack_case.add_argument("--allow-surface-drop", action="store_true",
-                              help="proceed even if the imported surface sits below the template's")
-    simpack_case.add_argument("--max-surface-drop", type=float, default=8.0,
-                              help="how far (mm) the imported surface may sit below the template's")
-    simpack_case.add_argument("--lateral-m", type=float, default=None,
-                              help="lateral position used to compare surfaces (default: the "
-                                   "template station's y_offset)")
+    simpack_case.add_argument("--no-seat-check", action="store_true",
+                              help="write the case without running the vertical preload equilibrium "
+                                   "on it (the check is the only thing that knows whether the "
+                                   "imported sections seat eight patches)")
     native_status = sub.add_parser("contact-native-status", help="check official CONTACT Python interface and native DLL")
     native_status.add_argument("--contact-root", type=Path, required=True)
     native_status.add_argument("--output", type=Path)
@@ -153,23 +150,31 @@ def main(argv: list[str] | None = None) -> int:
                              ensure_ascii=False, indent=2))
             return 0 if report["summary"]["geometry_readable"] else 2
         if args.command == "simpack-case":
-            from .simpack_case import SimpackCaseError, build_case
+            from .simpack_case import SimpackCaseError, build_case, seat_report
             try:
                 built = build_case(
                     catalog_path=args.catalog, template_path=args.template, out_path=args.out,
                     side=args.side, rail=args.rail, sample=args.sample,
                     x_start_m=args.x_start, duration_s=args.duration, case_id=args.case_id,
-                    keep_profiles=args.keep_profiles,
-                    allow_surface_drop=args.allow_surface_drop,
-                    max_surface_drop_mm=args.max_surface_drop,
-                    lateral_m=args.lateral_m)
+                    keep_profiles=args.keep_profiles)
             except SimpackCaseError as error:
                 print(json.dumps({"status": "failed", "error_type": type(error).__name__,
                                   "message": str(error)}, ensure_ascii=False, indent=2),
                       file=sys.stderr)
                 return 2
-            print(json.dumps(built.summary(), ensure_ascii=False, indent=2))
-            return 0
+            summary = built.summary()
+            if args.keep_profiles or args.no_seat_check:
+                # Geometry is all this command can honestly promise without running the solver.
+                print(json.dumps(summary, ensure_ascii=False, indent=2))
+                return 0
+            # "Will it seat" is not a geometry question: run the preload equilibrium on what was just
+            # written and let its own measurement decide.
+            report = seat_report(args.out, catalog_path=args.catalog,
+                                 template_path=args.template, x_start_m=args.x_start,
+                                 duration_s=args.duration, side=args.side, rail=args.rail)
+            summary["seating"] = report
+            print(json.dumps(summary, ensure_ascii=False, indent=2))
+            return 0 if report["seats"] else 2
         if args.command == "inspect-profile":
             profile = load_profile(args.file, file_format=args.format, surface=args.surface)
             print(json.dumps({"source": profile.source, "sha256": profile.source_sha256,

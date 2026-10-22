@@ -1501,6 +1501,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.18.md](RELEASE_NOTES_0.4.18.md) | Velch 0.4.18 发布说明 |
 | [RELEASE_NOTES_0.4.19.md](RELEASE_NOTES_0.4.19.md) | Velch 0.4.19 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
+| [RELEASE_NOTES_0.4.20.md](RELEASE_NOTES_0.4.20.md) | Velch 0.4.20 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -1755,6 +1756,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.17.md` | 0.4.17：① 屏「环境体检」，结果按 PASS/WARN/FAIL 着色 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.18.md` | 0.4.18：状态栏常驻「这版跑过什么」证据行 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.19.md` | 0.4.19：⑤ 屏常驻「本运行不是标定」横幅 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.20.md` | 0.4.20：页眉「发布证据」只读窗口 + 两个动作搬家 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1892,3 +1894,31 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 
 `tests/test_ui_calibration_banner.py`（3 项）：文案必须写明边界与两份文件、一进屏就在、
 `wraplength` 必须走 `wrap_with`（写死宽度会在缩放时溢出）。
+
+## 第 58 轮：界面里能看「凭什么可以发布」
+
+`docs/EVIDENCE_MAP.md` 是发布前最该被读的一页（六个分项各自跑出来的最近结果），但它是磁盘上的
+markdown。现在页眉有**「发布证据」**：一个只读窗口，显示原文 + 文件时间 + 大小。
+
+### 三个判断
+
+- **显示原文，不解析**：那张表每次任务都在改列，重新实现的解析器会成为第三份真相。窗口只负责
+  把"哪一版"（时间、KB）和"写了什么"（原文）同时摆出来。
+- **找不到就说查过哪里**：`describe(None)` 会把 `docs/EVIDENCE_MAP.md` 的三个候选路径列出来，
+  并给重新生成的命令 `python -X utf8 scripts/evidence_map.py --with-run`。
+- **目录解析复用 `selfcheck.docs_roots()`**：PyInstaller 6 把 `datas` 放 `_internal`，
+  `parents[2]` 只对一种布局成立——再猜一次就是第三个猜测。
+
+### 两个动作搬到了页眉
+
+「环境体检」和「发布证据」原来挤在 ① 屏右卡的导航格子里。加到第 5 个按钮时**卡片放不下**：
+`grid` 仍然建出按钮，但父容器裁掉了它——**布局闸门量的是"按钮分配宽度 vs 所需宽度"，
+量不到父容器裁切**，所以这次是我看截图发现的。它们本来就是"整程序"的动作，不属于任何一屏，
+搬到页眉后 ① 屏的导航回到三键。
+
+### 一个被架构规则拦下的 import
+
+`evidence_map_dialog` 想用 `velch.selfcheck` 的目录解析，规则先报
+`velch.ui.evidence_map_dialog -> velch.selfcheck`。**这条规则是对的**：presentation 不该随手
+import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并写明理由——`selfcheck` 只回答
+"这台机器装了什么、可写在哪"，不碰数值路径。

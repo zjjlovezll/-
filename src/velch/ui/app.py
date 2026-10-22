@@ -306,6 +306,12 @@ class VelchUI:
         self.backend_label = ttk.Label(right, text=f"绘图后端 {MATPLOTLIB_BACKEND}",
                                        style="Subtitle.TLabel")
         self.backend_label.pack(side="right", padx=(0, theme.GAP))
+        # 两件"整程序"的事放在页眉：体检回答"这台机器装对了吗"，发布证据回答"这版凭什么能发"。
+        # 它们不属于任何一屏，塞进 ① 屏的卡片会把它挤到裁切（布局闸门量得到按钮、量不到父容器裁切）。
+        ttk.Button(right, text="环境体检", style="Ghost.TButton",
+                   command=self.run_selfcheck).pack(side="right", padx=(0, theme.GAP))
+        ttk.Button(right, text="发布证据", style="Ghost.TButton",
+                   command=self.show_evidence).pack(side="right", padx=(0, theme.GAP))
 
         self.body = ttk.Frame(self.root, style="Bg.TFrame")
         self.body.grid(row=1, column=1, sticky="nsew")
@@ -682,6 +688,20 @@ class VelchUI:
         self._tick_job = self.root.after(300, self._tick)
 
     # -- misc --------------------------------------------------------------
+    def run_selfcheck(self) -> None:
+        """跑一次环境体检（`velch selfcheck` 走子进程，冻结版也一样）。"""
+
+        from .selfcheck_dialog import show_selfcheck_dialog
+
+        self.selfcheck_dialog = show_selfcheck_dialog(self.root)
+
+    def show_evidence(self) -> None:
+        """打开 ``docs/EVIDENCE_MAP.md``：这版能发，凭什么。"""
+
+        from .evidence_map_dialog import show_evidence_map_dialog
+
+        self.evidence_dialog = show_evidence_map_dialog(self.root)
+
     def show_help(self) -> None:
         window = tk.Toplevel(self.root)
         window.title("Velch 工作台 · 快捷键与数据口径")

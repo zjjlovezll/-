@@ -49,6 +49,12 @@ def _module_missing(name: str) -> bool:
         return True
 
 
+def docs_roots() -> list[Path]:
+    """公开别名：界面的"发布证据"窗口要用同一套目录解析，不能自己再猜一遍。"""
+
+    return _docs_roots()
+
+
 def _docs_roots() -> list[Path]:
     """Every folder that could hold ``docs/``: the checkout, and the build's two levels.
 

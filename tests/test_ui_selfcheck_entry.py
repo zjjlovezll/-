@@ -9,9 +9,12 @@ DIALOG = (Path(__file__).resolve().parent.parent / "src" / "velch" / "ui" / "sel
           ).read_text(encoding="utf-8")
 
 
-def test_the_cases_screen_offers_a_selfcheck_button() -> None:
-    assert '"环境体检"' in TEXT
-    assert "self.run_selfcheck" in TEXT
+def test_the_header_offers_the_selfcheck_button() -> None:
+    # 整程序的动作放在页眉：塞进 ① 屏的卡片会把卡片挤到裁切（父容器裁切，布局闸门量不到）。
+    header = (Path(__file__).resolve().parent.parent / "src" / "velch" / "ui" / "app.py"
+              ).read_text(encoding="utf-8")
+    assert '"环境体检"' in header
+    assert "def run_selfcheck" in header
 
 
 def test_the_dialog_runs_the_cli_instead_of_importing_the_checker() -> None:

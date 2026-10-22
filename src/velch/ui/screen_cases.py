@@ -15,7 +15,6 @@ from tkinter import filedialog, ttk
 
 from . import store, theme
 from .screen import Screen
-from .selfcheck_dialog import show_selfcheck_dialog
 from .widgets import Card, ListPanel, ui_font
 
 #: Four columns, not six.  Beside the contract card the six-column table put the hash — the one
@@ -154,10 +153,9 @@ class CasesScreen(Screen):
         for index, (text, command) in enumerate((
                 ("在运行屏打开", self.open_in_run),
                 ("刷新列表", self.reload),
-                ("Simpack 导入", self.import_from_simpack),
-                ("环境体检", self.run_selfcheck))):
-            # Two rows of two: four buttons in one 360 px row clip at 130 % type size, and the
-            # layout gate (tests/test_ui_layout.py) measures exactly that.
+                ("Simpack 导入", self.import_from_simpack))):
+            # Two columns, ceil(n/2) rows: five buttons in one 360 px row clip at 130 % type size,
+            # and the layout gate (tests/test_ui_layout.py) measures exactly that.
             ttk.Button(nav, text=text, style="Ghost.TButton", command=command).grid(
                 row=index // 2, column=index % 2, sticky="ew",
                 padx=(0 if index % 2 == 0 else theme.GAP, 0),
@@ -350,15 +348,6 @@ class CasesScreen(Screen):
             text=f"已派生：{path.name}\ncase_id = {payload['case_id']}\nsha256 = {digest}")
         self.app.set_status(f"派生成功 · {path.name}", tone="pass")
         self.reload()
-
-    def run_selfcheck(self) -> None:
-        """跑一次环境体检，把 `velch selfcheck` 的原文贴出来。
-
-        空表、缺 matplotlib、Simpack 路径写错这几种"看着像坏了"的情况都在体检里有条目；
-        在这里开一个入口，比让人去翻文档快。
-        """
-
-        show_selfcheck_dialog(self.winfo_toplevel())
 
     def import_from_simpack(self) -> None:
         """Open the Simpack import dialog on the selected case as the template."""

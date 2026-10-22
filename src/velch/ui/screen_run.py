@@ -13,6 +13,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, ttk
 
+from ..launcher import launcher_argv
 from . import store, theme
 from .screen import Screen
 from .widgets import Card, ListPanel, MetricCard, ui_font
@@ -240,12 +241,11 @@ class RunScreen(Screen):
         return flags
 
     def _argv_single(self, case: store.CaseInfo, outdir: Path) -> list[str]:
-        return [sys.executable, "-X", "utf8", "-m", "velch", "run-vehicle",
-                str(case.path), "--output", str(outdir), *self._solver_flags()]
-
+        return launcher_argv("run-vehicle", str(case.path), "--output", str(outdir),
+                             *self._solver_flags())
 
     def _argv_batch(self, cases: list[store.CaseInfo], root: Path) -> list[str]:
-        argv = [sys.executable, "-X", "utf8", "-m", "velch", "run-vehicle-batch"]
+        argv = launcher_argv("run-vehicle-batch")
         argv += [str(case.path) for case in cases]
         argv += ["--output-root", str(root), "--jobs", str(max(1, int(self.jobs_var.get())))]
         return argv

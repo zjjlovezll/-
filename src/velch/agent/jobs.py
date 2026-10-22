@@ -31,6 +31,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from ..launcher import launcher_argv, worker_argv
 from .cases import materialise_case, sha256_file
 from .core import (
     AgentError,
@@ -100,8 +101,8 @@ def _environment() -> dict[str, str]:
 
 
 def _program(case_path: Path, output_dir: Path, workers: int) -> list[str]:
-    return [sys.executable, "-X", "utf8", "-m", "velch", "run-vehicle", str(case_path),
-            "--output", str(output_dir), "--workers", str(int(workers))]
+    return launcher_argv("run-vehicle", str(case_path), "--output", str(output_dir),
+                         "--workers", str(int(workers)))
 
 
 def _worker_alive(pid: int | None) -> bool:
@@ -217,7 +218,7 @@ def submit_run(*, case_path: str | Path, workers: int = 1,
     detach = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
     with log_path.open("w", encoding="utf-8", newline="\n") as log:
         child = subprocess.Popen(
-            [sys.executable, "-X", "utf8", "-m", "velch.agent.worker", str(job_dir)],
+            worker_argv(job_dir),
             cwd=str(repository_root()), env=_environment(), stdin=subprocess.DEVNULL,
             stdout=log, stderr=subprocess.STDOUT, creationflags=detach if os.name == "nt" else 0,
             start_new_session=os.name != "nt",

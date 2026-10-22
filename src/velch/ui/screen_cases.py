@@ -69,6 +69,13 @@ class CasesScreen(Screen):
         self.table.columns(COLUMNS, stretch_weights=STRETCH)
         self.table.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.table.tree.bind("<Double-1>", lambda _e: self.open_in_run())
+        # Where the program looked for the corpus, shown only when it found nothing: a packaged
+        # build ships no cases, so an empty table is the expected first run and needs a reason.
+        self.problem_var = tk.StringVar(value="")
+        self.problem_label = tk.Label(body, textvariable=self.problem_var, bg=theme.SURFACE,
+                                      fg=theme.WARN, justify="left", anchor="w",
+                                      font=ui_font(theme.FONT_SIZE["tiny"]))
+        self.problem_label.pack(fill="x", pady=(theme.SPACE["2"], 0))
 
         # -- right: detail + derive --------------------------------------
         right = Card(self, "算例契约")
@@ -159,6 +166,14 @@ class CasesScreen(Screen):
         faults = [info for info in self.infos if info.problem]
         detail = (f"{len(self.infos)} 个算例 · {sum(i.size_bytes for i in self.infos)/1024/1024:.1f} MB"
                   f" · 含故障 {len(faults)}")
+        if not self.infos:
+            # An empty list is the normal first run of a packaged build (the corpus is not
+            # shipped), so it must explain where the program looked, not just show nothing.
+            from ..data_root import hint
+            detail = "未找到算例：语料目录没有挂上"
+            self.problem_var.set(hint())
+        else:
+            self.problem_var.set("")
         self.set_rows(len(self.infos), detail)
         # Arriving with the contract card full of em dashes reads as "this screen is broken".
         # Pre-select the first row so the card always explains *some* case.

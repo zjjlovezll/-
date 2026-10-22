@@ -36,7 +36,14 @@ def _doctor() -> dict:
     except OSError as error:  # pragma: no cover - a read-only checkout
         checks.append({"check": "agent_home", "ok": False, "detail": f"{home}: {error}"})
     cases = list_cases(limit=1)
-    checks.append({"check": "cases", "ok": cases["total"] > 0, "detail": cases["total"]})
+    check: dict = {"check": "cases", "ok": cases["total"] > 0, "detail": cases["total"]}
+    if cases["total"] == 0:
+        # "0 cases" is the first thing a packaged install shows; without the reason it reads like
+        # a broken build rather than a missing corpus, so the same hint the UI prints goes here.
+        from .. import data_root as data_root_module
+        check["detail"] = f"0（算例根：{data_root_module.case_dir()}）"
+        check["hint"] = data_root_module.hint()
+    checks.append(check)
     ledger = revisions(limit=1)
     return {
         "software": str(repository_root()),

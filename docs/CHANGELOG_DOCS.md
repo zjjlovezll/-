@@ -1033,3 +1033,20 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 
 新增 `tests/test_ui_robustness.py`（19 项，含一条真建 Tk 窗口验证"坏事件之后队列继续被消费"的用例）。
 验证：`pytest` **473 passed in 17.1 s**、`--selftest` 7 屏 0 报错、`scripts/auto_accept.py` ACCEPT。
+
+## 第 34 轮 · 0.4.1 安装包（2026-10-22 22:30）
+
+- 包装：`pyproject.toml` 版本改为单一事实源（`dynamic` + `attr = "velch.__version__"`）、
+  补 `velch-ui`/`velch-agent` 入口；新增 `packaging/`（`Velch.spec`、`entry_console.py`、
+  `entry_window.py`、`version_info.txt`、`build_installer.py`、`smoke_test.py`）。
+- 两个 exe：`Velch.exe`（窗口）+ `velch-cli.exe`（控制台）。控制台**不能**叫 `velch.exe`：
+  Windows 文件名大小写不敏感，会与 `Velch.exe` 在同一个 COLLECT 里相撞、只剩一个（实测）。
+- 冻结构建四个坑（都写进 spec 注释）：Anaconda 里 PyInstaller 会拖进 PyQt5→torch（要 EXCLUDES）；
+  `distutils` 不能排除（pre-safe-import hook 冲突）；屏是动态 import 的必须 `collect_submodules("velch")`；
+  PIL 不能排除（matplotlib 三维路径要它）。
+- 数据根安装态：`data_root` 新增 frozen 安装根、`%LOCALAPPDATA%` 标记、`hint()`；① 算例屏空表给原因。
+- 入口点统一：`velch/launcher.py`（`launcher_argv` / `worker_argv` / `console_executable` /
+  `child_environment`），六处 `sys.executable` 全部收敛，测试禁止新出现（白名单三处）。
+- 修 B017–B020（见 `BUGS.md`）：冻结输出改 UTF-8、窗口版无 stdout、日志管道探针误报、doctor 提示。
+- 验证：`pytest` **483 passed**；`smoke_test.py` **ACCEPT**；产物 `Velch-0.4.1-win64.zip` 88.9 MB。
+- 新文档：`docs/RELEASE_NOTES_0.4.1.md`、`docs/PACKAGING_2026-10-22.md`（含构建命令与 5 步冒烟）。

@@ -73,6 +73,10 @@ PRESENTATION_MAY_IMPORT = PRESENTATION | frozenset(
         # A pure path resolver: where the validation corpus lives.  It imports nothing from
         # the package, so letting presentation ask it a question keeps the numeric path closed.
         "velch.data_root",
+        # The startup helper: how to launch *ourselves* as a child process, from source or from a
+        # frozen build.  It knows nothing about physics; duplicating its two branches per screen is
+        # what broke the packaged product in the first place.
+        "velch.launcher",
     }
 )
 

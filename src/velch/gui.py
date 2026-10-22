@@ -14,6 +14,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+from .launcher import launcher_argv
 from .gui_support import (case_kind, csv_columns, get_value, iter_nodes,
                           plot_series, relocated_case, set_scalar, write_case)
 from .model import load_case
@@ -485,8 +486,8 @@ class VelchWorkbench:
             messagebox.showerror("运行失败", "请指定输出目录")
             return
         output = output.resolve()
-        command = [sys.executable, "-m", "velch", "run-vehicle" if self.kind == "vehicle" else "run",
-                   str(run_path), "--output", str(output)]
+        command = launcher_argv("run-vehicle" if self.kind == "vehicle" else "run",
+                                str(run_path), "--output", str(output))
         self.running = True
         self.run_button.configure(state="disabled")
         self.stop_button.configure(state="normal")

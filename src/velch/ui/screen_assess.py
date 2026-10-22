@@ -18,6 +18,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
 
+from ..launcher import launcher_argv
 from . import fmt, store, theme
 from .fmt import fmt_number
 from .screen import Screen
@@ -325,7 +326,7 @@ class AssessScreen(Screen):
         self.cli_log.configure(state="normal")
         self.cli_log.delete("1.0", "end")
         self.cli_log.configure(state="disabled")
-        argv = [sys.executable, "-X", "utf8", "-m", "velch", "assess", str(run.path)]
+        argv = launcher_argv("assess", str(run.path))
         self.cli_var.set("$ " + " ".join(argv))
         if self.app.spawn(argv, store.REPO_ROOT, owner=self.name) is None:
             return

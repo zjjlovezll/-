@@ -19,12 +19,9 @@ import sys
 import time
 import traceback
 
+from ..launcher import launcher_argv
+from .stream_probe import stream_probe_argv
 from . import store
-
-STREAM_PROBE = ("import sys;"
-                "print('velch-ui-stream-ok');"
-                "print('velch-ui-stream-ok-2');"
-                "print('argv0=' + sys.argv[0])")
 
 
 def _parse_screens(spec: str) -> list[str]:
@@ -301,8 +298,7 @@ def run(screens: str = "", as_json: bool = False, timeout: float = 180.0) -> int
         app.on_log = spy
         try:
             app.show("run")
-            job = app.spawn([sys.executable, "-X", "utf8", "-c", STREAM_PROBE],
-                            store.REPO_ROOT, owner="run")
+            job = app.spawn(stream_probe_argv(), store.REPO_ROOT, owner="run")
             if job is None:
                 raise RuntimeError("spawn refused: another child process is already running")
             end = time.monotonic() + 40.0
@@ -319,6 +315,14 @@ def run(screens: str = "", as_json: bool = False, timeout: float = 180.0) -> int
                                 "first": received[0] if received else "",
                                 "last": received[-1] if received else "",
                                 "waited": finished}
+        except Exception as exc:
+            # The probe is diagnostic: it must report its own failure, not abort the whole
+            # self-test (a packaged build without velch-cli.exe lands exactly here).
+            report["stream"] = {"lines": len(received), "exit_code": None, "elapsed_s": 0.0,
+                                "first": received[0] if received else "",
+                                "last": received[-1] if received else "",
+                                "waited": False,
+                                "error": f"{type(exc).__name__}: {exc}"}
         finally:
             app.on_log = original
 

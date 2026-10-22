@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "velch-turnout-dynamics"
-version = "0.4.0"
+# One source of truth: ``src/velch/__init__.py``.  A second literal here drifted the wheel
+# version away from what ``velch --version`` and the agent manifest reported.
+dynamic = ["version"]
 description = "Independent turnout vehicle-wheelset-rail dynamics research kernel"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "scipy>=1.10"]
@@ -15,9 +17,16 @@ dependencies = ["numpy>=1.24", "scipy>=1.10"]
 ui = ["matplotlib>=3.6"]
 all = ["matplotlib>=3.6"]
 
+# Every door into the product, so nobody has to know a module path.  ``velch-ui`` is the window,
+# ``velch`` is the console (CLI + MCP), ``velch-agent`` is the machine-facing JSON tool layer.
 [project.scripts]
 velch = "velch.cli:main"
 velch-gui = "velch.gui:main"
+velch-ui = "velch.ui:main"
+velch-agent = "velch.agent.__main__:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "velch.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]

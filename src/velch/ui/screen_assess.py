@@ -33,6 +33,12 @@ AXLE_COLUMNS = (
 )
 
 
+#: 这一屏会给出"通过/超限"的判定，但物理参数没有与实测或 Simpack 对齐。这条横幅是常驻的：
+#: 判定是**这套参数下**的自洽结果，不是对真实道岔的结论。
+CALIBRATION_NOTE = ("本运行不是标定：物理参数未与实测或 Simpack 对齐，这里的「通过 / 超限」"
+                    "只在这套算例参数下成立，不能当作对真实道岔的结论"
+                    "（见 docs/BUGS.md 的 O008 与 docs/PHYSICS_INVARIANTS.md）。")
+
 class AssessScreen(Screen):
     name = "assess"
     title = "数值门与运用限值"
@@ -93,10 +99,18 @@ class AssessScreen(Screen):
         right = ttk.Frame(self, style="Bg.TFrame")
         right.grid(row=0, column=1, sticky="nsew")
         right.columnconfigure(0, weight=1)
-        right.rowconfigure(1, weight=1)
+        right.rowconfigure(2, weight=1)
+
+        self.calibration_label = tk.Label(
+            right, text=CALIBRATION_NOTE, bg=theme.SURFACE, fg=theme.WARN, justify="left",
+            anchor="w", font=ui_font(theme.FONT_SIZE["micro"]),
+            wraplength=int(760 * theme.SCALE))
+        self.calibration_label.grid(row=0, column=0, sticky="ew",
+                                    pady=(0, theme.SPACE["2"]))
+        self.wrap_with(self.calibration_label, right, reserve=16)
 
         cards = ttk.Frame(right, style="Bg.TFrame")
-        cards.grid(row=0, column=0, sticky="ew", pady=(0, theme.SPACE["2"]))
+        cards.grid(row=1, column=0, sticky="ew", pady=(0, theme.SPACE["2"]))
         self.card_verdict = MetricCard(cards, "总判定", "—")
         self.card_verdict.pack(side="left", padx=(0, theme.GAP))
         self.card_samples = MetricCard(cards, "样本", "—")
@@ -107,7 +121,7 @@ class AssessScreen(Screen):
         self.card_status.pack(side="left", padx=(0, theme.GAP))
 
         panes = ttk.Frame(right, style="Bg.TFrame")
-        panes.grid(row=1, column=0, sticky="nsew")
+        panes.grid(row=2, column=0, sticky="nsew")
         panes.columnconfigure(0, weight=1, minsize=int(340 * theme.SCALE))
         panes.columnconfigure(1, weight=1, minsize=int(300 * theme.SCALE))
         panes.rowconfigure(0, weight=1)

@@ -1499,6 +1499,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.16.md](RELEASE_NOTES_0.4.16.md) | Velch 0.4.16 发布说明 |
 | [RELEASE_NOTES_0.4.17.md](RELEASE_NOTES_0.4.17.md) | Velch 0.4.17 发布说明 |
 | [RELEASE_NOTES_0.4.18.md](RELEASE_NOTES_0.4.18.md) | Velch 0.4.18 发布说明 |
+| [RELEASE_NOTES_0.4.19.md](RELEASE_NOTES_0.4.19.md) | Velch 0.4.19 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
@@ -1753,6 +1754,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.16.md` | 0.4.16：`SimpackCaseError.detail`，拒绝带结构化数字 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.17.md` | 0.4.17：① 屏「环境体检」，结果按 PASS/WARN/FAIL 着色 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.18.md` | 0.4.18：状态栏常驻「这版跑过什么」证据行 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.19.md` | 0.4.19：⑤ 屏常驻「本运行不是标定」横幅 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1867,3 +1869,26 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 第一版把这句话放在状态栏的**第二行**。结果状态栏变高，① 屏右卡被挤，`环境体检` 那四个导航按钮
 在 1.3 倍字号下**只剩 1 px**——`tests/test_ui_layout.py` 报 `「在运行屏打开」 1px < required 146px`。
 改成与「就绪」「算例/运行」同一行（`row=0, column=1`）后恢复。**加一行文字也是一次布局改动**。
+
+## 第 57 轮：把"这不是标定"写在判定旁边
+
+⑤ 评价屏会给出"通过 / 超限"的判定——那是**这套算例参数下**的自洽结果，但屏幕本身没有说过这件事；
+这句免责声明此前只活在文档里，而引用数字的人未必读过文档。现在它是屏顶一条常驻的黄色横幅：
+
+> 本运行不是标定：物理参数未与实测或 Simpack 对齐，这里的「通过 / 超限」只在这套算例参数下成立，
+> 不能当作对真实道岔的结论（见 docs/BUGS.md 的 O008 与 docs/PHYSICS_INVARIANTS.md）。
+
+### 三个判断
+
+- **常驻、不可关闭**：一条可以关掉的警告等于没有警告。
+- **写在判定上方**：先读到边界，再读到结论；写在页脚会被当成脚注。
+- **给出可查的两个文件**：不写"仅供参考"这种空话，直接指 `docs/BUGS.md` 的 O008 与
+  `docs/PHYSICS_INVARIANTS.md`。
+
+### 一个自己的错
+
+常量先用直引号写了「通过/超限」（`"…这里的"通过/超限"只在…"`），文件直接 `SyntaxError`；
+改成「」引号。**引号在中文句子里的替换不是排版问题，是语法问题。**
+
+`tests/test_ui_calibration_banner.py`（3 项）：文案必须写明边界与两份文件、一进屏就在、
+`wraplength` 必须走 `wrap_with`（写死宽度会在缩放时溢出）。

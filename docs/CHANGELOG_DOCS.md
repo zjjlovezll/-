@@ -1395,3 +1395,21 @@ O008 剩下的那一层（冠部横向漂移 103 mm 未导入）看起来像"再
   `4 位右 171 kN` 显示为红色，其余六个约 60 kN 为绿色
 - 新增 5 项测试：力与侵入取自记录、半径 = sqrt(2Rδ)、八个斑落在各轮下方、非活动接触不画、
   颜色阈值与限值条一致、源码不 import 求解栈
+
+## 第 47 轮：O008 定性——模型只有一侧断面表
+
+横向导入被拒不是缺一个开关。数过 catalog 之后（右轨 236 站 / 233 个 PRR，左轨 **2** 站且都是基准
+`Profile_Mileage_JBG.prr`），结论是**这个模型只在一条轨上定义了变断面**，所以"两侧一起导入"无从做起，
+单侧导入就是改轨距——闸门拒绝是正确行为。
+
+代码改动只有一处，但把死路变成可读的话：`_gauge_implication()` 增加 `other_side_stations`，
+拒绝消息在对方侧站数 <3 时改为
+
+```
+This model defines only 2 station(s) on the left rail, so importing both sides is not possible
+from it -- use --keep-profiles ... or supply a model whose two rails both carry section tables.
+```
+
+旁挂 `lateral_gauge_mm.other_side_stations` 让脚本能区分"不对称模型"与"调用方少传了一侧"。
+新增 1 项测试（右 13 站 / 左 2 站的合成 catalog，断言消息含 `defines only 2 station(s) on the left rail`
+与 `--keep-profiles`）。`pytest` **533 passed, 2 skipped**。

@@ -219,6 +219,11 @@ def _gauge_implication(catalog: list[dict[str, Any]], *, side: str, chosen_entri
 
     other_side = "left" if side == "right" else "right"
     other: list[float] = []
+    # How many stations the other side has at all.  A turnout model often defines the varying
+    # sections on one rail string only (this one: 236 right, 2 left), and then "import both sides"
+    # is not an option -- there is nothing on the other side to import.  Counting it lets the
+    # refusal say that instead of implying the caller forgot a flag.
+    other_stations = sum(1 for item in catalog if item.get("side") == other_side)
     if other_template is not None:
         for item in catalog:
             if item.get("side") != other_side:
@@ -237,6 +242,7 @@ def _gauge_implication(catalog: list[dict[str, Any]], *, side: str, chosen_entri
             "signed_mm": round(signed[worst_index] * 1000.0, 2),
             "at_m": round(station_m, 3),
             "other_side_mm": round(other_delta * 1000.0, 2),
+            "other_side_stations": other_stations,
             "gauge_mm": round(gauge * 1000.0, 2)}
 
 
@@ -541,7 +547,16 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
                 f"{gauge['signed_mm']:+.1f} mm, other side {gauge['other_side_mm']:+.1f} mm), "
                 f"beyond the {LATERAL_GAUGE_LIMIT_MM:.0f} mm a run can absorb: on one side a "
                 "placement correction is a gauge change and rolls the vehicle onto one rail. "
-                "Import both sides in one go, or pass --allow-gauge-change to say you mean it.")
+                + (
+                    f"This model defines only {gauge['other_side_stations']} station(s) on the "
+                    f"{'left' if side == 'right' else 'right'} rail, so importing both sides is not "
+                    "possible from it -- use --keep-profiles to keep the template's running surface "
+                    "with the model's mileage layout, or supply a model whose two rails both carry "
+                    "section tables. "
+                    if gauge["other_side_stations"] < 3 else
+                    "Import both sides in one go, or pass --allow-gauge-change to say you mean it. "
+                )
+                + "Pass --allow-gauge-change only if you mean to change the gauge.")
 
     new_stations = []
     for entry, path in zip(chosen, source_files):

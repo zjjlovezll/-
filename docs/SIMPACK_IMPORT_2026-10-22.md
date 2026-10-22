@@ -274,3 +274,37 @@ in one go, or pass --allow-gauge-change to say you mean it.
 
 结论：横向布置**不是一条可以顺路补上的活**，它是双体交接的一部分。这一轮把它从"未做"变成"做了、
 被量测挡住、并装上了拒绝"，这才是诚实的进度。
+
+## 十、O008 的答案：不是缺一个开关，是模型只有一侧断面表
+
+0.4.8 的横向导入只允许一侧时被拒（+103.0 mm → 改轨距）。当时的推测是"需要一个双体交接框架"。
+对着 catalog 数了数，结论更简单也更硬：
+
+| | 站数 | 里程 | 断面文件 |
+|---|---|---|---|
+| `$RWR_Rail_1`（right） | **236** | 0.000–150.000 m | 233 个不同 PRR（含 `R74.0272`…`R91.6114`、`XG_*`、`YG_*` 系列） |
+| `$RWR_Rail_1`（left） | **2** | 0.000 与 150.000 m | 都是基准 `Profile_Mileage_JBG.prr` |
+
+即：**这个 Simpack 模型只在一条轨（右/外侧）上定义了变断面，左轨整条 150 m 用同一个基准断面。**
+两侧都有站的里程只有 2 个（0 与 150 m）。
+
+因此：
+
+1. "两侧一起导入"在这个模型上**无从做起**——左轨没有任何可导入的横向信息；
+2. 单侧导入 +103 mm 就是**改轨距**，闸门拒绝是对的（首次实跑 `seats: false`，一侧四个接触 `0.0 N`
+   对另一侧 `119330.9 N`，整台车被滚到一根轨上）；
+3. 缺的不是"双体交接代码"，而是**源的对称性**。可走的路只有两条：
+   - `--keep-profiles`：保留模板运行面 + 用模型的里程布置（已实测 60 m 与 82 m 窗口都能跑）；
+   - 换一个两侧都带断面表的模型。
+
+0.4.11 起拒绝消息会直接说这件事：
+
+```
+... changes the gauge by +103.0 mm at 80.911 m (...), beyond the 5 mm a run can absorb ...
+This model defines only 2 station(s) on the left rail, so importing both sides is not possible
+from it -- use --keep-profiles to keep the template's running surface with the model's mileage
+layout, or supply a model whose two rails both carry section tables.
+```
+
+`lateral_gauge_mm` 旁挂字段也多了 `other_side_stations`，让脚本能自己判断"这是不对称模型"还是
+"调用方少传了一侧"。

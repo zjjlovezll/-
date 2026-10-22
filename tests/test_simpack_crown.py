@@ -223,3 +223,55 @@ def test_allow_gauge_change_lets_it_through_and_records_the_number(tmp_path, mon
     assert offsets == {"simpack crown"}
     shifted = {round(station["profile"]["y_offset_m"], 9) for station in template_rail["stations"]}
     assert len(shifted) == 1 and abs(next(iter(shifted)) - 0.753) > 0.05, "patched crown moved it"
+
+
+def _asymmetric_catalog(root: Path) -> Path:
+    """Right rail with 13 stations, left with 2 -- the shape the real CRH380A model has."""
+
+    import json as _json
+
+    profile = Path(_json.loads(TEMPLATE.read_text(encoding="utf-8"))["rail_templates"][1]
+                   ["stations"][0]["profile"]["file"])
+    references = [
+        {"source_model": str(root / "model.spck"), "rail": "$RWR_Rail_1", "side": "right",
+         "index": index, "filename": profile.name, "station_m": float(station),
+         "station_expression": None, "path": str(profile), "sha256": "1" * 64}
+        for index, station in enumerate(range(74, 87), start=1)
+    ]
+    references += [
+        {"source_model": str(root / "model.spck"), "rail": "$RWR_Rail_1", "side": "left",
+         "index": index, "filename": profile.name, "station_m": float(station),
+         "station_expression": None, "path": str(profile), "sha256": "1" * 64}
+        for index, station in enumerate((0.0, 150.0), start=100)
+    ]
+    catalog = {
+        "schema_version": simpack_case.CATALOG_SCHEMA,
+        "model": {"path": str(root / "model.spck"), "sha256": "0" * 64},
+        "model_root": str(root),
+        "profile_references": references,
+        "summary": {"geometry_readable": True, "missing_profile_references": 0},
+    }
+    path = root / "asymmetric_catalog.json"
+    path.write_text(_json.dumps(catalog), encoding="utf-8")
+    return path
+
+
+def test_the_refusal_says_the_other_rail_has_no_stations(tmp_path, monkeypatch, template) -> None:
+    """O008 is not "you forgot a flag": this model defines sections on one rail only (2 vs 236).
+
+    The message has to say that, otherwise the honest fix (--keep-profiles, or a model with two
+    section tables) is invisible and the reader keeps looking for the missing switch.
+    """
+
+    monkeypatch.setattr(simpack_case, "_crown_lateral_delta", lambda entry, template: 0.103
+                        if entry.side == "right" else 0.0)
+    with pytest.raises(simpack_case.SimpackCaseError) as caught:
+        simpack_case.build_case(catalog_path=_asymmetric_catalog(tmp_path), template_path=template,
+                                out_path=tmp_path / "refused.json", side="right", rail=None,
+                                sample=None, x_start_m=80.0, duration_s=0.05,
+                                keep_profiles=False, import_lateral=True,
+                                allow_gauge_change=False)
+    message = str(caught.value)
+    assert "defines only 2 station(s) on the left rail" in message, message
+    assert "--keep-profiles" in message
+    assert "103.0 mm" in message

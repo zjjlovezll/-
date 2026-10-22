@@ -35,6 +35,7 @@ SCREENS: tuple[tuple[str, str, str, str], ...] = (
     ("spectrum", "④ 频谱", "1/3 倍频程与带宽 RMS", "Ctrl+4"),
     ("assess", "⑤ 评价", "七项数值门与三项限值", "Ctrl+5"),
     ("compare", "⑥ 对照", "与 Simpack / 实测同轴叠加", "Ctrl+6"),
+    ("model3d", "⑦ 三维", "钢轨型面与车轮的三维视图", "Ctrl+7"),
 )
 
 #: State machine: the header chip and the status bar read the same value.
@@ -46,7 +47,7 @@ STATES: dict[str, tuple[str, str]] = {
 }
 
 SHORTCUTS: tuple[tuple[str, str], ...] = (
-    ("Ctrl+1 … Ctrl+6", "切换到第 1–6 屏"),
+    ("Ctrl+1 … Ctrl+7", "切换到第 1–7 屏"),
     ("F5", "重新加载当前屏"),
     ("Ctrl+R", "在「运行」屏启动所选算例"),
     ("Esc", "取消正在运行的子进程"),
@@ -326,6 +327,7 @@ class VelchUI:
             "spectrum": ("screen_spectrum", "SpectrumScreen"),
             "assess": ("screen_assess", "AssessScreen"),
             "compare": ("screen_compare", "CompareScreen"),
+            "model3d": ("screen_model3d", "Model3DScreen"),
         }[name]
         title = next(label for key, label, *_ in SCREENS if key == name)
         try:

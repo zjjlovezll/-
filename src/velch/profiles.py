@@ -226,6 +226,20 @@ class ProfileSeries:
         # True when the station range brackets this mileage.
         return bool(self._station_index[0] <= s_m <= self._station_index[-1])
 
+    @property
+    def lowest_m(self) -> float:
+        """First station mileage.  Readers that sweep the surface need these bounds."""
+        return float(self._station_index[0])
+
+    @property
+    def highest_m(self) -> float:
+        """Last station mileage."""
+        return float(self._station_index[-1])
+
+    def mileages(self) -> tuple[float, ...]:
+        """Every station mileage, ascending (duplicates collapsed by construction)."""
+        return tuple(self._stations)
+
     def _select(self, s: float, side: str) -> Station:
         group = self._groups[s]
         if len({item.profile.source_sha256 for item in group}) == 1:

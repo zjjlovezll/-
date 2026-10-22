@@ -9,6 +9,12 @@ description = "Independent turnout vehicle-wheelset-rail dynamics research kerne
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "scipy>=1.10"]
 
+# The Tk UI opens without Matplotlib: the 2D/3D chart screens degrade to a hint instead of
+# failing.  Install the extra to get the charts and the ⑦ 三维模型 screen.
+[project.optional-dependencies]
+ui = ["matplotlib>=3.6"]
+all = ["matplotlib>=3.6"]
+
 [project.scripts]
 velch = "velch.cli:main"
 velch-gui = "velch.gui:main"

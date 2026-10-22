@@ -91,7 +91,7 @@ numpy 手写实现，未改动环境。
 | 单次 RHS 成本（单核） | 1.19 ms | 4.25 ms CPU |
 | 整程墙钟 | ≈850 s（67 DOF） | 85.08 s（32 线程） |
 | 多进程批量 | 8 工况 8.58× | — |
-| 测试 | 352 passed（2026-10-22 16:59 实测，含 16 条架构规则 + 20 条 agent 契约；会随并行会话增加，验收只认 0 failed） | — |
+| 测试 | 360 passed（2026-10-22 17:25 实测，含 16 条架构规则 + 20 条 agent 契约 + 8 条三维几何；会随并行会话增加，验收只认 0 failed） | — |
 
 基线组合：条带积分法向律 + 钢轨垂向自由度 + 柔性扣件 5e7/4e4 + 接触阻尼 3e7 且
 `damping_force_cap_ratio=0.5`。
@@ -681,3 +681,49 @@ FD 8.9061e+02 = 2.30 倍；`∂M_yaw/∂y` 解析 0.13 vs FD −87.67，整项�
 
 文档：`docs/AGENT_TOOL_LAYER_2026-10-22.md` 新增 §8（设计 vs 代码对照）；
 `docs/AI_INTERFACE_ARCHITECTURE_2026-10-22.md` §9 的 Phase 0/2/3 已部分落地。
+
+## 第 25 轮（2026-10-22 傍晚）：UI 第 ⑦ 屏「三维模型」
+
+目标（用户）："先把软件做好，有相应的中文ui界面可以操作，并且是否可以将相应的三维模型展示在我的UI界面上？"
+
+结论：能，且**未引入新依赖**——Tk 内嵌 matplotlib `mplot3d`（本机已装）。`pyproject.toml` 新增
+`[project.optional-dependencies] ui = ["matplotlib>=3.6"]`；没有 matplotlib 时这一屏降级为一句安装提示，
+其余六屏照常，窗口不崩。
+
+### 几何口径（两处，都是靠探针数值抓出来的）
+1. 车轮型面的 z 是"**轮心以下的高度**"：`case_frog_N_strip05.json` 实测 `z_m ∈ [-0.458, -0.4131]`，
+   所以子午点半径 `R = -z`（踏面约 0.413–0.43 m、轮缘 0.458 m，比踏面大 28 mm，正是轮缘高出踏面量）。
+   先写成 `R = R0 - z` → 整车低了 0.5 m，图上一眼可见、数值上无声。
+2. `initial_q` 的 z 是**位移**不是绝对高度：绝对轮心高 = `wheel_center_height_m + q_z`。
+   修后车轮最低点（轮缘尖）落在 **-0.0285 m**、踏面贴轨面 **z≈0**，与
+   `src/velch/contact.py:618 _absolute_arrays`（`depth = rail_z - wheel_z > 0`）的符号一致。
+
+### 新增
+- `src/velch/ui/model3d.py`（307 行，纯几何，不 import Tk/matplotlib、不做接触搜索）：
+  `QuadGrid` / `WheelState` / `Scene`；`axle_x_positions`、`initial_states`、`states_from_history`、
+  `rail_grids`（**逐 body 画**：stock/switch/wing/point 是不同承载面，合并正是求解器刻意避免的错误）、
+  `wheel_grid`、`wheel_grids`、`skeleton`、`build_scene`（可传已解析的 `case`，省掉 13.5 MB 算例的 0.5 s 解析）。
+- `src/velch/ui/screen_model3d.py`（约 430 行）：左栏算例下拉、里程窗起点/长度、站位数/横向点/周向点、
+  轴位多选、叠加运行（`history.csv` 帧滑块）、显示开关（钢轨/车轮/骨架）；右栏 3D 画布 +
+  工具栏（重画、等轴/正视/侧视/俯视、PNG 导出）；底部注记与统计。
+- `tests/test_ui_model3d.py`（8 项，无 Tk、无 matplotlib、无求解）：面片覆盖里程窗、**接触斑落在轨面**
+  （轮缘尖 -28.5 mm、踏面 |z|<30 mm）、轮心绝对高度、history 缺通道时回退到轮心高度、分辨率上限、
+  窗口越界时 `notes` 说明、骨架在车轮之上、轴位随速度平移。
+- `src/velch/profiles.py`：`ProfileSeries` 新增 `lowest_m` / `highest_m` / `mileages()`（原先只能摸私有字段）。
+- `ui/app.py`：`SCREENS` 加 `("model3d", "⑦ 三维", "钢轨型面与车轮的三维视图", "Ctrl+7")`、
+  `_build_screen` 加映射；快捷键文案改 Ctrl+1…Ctrl+7（`_bind_keys()` 按 `enumerate(SCREENS)` 自动绑，
+  新增屏不需要另写绑定）。
+
+### 实测
+- `python -m velch.ui --selftest` → **7 屏 / 404 控件 / 0 个屏报错**，新屏一行：
+  `model3d (三维模型) 52 16 case_frog_N_strip05 轨面 8 车轮 8 顶点 19040 302 ms`。
+- `pytest tests` → **360 passed in 17.5 s**。
+
+### 诚实边界（屏内注记也写了）
+- 车厢/转向架轮廓是**示意尺寸**：算例只给质量与惯量，不给车厢图。
+- 车轮按四个实际轮对位置画、钢轨只画所选里程窗，所以车体常常超出轨面窗——这是视图取舍，不是错位。
+- 视图**不做接触搜索**：看不到侵入量与接触斑。要这些去 ⑤ 评价屏（读求解器产物），别在这里自己算一份。
+
+**下一步**：①接触点/侵入量着色（`depth` 从 history 的 penetration 通道取，不要自己算）；
+②左侧 `left:main` 在该窗内只有 2 个站位，抽样会退化成长条，需按 body 的 `s_lo_m/s_hi_m` 补齐；
+③把 ⑦ 屏写进 `docs/ONBOARDING_2026-10-21.md` 的操作路径。

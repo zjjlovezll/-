@@ -76,6 +76,13 @@ def main(argv: list[str] | None = None) -> int:
     simpack_case.add_argument("--case-id", default=None)
     simpack_case.add_argument("--keep-profiles", action="store_true",
                               help="import only the station layout; keep the template's surface file")
+    simpack_case.add_argument("--allow-surface-drop", action="store_true",
+                              help="proceed even if the imported surface sits below the template's")
+    simpack_case.add_argument("--max-surface-drop", type=float, default=8.0,
+                              help="how far (mm) the imported surface may sit below the template's")
+    simpack_case.add_argument("--lateral-m", type=float, default=None,
+                              help="lateral position used to compare surfaces (default: the "
+                                   "template station's y_offset)")
     native_status = sub.add_parser("contact-native-status", help="check official CONTACT Python interface and native DLL")
     native_status.add_argument("--contact-root", type=Path, required=True)
     native_status.add_argument("--output", type=Path)
@@ -152,7 +159,10 @@ def main(argv: list[str] | None = None) -> int:
                     catalog_path=args.catalog, template_path=args.template, out_path=args.out,
                     side=args.side, rail=args.rail, sample=args.sample,
                     x_start_m=args.x_start, duration_s=args.duration, case_id=args.case_id,
-                    keep_profiles=args.keep_profiles)
+                    keep_profiles=args.keep_profiles,
+                    allow_surface_drop=args.allow_surface_drop,
+                    max_surface_drop_mm=args.max_surface_drop,
+                    lateral_m=args.lateral_m)
             except SimpackCaseError as error:
                 print(json.dumps({"status": "failed", "error_type": type(error).__name__,
                                   "message": str(error)}, ensure_ascii=False, indent=2),

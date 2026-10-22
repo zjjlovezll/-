@@ -20,10 +20,15 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+
+from .profiles import ProfileError, load_profile
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 SCHEMA_VERSION = "velch-simpack-case-v1"
+#: From 3 mm the imported surface is worth saying out loud; above the caller's limit the
+#: build stops.  Measured: 5.18 mm seated, 11.91 mm failed the vertical preload equilibrium.
+SURFACE_DROP_WARN_MM = 3.0
 CATALOG_SCHEMA = "velch-simpack-track-catalog-v1"
 
 
@@ -155,6 +160,48 @@ def _thin(entries: Sequence[CatalogStation], sample: int | None) -> list[Catalog
     return unique
 
 
+def _surface_delta_mm(entries: Sequence[CatalogStation], profile_template: dict[str, Any],
+                      *, lateral_m: float | None = None) -> tuple[float, float] | None:
+    """How far the imported surfaces sit below the template's, at the wheel's lateral position.
+
+    ``None`` means "could not be measured" (the lateral position falls outside a profile's measured
+    envelope); it is not the same as "no drop" and is reported as such.
+    """
+
+    y_offset = float(profile_template.get("y_offset_m", 0.0))
+    y_sign = int(profile_template.get("y_sign", 1))
+    z_sign = int(profile_template.get("z_sign", 1))
+    y = float(lateral_m) if lateral_m is not None else y_offset * y_sign
+
+    def crown(spec: dict[str, Any]) -> float | None:
+        try:
+            profile = load_profile(Path(spec["file"]), file_format=spec.get("format", "prr"),
+                                   surface="rail_top", y_sign=int(spec.get("y_sign", 1)),
+                                   z_sign=int(spec.get("z_sign", 1)),
+                                   y_offset_m=float(spec.get("y_offset_m", 0.0)))
+            return float(profile.z_at(y)) * z_sign
+        except (ProfileError, OSError, ValueError):
+            return None
+
+    base = crown(profile_template)
+    if base is None:
+        return None
+    worst = 0.0
+    worst_at = entries[0].station_m
+    measured = 0
+    for entry in entries:
+        z = crown({**profile_template, "file": entry.path})
+        if z is None:
+            continue
+        measured += 1
+        delta = (z - base) * 1000.0
+        if abs(delta) > abs(worst):
+            worst, worst_at = delta, entry.station_m
+    if measured == 0:
+        return None
+    return worst, worst_at
+
+
 def _template_profile(profile: dict[str, Any], path: str) -> dict[str, Any]:
     clone = dict(profile)
     clone["file"] = path
@@ -164,7 +211,9 @@ def _template_profile(profile: dict[str, Any], path: str) -> dict[str, Any]:
 def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path: str | Path,
                side: str = "left", rail: str | None = None, sample: int | None = None,
                x_start_m: float, duration_s: float | None = None,
-               case_id: str | None = None, keep_profiles: bool = False) -> CaseBuild:
+               case_id: str | None = None, keep_profiles: bool = False,
+               allow_surface_drop: bool = False, max_surface_drop_mm: float = 8.0,
+               lateral_m: float | None = None) -> CaseBuild:
     """Write a case whose rail geometry comes from the catalog and whose physics comes from a case.
 
     ``x_start_m`` is required and must lie inside the model's own mileage span, because the station
@@ -217,6 +266,31 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
     profile_template = dict((target.get("stations") or [{}])[0].get("profile") or {})
     if not profile_template:
         raise SimpackCaseError(f"template rail {side!r} has no profile metadata to inherit")
+
+    # Only the stations the wheels can reach decide whether the vehicle seats: a switch blade 26 m
+    # behind the start cannot unload a wheel that never gets there.
+    travel = float((template.get("vehicle") or {}).get("travel_speed_m_s", 0.0))
+    ride_s = float(duration_s if duration_s is not None
+                   else (template.get("run") or {}).get("duration_s", 0.0))
+    park_lo = float(x_start_m) - 2.0
+    park_hi = float(x_start_m) + travel * ride_s + 2.0
+    in_window = [entry for entry in chosen if park_lo <= entry.station_m <= park_hi]
+    drop = None if keep_profiles else _surface_delta_mm(in_window or chosen, profile_template,
+                                                       lateral_m=lateral_m)
+    warning = None
+    if drop is not None and not allow_surface_drop:
+        magnitude = abs(drop[0])
+        if magnitude > max_surface_drop_mm:
+            raise SimpackCaseError(
+                f"the imported surface sits {drop[0]:+.2f} mm against the template's at "
+                f"{drop[1]:.3f} m, beyond the {max_surface_drop_mm:.1f} mm this run can plausibly "
+                "seat (measured here: 5.18 mm seated, 11.91 mm did not). Those stations are "
+                "switch/blade surfaces rather than one running surface. Pick a window where they "
+                "agree, use --keep-profiles, or pass --allow-surface-drop and read the run before "
+                "quoting it")
+        if magnitude > SURFACE_DROP_WARN_MM:
+            warning = (f"imported surface sits {drop[0]:+.2f} mm against the template's at "
+                       f"{drop[1]:.3f} m; the run may seat, but say so before quoting it")
 
     # ``keep_profiles`` keeps the template's surface file and imports only the station *layout*.
     # The full import (default) mixes rail sections that were never calibrated against this vehicle,
@@ -276,6 +350,13 @@ def build_case(*, catalog_path: str | Path, template_path: str | Path, out_path:
         "x_start_m": float(x_start_m),
         "duration_s": run.get("duration_s"),
         "station_count": len(new_stations),
+        "surface_delta_mm": (None if drop is None
+                             else {"max_abs": round(drop[0], 3), "at_m": round(drop[1], 3),
+                                   "measured_stations": len(in_window or chosen),
+                                   "ride_window_m": [round(park_lo, 3), round(park_hi, 3)]}),
+        "surface_drop_allowed": bool(allow_surface_drop),
+        "surface_drop_warning": warning,
+
         "dropped_duplicate_stations": dropped,
         "stations": [
             {"s_m": entry["s_m"], "profile": entry["profile"]["file"],

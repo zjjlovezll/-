@@ -85,13 +85,69 @@ Simpack 侧的数**只能作对照值**（reference, not adopted），写进算�
 2. **拒绝而不是猜**。catalog 不可读、型面文件消失、模板里该侧是分体结构、`x_start` 越界——四种
    情况都给 `SimpackCaseError` 与一句能照着改的话，绝不写半个算例出去。
 
-## 五、测试
+## 五、断面下沉判据：先说清楚"这段模型断面比模板低多少"
+
+导入模型自己的断面时，道岔区（尤其 55–65 m 的转辙器与翼轨段）的断面比平板模板低，车一落上去
+就偏载。最早的表象是一句很难读的静平衡报错：
+
+```
+the lightest contact patch carries only 0.0 N while the heaviest carries 119357.0 N
+```
+
+这句话没错，但它不告诉你"为什么"。所以 `simpack-case` 在派生之前先量一件事：
+**模型断面在车轮实际会经过的那段里程上，比模板低多少。**
+
+### 量法与两个实测边界
+
+- 逐站在算例的横向口径下（`y_sign` × `y_offset_m`、`z_sign`）求轨顶高度，与模板同里程同位置相减，取绝对差值的最大值与该站里程。
+- 只在**行驶窗口**上量：`[x_start − 2 m, x_start + 车速 × 时长 + 2 m]`。全模型最深的 −15.85 mm 在
+  56.642 m，82 m 起跑的算例一辈子开不到那儿，不该被它否决。
+- 实测边界（本机、CRH380A_M 算例对 `Profile_Mileage_*` 断面）：
+
+| 窗口 | 窗口内最大下沉 | 结果 |
+|---|---|---|
+| 60.0 m 起跑 | **11.91 mm** @ 56.569 m | 静平衡失败（旧版报 119 357 N 偏载） |
+| 82.0 m 起跑 | **5.18 mm** @ 80.004 m | 跑通：`numerically_checked`、七门全 true、八接触峰值 60.59–71.89 kN、最大侵入 88.63 µm |
+
+全模型统计：236 站中 **200 站在 2 mm 以内**，最长连续 ≤2 mm 的段落是 80.217–150.000 m（69.78 m）。
+
+### 两级阈值（为什么不是一个数）
+
+一个数只能满足一半：设 6 mm 会漏掉 11.91 mm 那种必失败的，设 4 mm 会把 5.18 mm 那种实际能跑的挡掉。
+所以 `SURFACE_DROP_WARN_MM = 3.0` 是"值得说一句"的线，`--max-surface-drop`（默认 **8.0 mm**）是"直接拦"的线：
+
+| 窗口内最大下沉 | 行为 |
+|---|---|
+| ≤ 3 mm | 静默通过 |
+| 3–8 mm | 构建成功，旁挂 `surface_drop_warning` 与终端提示"能跑，但引用数字前先说清来源" |
+| > 8 mm | `SimpackCaseError`，消息里带上实测下沉量、里程、阈值，以及"5.18 mm 能坐、11.91 mm 不能"这条边界 |
+| 量不到（型面包络不覆盖该横向位置） | 记 `surface_delta_mm: null`——**"没量到"不等于"没下沉"** |
+
+三条出路写在报错里：换一段断面与模板相符的窗口；`--keep-profiles` 只用模型的里程布置；或
+`--allow-surface-drop` 强制放行并自己读一遍结果（放行会记 `surface_drop_allowed: true`）。
+
+旁挂 `*.simpack.json` 的字段：
+
+```json
+"surface_delta_mm": {"max_abs": 5.182, "at_m": 80.004, "measured_stations": 35,
+                     "ride_window_m": [80.0, 88.861]},
+"surface_drop_allowed": false,
+"surface_drop_warning": "imported surface sits +5.18 mm against the template's at 80.004 m; ..."
+```
+
+### 这一层也不导入物理
+
+判据只是把"几何差异有多大"量出来并说清楚，它不改变任何力。`physics_validation_status` 仍是
+`unvalidated_against_measurement_or_Simpack`：5.18 mm 能跑通说明数值上坐住了，不说明这段断面就是
+真实线路的断面。
+
+## 六、测试
 
 `tests/test_simpack_case.py`（10 项）：schema 不符、`geometry_readable=false`、按 side 过滤与排序、
 同里程去重计数、里程不被位移、越界拒绝、`--keep-profiles` 的型面来源、旁挂的
 `from_*`/`not_imported`、型面文件缺失、以及真实模型在 `VELCH_SIMPACK_MODEL` 下可读（未设置则 skip）。
 
-## 六、下一步（按价值排序）
+## 七、下一步（按价值排序）
 
 1. 按站位导入**横向布置**（模型里每根轨的 y 基准），这是默认模式能跑起来的前提。
 2. 双体交接（基本轨 / 尖轨、翼轨 / 心轨），需要 `rail_templates[*].bodies` 与 `y_window_m` 的映射。

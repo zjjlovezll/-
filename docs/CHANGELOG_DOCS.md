@@ -128,6 +128,11 @@ numpy 手写实现，未改动环境。
 | `docs/ARCHITECTURE_2026-10-21.md` | **架构收口与 Simpack 2021x 对标**：14 行能力矩阵（接触几何/多点接触/法向律/切向律/阻尼/积分器/轨道结构/车辆自由度/执行机构/观测量/反演/UQ/批处理/UI，每行给出 Velch 文件:行号 × Simpack 取证 × 差距性质）、实测 import 图与 4 条真实违规（`io`→`inverse` 类型级反向依赖、`case/spec.py:27`、`vehicle_solver.py:23`、`contact.py:32`）、上帝模块与 6 步拆分顺序、四道结构性缺口（①模态每轨一套 ②钢轨离散化 ③轴箱体 ④轨底应变桥路）的接口+DOF 布局+验收门、UI/CLI 边界与稳定接口清单、三个月四轴路线 | ✅ 新增。行号基准 2026-10-21 11:40 工作树；用 `python -X utf8 _cite_check.py` 重解析、`_arch_scan.py` 重算依赖图 |
 | `tests/test_architecture_rules.py` | 架构适应度函数（16 项 AST 静态断言）：前向不得 import `inverse`、`inverse` 不得 import 前向、`contact*` 不得 import 调用者、`case/*` 只许 import `velch.vehicle`、`io.history` 必须是叶子、`vehicle_solver` 只许从 v1 借 `SimulationFailure`、UI 不得 import 前向栈、import 时图无环、`io.measured → inverse` 不得是运行时边 | ✅ 16 passed；失败信息直接打印违规边（含 `kind ∈ runtime/deferred/typing`） |
 
+| `docs/SIMPACK_IMPORT_2026-10-22.md` | **怎么从 Simpack 模型算一个算例**：只读 catalog（238 引用 / 233 PRR / 0 缺失）、两种模式（`--keep-profiles` 与默认全断面）、里程不平移、第五节**断面下沉判据**（两级阈值 3/8 mm、5.18 mm 能坐 / 11.91 mm 不能、旁挂字段）、明确不导入的物理量 | ✅ 2026-10-22 新增 |
+| `docs/PACKAGING_2026-10-22.md` | **怎么打成安装包**：onedir + 两个 exe 的分工、`launcher.py` 的冻结口径、语料四级解析顺序、构建命令、打包后必跑的五步冒烟表 | ✅ 0.4.1/0.4.2 均照此验证 |
+| `docs/RELEASE_NOTES_0.4.2.md` | 0.4.2 装什么、怎么开、界面四项与 Simpack 三条命令的实测、仍然没有的五项 | ✅ 当前发布物 |
+| `docs/BUGS.md` | **缺陷账本**：B001–B020 已修（每条带复现与影响面）+ O001–O007 已知未修及理由 | ✅ 每轮更新 |
+
 ## 已作废的结论（不要重走）
 
 1. "断面有 2.76 mm V 形凹陷、需要重建" —— 实测 `worst |body - raw| = 0.0000 mm`，断面没被改；病根是承载面缺失。
@@ -1086,3 +1091,41 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 - 修 B017–B020（见 `BUGS.md`）：冻结输出改 UTF-8、窗口版无 stdout、日志管道探针误报、doctor 提示。
 - 验证：`pytest` **492 passed, 1 skipped**；`smoke_test.py` **ACCEPT**；产物 `Velch-0.4.1-win64.zip` 88.9 MB。
 - 新文档：`docs/RELEASE_NOTES_0.4.1.md`、`docs/PACKAGING_2026-10-22.md`（含构建命令与 5 步冒烟）。
+
+## 第 38 轮（2026-10-22 夜间）：读模型自己的断面能跑了，跑不了时给准话
+
+**问题**：`simpack-case` 的默认模式（型面取自模型）在转辙区窗口必然失败，报的是一句静平衡偏载
+（`the lightest contact patch carries only 0.0 N while the heaviest carries 119357.0 N`），
+既不说是几何问题，也不说差多少；而 82 m 窗口其实能跑通，用户无从判断"该换窗口还是该怀疑模型"。
+
+**做法**（`Velch/src/velch/simpack_case.py`、`Velch/src/velch/cli.py`）：
+
+1. 新增 `_surface_delta_mm()`：按算例的横向口径（`y_sign × y_offset_m`、`z_sign`）逐站求轨顶高度，
+   与模板同里程同位置相减，返回"窗口内最大下沉量与所在里程"；量不到时返回 `None`。
+2. **只在行驶窗口上量**（`x_start − 2 m` 到 `x_start + 车速 × 时长 + 2 m`），否则 82 m 起跑的算例会被
+   26 m 外 15.85 mm 的转辙器断面否决。
+3. 两级阈值：`SURFACE_DROP_WARN_MM = 3.0` 只记 `surface_drop_warning`；`--max-surface-drop`（默认 **8.0 mm**）
+   才拒绝。之所以不是一个数：**5.18 mm 实测能坐、11.91 mm 实测不能**，单一阈值必然误伤一边。
+4. 旁挂 `*.simpack.json` 增 `surface_delta_mm{max_abs, at_m, measured_stations, ride_window_m}`、
+   `surface_drop_allowed`、`surface_drop_warning`。
+5. 里程不再整体平移（早期实现把模型里程挪到 `--x-start`，右轨只剩 13.5–163.5 m，首个车轮位置即越界）；
+   越界改为在派生时报 `… leaves the model's coverage …`。
+6. `--keep-profiles`：只用模型的里程布置、型面沿用模板，旁挂 `profiles_from: "template"`。
+
+**实测**
+
+| 窗口 | 窗口内最大下沉 | 结果 |
+|---|---|---|
+| 60.0 m 起跑 | 11.91 mm @ 56.569 m | 被拒，消息含下沉量/里程/阈值/实测边界 |
+| 82.0 m 起跑 | 5.18 mm @ 80.004 m | 构建成功 + warning；`run-vehicle --fast` → `numerically_checked`、七门全 true、八接触峰值 60.59/66.85/63.55/60.56/60.79/68.52/71.89/60.75 kN、最大侵入 88.63 µm、BDF `nfev 1094` |
+| 60.0 m + `--keep-profiles` | 不适用（型面用模板） | 跑通，`max_penetration_m = 6.546612428690518e-05`、每接触峰值 **59 680.5768587 N**（冻结静载门）、`nfev 116` |
+
+**测试**：`Velch/tests/test_simpack_case.py` 10 项（既有）+ 新增 `Velch/tests/test_simpack_surface_drop.py`
+5 项（超限拒绝且消息带四个数、3–8 mm 构建成功并写 warning、≤3 mm 不吵、`allow_surface_drop` 放行、
+量不到时记 `None` 视为未知）。全仓 **497 passed, 1 skipped**。
+
+**教训**：几何差异必须在派生阶段量出来并说出数值，等到积分器报偏载就太晚了；而"量不到"必须
+与"没有差异"分开记录——否则默认值会替用户做出一个它没有证据的判断。
+
+**文档**：`docs/SIMPACK_IMPORT_2026-10-22.md` 增第五节"断面下沉判据"（量法、两个实测边界、两级阈值表、
+旁挂字段样例、以及"这一层也不导入物理"）。

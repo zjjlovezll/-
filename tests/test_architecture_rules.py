@@ -70,6 +70,9 @@ PRESENTATION_MAY_IMPORT = PRESENTATION | frozenset(
         "velch.case",
         "velch.case.spec",
         "velch.inverse.bands",
+        # A pure path resolver: where the validation corpus lives.  It imports nothing from
+        # the package, so letting presentation ask it a question keeps the numeric path closed.
+        "velch.data_root",
     }
 )
 

@@ -8,6 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from velch.data_root import case_dir as _case_dir
 from velch.ui.parameters import REGISTRY, ParameterError, apply_patch, registry_by_path
 
 #: Every failure an agent can observe.  A closed set on purpose: a caller that has to
@@ -50,9 +51,16 @@ def repository_root() -> Path:
 
 
 def case_root() -> Path:
-    """Where the shipped cases live; overridable so a deployment can point elsewhere."""
+    """Where the shipped cases live.
+
+    ``VELCH_CASE_ROOT`` still wins (deployments point it at their own set); otherwise this is
+    the shared answer from :mod:`velch.data_root`, so moving the corpus does not desynchronise
+    the agent from the UI and the gates.
+    """
     override = os.environ.get("VELCH_CASE_ROOT")
-    return Path(override).resolve() if override else repository_root() / "validation" / "crh380a_m"
+    if override:
+        return Path(override).resolve()
+    return _case_dir()
 
 
 def agent_home() -> Path:

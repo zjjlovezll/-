@@ -21,6 +21,7 @@ from typing import Any, Iterable, Sequence
 
 import numpy as np
 
+from ..data_root import case_dir as _case_dir
 from ..inverse.bands import (DEFAULT_BAND_HZ, BandError, BandMetrics, band_metrics,
                              third_octave_centres, third_octave_levels)
 from ..metrics import Assessment, AssessmentError, assess_history
@@ -30,7 +31,8 @@ from ..metrics import Assessment, AssessmentError, assess_history
 # ---------------------------------------------------------------------------
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-VALIDATION_DIR = REPO_ROOT / "validation" / "crh380a_m"
+#: Resolved through :mod:`velch.data_root` so a moved validation corpus needs no edit here.
+VALIDATION_DIR = _case_dir()
 SIMPACK_MAT = (REPO_ROOT.parent / "simpack-mcp-2021x" / "results"
                / "case_a47bc7d9e48f40b08628147bfab5c3f4" / "model.output" / "350.mat")
 SIMPACK_SRC = REPO_ROOT.parent / "simpack-mcp-2021x" / "src"

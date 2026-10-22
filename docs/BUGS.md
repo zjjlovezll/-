@@ -29,7 +29,12 @@
 | **B015** | **版本漂移 + 入口点缺失** | `pyproject.toml` 写死 `version = "0.4.0"`，且没有 UI/agent 入口 | wheel 版本与 `velch.__version__` 可能不一致；用户只能靠记模块路径打开界面 | pyproject 改 `dynamic = ["version"]`（单一事实源 `src/velch/__init__.py`）+ 新增 `velch-ui`、`velch-agent` 两个 script |
 | **B016** | **自检的流式探针用 `-c` 内联源码** | 冻结构建 | 打包后的 exe 不接受 `-c`，自检的"子进程通路"项直接失败 | 新建 `ui/stream_probe.py`（`stream_probe_argv()`），自检与 `packaging/entry_console.py` 的 `--selftest-stream` 对应 |
 
+| B021 | `simpack-case` 的默认模式（型面取自模型）在转辙区窗口必然失败，报的是静平衡偏载 `the lightest contact patch carries only 0.0 N while the heaviest carries 119357.0 N`，没说是几何问题、也没说差多少 | 派生阶段量出行驶窗口内的断面下沉并与模板比较；>8 mm 直接拒（消息给下沉量/里程/阈值/实测边界），3–8 mm 记 `surface_drop_warning`，量不到记 `null` | `tests/test_simpack_surface_drop.py` 5 项 + `docs/SIMPACK_IMPORT` 第五节 | 8a00009 |
+
 ## 已知未修（不是"忘了"，是权衡）
+
+| O008 | 转辙区（约 58–72 m）的断面**形状**差异未被判据覆盖：冠部高度对齐（≤0.1 mm）仍可能静平衡失败 | 需要比冠部高度更强的形状不变量（承载面宽度/曲率/轨距面位置逐站比较），或在该区段直接用 `--keep-profiles` | 实测矩阵见 `docs/SIMPACK_IMPORT` 第五节；`tests/test_simpack_surface_drop.py` 只钉高度判据 |
+
 
 | ID | 症状 | 为什么不修 / 什么时候修 |
 |---|---|---|

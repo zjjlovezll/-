@@ -58,6 +58,28 @@ python -m velch run examples\synthetic_transfer\case.json --output examples\synt
 
 两种求解都输出 `history.csv` 与 `manifest.json`。前者包含时间、各轴里程、车辆和轨道状态、接触力与活动标志；后者包含算例与轮廓 SHA-256、坐标顺序、单位、求解器设置和质量门。求解失败返回非零退出码；不会出现交互式 `input()`。
 
+### 慢？用 `--fast` 预置（默认不改物理）
+
+算例声明的求解器是为了**和 Simpack 对齐**（`DOP853` + `max_step=1e-4`），1.2 s 整车要 ≈850 s。
+日常看趋势、扫参数时用实测预置，快一个量级：
+
+```powershell
+velch run-vehicle validation\crh380a_m\case_full12_cap05.json --output out_fast --fast
+#   --fast = BDF + 解析雅可比 + rtol 1e-4 + max_step 1e-3
+```
+
+| 算例 | 声明配置 | `--fast` | 峰值偏差 | 最大侵入偏差 |
+| --- | --- | --- | --- | --- |
+| `case_full12_cap05.json`（1.2 s 整车） | 850 s / nfev 331 949 | **79 s / 58 113** | 最差 0.11 kN | 550.54 vs 551.89 µm |
+| `case_frog_N_strip05.json`（0.05 s 辙叉） | 17.8 s / 10 253 | **3.7 s / 1 553** | 最差 0.30 kN | 155.03 vs 154.77 µm |
+
+脱空样本数不变，两种都 `numerically_checked`。**要出报告数字就用声明配置**；`--fast` 只适合趋势与脚本扫描。
+单项覆盖也支持：`--method BDF --jacobian analytic --rtol 1e-4 --max-step 1e-3`（显式参数优先于 `--fast`）。
+
+覆盖不会"就地改算例"：它写一份派生算例到 `<输出目录>\case_used.json`（型面引用改成绝对路径），
+再拿它去跑，因此 `manifest.json` 的 `case_sha256`、`case_snapshot.json` 与实际设置永远一致。
+命令行输出里的 `solver` 段会同时列出 `declared` 与 `effective`。
+
 ## 单轮对基础内核与源代码对应关系
 
 | Velch 模块 | 职责 | 与 SDITT MATLAB 的关系 |

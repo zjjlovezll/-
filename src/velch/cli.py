@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import json
 import sys
 from pathlib import Path
 
+from .case.derive import solver_override, write_derived_case
 from .contact_native import (ContactNativeUnavailable, HertzProbe, assess_spherical_hertz_probe,
                              inspect_contact_native, run_contact_hertz_probe)
 from .model import load_case
@@ -30,6 +31,18 @@ def main(argv: list[str] | None = None) -> int:
     vehicle_run.add_argument("--output", type=Path, required=True)
     vehicle_run.add_argument("--workers", type=int, default=1,
                              help="threads for the per-axle contact evaluation (1 = serial)")
+    vehicle_run.add_argument("--fast", action="store_true",
+                             help="the measured preset: BDF + analytic Jacobian + rtol 1e-4 + "
+                                  "max step 1e-3 (~11x faster than the declared DOP853 case; "
+                                  "peaks within 0.11 kN, worst-frame penetration within 35 um)")
+    vehicle_run.add_argument("--method", choices=("DOP853", "Radau", "BDF"),
+                             help="override the declared integrator")
+    vehicle_run.add_argument("--jacobian", choices=("none", "sparse_fd", "analytic"),
+                             help="override the declared Jacobian (implicit methods only)")
+    vehicle_run.add_argument("--rtol", type=float, help="override the relative tolerance")
+    vehicle_run.add_argument("--atol", type=float, help="override the absolute tolerance")
+    vehicle_run.add_argument("--max-step", dest="max_step", type=float,
+                             help="override the maximum solver step in seconds")
     batch = sub.add_parser("run-vehicle-batch",
                            help="run several v2 cases in parallel worker processes")
     batch.add_argument("cases", type=Path, nargs="+")
@@ -134,10 +147,27 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if assessment.verdict(assessment.static_axle_load_n)["pass"] else 2
         if args.command == "run-vehicle":
             case = load_vehicle_case(args.case)
+            declared = asdict(case.run)
+            patch = solver_override(declared, fast=args.fast, method=args.method,
+                                    jacobian=args.jacobian, rtol=args.rtol, atol=args.atol,
+                                    max_solver_step_s=args.max_step)
+            derived: Path | None = None
+            if patch:
+                # The snapshot must describe the settings that ran, so the override is written
+                # into a derived case instead of being patched in memory.
+                replace(case.run, **patch)  # validate before touching the filesystem
+                args.output.mkdir(parents=True, exist_ok=True)
+                derived = write_derived_case(args.case, args.output / "case_used.json",
+                                             run=patch, overwrite=True)
+                case = load_vehicle_case(derived)
             result = simulate_vehicle(case, contact_workers=args.workers)
             csv_path, manifest_path = save_vehicle_result(case, result, args.output)
+            solver = {"declared": declared, "effective": asdict(case.run),
+                      "preset": "fast" if args.fast else None,
+                      "derived_case": str(derived) if derived else None}
             print(json.dumps({"history": str(csv_path), "manifest": str(manifest_path),
-                              "summary": result.summary}, ensure_ascii=False, indent=2))
+                              "summary": result.summary, "solver": solver},
+                             ensure_ascii=False, indent=2))
             return 0 if result.summary["result_status"] == "numerically_checked" else 2
         if args.command == "run-vehicle-batch":
             report = run_vehicle_batch([Path(p) for p in args.cases], args.output_root,

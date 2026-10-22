@@ -91,7 +91,7 @@ numpy 手写实现，未改动环境。
 | 单次 RHS 成本（单核） | 1.19 ms | 4.25 ms CPU |
 | 整程墙钟 | ≈850 s（67 DOF） | 85.08 s（32 线程） |
 | 多进程批量 | 8 工况 8.58× | — |
-| 测试 | 361 passed（2026-10-22 17:40 实测，含 16 条架构规则 + 20 条 agent 契约 + 8 条三维几何；会随并行会话增加，验收只认 0 failed） | — |
+| 测试 | 377 passed（2026-10-22 17:52 实测，含 16 条架构规则 + 20 条 agent 契约 + 8 条三维几何；会随并行会话增加，验收只认 0 failed） | — |
 
 基线组合：条带积分法向律 + 钢轨垂向自由度 + 柔性扣件 5e7/4e4 + 接触阻尼 3e7 且
 `damping_force_cap_ratio=0.5`。
@@ -738,3 +738,51 @@ FD 8.9061e+02 = 2.30 倍；`∂M_yaw/∂y` 解析 0.13 vs FD −87.67，整项�
 **下一步**：①接触点/侵入量着色（`depth` 从 history 的 penetration 通道取，不要自己算）；
 ②左侧 `left:main` 在该窗内只有 2 个站位，抽样会退化成长条，需按 body 的 `s_lo_m/s_hi_m` 补齐；
 ③把 ⑦ 屏写进 `docs/ONBOARDING_2026-10-21.md` 的操作路径。
+
+## 第 26 轮（2026-10-22 傍晚）：把"默认太慢"这件事从文档挪到入口
+
+**决策（用户拍板顺序 2 → 1 → 3）**：默认路径决定别人的第一印象 → `validation/` 外移决定仓库能否
+长期维护 → `contact.py` 拆分风险最高，等 CI 兜底后再动。本轮做第 2 项。
+
+### 问题
+算例声明的求解器（`DOP853` + `max_step=1e-4`）是为对齐 Simpack 标的，1.2 s 整车 ≈850 s。
+解析雅可比与 `rtol=1e-4` 的快速档实测早已存在，但**没有入口**——只能靠临时脚本，
+所以"第一次跑"必然是等 14 分钟。
+
+### 做法：预置 + 派生算例，而不是就地改算例
+- `src/velch/case/derive.py`（新）：`solver_override()`（`--fast` 打底、显式参数覆盖、只返回变化的键）、
+  `absolutise_profile_paths()` / `relative_profile_references()`、`write_derived_case()`。
+- `cli.py` 的 `run-vehicle` 新增 `--fast`、`--method`、`--jacobian`、`--rtol`、`--atol`、`--max-step`。
+- **关键设计**：覆盖不写进内存里的 `case.run`，而是写一份**派生算例**到 `<输出目录>/case_used.json`
+  再加载它运行。理由是 `save_vehicle_result` 会快照"它拿到的算例字节"并在收尾时复核哈希——
+  内存里改 `run` 会让快照描述一套**从未运行过的设置**，manifest 看着可审计、其实在撒谎。
+  派生时把型面引用改成绝对路径（该算例的辙叉 body 用的是 `bodies/point_r07xxxxx.csv` 相对引用，
+  拼到输出目录下就加载不到），并且父算例一个字节不动。
+- 命令行输出的 `solver` 段同时给 `declared` / `effective` / `preset` / `derived_case`。
+
+### 实测（同机同批）
+| 算例 | 声明 | `--fast` | 峰值最差偏差 | 最大侵入 |
+|---|---|---|---|---|
+| `case_full12_cap05.json`（1.2 s） | 850 s / 331 949 | **79 s / 58 113** | 0.11 kN | 550.54 vs 551.89 µm |
+| `case_frog_N_strip05.json`（0.05 s） | 17.8 s / 10 253 | **3.7 s / 1 553** | 0.30 kN（0.14 %） | 155.03 vs 154.77 µm |
+
+脱空样本数（13 / 0）两边一致，均 `numerically_checked`；`manifest.case_sha256 == case_snapshot.json`
+的 sha256 在两种运行下都成立。
+
+### 踩坑
+1. `--fast` 第一次跑就炸：`FileNotFoundError: ...fast_smoke\validation\crh380a_m\bodies\main_r0791310.csv`。
+   根因是命令行给的是**相对路径**，`source.parent` 也就相对，绝对化等于没做。修法：`write_derived_case`
+   先 `Path(source).resolve()`；`absolutise_profile_paths` 再以 `Path.cwd()` 兜底找不到的相对引用。
+   已加回归测试 `test_derived_case_handles_a_relative_source_path`。
+2. `write_derived_case` 原先先查"目标已存在"再查"目标是源文件"，导致覆盖源文件时报的是
+   `already exists`。顺序调换：**先拒绝写源文件**，再谈重复。
+3. `--fast` + `--method DOP853` 仍会被 `RunSettings` 拒（`jacobian is only used by the implicit
+   methods`），这是 D5 那条规则在起作用，不是新 bug。
+
+### 测试
+新增 `tests/test_cli_solver_override.py`（16 项）：预置内容、显式参数优先、`jacobian="none"` 清空、
+非正容差被拒、`--fast` 产物能通过 `RunSettings`、DOP853+解析被拒、派生算例只改 `run`、
+型面引用绝对化（含相对源路径）、父算例字节不变、拒写源文件、拒写已存在目标（`overwrite=True` 例外）、
+校验失败时**不留下输出目录**。全仓 **377 passed**。
+
+文档：README §快速运行 增补 `--fast` 前置说明与两行实测表；本轮起"要报告数字用声明配置、要趋势用 `--fast`"成为写进 README 的规矩。

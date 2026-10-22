@@ -95,15 +95,24 @@ def test_list_panel_columns_accept_stretch_weights() -> None:
     assert "minwidth" in body, "a column that cannot shrink is a column that clips"
 
 
-def test_case_table_declares_four_columns_that_fit_beside_the_contract_card() -> None:
+def test_case_table_declares_few_columns_that_fit_beside_the_contract_card() -> None:
+    """The table only carries what the card cannot: id, duration, DOF.
+
+    The hash, the output step and the start mileage all moved into the contract card, where each
+    one gets a full line instead of being clipped past the panel edge.
+    """
+
     text = (UI / "screen_cases.py").read_text(encoding="utf-8")
     module = ast.parse(text)
     columns = next(node for node in module.body
                    if isinstance(node, ast.Assign)
                    and getattr(node.targets[0], "id", "") == "COLUMNS")
     widths = [element.elts[2].value for element in columns.value.elts]
-    assert len(widths) == 4, "six columns did not fit; the hash moved to the contract card"
+    assert 3 <= len(widths) <= 4, "each extra column costs width the free-DOF number needs"
     assert sum(widths) <= 500, f"declared width {sum(widths)} px does not fit the panel"
+    names = {element.elts[1].value for element in columns.value.elts}
+    assert not any("哈希" in name for name in names), "the hash belongs to the contract card"
+    assert "起始里程" in text, "dropping the column must not drop the value from the card"
 
 
 # -- one handler per job ---------------------------------------------------

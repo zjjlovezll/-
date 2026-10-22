@@ -105,3 +105,23 @@ fail loud，保留）、`screen_assess.run_cli()` 不传 `--static-axle-load`（
 
 **没有改动物理**：静载门、八接触峰值、七项 manifest 门、DOP853 路径全部未触碰；`pytest` 454 → **473 passed**，
 `--selftest` 7 屏 0 报错，`scripts/auto_accept.py` ACCEPT。
+
+## 四轮：把"不好看"的四项做完
+
+前两轮解决的是"读错数/找不到"，这一轮只剩可读性与观感。四项都带可测的判据，不靠感觉。
+
+| 项 | 之前 | 现在 | 判据 |
+|---|---|---|---|
+| 控件边界对比度 | `BORDER_CONTROL`/`SURFACE` 1.37:1、`/BG` 1.83:1（WCAG 1.4.11 要求 3:1） | **3.99:1 / 4.32:1** | `theme.contrast_violations() == []`（`tests/test_ui_scale.py` 每例断言） |
+| 表格斑马纹 | 无（长表靠肉眼跟行，容易串行） | `ROW_ALT` 每两行一条，`INK` 14.03:1、`INK_MUTED` 6.92:1 | `ListPanel.restripe()`，五个建表的屏各自在填充后调用一次 |
+| 焦点环 | 1 px | **2 px**（`Field.TEntry`/`TSpinbox`/`TCombobox` 的 `focuscolor`/`focusthickness`） | `styles.py` 里由 `theme.FOCUS_RING` 单一来源给出 |
+| 字号阶梯 | micro 9 / tiny 10 / body 11 / section 14 / title 18 | **micro 10 / tiny 11 / body 12 / body_lg 13 / section 15 / title 20 / display 26**、行高 26→28 | `tests/test_ui_scale.py::test_design_size_reproduces_the_declared_table` 钉住下界（body ≥ 12、micro ≥ 10、title ≥ 20） |
+
+### 两处由"抬字号"暴露出来的新问题
+
+1. **① 算例表在 12 px 下又需要横向滚动了**：四列合计 476 px > 面板可用宽度。做法不是再压字号，而是**继续减法**——把"起始里程 m"也移进右侧契约卡（那里本来就是一行一个完整值），表格只留 算例编号 / 时长 / 自由度 三列，合计 396 px。判据：`tests/test_ui_readability.py::test_case_table_declares_few_columns_that_fit_beside_the_contract_card` 断言 3–4 列、总宽 ≤ 500、且"起始里程"必须仍出现在契约卡里。
+2. **横向滚动条常驻像"右边还有内容"**：三列明明放得下，条还在。改 `ListPanel._sync_scrollbars()`——`<Configure>` 时比较"列最小宽之和 + 竖条宽"与控件宽，放得下就 `grid_remove()`。滚动条是"内容延续"的声明，不该在没延续时出现。
+
+### 一个差点写错的判断
+
+`contrast_violations()` 原先把 `BORDER`/`BG`（1.48:1，卡片之间的装饰分隔线）也按 3:1 判，于是四项一改完仍有"违规"。WCAG 1.4.11 明确豁免纯装饰元素，所以拆成三类：文本 4.5:1、控件边界 3:1（`NON_TEXT_PAIRS`）、装饰（`DECORATIVE_PAIRS`，只记录不判）。把装饰线当成缺陷去"修"会毁掉层次感。

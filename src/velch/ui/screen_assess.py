@@ -307,6 +307,7 @@ class AssessScreen(Screen):
                         f"{axle.derailment_coefficient:.3f} ({axle.derailment_side})",
                         f"{axle.wheel_load_reduction:.3f}",
                         f"{axle.lateral_force_n/1000:.2f}"))
+        self.axle_panel.restripe()
         self.set_rows(len(assessment.axles),
                       f"{run.name} · {assessment.samples} 采样 · "
                       f"{len(bars)} 项限值 · {'通过' if view.passed else '超限'}")

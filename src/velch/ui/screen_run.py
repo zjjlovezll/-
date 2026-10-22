@@ -189,6 +189,7 @@ class RunScreen(Screen):
         for index, info in enumerate(self.cases):
             self.case_list.tree.insert("", "end", iid=str(index),
                                        values=(info.case_id, info.duration_label, info.dof))
+        self.case_list.restripe()
         self.set_rows(len(self.cases), f"{len(self.cases)} 个可选算例")
         if self.cases and not self.case_list.tree.selection():
             target = next((i for i, c in enumerate(self.cases)

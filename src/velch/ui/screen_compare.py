@@ -291,6 +291,7 @@ class CompareScreen(Screen):
             self.stats_panel.tree.insert("", "end", iid=str(order),
                                          values=(metric, fmt_number(ours), fmt_number(theirs),
                                                  fmt_number(delta, signed=True), pct))
+        self.stats_panel.restripe()
         self.caveat_var.set(result.caveat or STATIC_CAVEAT)
         rows = len(result.summary_rows())
         span = f"{xs.min():.2f}–{xs.max():.2f} m"

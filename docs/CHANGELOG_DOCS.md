@@ -1034,6 +1034,19 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 新增 `tests/test_ui_robustness.py`（19 项，含一条真建 Tk 窗口验证"坏事件之后队列继续被消费"的用例）。
 验证：`pytest` **473 passed in 17.1 s**、`--selftest` 7 屏 0 报错、`scripts/auto_accept.py` ACCEPT。
 
+## 第 35 轮 2026-10-22 夜间：可读性剩余四项（对比度/斑马纹/焦点环/字号）
+
+按视觉验收的清单做完最后四项，全部带可测判据：
+
+- **对比度**：`BORDER_CONTROL`/`SURFACE` 1.37→**3.99:1**、`/BG` 1.83→**4.32:1**（WCAG 1.4.11 的 3:1）；`contrast_violations()` 拆成文本 4.5:1 / 控件边界 3:1 / 装饰豁免三类，`BORDER`/`BG` 1.48:1 属装饰，不再当缺陷。
+- **斑马纹**：`ListPanel.restripe()` 用 `theme.ROW_ALT` 每两行一条，五个建表的屏在填充后各调一次；`INK` 14.03:1、`INK_MUTED` 6.92:1 仍达标。
+- **焦点环**：1→2 px，`theme.FOCUS_RING` 单一来源。
+- **字号阶梯**：micro 10 / tiny 11 / body 12 / body_lg 13 / section 15 / title 20 / display 26，行高 28；`tests/test_ui_scale.py` 把下界钉住（body ≥ 12、micro ≥ 10、title ≥ 20）。
+
+抬字号后暴露的两处新问题，都用"减法"而不是"再压字号"解决：① 算例表四列 476 px 放不下 → 砍掉"起始里程 m"（值仍在右侧契约卡，有断言保证），三列 396 px；② 横向滚动条常驻像"右边还有内容" → `_sync_scrollbars()` 按 `<Configure>` 比较列最小宽与控件宽，放得下就隐藏。
+
+验证：`pytest` **483 passed**、`velch.ui --selftest` 7 屏 / 424 控件 / **0 屏报错**。
+
 ## 第 34 轮 · 0.4.1 安装包（2026-10-22 22:30）
 
 - 包装：`pyproject.toml` 版本改为单一事实源（`dynamic` + `attr = "velch.__version__"`）、

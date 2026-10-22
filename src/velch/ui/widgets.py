@@ -261,6 +261,26 @@ class ListPanel(ttk.Frame):
         self._scroll = vertical
         self._scroll_x = horizontal
         self._mono = mono
+        self._declared_px = 0
+        self.tree.bind("<Configure>", self._sync_scrollbars, add="+")
+
+    def _sync_scrollbars(self, event: "tk.Event[tk.Misc] | None" = None) -> None:
+        """Withdraw the horizontal bar when the columns already fit.
+
+        A visible scrollbar is a claim that content continues past the edge.  When the declared
+        widths (plus the vertical bar) fit in the widget, that claim is false, so the bar goes away
+        instead of costing a row of height on every list.
+        """
+
+        needed = int(self._declared_px) + self._scroll.winfo_reqwidth()
+        available = int(event.width) if event is not None else self.tree.winfo_width()
+        if available <= 1:
+            return
+        if needed <= available:
+            if self._scroll_x.winfo_ismapped():
+                self._scroll_x.grid_remove()
+        elif not self._scroll_x.winfo_ismapped():
+            self._scroll_x.grid()
 
     def columns(self, spec: Sequence[tuple[str, str, int]], *, anchor: str = "w",
                 stretch_weights: Sequence[float] | None = None) -> None:
@@ -275,9 +295,28 @@ class ListPanel(ttk.Frame):
             self.tree.column(name, width=int(width * theme.SCALE), anchor=anchor,
                              minwidth=int(width * 0.7 * theme.SCALE),
                              stretch=weights[index] > 0)
+        # The narrowest the table can get before a column stops being fully readable.
+        self._declared_px = sum(int(width * 0.7 * theme.SCALE) for _n, _t, width in spec)
+        self._sync_scrollbars()
 
     def clear(self) -> None:
         self.tree.delete(*self.tree.get_children())
+
+    def restripe(self) -> None:
+        """Re-apply the every-second-row background.
+
+        Rows are inserted by the screens themselves (each has its own columns and values), so the
+        stripe cannot be attached at insert time without touching five call sites twice.  One pass
+        over the existing items is cheap (a few hundred rows) and keeps the rule in one place: if a
+        screen forgets to call this, the table is merely plainer, never wrong.
+        """
+
+        try:
+            self.tree.tag_configure("stripe", background=theme.ROW_ALT)
+        except Exception:  # pragma: no cover - Tk without tag support
+            return
+        for index, item in enumerate(self.tree.get_children()):
+            self.tree.item(item, tags=("stripe",) if index % 2 else ())
 
 
 # ---------------------------------------------------------------------------

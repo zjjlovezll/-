@@ -22,12 +22,11 @@ from .widgets import Card, ListPanel, ui_font
 #: that showed was a truncated ``ed42f7ff7``.  The hash and the output step now live in the
 #: contract card, one full line each.
 COLUMNS = (
-    ("case_id", "算例编号", 232),
-    ("duration", "时长 s", 84),
-    ("dof", "自由度", 68),
-    ("xstart", "起始里程 m", 92),
+    ("case_id", "算例编号", 236),
+    ("duration", "时长 s", 88),
+    ("dof", "自由度", 72),
 )
-STRETCH = (1.0, 0.0, 0.0, 0.0)
+STRETCH = (1.0, 0.0, 0.0)
 DEFAULT_FILTER_HINT = "按 ID / 目的 / 自由度 过滤，例如 frog 或 35"
 
 
@@ -208,10 +207,10 @@ class CasesScreen(Screen):
     def _fill_table(self) -> None:
         self.table.clear()
         for index, info in enumerate(self.visible):
-            values = (info.case_id, info.duration_label, info.dof or "—",
-                      "—" if info.x_start_m is None else f"{info.x_start_m:.2f}")
+            values = (info.case_id, info.duration_label, info.dof or "—")
             tags = ("bad",) if info.problem else ()
             self.table.tree.insert("", "end", iid=str(index), values=values, tags=tags)
+        self.table.restripe()
         self.table.tree.tag_configure("bad", foreground=theme.FAIL)
         self.set_rows(len(self.visible), f"{len(self.visible)}/{len(self.infos)} 个算例列在表中")
 

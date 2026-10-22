@@ -12,8 +12,15 @@ BG = "#0E1116"          # app background, the darkest plane
 SURFACE = "#151A21"     # panels, tables
 RAISED = "#1C232C"      # cards, hovered rows, inputs
 OVERLAY = "#222A34"     # menus, tooltips, selection chips
-BORDER = "#2A3341"      # hairlines (decorative only, never text)
-BORDER_STRONG = "#3A4657"
+BORDER = "#2A3341"      # hairlines (decorative only, never text)   1.48:1 on BG
+BORDER_STRONG = "#3A4657"  # hover wash for buttons, still decorative
+#: Outline of a *control* (entry, combobox, table border). WCAG 1.4.11 wants 3:1 for the
+#: boundary that tells you where the field is; BORDER at 1.48:1 does not (visual review
+#: measured 1.37:1 against SURFACE and read it as "no field at all").
+BORDER_CONTROL = "#6B7A8D"
+#: Every second table row. Subtle by intent: it must group rows without competing with
+#: the text, so it is a surface difference, not a text-contrast pair.
+ROW_ALT = "#191F27"
 
 # --- text ------------------------------------------------------------------
 INK = "#E6EDF3"         # primary text            16.00:1 on BG
@@ -40,18 +47,21 @@ FONT_UI = "Microsoft YaHei UI"
 FONT_MONO = "Consolas"
 #: The declared sizes are the 100 % scale.  ``set_scale()`` rewrites ``FONT_SIZE`` from this table,
 #: so a HiDPI screen (or a projector) can be served without touching a single screen file.
+# One notch up from the first design: the layout subtraction (four columns instead of
+# six, horizontal scroll where columns still overflow, chip strip wrapped) bought the
+# room, and 11 px body was the single most repeated complaint in the visual review.
 BASE_FONT_SIZE = {
-    "micro": 9,      # table meta, axis ticks
-    "tiny": 10,      # dense tables
-    "body": 11,      # default UI text
-    "body_lg": 12,   # emphasised body
-    "section": 14,   # card titles
-    "title": 18,     # screen titles
-    "display": 24,   # hero metric numerals
+    "micro": 10,     # table meta, axis ticks (Chinese sentences never use this)
+    "tiny": 11,      # dense tables
+    "body": 12,      # default UI text
+    "body_lg": 13,   # emphasised body
+    "section": 15,   # card titles
+    "title": 20,     # screen titles
+    "display": 26,   # hero metric numerals
 }
 FONT_SIZE = dict(BASE_FONT_SIZE)
-LINE_HEIGHT = {"micro": 14, "tiny": 16, "body": 18, "section": 22, "title": 26}
-TREE_ROW_HEIGHT = 26
+LINE_HEIGHT = {"micro": 15, "tiny": 17, "body": 19, "section": 23, "title": 27}
+TREE_ROW_HEIGHT = 28
 
 #: Current display scale.  ``1.0`` is the design size; the UI offers 0.9 … 1.6 so the same layout
 #: stays usable on a 1280 px laptop panel and on a 4 K monitor without a second theme.
@@ -76,7 +86,7 @@ def set_scale(factor: float) -> float:
         FONT_SIZE[key] = max(8, round(base * factor))
     for key in LINE_HEIGHT:
         LINE_HEIGHT[key] = max(12, round(LINE_HEIGHT[key] * factor))
-    TREE_ROW_HEIGHT = max(24, round(26 * factor))
+    TREE_ROW_HEIGHT = max(26, round(28 * factor))
     return factor
 
 
@@ -116,8 +126,14 @@ CONTRAST = {
     ("INFO", "SURFACE"): 7.90,
     ("ACCENT_INK", "ACCENT"): 9.43,
     ("BORDER", "BG"): 1.48,   # decorative hairline, never used for text
+    ("BORDER_CONTROL", "SURFACE"): 3.99,   # non-text boundary of a control
+    ("BORDER_CONTROL", "BG"): 4.32,
+    ("INK", "ROW_ALT"): 14.05,             # text on a striped row
+    ("INK_MUTED", "ROW_ALT"): 6.92,
 }
 MIN_TEXT_CONTRAST = 4.5
+#: WCAG 1.4.11: the boundary of a control (not its text) must reach 3:1.
+MIN_NON_TEXT_CONTRAST = 3.0
 
 
 def luminance(hex_color: str) -> float:
@@ -140,17 +156,30 @@ def contrast_ratio(foreground: str, background: str) -> float:
     return (high + 0.05) / (low + 0.05)
 
 
+#: Pairs that describe a *boundary* rather than text: WCAG 1.4.11 asks 3:1 for these, and holding
+#: them to the 4.5:1 text rule would reject a perfectly legible control outline.
+NON_TEXT_PAIRS = frozenset({("BORDER_CONTROL", "SURFACE"), ("BORDER_CONTROL", "BG")})
+#: Purely decorative separators.  WCAG 1.4.11 exempts these: a divider between cards carries no
+#: state and no boundary, so 1.48:1 is a design choice rather than a defect.
+DECORATIVE_PAIRS = frozenset({("BORDER", "BG")})
+
+
 def contrast_violations() -> list[str]:
-    """Token pairs that fall below AA for normal text (border excluded by design)."""
+    """Token pairs that miss their WCAG threshold (text 4.5:1, control boundary 3:1)."""
 
     problems: list[str] = []
     for (fg_name, bg_name), documented in CONTRAST.items():
-        if documented < 3.0:      # documented decorative hairline
-            continue
         measured = contrast_ratio(globals()[fg_name], globals()[bg_name])
         if abs(measured - documented) > 0.02:
             problems.append(f"{fg_name}/{bg_name} documented {documented:.2f} "
                             f"but measured {measured:.2f}")
+        if (fg_name, bg_name) in DECORATIVE_PAIRS:
+            continue
+        if (fg_name, bg_name) in NON_TEXT_PAIRS:
+            if measured < MIN_NON_TEXT_CONTRAST:
+                problems.append(f"{fg_name}/{bg_name} only {measured:.2f}:1 "
+                                f"(< 1.4.11 3:1 for a control boundary)")
+            continue
         if measured < MIN_TEXT_CONTRAST:
             problems.append(f"{fg_name}/{bg_name} only {measured:.2f}:1 (< AA 4.5:1)")
     return problems

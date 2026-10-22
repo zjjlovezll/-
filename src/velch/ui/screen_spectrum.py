@@ -246,6 +246,7 @@ class SpectrumScreen(Screen):
                                    values=(fmt.fmt_number(centre),
                                            f"{fmt.fmt_number(low)} – {fmt.fmt_number(high)}",
                                            fmt.fmt_number(level), fmt.fmt_percent(share / 100.0)))
+        self.table.restripe()
         self.card_rms.set(fmt.fmt_number(metrics.rms), unit)
         self.card_peak.set(fmt.fmt_number(metrics.peak), unit)
         self.card_p2p.set(fmt.fmt_number(metrics.peak_to_peak), unit)

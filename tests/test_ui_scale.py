@@ -26,7 +26,12 @@ def test_design_size_reproduces_the_declared_table() -> None:
     theme.set_scale(1.0)
 
     assert theme.FONT_SIZE == theme.BASE_FONT_SIZE
-    assert theme.TREE_ROW_HEIGHT == 26
+    assert theme.TREE_ROW_HEIGHT == 28
+    # The ladder itself: 12 px body is the floor the visual review asked for, so a later "compact"
+    # edit cannot quietly walk it back to 11.
+    assert theme.BASE_FONT_SIZE["body"] >= 12
+    assert theme.BASE_FONT_SIZE["micro"] >= 10
+    assert theme.BASE_FONT_SIZE["title"] >= 20
 
 
 def test_scale_grows_every_token_monotonically() -> None:

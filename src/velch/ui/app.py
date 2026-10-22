@@ -183,8 +183,8 @@ class VelchUI:
             ("Amber.TButton", theme.AMBER, theme.FAIL_INK),
         ):
             style.configure(name, background=background, foreground=foreground,
-                            bordercolor=theme.BORDER, focuscolor=theme.ACCENT,
-                            focusthickness=1, padding=(theme.SPACE["3"], 5),
+                            bordercolor=theme.BORDER_CONTROL, focuscolor=theme.ACCENT,
+                            focusthickness=2, padding=(theme.SPACE["3"], 5),
                             relief="flat", font=ui_font(theme.FONT_SIZE["tiny"]))
             active = theme.OVERLAY if name == "Ghost.TButton" else theme.BORDER_STRONG
             style.map(name, background=[("pressed", theme.BORDER_STRONG),
@@ -204,7 +204,8 @@ class VelchUI:
         # data views ------------------------------------------------------
         style.configure("Data.Treeview", background=theme.SURFACE,
                         fieldbackground=theme.SURFACE, foreground=theme.INK,
-                        bordercolor=theme.BORDER, borderwidth=0, rowheight=theme.TREE_ROW_HEIGHT,
+                        bordercolor=theme.BORDER_CONTROL, borderwidth=1,
+                        rowheight=theme.TREE_ROW_HEIGHT,
                         font=ui_font(theme.FONT_SIZE["tiny"]))
         style.configure("Data.Treeview.Heading", background=theme.RAISED,
                         foreground=theme.INK_MUTED, relief="flat",
@@ -214,16 +215,16 @@ class VelchUI:
         style.map("Data.Treeview.Heading", background=[("active", theme.BORDER_STRONG)])
 
         style.configure("Field.TEntry", fieldbackground=theme.RAISED, foreground=theme.INK,
-                        insertcolor=theme.INK, bordercolor=theme.BORDER, padding=4,
+                        insertcolor=theme.INK, bordercolor=theme.BORDER_CONTROL, padding=4,
                         selectbackground=theme.ACCENT, selectforeground=theme.ACCENT_INK)
         style.map("Field.TEntry", bordercolor=[("focus", theme.ACCENT)])
         style.configure("TCombobox", fieldbackground=theme.RAISED, background=theme.RAISED,
                         foreground=theme.INK, arrowcolor=theme.INK_MUTED,
-                        bordercolor=theme.BORDER, padding=3)
+                        bordercolor=theme.BORDER_CONTROL, padding=3)
         style.map("TCombobox", fieldbackground=[("readonly", theme.RAISED)],
                   foreground=[("readonly", theme.INK)])
         style.configure("TSpinbox", fieldbackground=theme.RAISED, foreground=theme.INK,
-                        arrowcolor=theme.INK_MUTED, bordercolor=theme.BORDER, padding=3)
+                        arrowcolor=theme.INK_MUTED, bordercolor=theme.BORDER_CONTROL, padding=3)
         style.configure("TScale", background=theme.SURFACE, troughcolor=theme.RAISED,
                         bordercolor=theme.BORDER)
         style.configure("TCheckbutton", background=theme.SURFACE, foreground=theme.INK,

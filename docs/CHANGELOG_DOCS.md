@@ -1705,3 +1705,38 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 - `tests/test_evidence_map.py` 6 passed；全仓 **550 passed, 1 skipped**
 - `scripts/auto_accept.py --skip-run` → ACCEPT（4 步）
 - 文档索引覆盖 **76** 篇，`test_docs_index` 5 项全绿
+
+## 第 52 轮：⑤ 那一行从"读得进来"走到"算得出来"
+
+证据地图的 ⑤ 行之前只证明 catalog 里 `geometry_readable = true`——几何能读进来，但"读进来之后
+能不能算"还是散的（在 `SIMPACK_IMPORT` 的正文里）。这一轮给生成器加 `--with-run`：同一行里
+把导入后的算例**真跑一次**。
+
+### 新增 `evidence_map.py --with-run`
+
+流程与命令行完全一致，只是把中间产物放进临时目录：
+
+1. `velch inspect-simpack-track <wheelset>.spck --model-root <db> --output catalog.json`
+   → `geometry_readable = True`、`missing_profile_references = 0`、`profile_references = 238`
+2. `velch simpack-case --catalog … --template case_A_final_law.json --x-start 82 --duration 0.05
+   --sample 400` → 派生算例，**静平衡裁决 `seats: true`**，八个接触各 **59.68 kN**、
+   最大侵入 **65.47 µm**（与冻结静载门 59 680.5769 N / 65.47 µm 同一个数）
+3. `velch run-vehicle <派生算例> --fast` → `numerically_checked`、**七门 7/7**、`nfev 116`
+
+于是 ⑤ 那一行现在读起来是：`geometry_readable = True、missing_profile_references = 0、
+profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）；现跑 numerically_checked、
+门 7/7、nfev 116`。
+
+### 两个坑
+
+- **内存顺序写错**：`Path(os.environ.get(..., "")).strip()` —— `Path` 没有 `.strip()`，
+  抛 `AttributeError: 'WindowsPath' object has no attribute 'strip'`；正确写法是先 strip 再 `Path()`。
+- **模型不在 `F:\项目` 那一份**：`F:` 下的同名 `CRH380A_M_Wheelset.spck` 不含轨道断面
+  （catalog 报 `geometry_readable` 为假/引用为 0），真正带 238 个断面引用的是
+  `G:\研究生\动力学\CRH380A_纯刚性模型\…`。所以 ⑤ 行依赖环境变量而不是硬编码路径。
+
+### 代价与边界
+
+`--with-run` 约 10 s（catalog 2 s + 派生含裁决 4 s + 现跑 4 s），**不进提交闸门**——闸门那一步
+用的是 `physics_invariants.py --no-run`（0.2 s）。地图默认（不带 `--with-run`）仍只写 catalog 结果，
+需要完整证据时显式加参数，这比"每次都跑 10 s 但不看"更诚实。

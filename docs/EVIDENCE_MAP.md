@@ -2,9 +2,9 @@
 
 由 `scripts/evidence_map.py` 生成——里面的结果都是**跑出来的**，不是抄来的。`tests/test_evidence_map.py` 会检查这里引用的每个文件都还在、每条命令都能解析，所以这一页没法悄悄过期。
 
-- 当前提交 **`20ca1bb`**
+- 当前提交 **`198c2d0`**
 - 标签 13 个：`v0.4.6`、`v0.4.7`、`v0.4.8`、`v0.4.9` …
-- 全仓测试 **550 passed, 1 skipped**
+- 全仓测试 **551 passed, 0 skipped**
 
 ## 逐项证据
 
@@ -14,7 +14,7 @@
 | **② 全仓 bug 清理** | 缺陷账本归零：已修记 B 编号，仍开记 O 编号并写明理由 | `python -X utf8 scripts/auto_accept.py --skip-run` | `ACCEPT` — tests PASS、doctor PASS、contract PASS、invariants PASS（exit 0）<br>期望：四步全 PASS（tests / doctor / contract / invariants） |
 | **③ 界面美观与可读性** | 截断由布局测试量出来，不是靠看图；对比度由主题测试算出来 | `python -X utf8 -m pytest tests/test_ui_layout.py tests/test_ui_scale.py -q` | **13 passed, 0 skipped**（exit 0）<br>期望：7 屏 × 100%/130% 无被裁控件；`contrast_violations() == []` |
 | **④ 安装包** | onedir 双 exe（窗口版 + 控制台版），装完能双击运行，并在包内跑一次真实算例 | `python -X utf8 packaging/build_installer.py && python -X utf8 packaging/smoke_test.py` | `ACCEPT` · 6 步 · 失败 0 · 跳过 0（`packaging_smoke_20261023-012825.json`）<br>期望：冒烟 6 步全 PASS：selftest / cli-run / missing-corpus / agent-contract / unicode-path / install-dir-untouched |
-| **⑤ 读取 Simpack 模型** | 只读几何导入（catalog → case），导入后由静平衡决定能不能算 | `python -X utf8 -m velch inspect-simpack-track <db>/substructure/<x>.spck --model-root <db> --output catalog.json` | 未设置 `VELCH_SIMPACK_MODEL`/`VELCH_SIMPACK_ROOT`（本机未挂模型；细节见文档）<br>期望：`geometry_readable = true`、`missing_profile_references = 0`；派生算例 `seats: true` 后跑出 `numerically_checked` |
+| **⑤ 读取 Simpack 模型** | 只读几何导入（catalog → case），导入后由静平衡决定能不能算 | `python -X utf8 -m velch inspect-simpack-track <db>/substructure/<x>.spck --model-root <db> --output catalog.json` | `geometry_readable = True`、`missing_profile_references = 0`、`profile_references = 238`；`seats: true`（8 个接触、最大侵入 65.47 µm）；现跑 `numerically_checked`、门 7/7、`nfev 116`<br>期望：`geometry_readable = true`、`missing_profile_references = 0`；派生算例 `seats: true` 后跑出 `numerically_checked`（加 `--with-run` 才跑这一段） |
 | **物理数值不变** | 复算门：归档 2401 帧 + 一次 `--fast` 现跑，与 committed 参考值比较 | `python -X utf8 scripts/physics_invariants.py` | `UNCHANGED`（整程峰值 170.61 kN），exit 0<br>期望：VERDICT: UNCHANGED |
 
 ## 证据文件与最后一次改动
@@ -22,7 +22,7 @@
 | 文件 | 内容 | 最后改动 |
 |---|---|---|
 | [`docs/ARCHITECTURE_2026-10-21.md`](../docs/ARCHITECTURE_2026-10-21.md) | 分项 1 的细节 | `b73a932 2026-10-22` |
-| [`docs/CHANGELOG_DOCS.md`](../docs/CHANGELOG_DOCS.md) | 分项 1 的细节 | `20ca1bb 2026-10-23` |
+| [`docs/CHANGELOG_DOCS.md`](../docs/CHANGELOG_DOCS.md) | 分项 1 的细节 | `198c2d0 2026-10-23` |
 | [`tests/test_docs_index.py`](../tests/test_docs_index.py) | 分项 1 的细节 | `3289507 2026-10-23` |
 | [`docs/BUGS.md`](../docs/BUGS.md) | 分项 2 的细节 | `20aa168 2026-10-23` |
 | [`scripts/auto_accept.py`](../scripts/auto_accept.py) | 分项 2 的细节 | `20aa168 2026-10-23` |

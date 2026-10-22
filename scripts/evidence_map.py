@@ -49,7 +49,7 @@ ITEMS: list[tuple[str, str, str, str, list[str]]] = [
     ("⑤ 读取 Simpack 模型",
      "只读几何导入（catalog → case），导入后由静平衡决定能不能算",
      "python -X utf8 -m velch inspect-simpack-track <db>/substructure/<x>.spck --model-root <db> --output catalog.json",
-     "`geometry_readable = true`、`missing_profile_references = 0`；派生算例 `seats: true` 后跑出 `numerically_checked`",
+     "`geometry_readable = true`、`missing_profile_references = 0`；派生算例 `seats: true` 后跑出 `numerically_checked`（加 `--with-run` 才跑这一段）",
      ["docs/SIMPACK_IMPORT_2026-10-22.md", "docs/SIMPACK_COMPARE_2026-10-23.md",
       "src/velch/simpack_case.py"]),
 ]
@@ -131,25 +131,54 @@ def _pytest_of(command: str) -> str:
     return f"**{passed} passed, {skipped} skipped**{tail}（exit {code}）"
 
 
-def _simpack() -> str:
+def _simpack(with_run: bool = False) -> str:
     """Import the model named by ``VELCH_SIMPACK_MODEL``; say so plainly when unset."""
 
     model = os.environ.get("VELCH_SIMPACK_MODEL", "").strip()
     root = os.environ.get("VELCH_SIMPACK_ROOT", "").strip()
     if not model or not root:
         return "未设置 `VELCH_SIMPACK_MODEL`/`VELCH_SIMPACK_ROOT`（本机未挂模型；细节见文档）"
-    out = Path(__import__("tempfile").mkdtemp(prefix="velch_evidence_")) / "catalog.json"
-    code, output = _run([sys.executable, "-X", "utf8", "-m", "velch", "inspect-simpack-track",
-                         model, "--model-root", root, "--output", str(out)], timeout=600.0)
-    if code != 0 or not out.is_file():
+    work = Path(__import__("tempfile").mkdtemp(prefix="velch_evidence_"))
+    catalog = work / "catalog.json"
+    code, _output = _run([sys.executable, "-X", "utf8", "-m", "velch", "inspect-simpack-track",
+                          model, "--model-root", root, "--output", str(catalog)], timeout=600.0)
+    if code != 0 or not catalog.is_file():
         return f"catalog 生成失败（exit {code}）"
-    summary = (json.loads(out.read_text(encoding="utf-8")).get("summary") or {})
-    return (f"`geometry_readable = {summary.get('geometry_readable')}`、"
+    summary = (json.loads(catalog.read_text(encoding="utf-8")).get("summary") or {})
+    line = (f"`geometry_readable = {summary.get('geometry_readable')}`、"
             f"`missing_profile_references = {summary.get('missing_profile_references')}`、"
             f"`profile_references = {summary.get('profile_references')}`")
+    if not with_run:
+        return line
+    template = Path(os.environ.get("VELCH_EVIDENCE_TEMPLATE", "").strip())
+    if not template.is_file():
+        return line + "；`--with-run` 需要 `VELCH_EVIDENCE_TEMPLATE` 指向模板算例"
+    case = work / "case_evidence.json"
+    code, output = _run([sys.executable, "-X", "utf8", "-m", "velch", "simpack-case",
+                         "--catalog", str(catalog), "--template", str(template),
+                         "--out", str(case), "--x-start", "82", "--duration", "0.05",
+                         "--sample", "400"], timeout=900.0)
+    if code != 0 or not case.is_file():
+        return line + f"；派生失败（exit {code}）"
+    seating = (json.loads(output[output.index("{"):output.rindex("}") + 1])
+               .get("seating") or {})
+    if not seating.get("seats"):
+        return line + f"；派生算例没坐上：{seating.get('reason', '')[:60]}"
+    out = work / "run"
+    code, _output = _run([sys.executable, "-X", "utf8", "-m", "velch", "run-vehicle",
+                          str(case), "--output", str(out), "--fast"], timeout=900.0)
+    manifest = out / "manifest.json"
+    if code != 0 or not manifest.is_file():
+        return line + f"；现跑失败（exit {code}）"
+    payload = json.loads(manifest.read_text(encoding="utf-8")).get("summary") or {}
+    gates = payload.get("gates") or {}
+    return (line + f"；`seats: true`（{len(seating.get('per_contact_kn') or {})} 个接触、"
+            f"最大侵入 {seating.get('max_penetration_um')} µm）；现跑 "
+            f"`{payload.get('result_status')}`、门 {sum(1 for v in gates.values() if v)}/"
+            f"{len(gates)}、`nfev {payload.get('solver', {}).get('nfev')}`")
 
 
-def build() -> str:
+def build(with_run: bool = False) -> str:
     counts = _counts()
     gate = _gate()
     invariants = _invariants()
@@ -176,7 +205,7 @@ def build() -> str:
         "|---|---|---|---|",
     ]
     results = {"①": _pytest_of(ITEMS[0][2]), "②": gate, "③": _pytest_of(ITEMS[2][2]),
-               "④": smoke, "⑤": _simpack()}
+               "④": smoke, "⑤": _simpack(with_run)}
     for name, claim, command, expected, _artefacts in ITEMS:
         result = results.get(name[:1], "见下设文档")
         lines.append(f"| **{name}** | {claim} | `{command}` | {result}<br>期望：{expected} |")
@@ -246,10 +275,12 @@ def check() -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description="生成/校验证据地图")
     parser.add_argument("--check", action="store_true", help="只校验，不重写")
+    parser.add_argument("--with-run", action="store_true",
+                        help="⑤ 也跑一次导入后的算例（约 10 s，需要 VELCH_EVIDENCE_TEMPLATE）")
     arguments = parser.parse_args()
     if arguments.check:
         return check()
-    TARGET.write_text(build(), encoding="utf-8", newline="\n")
+    TARGET.write_text(build(arguments.with_run), encoding="utf-8", newline="\n")
     print(f"已写入 {TARGET}")
     return 0
 

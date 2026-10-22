@@ -12,18 +12,41 @@ from velch.ui.simpack_dialog import _parse_report, _status_line
 SOURCE = Path(__file__).resolve().parent.parent / "src" / "velch"
 
 
-def _dialog(monkeypatch, tmp_path: Path):
-    """Build the dialog headless; skip where Tk is unavailable."""
+_ROOT = None
+
+
+def _root():
+    """The one Tk root this module uses; ``None`` when Tk genuinely cannot open a window."""
+
+    global _ROOT
+    if _ROOT is not None:
+        return _ROOT
     tk = pytest.importorskip("tkinter")
     try:
         root = tk.Tk()
-        root.withdraw()
-        owned = True
-    except tk.TclError:  # pragma: no cover - another test already holds the interpreter
-        pytest.skip("no Tk display")
+    except tk.TclError as error:  # pragma: no cover - headless CI only
+        pytest.skip(f"no Tk display: {error}")
+    root.withdraw()
+    _ROOT = root
+    return root
+
+
+def _dialog(monkeypatch, tmp_path: Path):
+    """Build the dialog headless; skip only when Tk genuinely cannot open a window."""
+
+    root = _root()
     dialog = simpack_dialog.SimpackImportDialog(root, template=tmp_path / "case_A.json",
-                                               case_dir=tmp_path)
+                                                case_dir=tmp_path)
     return root, dialog
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _close_root():
+    yield
+    global _ROOT
+    if _ROOT is not None:
+        _ROOT.destroy()
+        _ROOT = None
 
 
 def test_the_command_is_the_cli_command(monkeypatch, tmp_path: Path) -> None:
@@ -40,7 +63,7 @@ def test_the_command_is_the_cli_command(monkeypatch, tmp_path: Path) -> None:
         assert "--keep-profiles" not in command
         assert "--no-seat-check" not in command
     finally:
-        root.destroy()
+        dialog.destroy()
 
 
 def test_the_two_switches_are_opt_in(monkeypatch, tmp_path: Path) -> None:
@@ -55,7 +78,7 @@ def test_the_two_switches_are_opt_in(monkeypatch, tmp_path: Path) -> None:
         assert "--no-seat-check" in command
         assert command[command.index("--rail") + 1] == "R"
     finally:
-        root.destroy()
+        dialog.destroy()
 
 
 def test_a_missing_catalog_is_refused_with_words_not_a_traceback(monkeypatch,
@@ -65,7 +88,7 @@ def test_a_missing_catalog_is_refused_with_words_not_a_traceback(monkeypatch,
         with pytest.raises(ValueError, match="catalog.json"):
             dialog.build_command()
     finally:
-        root.destroy()
+        dialog.destroy()
 
 
 def test_derive_does_not_swallow_a_failing_command(monkeypatch, tmp_path: Path) -> None:
@@ -80,7 +103,7 @@ def test_derive_does_not_swallow_a_failing_command(monkeypatch, tmp_path: Path) 
         assert called == []                       # a refusal must not reload the list as success
         assert "没坐住" in dialog.status.cget("text")
     finally:
-        root.destroy()
+        dialog.destroy()
 
 
 def test_a_successful_derive_hands_back_the_file(monkeypatch, tmp_path: Path) -> None:
@@ -96,7 +119,7 @@ def test_a_successful_derive_hands_back_the_file(monkeypatch, tmp_path: Path) ->
         assert called == [tmp_path / "simpack_ok.json"]
         assert "坐住了" in dialog.status.cget("text")
     finally:
-        root.destroy()
+        dialog.destroy()
 
 
 def test_the_report_parser_survives_noise() -> None:

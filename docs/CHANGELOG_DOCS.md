@@ -924,3 +924,45 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 - `python -m velch.ui --selftest` → 7 屏 / 0 报错；
 - 截图对比：100 % 与 130 % 的 ① 算例屏、125 % 的 ④ 频谱屏（`reports/` 下，可再生的验证件）；
 - `pre-commit` 实跑：16.0 s，`verdict: ACCEPT`。
+
+---
+
+## 2026-10-22 拆开 `contact.py`（拆分第 30 轮）
+
+### 一、为什么现在做
+
+`docs/ARCHITECTURE_2026-10-21.md` §2.3 把 `contact.py` 记成上帝模块：1573 行里塞了四件互不相关的事
+（参数契约、站位栅格缓存、三条接触点搜索、法向/切向力律）。拆它一直排在最后，理由是**没有兜底**——
+现在有了：`pytest` 423 项 + `scripts/auto_accept.py` 四步闸门 + `pre-commit`。
+
+### 二、拆成什么
+
+| 模块 | 行数 | 职责 |
+|---|---|---|
+| `src/velch/contact_models.py` | 302 | 四个策略常量 + `ContactParameters`/`ContactPartials`/`ContactGeometry`/`ContactResponse` + `merge_contact_responses`/`deduplicate_contacts` |
+| `src/velch/contact_grid.py` | 157 | `_build_rail_grid`/`_merge_grid`/`_grid_slope`/`_grid_curvature`/`_rail_node_slopes` 与两个 LRU 缓存、`RAIL_SLOPE_TABLE` 开关 |
+| `src/velch/contact_search.py` | 804 | `_contact_on_span`、`find_patch_contact`、`find_strip_contact`、`find_spline_contact` 与它们的私有助手 |
+| `src/velch/contact.py` | **384**（原 1573） | 策略分派（`find_graph_contact`/`find_graph_contacts`）+ 力律（`evaluate_contact`/`saturate_creep_force`）+ **显式 re-export 23 个旧名** |
+
+依赖方向 `contact_models ← contact_grid ← contact_search ← contact`，无环。三个新模块仍以
+`velch.contact` 开头，所以 `tests/test_architecture_rules.py::test_contact_layer_does_not_import_its_callers`
+自动把它们纳入"叶子不许 import 调用者"的约束，不用改规则。
+
+### 三、为什么调用方一行都不用改
+
+`contact.py` 逐名 re-export（不用 `import *`），包括**私有** `_contact_on_span`——`tests/test_contact_patch.py`
+一直在用它。`__all__` 显式列出 23 个公开名，任何一个从兄弟模块消失都会在 import 时就报错，而不是等到运行时。
+新增 `tests/test_contact_split.py`（6 项）把这条约定钉住：facade 名字齐全、各名字的 `__module__` 落在该落的模块、
+重活已经搬出 facade、兄弟模块不许反向 import facade、兄弟模块不许越过 contact 叶子。
+
+### 四、验证
+
+- `pytest tests` → **429 passed**（423 + 6）；
+- `scripts/auto_accept.py` → `PASS tests / PASS doctor / PASS contract / PASS end-to-end`，`verdict: ACCEPT`；
+- 冻结 oracle 与静载门（59 680.5769 N / 65.47 µm）未动：这次是纯移动，没有一行算法改动。
+
+### 五、下一步没做的
+
+`vehicle_solver.py`（812 行）仍在 `§2.4 S2` 的清单上，它比 `contact.py` 更难：跨调用可变状态五个
+（`_contact_seed`/`_body_cache`/`_seed_misses`/`_contact_age`/`_active_body`）与 `save_vehicle_result`
+的落盘字节耦合，拆之前要先把这些状态收进一个对象。

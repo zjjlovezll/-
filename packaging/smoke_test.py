@@ -262,6 +262,27 @@ def step_agent_contract(root: Path, data_root: Path) -> dict:
     return {"step": "agent-contract", "ok": ok, "detail": detail}
 
 
+def step_selfcheck(root: Path, data_root: Path) -> dict:
+    """`selfcheck` is what a user runs first; if it fails, the build is not shippable."""
+
+    exe = root / "velch-cli.exe"
+    if not exe.is_file():
+        return {"step": "selfcheck", "ok": False, "detail": {"reason": f"缺少 {exe}"}}
+    code, out, err = _run([str(exe), "selfcheck"], cwd=root, env=_env(data_root), timeout=180)
+    text = out + err
+    detail = {
+        "exit_code": code,
+        "pass": text.count("[PASS]"),
+        "warn": text.count("[WARN]"),
+        "fail": text.count("[FAIL]"),
+        "corpus": next((line.strip() for line in text.splitlines() if "算例语料" in line), ""),
+    }
+    # Four PASS is the floor: version, corpus, Tk and write access are not optional for a build
+    # that is supposed to run on this machine. matplotlib and Simpack may legitimately be absent.
+    ok = code == 0 and detail["fail"] == 0 and detail["pass"] >= 4
+    return {"step": "selfcheck", "ok": bool(ok), "detail": detail}
+
+
 def step_install_dir_untouched(root: Path, data_root: str, out: Path, case: str) -> dict:
     """The install directory is somebody else's folder: running the app must not write into it.
 
@@ -321,6 +342,7 @@ def main() -> int:
         step_cli_run(root, data_root, out, arguments.case),
         step_missing_corpus(root, out, arguments.case, data_root),
         step_agent_contract(root, data_root),
+        step_selfcheck(root, data_root),
         step_unicode_paths(root, data_root, out, arguments.case),
         step_install_dir_untouched(root, data_root, out, arguments.case),
     ]

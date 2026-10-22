@@ -189,6 +189,79 @@ def _tree_signature(root: Path) -> dict[str, int]:
             for path in root.rglob("*") if path.is_file()}
 
 
+def _first_json(text: str) -> dict:
+    """The first complete ``{...}`` in a mixed stream, or ``{}`` when there is none."""
+
+    start = text.find("{")
+    while start != -1:
+        depth = 0
+        for index in range(start, len(text)):
+            symbol = text[index]
+            if symbol == "{":
+                depth += 1
+            elif symbol == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start:index + 1])
+                    except json.JSONDecodeError:
+                        break
+        start = text.find("{", start + 1)
+    return {}
+
+
+def step_agent_contract(root: Path, data_root: Path) -> dict:
+    """The agent surface is what an automation calls, so the packaged exe must answer it too.
+
+    ``agent doctor`` already proves the environment; this step proves the *contract*: the tool
+    manifest lists the same tools, and ``capabilities`` reports the 72 registry parameters.  Both
+    go through the console exe because the windowed one has no stdout.
+    """
+
+    cli = root / "velch-cli.exe"
+    detail: dict[str, object] = {}
+    ok = True
+
+    code, stdout, stderr = _run([str(cli), "agent", "doctor"], cwd=root,
+                                env=_env(data_root), timeout=300)
+    text = (stdout + stderr).strip()
+    doctor_ok = code == 0 and '"ok": true' in text.replace("\n", " ")
+    detail["doctor_exit"] = code
+    detail["doctor_ok"] = doctor_ok
+    if not doctor_ok:
+        detail["doctor_tail"] = text.splitlines()[-4:]
+        ok = False
+
+    code, stdout, stderr = _run([str(cli), "agent", "manifest"], cwd=root,
+                                env=_env(data_root), timeout=300)
+    text = (stdout + stderr).strip()
+    manifest = _first_json(text)
+    body = manifest.get("data") if isinstance(manifest.get("data"), dict) else manifest
+    tools = [entry.get("name") for entry in (body.get("tools") or [])]
+    detail["manifest_exit"] = code
+    detail["tool_count"] = len(tools)
+    detail["has_capabilities"] = "capabilities" in tools
+    detail["has_submit_run"] = "submit_run" in tools
+    if not (code == 0 and len(tools) >= 12 and detail["has_capabilities"]):
+        detail["manifest_tail"] = text.splitlines()[-4:]
+        ok = False
+
+    code, stdout, stderr = _run([str(cli), "agent", "call",
+                                 '{"tool": "capabilities", "arguments": {}}'],
+                                cwd=root, env=_env(data_root), timeout=300)
+    text = (stdout + stderr).strip()
+    payload = _first_json(text)
+    data = payload.get("data") or {}
+    detail["call_exit"] = code
+    detail["call_ok"] = payload.get("ok")
+    detail["parameter_count"] = data.get("parameter_count")
+    if not (code == 0 and payload.get("ok") is True and data.get("parameter_count") == 72):
+        detail["call_tail"] = text.splitlines()[-4:]
+        ok = False
+
+    return {"step": "agent-contract", "ok": ok, "detail": detail}
+
+
 def step_install_dir_untouched(root: Path, data_root: str, out: Path, case: str) -> dict:
     """The install directory is somebody else's folder: running the app must not write into it.
 
@@ -247,6 +320,7 @@ def main() -> int:
         step_selftest(root, data_root),
         step_cli_run(root, data_root, out, arguments.case),
         step_missing_corpus(root, out, arguments.case, data_root),
+        step_agent_contract(root, data_root),
         step_unicode_paths(root, data_root, out, arguments.case),
         step_install_dir_untouched(root, data_root, out, arguments.case),
     ]

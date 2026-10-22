@@ -101,6 +101,7 @@ numpy 手写实现，未改动环境。
 | 文档 | 回答什么问题 | 仍成立？ || [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | 0.4.9 装什么、修了什么、仍然没有什么 | ✅ 2026-10-23 |
 | [RELEASE_NOTES_0.4.10.md](RELEASE_NOTES_0.4.10.md) | 0.4.10 装什么、接触斑怎么看、仍然没有什么 | ✅ 2026-10-23 |
 | [SIMPACK_COMPARE_2026-10-23.md](SIMPACK_COMPARE_2026-10-23.md) | 与 Simpack 同里程窗的定量差异（只描述不调参） | ✅ 2026-10-23 |
+| [RELEASE_NOTES_0.4.11.md](RELEASE_NOTES_0.4.11.md) | 0.4.11 装什么、冒烟第 6 步、对照报告结论 | ✅ 2026-10-23 |
 
 |---|---|---|
 | `validation/turnout18_ref/FROG_WINDOW_BREAKTHROUGH_2026-10-21.md` | 辙叉窗 599 kN → 122.5 kN 的根因与全部对照（§8 静载门、§9 整程、§10 阻尼定标、§11 阻尼上限、§12 轨道板） | ✅ 主结论 |

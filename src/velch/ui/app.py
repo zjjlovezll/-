@@ -319,14 +319,21 @@ class VelchUI:
         self.status_label = ttk.Label(status, text="就绪", style="Subtitle.TLabel",
                                       background=theme.BG)
         self.status_label.grid(row=0, column=0, sticky="w")
+        # 这一步回答"这版跑过什么"。放状态栏而不是某个屏里，是因为它属于整个程序；没找到报告时
+        # 它会明说"未找到"，而不是留空让人以为跑过了。它必须和另外两个标签**同一行**：多加一行
+        # 状态栏会夺走 ① 屏导航按钮的高度，1.3 倍字号下那四个按钮只剩 1 px（布局闸门实测）。
+        self.evidence_label = ttk.Label(status, text="", style="Dim.TLabel",
+                                        background=theme.BG,
+                                        font=ui_font(theme.FONT_SIZE["micro"]))
+        self.evidence_label.grid(row=0, column=1, sticky="w", padx=(theme.GAP, theme.GAP))
         self.progress = ttk.Progressbar(status, mode="indeterminate", length=140,
                                         style="TProgressbar")
-        self.progress.grid(row=0, column=1, sticky="e", padx=(0, theme.GAP))
+        self.progress.grid(row=0, column=2, sticky="e", padx=(0, theme.GAP))
         self.progress.grid_remove()
         self.context_label = ttk.Label(status, text="", style="Dim.TLabel",
                                        background=theme.BG,
                                        font=ui_font(theme.FONT_SIZE["micro"]))
-        self.context_label.grid(row=0, column=2, sticky="e")
+        self.context_label.grid(row=0, column=3, sticky="e")
 
     # -- keyboard ----------------------------------------------------------
     def _bind_keys(self) -> None:
@@ -468,6 +475,18 @@ class VelchUI:
                   "run": theme.AMBER, None: theme.INK_MUTED}.get(tone, theme.INK_MUTED)
         self.status_label.configure(text=text, foreground=colour)
 
+    def refresh_evidence(self) -> None:
+        """读最新一份冒烟/不变量报告，缩成一句话标在状态栏上。"""
+
+        from .evidence import latest_invariants, latest_smoke, summary_text
+
+        try:
+            text, tone = summary_text(latest_smoke(), latest_invariants())
+        except Exception as error:  # 证据缺失不该让界面崩
+            text, tone = f"证据：读取失败（{type(error).__name__}: {error}）", "warn"
+        colour = {"fail": theme.FAIL, "pass": theme.PASS, "warn": theme.WARN}
+        self.evidence_label.configure(text=text, foreground=colour.get(tone, theme.INK_MUTED))
+
     def refresh_status(self) -> None:
         run = self.context.get("run")
         case = self.context.get("case")
@@ -477,6 +496,7 @@ class VelchUI:
         if run is not None:
             bits.append(f"运行 {Path(run).name}")
         self.context_label.configure(text=" · ".join(bits) if bits else "未选择运行目录")
+        self.refresh_evidence()
 
     def set_context(self, *, run: Path | None = None, case: Path | None = None) -> None:
         if run is not None:

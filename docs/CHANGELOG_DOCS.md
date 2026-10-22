@@ -1498,6 +1498,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.15.md](RELEASE_NOTES_0.4.15.md) | Velch 0.4.15 发布说明 |
 | [RELEASE_NOTES_0.4.16.md](RELEASE_NOTES_0.4.16.md) | Velch 0.4.16 发布说明 |
 | [RELEASE_NOTES_0.4.17.md](RELEASE_NOTES_0.4.17.md) | Velch 0.4.17 发布说明 |
+| [RELEASE_NOTES_0.4.18.md](RELEASE_NOTES_0.4.18.md) | Velch 0.4.18 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
@@ -1751,6 +1752,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.15.md` | 0.4.15：只读安装（O009）自动化，自检在只读目录下的预期输出 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.16.md` | 0.4.16：`SimpackCaseError.detail`，拒绝带结构化数字 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.17.md` | 0.4.17：① 屏「环境体检」，结果按 PASS/WARN/FAIL 着色 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.18.md` | 0.4.18：状态栏常驻「这版跑过什么」证据行 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1839,3 +1841,29 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
   「该屏加载失败：IndentationError」，**布局闸门当场抓到**（这正是它存在的理由）。
 - `from ..launcher import ...` 与 `from .. import launcher` 的区别：后者在架构规则里被记成
   `velch`（包根），presentation 不许 import 包根；改成取叶子后规则通过。
+
+## 第 56 轮：状态栏多一句"这版跑过什么"
+
+发布前有两份证据躺在磁盘上：`reports/packaging_smoke_*.json`（装完能不能跑）与
+`reports/PHYSICS_INVARIANTS_LATEST.md`（物理数值有没有漂）。过去只有记得去翻文件的人才知道。
+现在状态栏右侧常驻一行：
+
+```
+证据：冒烟 ACCEPT · 8 步 ｜ 不变量 未移动
+```
+
+绿 = 两项都过；黄 = 有一项找不到（**"没找到"必须说出来**，留空会被读成"跑过了"）；红 = 有失败或漂移。
+
+### 三个判断
+
+- **新模块 `velch/ui/evidence.py`**（纯函数、无 Tk）：`latest_smoke()` 取 mtime 最新一份、坏文件跳过
+  （坏在解析上不该让整条证据消失）；`latest_invariants()` 读第一行带 `VERDICT`/「未移动」的结论；
+  `summary_text()` 返回 `(文案, 语气)`。
+- **`跳过 N` 要显示**：跳过和通过不是一回事，冒烟里 `readonly-acl` 曾经是 SKIP。
+- **放在状态栏而不是某个屏**：它属于整个程序，不属于任何一屏。
+
+### 一个被布局闸门当场驳回的设计
+
+第一版把这句话放在状态栏的**第二行**。结果状态栏变高，① 屏右卡被挤，`环境体检` 那四个导航按钮
+在 1.3 倍字号下**只剩 1 px**——`tests/test_ui_layout.py` 报 `「在运行屏打开」 1px < required 146px`。
+改成与「就绪」「算例/运行」同一行（`row=0, column=1`）后恢复。**加一行文字也是一次布局改动**。

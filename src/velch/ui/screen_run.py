@@ -284,7 +284,9 @@ class RunScreen(Screen):
         self.card_code.set("—")
         self._append(f"$ {' '.join(argv)}")
         self._append(f"# cwd={store.REPO_ROOT}")
-        self.app.spawn(argv, store.REPO_ROOT, owner=self.name)
+        if self.app.spawn(argv, store.REPO_ROOT, owner=self.name) is None:
+            self._set_busy(False)
+            return
         self._set_busy(True)
         self.app.set_status(f"已启动：{label}", tone="run")
 

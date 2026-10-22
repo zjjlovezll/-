@@ -12,6 +12,7 @@ Two constraints drive the design here:
 """
 from __future__ import annotations
 
+import math
 import tkinter as tk
 from tkinter import ttk
 from typing import Callable, Sequence
@@ -154,6 +155,21 @@ class LimitBar(tk.Canvas):
         width = self.winfo_width()
         if width <= 1:            # not mapped yet: <Configure> will call us again
             return
+        left, right = 0, width - 2
+        top = int(26 * theme.SCALE)
+        track_h = int(10 * theme.SCALE)
+        if not (math.isfinite(self._value) and math.isfinite(self._limit)):
+            # NaN compares False against everything, so a missing value used to fall through to
+            # the "pass" colour: a bar with no data read as a bar that satisfied the limit.
+            self.create_text(left, 0, text=self._label, anchor="nw", fill=theme.INK,
+                             font=ui_font(theme.FONT_SIZE["tiny"]))
+            self.create_text(right, 0, text="—", anchor="ne", fill=theme.INK_MUTED,
+                             font=mono_font(theme.FONT_SIZE["tiny"]))
+            self.create_rectangle(left, top, right, top + track_h, fill=theme.RAISED, outline="")
+            self.create_text(left, top + track_h + int(6 * theme.SCALE), text="无有效值",
+                             anchor="nw", fill=theme.INK_MUTED,
+                             font=ui_font(theme.FONT_SIZE["micro"]))
+            return
         ratio = 0.0 if self._limit <= 0 else min(self._value / self._limit, 1.35)
         if not self._passed or ratio >= 1.0:
             colour = theme.FAIL
@@ -161,9 +177,6 @@ class LimitBar(tk.Canvas):
             colour = theme.WARN
         else:
             colour = theme.PASS
-        left, right = 0, width - 2
-        top = int(26 * theme.SCALE)
-        track_h = int(10 * theme.SCALE)
         self.create_text(left, 0, text=self._label, anchor="nw", fill=theme.INK,
                          font=ui_font(theme.FONT_SIZE["tiny"]))
         reading = fmt_pair(self._value, self._limit, self._unit)
@@ -416,12 +429,6 @@ class Chart(ttk.Frame):
             self._draw_matplotlib()
         elif self._canvas is not None:
             self._draw_canvas()
-
-    def _stack_groups(self) -> list[tuple[str, float, float]]:
-        """Y bands for multi-unit series: one band per unit group, top to bottom."""
-
-        units = [self.ylabel] if self.ylabel else []
-        return [(unit, None, None) for unit in units]  # type: ignore[misc]
 
     def _draw_matplotlib(self) -> None:
         axes = self._axes

@@ -12,7 +12,7 @@ from pathlib import Path
 from tkinter import filedialog, ttk
 
 from . import store, theme
-from .fmt import fmt_number
+from .fmt import fmt_number, fmt_percent
 from .screen import Screen
 from .widgets import Card, Chart, ChartSeries, Chip, ListPanel, ui_font
 
@@ -285,10 +285,12 @@ class CompareScreen(Screen):
 
         self.stats_panel.clear()
         for order, (metric, ours, theirs, delta) in enumerate(result.summary_rows()):
-            pct = "—" if abs(theirs) < 1e-9 else f"{delta / theirs * 100:+.1f} %"
+            # NaN renders as "+nan %" through an f-string, and a reader cannot tell that from a
+            # real ratio; fmt_number gives the em dash and keeps one formatting path.
+            pct = "—" if abs(theirs) < 1e-9 else fmt_percent(delta / theirs, signed=True)
             self.stats_panel.tree.insert("", "end", iid=str(order),
                                          values=(metric, fmt_number(ours), fmt_number(theirs),
-                                                 f"{delta:+.4g}", pct))
+                                                 fmt_number(delta, signed=True), pct))
         self.caveat_var.set(result.caveat or STATIC_CAVEAT)
         rows = len(result.summary_rows())
         span = f"{xs.min():.2f}–{xs.max():.2f} m"

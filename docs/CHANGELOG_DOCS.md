@@ -1011,4 +1011,25 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 
 **新增**：`src/velch/ui/fmt.py`（全局唯一的数字格式出口，支持 SI 前缀、缺测显示 `—`、`fmt_pair` 保证两侧同量级）、`tests/test_ui_readability.py`（19 项）。
 
-**验证**：`pytest` **454 passed**；`--selftest` 7 屏 0 报错；`scripts/auto_accept.py --skip-run` → **ACCEPT**。
+**验证**：`pytest` **473 passed**；`--selftest` 7 屏 0 报错；`scripts/auto_accept.py --skip-run` → **ACCEPT**。
+
+## 2026-10-22 代码审查后的健壮性修复（第 33 轮）
+
+审查（`@代码审查工程师`）给出 7 条确定缺陷，全部落在"界面会骗人"这一类，而不是算错物理：
+
+- **F1 事件泵永久停摆**：`VelchUI._pump` 的 `after(100, ...)` 在 `try` 之外，任一 handler 抛异常即
+  停止轮询——日志冻结、worker 结果不再投递、运行按钮永久灰、子进程继续跑。改为逐事件 `except`
+  + `finally` 重排，并新增 `report_problem()` 与 `root.report_callback_exception` 把异常送进状态栏。
+- **F2 失败分支不清屏**：评价屏失败时旧 `LimitBar`（可能红色"超限"）与轮轴表留在屏上；频谱屏失败时
+  留着上一次的柱子、表格与五张 KPI 卡，且 caption 不含运行名。新增 `_clear_limits()` / `_clear_view()`，
+  频谱 caption 加运行名。
+- **F3 结果乱序**：快速连点运行下拉时，慢请求覆盖快请求。每屏加 `_token`，过期结果直接丢弃。
+- **F4 子进程归属**：`spawn` 单槽 + `on_exit` 按当前槽位 owner 路由 → 取消作用于错误进程。`exit` 事件
+  携带作业对象，`on_exit(job, ...)` 按 `job.owner` 路由；`spawn` 忙时返回 `None`。
+- **F5 NaN 限值条显示通过**：`isfinite` 判断 → 灰条 + "无有效值"。
+- **F6 过滤后选择悬空**：`_apply_filter()` 后选中首行（或清空卡片），避免"派生的是看不见的那一行"。
+- **F7 `peak_force_kn` 实为牛顿**：改名 `peak_force_n`，去掉调用点的 `/1000`。
+- **F8/F9**：`fmt_percent(signed=True)`、静态轴重卡改 kN；删掉过期元组注解与死代码 `Chart._stack_groups`。
+
+新增 `tests/test_ui_robustness.py`（19 项，含一条真建 Tk 窗口验证"坏事件之后队列继续被消费"的用例）。
+验证：`pytest` **473 passed in 17.1 s**、`--selftest` 7 屏 0 报错、`scripts/auto_accept.py` ACCEPT。

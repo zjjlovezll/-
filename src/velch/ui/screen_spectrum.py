@@ -32,6 +32,11 @@ class SpectrumScreen(Screen):
         #: instead of being re-derived from the label (labels are not guaranteed injective).
         self._column_by_label: dict[str, str] = {}
         self.result: store.SpectrumResult | None = None
+        #: Monotonic request id.  Each recompute bumps it; a worker that finishes late is dropped
+        #: instead of painting the previous run's bars under the new run's name.
+        self._token = 0
+        self._token_run = ""
+        self._token_channel = ""
         self.run_var = tk.StringVar()
         self.channel_var = tk.StringVar()
         self.low_var = tk.StringVar(value="5")
@@ -181,20 +186,41 @@ class SpectrumScreen(Screen):
             f"计算 {run.name} / {store.channel_short_label(channel)}（{channel}）的 1/3 倍频程 …",
             tone="run",
         )
+        self._token += 1
+        token = self._token
+        self._token_run = run.name
+        self._token_channel = store.channel_short_label(channel)
+        # Clear before the worker starts: a failure used to leave the previous run's bars, table
+        # and five KPI cards on screen, and the caption never named the run, so the stale numbers
+        # could not be told apart from the new ones.
+        self._clear_view(f"{run.name} · {self._token_channel} 计算中 …")
 
         def work() -> store.SpectrumResult:
             series = store.read_history(run.history, ["time_s", channel])
             return store.spectrum(series, channel, low, high)
 
         def done(ok: bool, result, error) -> None:
+            if token != self._token:
+                return  # a newer request owns the screen now
             if not ok:
+                self._clear_view(f"{run.name} · {self._token_channel} 计算失败：{error}")
                 self.app.set_status(f"频谱计算失败：{error}", tone="fail")
-                self.caption_var.set(f"失败：{error}")
                 return
             self.result = result
             self._render(result)
 
         self.app.submit("1/3 倍频程", work, done)
+
+    def _clear_view(self, caption: str) -> None:
+        """Drop every number the previous run left behind, and say whose screen this is."""
+
+        self.result = None
+        self.chart.clear()
+        self.table.clear()
+        for card in (self.card_rms, self.card_peak, self.card_p2p, self.card_p999, self.card_dom):
+            card.set("—")
+        self.caption_var.set(caption)
+        self.set_rows(0, caption)
 
     def _render(self, result: store.SpectrumResult) -> None:
         unit = store.channel_unit(result.column)
@@ -219,21 +245,22 @@ class SpectrumScreen(Screen):
             self.table.tree.insert("", "end", iid=str(order),
                                    values=(fmt.fmt_number(centre),
                                            f"{fmt.fmt_number(low)} – {fmt.fmt_number(high)}",
-                                           fmt.fmt_number(level), f"{share:.2f} %"))
+                                           fmt.fmt_number(level), fmt.fmt_percent(share / 100.0)))
         self.card_rms.set(fmt.fmt_number(metrics.rms), unit)
         self.card_peak.set(fmt.fmt_number(metrics.peak), unit)
         self.card_p2p.set(fmt.fmt_number(metrics.peak_to_peak), unit)
         self.card_p999.set(fmt.fmt_number(metrics.p999_abs), unit)
-        self.card_dom.set("-" if result.dominant_hz is None
-                          else f"{result.dominant_hz:.0f}", "Hz")
-        caption = (f"{store.channel_short_label(result.column)}（{result.column}） · "
+        dominant = "—" if result.dominant_hz is None else f"{result.dominant_hz:.0f}"
+        self.card_dom.set(dominant, "Hz")
+        caption = (f"{self._token_run} · {store.channel_short_label(result.column)}"
+                   f"（{result.column}） · "
                    f"采样 {result.rate_hz:.0f} Hz · "
                    f"频带 {fmt.fmt_number(result.low_hz)}–{fmt.fmt_number(result.high_hz)} Hz · "
                    f"{len(bands)} 个 1/3 倍频程带")
         if result.note:
             caption += "\n" + result.note
         self.caption_var.set(caption)
-        self.set_rows(len(bands), f"{len(bands)} 个频带 · 主导 {result.dominant_hz:.0f} Hz")
+        self.set_rows(len(bands), f"{self._token_run} · {len(bands)} 个频带 · 主导 {dominant} Hz")
         self.app.set_status(f"已计算 {len(bands)} 个 1/3 倍频程带", tone="pass")
 
     def export_figure(self) -> None:

@@ -303,6 +303,8 @@ def run(screens: str = "", as_json: bool = False, timeout: float = 180.0) -> int
             app.show("run")
             job = app.spawn([sys.executable, "-X", "utf8", "-c", STREAM_PROBE],
                             store.REPO_ROOT, owner="run")
+            if job is None:
+                raise RuntimeError("spawn refused: another child process is already running")
             end = time.monotonic() + 40.0
             while time.monotonic() < end and job.running:
                 try:

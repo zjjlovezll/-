@@ -210,6 +210,19 @@ class CasesScreen(Screen):
                             or needle in info.purpose.lower()
                             or needle in str(info.dof)]
         self._fill_table()
+        # The filter can hide the selected row.  Keeping it selected meant the contract card, the
+        # copy command and "derive" still pointed at a case that was no longer in the table — the
+        # reader believes they are deriving the row they can see.
+        if self.visible:
+            first = self.table.tree.get_children()
+            if first:
+                self.table.tree.selection_set(first[0])
+                self._on_select()
+                return
+        self.selected = None
+        for key, widget in self.fields.items():
+            widget.configure(text="—" if key != "sha" else "—")
+        self.derive_id.set("")
 
     # -- interaction -------------------------------------------------------
     def _on_select(self, _event=None) -> None:

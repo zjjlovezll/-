@@ -27,7 +27,8 @@ PREFIXABLE = frozenset({"N", "m", "s", "m/s", "m/s²", "Hz", "rad", "rad/s", "N�
                         "Pa", "kg", "W", "V", "A", "m⁻¹", "N/m"})
 
 
-def fmt_number(value: float, unit: str = "", *, digits: int = 4, prefix: bool = True) -> str:
+def fmt_number(value: float, unit: str = "", *, digits: int = 4, prefix: bool = True,
+               signed: bool = False) -> str:
     """Format one measurement for display, appending ``unit`` when it is given."""
 
     try:
@@ -39,33 +40,43 @@ def fmt_number(value: float, unit: str = "", *, digits: int = 4, prefix: bool = 
     if number == 0.0:
         return "0" if not unit else f"0 {unit}"
     magnitude = abs(number)
+    sign = "+" if signed else ""
 
     if 1e-3 <= magnitude < 1e4:
-        text = f"{number:.{digits}g}"
+        text = f"{number:{sign}.{digits}g}"
     elif prefix and unit in PREFIXABLE:
         exponent = int(math.floor(math.log10(magnitude) / 3.0) * 3)
         exponent = max(-12, min(9, exponent))
         scaled = number / (10.0 ** exponent)
         name = dict(SI_PREFIXES).get(exponent)
         if name is None:
-            text = f"{number:.{digits - 1}e}"
+            text = f"{number:{sign}.{digits - 1}e}"
             return text if not unit else f"{text} {unit}"
         if 1e-3 <= abs(scaled) < 1e4:
-            return f"{scaled:.{digits}g} {name}{unit}"
-        text = f"{scaled:.{digits}g}"
+            return f"{scaled:{sign}.{digits}g} {name}{unit}"
+        text = f"{scaled:{sign}.{digits}g}"
         return f"{text} {name}{unit}"
     else:
-        text = f"{number:.{digits - 1}e}"
+        text = f"{number:{sign}.{digits - 1}e}"
 
     return text if not unit else f"{text} {unit}"
 
 
-def fmt_percent(ratio: float, *, digits: int = 4) -> str:
-    """A ratio as a percentage; used for "how far to the limit" readings."""
+def fmt_percent(ratio: float, *, digits: int = 4, signed: bool = False) -> str:
+    """A ratio as a percentage; used for "how far to the limit" readings.
 
-    if not math.isfinite(float(ratio)):
+    ``signed=True`` is for a difference against a reference, where the sign is the point; an
+    f-string used to print ``+nan %`` for a missing side, which reads like a real ratio.
+    """
+
+    try:
+        number = float(ratio)
+    except (TypeError, ValueError):
         return "—"
-    return f"{float(ratio) * 100.0:.{digits}g} %"
+    if not math.isfinite(number):
+        return "—"
+    sign = "+" if signed else ""
+    return f"{number * 100.0:{sign}.{digits}g} %"
 
 
 def fmt_pair(value: float, limit: float, unit: str = "") -> str:

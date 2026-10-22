@@ -20,6 +20,7 @@ import sys
 import threading
 import time
 import tkinter as tk
+import traceback
 from pathlib import Path
 from tkinter import ttk
 from typing import Any, Callable, Sequence
@@ -102,7 +103,9 @@ class ProcessJob:
         finally:
             self.returncode = self.proc.wait()
             self.stopped_at = time.monotonic()
-            self.post(("exit", (self.returncode, self.elapsed, self._cancelled)))
+            # The job itself travels with the event: routing by "whoever owns the current slot"
+            # sent a cancel or a log line to the wrong screen as soon as two jobs existed.
+            self.post(("exit", (self, self.returncode, self.elapsed, self._cancelled)))
 
     def cancel(self) -> None:
         if self.running:
@@ -130,6 +133,7 @@ class VelchUI:
         self._tick_job: str | None = None
         root.title("Velch 道岔动力学工作台 · v0.4")
         root.configure(background=theme.BG)
+        root.report_callback_exception = self._on_callback_error
         root.minsize(int(1180 * theme.SCALE), int(720 * theme.SCALE))
         self.build_style()
         self._build_layout()
@@ -479,9 +483,17 @@ class VelchUI:
 
     # -- background work ---------------------------------------------------
     def spawn(self, argv: Sequence[str], cwd: Path, *, env: dict[str, str] | None = None,
-              owner: str = "") -> ProcessJob:
-        """Start a CLI subprocess; its lines arrive as ``("log", line)`` on the queue."""
+              owner: str = "") -> ProcessJob | None:
+        """Start a CLI subprocess; its lines arrive as ``("log", line)`` on the queue.
 
+        Only one subprocess at a time: two would share the single ``self.process`` slot, so the
+        first job's exit code went unread and ``cancel`` could terminate the other one.  Returning
+        ``None`` when busy lets a caller say so instead of silently doing nothing.
+        """
+
+        if self.process is not None and self.process.running:
+            self.set_status("已有子进程在运行：先取消或等它结束", tone="warn")
+            return None
         job = ProcessJob(argv, cwd, env or self.cli_env(), self.queue.put, owner=owner)
         self.process = job
         job.start()
@@ -531,13 +543,41 @@ class VelchUI:
             self.set_status("已请求取消子进程", tone="warn")
 
     def _pump(self) -> None:
+        """Drain the queue; one bad event must not stop the pump.
+
+        The loop used to be ``while True: dispatch(...)`` inside ``try: ... except queue.Empty``
+        with ``after(100, self._pump)`` *after* the try block.  Any handler that raised therefore
+        escaped before the re-arm line: polling stopped for good, so logs froze, worker results
+        were never delivered, the busy state never cleared (the run buttons stayed grey) and the
+        subprocess kept going with nobody listening.  The only trace was a traceback on stderr.
+        """
+
         try:
             while True:
                 kind, payload = self.queue.get_nowait()
-                self.dispatch(kind, payload)
+                try:
+                    self.dispatch(kind, payload)
+                except Exception as exc:  # a single event fails, the pump survives
+                    traceback.print_exc()
+                    self.report_problem(f"界面事件处理失败：{type(exc).__name__}: {exc}")
         except queue.Empty:
             pass
-        self.root.after(100, self._pump)
+        finally:
+            self.root.after(100, self._pump)
+
+    def report_problem(self, message: str) -> None:
+        """Surface an internal failure where the reader can see it, not only on stderr."""
+
+        try:
+            self.set_status(message, tone="fail")
+        except Exception:  # pragma: no cover - status bar itself broken
+            pass
+
+    def _on_callback_error(self, exc_type, exc_value, exc_traceback) -> None:
+        """Tk swallows callback exceptions into stderr; route them to the status bar too."""
+
+        traceback.print_exception(exc_type, exc_value, exc_traceback)
+        self.report_problem(f"界面回调异常：{exc_type.__name__}: {exc_value}")
 
     def dispatch(self, kind: str, payload: Any) -> None:
         """Route a queue event; screens may override ``handle_event`` for their own kinds."""
@@ -568,24 +608,37 @@ class VelchUI:
     _job_handlers: dict[int, Callable[[bool, Any, str | None], None]] = {}
     _job_seq: int = 0
 
-    def on_log(self, line: str) -> None:
-        screen = self._owner_screen()
+    def on_log(self, line: str, job: ProcessJob | None = None) -> None:
+        screen = self._owner_screen(job)
         handler = getattr(screen, "on_log", None)
         if handler is not None:
             handler(line)
 
-    def _owner_screen(self) -> Screen | None:
-        owner = self.process.owner if self.process is not None else ""
+    def _owner_screen(self, job: ProcessJob | None = None) -> Screen | None:
+        """The screen that owns this job; falls back to the visible one for keyboard paths."""
+
+        owner = job.owner if job is not None else (self.process.owner if self.process else "")
         if owner and owner in self.screens:
             return self.screens[owner]
         return self.screens.get(self.current)
 
-    def on_exit(self, code: int, elapsed: float, cancelled: bool) -> None:
+    def on_exit(self, job: ProcessJob | int | None = None, code: int = 0, elapsed: float = 0.0,
+                cancelled: bool = False) -> None:
+        """Handle a subprocess exit, routed by the job that actually exited.
+
+        Older call sites passed ``(code, elapsed, cancelled)``; accept that shape too so a stale
+        queue entry cannot raise inside the pump.
+        """
+
+        if isinstance(job, int):
+            job, code, elapsed, cancelled = None, job, int(code), bool(elapsed)
+        if job is not None and job is self.process:
+            self.process = None
         self.set_state("done" if code == 0 else ("idle" if cancelled else "failed"))
         hint = "已取消" if cancelled else ("完成" if code == 0 else f"失败（退出码 {code}）")
         self.set_status(f"子进程{hint} · 用时 {elapsed:.1f} s",
                         tone="pass" if code == 0 else ("warn" if cancelled else "fail"))
-        screen = self._owner_screen()
+        screen = self._owner_screen(job)
         handler = getattr(screen, "on_process_exit", None)
         if handler is not None:
             handler(code, elapsed, cancelled)

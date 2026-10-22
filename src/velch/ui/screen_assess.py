@@ -100,7 +100,7 @@ class AssessScreen(Screen):
         self.card_verdict.pack(side="left", padx=(0, theme.GAP))
         self.card_samples = MetricCard(cards, "样本", "—")
         self.card_samples.pack(side="left", padx=(0, theme.GAP))
-        self.card_load = MetricCard(cards, "静态轴重", "—", "N")
+        self.card_load = MetricCard(cards, "静态轴重", "—", "kN")
         self.card_load.pack(side="left", padx=(0, theme.GAP))
         self.card_status = MetricCard(cards, "manifest 门", "—")
         self.card_status.pack(side="left", padx=(0, theme.GAP))
@@ -168,11 +168,29 @@ class AssessScreen(Screen):
         index = self.run_combo.current()
         return self.runs[index] if 0 <= index < len(self.runs) else None
 
+    def _clear_limits(self, note: str) -> None:
+        """Remove the previous run's limit bars, axle table and cards before a new attempt.
+
+        A failing assessment used to return while the old LimitBars — possibly red "超限" — and
+        the old axle table stayed on screen under a "评价失败" headline: a red bar that looks like
+        an accusation against the run the reader just selected.
+        """
+
+        for bar in self.bars.values():
+            bar.destroy()
+        self.bars.clear()
+        self.axle_panel.clear()
+        self.card_verdict.set("—")
+        self.card_samples.set("—")
+        self.card_load.set("—")
+        self.verdict_var.set(note)
+
     def load_run(self) -> None:
         run = self._current_run()
         if run is None:
             return
         self.app.set_context(run=run.path)
+        self._clear_limits(f"{run.name} · 正在评价 …")
         self.summary = self._read_summary(run)
         self._render_gates(run)
 
@@ -242,9 +260,9 @@ class AssessScreen(Screen):
                             tone=theme.PASS if known and passed == known else theme.FAIL
                             if known else theme.INK_MUTED)
         failed = [label for key, label in store.GATE_LABELS if run.gates.get(key) is False]
-        note = run.peak_force_kn
+        note = run.peak_force_n
         text = (f"算例 {run.case_id or '—'} · 总自由度 {run.total_dof or '—'} · "
-                f"峰值法向力 {'—' if note is None else f'{note/1000:.1f} kN'}")
+                f"峰值法向力 {fmt_number(note, 'N') if note is not None else '—'}")
         if failed:
             text += "\n未通过：" + "、".join(failed)
         self.gate_note.configure(text=text)
@@ -268,7 +286,9 @@ class AssessScreen(Screen):
         self.card_verdict.set("通过" if view.passed else "超限",
                               tone=theme.PASS if view.passed else theme.FAIL)
         self.card_samples.set(f"{assessment.samples}")
-        self.card_load.set(f"{assessment.static_axle_load_n:.0f}")
+        # The card's unit is kN, so the value is divided once here; previously the number was
+        # rounded to "59681" N with no hint that 59.68 kN was meant.
+        self.card_load.set(fmt_number(assessment.static_axle_load_n / 1000.0, "", prefix=False))
         self.verdict_chip.set("全部限值通过" if view.passed else "存在超限项",
                               "pass" if view.passed else "fail")
         worst = [f"{label} {fmt.fmt_pair(value, limit, unit)}"
@@ -307,7 +327,8 @@ class AssessScreen(Screen):
         self.cli_log.configure(state="disabled")
         argv = [sys.executable, "-X", "utf8", "-m", "velch", "assess", str(run.path)]
         self.cli_var.set("$ " + " ".join(argv))
-        self.app.spawn(argv, store.REPO_ROOT, owner=self.name)
+        if self.app.spawn(argv, store.REPO_ROOT, owner=self.name) is None:
+            return
         self.app.set_state("running")
         self.app.set_status("正在运行 velch assess …", tone="run")
 

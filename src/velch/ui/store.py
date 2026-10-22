@@ -410,7 +410,14 @@ class RunInfo:
                                                            self.result_status or "—")
 
     @property
-    def peak_force_kn(self) -> float | None:
+    def peak_force_n(self) -> float | None:
+        """Largest contact normal force in newtons (the manifest stores N, not kN).
+
+        Named ``peak_force_n`` on purpose: the old ``peak_force_kn`` returned newtons, and the one
+        call site happened to divide by 1000 itself.  Any new caller trusting the name would have
+        reported 170610 kN.
+        """
+
         values = [v for v in self.peak_normal_force_n.values() if isinstance(v, float)]
         return max(values, default=None)
 

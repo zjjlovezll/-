@@ -1493,6 +1493,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.10.md](RELEASE_NOTES_0.4.10.md) | Velch 0.4.10 发布说明（2026-10-23） |
 | [RELEASE_NOTES_0.4.11.md](RELEASE_NOTES_0.4.11.md) | Velch 0.4.11 发布说明（2026-10-23） |
 | [RELEASE_NOTES_0.4.12.md](RELEASE_NOTES_0.4.12.md) | Velch 0.4.12 发布说明 |
+| [RELEASE_NOTES_0.4.13.md](RELEASE_NOTES_0.4.13.md) | Velch 0.4.13 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
@@ -1740,3 +1741,4 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 `--with-run` 约 10 s（catalog 2 s + 派生含裁决 4 s + 现跑 4 s），**不进提交闸门**——闸门那一步
 用的是 `physics_invariants.py --no-run`（0.2 s）。地图默认（不带 `--with-run`）仍只写 catalog 结果，
 需要完整证据时显式加参数，这比"每次都跑 10 s 但不看"更诚实。
+| `RELEASE_NOTES_0.4.13.md` | 0.4.13 装什么、证据版包含哪三份可复算材料、与 Simpack 的对照摘要、仍然没有的五项 | ✅ 2026-10-23 新增 |

@@ -312,6 +312,8 @@ class VelchUI:
                    command=self.run_selfcheck).pack(side="right", padx=(0, theme.GAP))
         ttk.Button(right, text="发布证据", style="Ghost.TButton",
                    command=self.show_evidence).pack(side="right", padx=(0, theme.GAP))
+        ttk.Button(right, text="已知问题", style="Ghost.TButton",
+                   command=self.show_open_items).pack(side="right", padx=(0, theme.GAP))
 
         self.body = ttk.Frame(self.root, style="Bg.TFrame")
         self.body.grid(row=1, column=1, sticky="nsew")
@@ -695,12 +697,21 @@ class VelchUI:
 
         self.selfcheck_dialog = show_selfcheck_dialog(self.root)
 
+    def show_open_items(self) -> None:
+        """列出已知未修项：和「发布证据」并排，读的人才会两边都看。"""
+        try:
+            from .open_items_dialog import show_open_items
+
+            show_open_items(self.root)
+        except Exception as error:                        # pragma: no cover - 窗口装不上时
+            self.set_status(f"已知问题窗口打不开：{type(error).__name__}: {error}", tone="fail")
+
     def show_evidence(self) -> None:
         """打开 ``docs/EVIDENCE_MAP.md``：这版能发，凭什么。"""
 
-        from .evidence_map_dialog import show_evidence_map_dialog
+        from .evidence_map_dialog import show_evidence_map
 
-        self.evidence_dialog = show_evidence_map_dialog(self.root)
+        self.evidence_dialog = show_evidence_map(self.root)
 
     def show_help(self) -> None:
         window = tk.Toplevel(self.root)

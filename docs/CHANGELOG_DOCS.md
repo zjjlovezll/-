@@ -1502,6 +1502,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.19.md](RELEASE_NOTES_0.4.19.md) | Velch 0.4.19 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.20.md](RELEASE_NOTES_0.4.20.md) | Velch 0.4.20 发布说明 |
+| [RELEASE_NOTES_0.4.21.md](RELEASE_NOTES_0.4.21.md) | Velch 0.4.21 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -1757,6 +1758,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.18.md` | 0.4.18：状态栏常驻「这版跑过什么」证据行 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.19.md` | 0.4.19：⑤ 屏常驻「本运行不是标定」横幅 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.20.md` | 0.4.20：页眉「发布证据」只读窗口 + 两个动作搬家 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.21.md` | 0.4.21：页眉「已知问题」窗口 + 账本双向守卫 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1922,3 +1924,30 @@ markdown。现在页眉有**「发布证据」**：一个只读窗口，显示�
 `velch.ui.evidence_map_dialog -> velch.selfcheck`。**这条规则是对的**：presentation 不该随手
 import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并写明理由——`selfcheck` 只回答
 "这台机器装了什么、可写在哪"，不碰数值路径。
+
+## 第 59 轮：把「还差什么」和「已通过什么」摆在同一个页眉
+
+上一轮让「凭什么能发」变得一键可达；这一轮补另一半：**已知未修项**。页眉第三个按钮
+「已知问题」列出 `O001`、`O003`、`O005`、`O008`（外加已关闭的四项，标成灰），每条一行标题加一段
+"该怎么办"。
+
+### 为什么另建 `velch/open_items.py` 而不是解析 markdown
+
+`docs/BUGS.md` 是给人读的账本；程序要读的是同一份事实的**结构化**副本。解析 markdown 会成为第三
+份真相（表头一改列就静默失效）。所以数据在 `velch/open_items.py`，并用
+`tests/test_open_items.py` **双向守**：模块里的每个 id 必须出现在 `BUGS.md`，`BUGS.md` 里每个
+`O###` 行与标题也必须出现在模块里。哪边先漂移，测试立刻红。
+
+### 三个状态，不是两个
+
+- `open`：真的缺东西（`O001` 语料探测靠源码文本、`O003` CSV 列靠猜、`O008` 横向布置不可双侧导入）
+- `by_design`：**故意不做**（`O005` Simpack 侧物理量不自动映射——自动映射会静默改动物理标定）
+- `closed`：只为让旧笔记里的 id 还能对上（`O002`/`O004`/`O006`/`O007`/`O009`）
+
+把它们混成一个"未修 N 项"会误导：设计约束不是债。
+
+### 顺带更正一行过期账本
+
+`BUGS.md` 里 `O006` 还写着"⑦ 屏没有接触斑着色，属功能增量"，而它已在 0.4.10 实现。这类
+"关了但账本没改"的漂移正是双向守卫要防的，这次是我先读到才发现的——所以守卫生效之后我把这一行
+就地改成 ✅ 已实现并注明截图。

@@ -53,7 +53,7 @@
 | O003 | `screen_compare.choose_csv()` 用 `"x"`/`"力"`/`"_n"` 子串猜列，猜错无提示 | 需要实测 CSV 样本才能定规则；猜测应在状态栏显示"选了哪两列" |
 | O004 | ~~`screen_model3d.load_runs()` 吞 I/O 失败~~ **已修（0.4.7）**：改为在状态栏报 `读不到运行目录：<类型>: <消息>（<路径>）`；空下拉与「首次运行」不再长得一样 | — |
 | O005 | Simpack 侧的物理量（轴重、E*、R*、蠕滑、模态）**不做自动映射** | 这是设计约束不是缺陷：自动映射会静默改动物理标定。Simpack 的数只作对照值（reference, not adopted） |
-| O006 | ⑦ 屏没有接触斑着色（侵入量画到轨面） | 需要 `_body_cache` 的逐接触几何；属功能增量 |
+| O006 ✅ 已实现（0.4.10，第 46 轮） | ⑦ 屏接触斑着色 | 现在按记录的法向力着色、圆环用 `sqrt(2Rδ)` 的真实半径、另加 20 mm 指示杆；`docs/images/ui_contacts3d.png` |
 | O007 | ~~UI 对比度：`BORDER`/`BORDER_STRONG` < 3:1~~ **撤销（0.4.7，量错了对象）**：这两个 token 是装饰性细线与悬停底色，WCAG 1.4.11 只管**控制边界**。实测：`BORDER_CONTROL` 3.61–4.32:1、`ACCENT`（焦点环）7.89–9.43:1、`WARN/FAIL/PASS` 6.26–7.88:1，全部达标；`BORDER` 1.48:1 只作卡片间细线。现在这些对都进 `NON_TEXT_PAIRS` 由 `contrast_violations()` 机器判定，焦点环粗细也提成 `FOCUS_THICKNESS = 2` | — |
 
 ### B017 冻结版的输出是 GBK，任何按 UTF-8 读的地方都是乱码

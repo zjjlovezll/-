@@ -77,6 +77,9 @@ PRESENTATION_MAY_IMPORT = PRESENTATION | frozenset(
         # forward stack nowhere; the evidence window only borrows its docs/roots resolution so
         # a frozen build does not have to guess a third time where ``docs/`` landed.
         "velch.selfcheck",
+    # 静态数据表（已知未修项），没有数值路径：界面要能把它列出来，`docs/BUGS.md` 与它由
+    # `tests/test_open_items.py` 双向守着。
+    "velch.open_items",
         # The startup helper: how to launch *ourselves* as a child process, from source or from a
         # frozen build.  It knows nothing about physics; duplicating its two branches per screen is
         # what broke the packaged product in the first place.

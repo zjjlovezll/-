@@ -1497,6 +1497,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.14.md](RELEASE_NOTES_0.4.14.md) | Velch 0.4.14 发布说明 |
 | [RELEASE_NOTES_0.4.15.md](RELEASE_NOTES_0.4.15.md) | Velch 0.4.15 发布说明 |
 | [RELEASE_NOTES_0.4.16.md](RELEASE_NOTES_0.4.16.md) | Velch 0.4.16 发布说明 |
+| [RELEASE_NOTES_0.4.17.md](RELEASE_NOTES_0.4.17.md) | Velch 0.4.17 发布说明 |
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
@@ -1749,6 +1750,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.14.md` | 0.4.14 新增 `selfcheck`（六项首次运行检查）与冒烟第 7 步 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.15.md` | 0.4.15：只读安装（O009）自动化，自检在只读目录下的预期输出 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.16.md` | 0.4.16：`SimpackCaseError.detail`，拒绝带结构化数字 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.17.md` | 0.4.17：① 屏「环境体检」，结果按 PASS/WARN/FAIL 着色 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1805,3 +1807,35 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 
 `tests/test_simpack_refusal_detail.py`（3 项）：拒绝带全部键与 `limit_mm`、CLI 把 `detail` 打进 stderr
 的 JSON、**其它失败（目录不存在）不带 `detail`** —— 不能让"没有数字"的失败看起来像有数字。
+
+## 第 55 轮：体检从命令行搬进界面
+
+`velch selfcheck` 上一轮就有了，但它只活在终端里。打包版用户第一次打开界面、看到算例表是空的，
+最自然的反应是"装坏了"——而体检恰好就是回答这个问题的。现在 ① 算例屏的导航区多了**「环境体检」**：
+
+```
+[PASS] 版本与发布说明         0.4.16，发布说明在位
+[PASS] 算例语料            358 个算例，位于 F:\velch_data\validation\crh380a_m
+[PASS] Tk 界面库          tkinter 可用
+[PASS] 绘图库 matplotlib  可用
+[WARN] Simpack 模型      未设置 VELCH_SIMPACK_MODEL / VELCH_SIMPACK_ROOT
+[PASS] 可写目录            F:\ai道岔状态反演辨识\Velch\.agent 可写
+```
+
+`[FAIL]` 红、`[WARN]` 黄、`[PASS]` 灰；底部一句结论文案分三档——**「全部通过」「可用，有 N 项提示」
+「N 项需要处理」**（WARN 退 0，但它确实在说某个能力没开，不该和"全部通过"共用一句话）。
+
+### 三个实现选择
+
+- **走子进程，不 import 自检**：冻结包里 `Velch.exe` 没有 stdout，自检必须跑 `velch-cli.exe`；
+  统一经 `launcher_argv("selfcheck")`，源码版与打包版同一条路。
+- **打开即跑**：点这个按钮的人已经表达了意图，不再要一次"再点确定"。
+- **文本区只读**：唯一的写入者是一个 `_append`，写完立刻回 `disabled`（测试钉住"只有一个解锁点"）。
+
+### 顺带修的两个自己的错
+
+- 加按钮那次批量替换把 `import_from_simpack` 里**函数内**的 `from .simpack_dialog import ...`
+  当成了模块级 import，替换后 `screen_cases.py` 直接 `IndentationError` → ① 屏显示
+  「该屏加载失败：IndentationError」，**布局闸门当场抓到**（这正是它存在的理由）。
+- `from ..launcher import ...` 与 `from .. import launcher` 的区别：后者在架构规则里被记成
+  `velch`（包根），presentation 不许 import 包根；改成取叶子后规则通过。

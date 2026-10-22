@@ -174,3 +174,19 @@ def test_remaining_ad_hoc_formats_are_gone() -> None:
     compare = _source("screen_compare.py")
     assert "fmt_percent(delta / theirs" in compare
     assert "{delta:+.4g}" not in compare
+
+
+def test_assess_screen_passes_the_typed_axle_load_to_the_cli() -> None:
+    """O002: both entry points must assess against the same denominator.
+
+    The screen computes its own numbers with ``store.assess(run, load)``; if its 「运行 velch assess」
+    button launched the CLI without ``--static-axle-load-n``, the same run would be judged against the
+    auto default and 轮重减载率 could flip on screen while the log says PASS.
+    """
+    source = _source("screen_assess.py")
+    body = source[source.index("def run_cli"):]
+    body = body[:body.index("def on_log")]
+    assert "--static-axle-load-n" in body, "the CLI run must carry the typed axle load"
+    assert "self.load_var.get()" in body, "it must read the same field the assessment reads"
+    # A blank field must stay blank: passing 0 would ask the CLI for "auto", which it already does.
+    assert "if raw:" in body

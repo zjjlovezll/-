@@ -13,7 +13,10 @@ SURFACE = "#151A21"     # panels, tables
 RAISED = "#1C232C"      # cards, hovered rows, inputs
 OVERLAY = "#222A34"     # menus, tooltips, selection chips
 BORDER = "#2A3341"      # hairlines (decorative only, never text)   1.48:1 on BG
-BORDER_STRONG = "#3A4657"  # hover wash for buttons, still decorative
+BORDER_STRONG = "#3A4657"  # hover/pressed wash for buttons, decorative by design (1.83:1)
+#: Focus ring geometry.  A 2 px ring at ACCENT (8.71:1 on SURFACE) is the only
+#: non-text cue that a keyboard user is here, so both number and colour are tokens.
+FOCUS_THICKNESS = 2
 #: Outline of a *control* (entry, combobox, table border). WCAG 1.4.11 wants 3:1 for the
 #: boundary that tells you where the field is; BORDER at 1.48:1 does not (visual review
 #: measured 1.37:1 against SURFACE and read it as "no field at all").
@@ -158,7 +161,14 @@ def contrast_ratio(foreground: str, background: str) -> float:
 
 #: Pairs that describe a *boundary* rather than text: WCAG 1.4.11 asks 3:1 for these, and holding
 #: them to the 4.5:1 text rule would reject a perfectly legible control outline.
-NON_TEXT_PAIRS = frozenset({("BORDER_CONTROL", "SURFACE"), ("BORDER_CONTROL", "BG")})
+NON_TEXT_PAIRS = frozenset({
+    ("BORDER_CONTROL", "SURFACE"), ("BORDER_CONTROL", "BG"), ("BORDER_CONTROL", "RAISED"),
+    # The focus ring and the semantic states are not text either: they carry state, so 1.4.11's
+    # 3:1 applies.  Measured 6.26–9.43:1 on 2026-10-23 -- declared here so a palette change cannot
+    # quietly drop them below the floor.
+    ("ACCENT", "SURFACE"), ("ACCENT", "BG"), ("ACCENT", "RAISED"),
+    ("WARN", "SURFACE"), ("FAIL", "SURFACE"), ("PASS", "SURFACE"),
+})
 #: Purely decorative separators.  WCAG 1.4.11 exempts these: a divider between cards carries no
 #: state and no boundary, so 1.48:1 is a design choice rather than a defect.
 DECORATIVE_PAIRS = frozenset({("BORDER", "BG")})

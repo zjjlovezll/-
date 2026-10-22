@@ -269,10 +269,20 @@ class Model3DScreen(Screen):
         self.draw()
 
     def load_runs(self) -> None:
+        """List the runs whose pose can be overlaid on the drawing.
+
+        An unreadable corpus used to look exactly like a first run — an empty combo — so the one
+        screen that could have said "your data root is wrong" stayed silent.  The combo still works;
+        the status bar now carries the reason.
+        """
         try:
             self.runs = store.scan_runs()
-        except Exception:
+        except Exception as exc:  # unreadable corpus, permissions, half-written directory
             self.runs = []
+            self.app.set_status(
+                f"读不到运行目录：{type(exc).__name__}: {exc}（{store.VALIDATION_DIR}）",
+                tone="fail",
+            )
         labels = ["（不叠加运行）"] + [f"{item.name}   {item.status_label}" for item in self.runs]
         self.run_combo.configure(values=labels)
 

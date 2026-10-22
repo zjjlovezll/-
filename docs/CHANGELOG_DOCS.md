@@ -1249,3 +1249,40 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 
 - `pytest` **517 passed, 2 skipped**；`--selftest` 7 屏 / 0 报错 / 退出码 0。
 - 截图复核：130 % 下 ⑦ 只占三个控件、模型填满画布；100 % 下 ①②③ 无裁切。
+
+## 第 43 轮：把三条"已知未修"改成"已量、已修"
+
+缺陷账本里的 O 项不是无处可去，是没排上。这一轮清掉三条，其中一条的结论是**当初量错了对象**。
+
+### O002 两个入口拿不同的分母评同一条运行（已修）
+
+`Velch/src/velch/ui/screen_assess.py` 自己用 `store.assess(run, 静态轴重)` 算三项限值，而「运行 velch
+assess」按钮起 CLI 时**没带**轴重——同一屏上，卡片用你填的数算，日志用自动值算，轮重减载率可能一个
+判 PASS 一个判超限。CLI 的 flag 是 `--static-axle-load-n`（不是 `--static-axle-load`），现在：填正数就
+`argv + ["--static-axle-load-n", f"{typed:g}"]`，留空则不加（CLI 自己取自动值，语义不变）。
+`tests/test_ui_robustness.py` 新增一项源码级对照：读的必须是同一个 `self.load_var.get()`。
+
+### O004 读不到运行目录时，三维屏摆出"首次运行"的样子（已修）
+
+`load_runs()` 原来 `except Exception: self.runs = []`。语料根写错、权限不足、目录写了一半——
+在这屏上全长得像"还没有运行"。现在状态栏报 `读不到运行目录：<类型>: <消息>（<路径>）`。
+
+### O007 对比度这条是量错了对象（撤销）
+
+原条目说 `BORDER/SURFACE` 1.37:1、`BORDER_STRONG` 1.83:1 低于 WCAG 3:1。这两个 token 在
+`theme.py` 里本来就注明是**装饰**（卡片间细线、悬停底色），而 1.4.11 管的是**控制边界与状态**。实测：
+
+| 用途 | token | 对比度 | 判定（1.4.11 3:1） |
+|---|---|---|---|
+| 输入框/表格边界 | `BORDER_CONTROL` on `RAISED`/`SURFACE`/`BG` | 3.61 / 3.99 / 4.32 | 达标 |
+| 焦点环 | `ACCENT` on `RAISED`/`SURFACE`/`BG` | 7.89 / 8.71 / 9.43 | 达标 |
+| 状态色 | `WARN`/`FAIL`/`PASS` on `SURFACE` | 7.88 / 6.26 / 7.79 | 达标 |
+| 卡片间细线 | `BORDER` on `BG` | 1.48 | 装饰，豁免 |
+
+为了让这条结论不再靠人记：`theme.NON_TEXT_PAIRS` 扩到 9 对（含 `ACCENT`、`WARN/FAIL/PASS`），
+`contrast_violations()` 按 3:1 机器判定；焦点环粗细提成 `FOCUS_THICKNESS = 2` 并被
+`tests/test_ui_scale.py` 钉住（1 px 在 130 % 下会消失）。
+
+### 验证
+
+`pytest` **520 passed, 1 skipped**（skip 仍是"真实 Simpack 模型在时才跑"那条）。

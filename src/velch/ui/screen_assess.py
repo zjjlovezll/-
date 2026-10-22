@@ -328,6 +328,17 @@ class AssessScreen(Screen):
         self.cli_log.delete("1.0", "end")
         self.cli_log.configure(state="disabled")
         argv = launcher_argv("assess", str(run.path))
+        # The screen already applies the typed axle load (``store.assess``), so the CLI run must be
+        # given the same number: without it the two entry points assess the same run against
+        # different denominators and can disagree on 轮重减载率 while both claiming to be right.
+        raw = self.load_var.get().strip()
+        if raw:
+            try:
+                typed = float(raw)
+            except ValueError:
+                typed = 0.0
+            if typed > 0.0:
+                argv = argv + ["--static-axle-load-n", f"{typed:g}"]
         self.cli_var.set("$ " + " ".join(argv))
         if self.app.spawn(argv, store.REPO_ROOT, owner=self.name) is None:
             return

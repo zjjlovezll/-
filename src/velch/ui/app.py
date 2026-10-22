@@ -193,7 +193,7 @@ class VelchUI:
         ):
             style.configure(name, background=background, foreground=foreground,
                             bordercolor=theme.BORDER_CONTROL, focuscolor=theme.ACCENT,
-                            focusthickness=2, padding=(theme.SPACE["3"], 5),
+                            focusthickness=theme.FOCUS_THICKNESS, padding=(theme.SPACE["3"], 5),
                             width=BUTTON_MIN_CHARS,
                             relief="flat", font=ui_font(theme.FONT_SIZE["tiny"]))
             active = theme.OVERLAY if name == "Ghost.TButton" else theme.BORDER_STRONG

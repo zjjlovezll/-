@@ -171,12 +171,18 @@ class Model3DScreen(Screen):
 
         toolbar = ttk.Frame(right, style="Bg.TFrame")
         toolbar.grid(row=0, column=0, sticky="ew", pady=(0, theme.SPACE["2"]))
+        # Four view buttons plus PNG did not fit beside the canvas once the type grew; a chooser
+        # keeps every view reachable in one control instead of two invisible ones.
         ttk.Button(toolbar, text="重画", style="Ghost.TButton",
-                   command=self.draw).pack(side="left", padx=(0, theme.SPACE["1"]))
-        for label in VIEWS:
-            ttk.Button(toolbar, text=label, style="Ghost.TButton",
-                       command=lambda name=label: self.set_view(name)).pack(
-                side="left", padx=(0, theme.SPACE["1"]))
+                   command=self.draw).pack(side="left", padx=(0, theme.SPACE["2"]))
+        ttk.Label(toolbar, text="视角", style="Muted.TLabel",
+                  font=ui_font(theme.FONT_SIZE["micro"])).pack(side="left")
+        self.view_var = tk.StringVar(value=next(iter(VIEWS)))
+        chooser = ttk.Combobox(toolbar, textvariable=self.view_var, values=list(VIEWS),
+                               width=6, state="readonly")
+        chooser.pack(side="left", padx=(theme.SPACE["1"], theme.SPACE["2"]))
+        chooser.bind("<<ComboboxSelected>>",
+                     lambda _event: self.set_view(self.view_var.get()))
         ttk.Button(toolbar, text="PNG", style="Ghost.TButton",
                    command=self.export_figure).pack(side="left")
 

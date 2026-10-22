@@ -125,3 +125,10 @@ fail loud，保留）、`screen_assess.run_cli()` 不传 `--static-axle-load`（
 ### 一个差点写错的判断
 
 `contrast_violations()` 原先把 `BORDER`/`BG`（1.48:1，卡片之间的装饰分隔线）也按 3:1 判，于是四项一改完仍有"违规"。WCAG 1.4.11 明确豁免纯装饰元素，所以拆成三类：文本 4.5:1、控件边界 3:1（`NON_TEXT_PAIRS`）、装饰（`DECORATIVE_PAIRS`，只记录不判）。把装饰线当成缺陷去"修"会毁掉层次感。
+
+## 五轮：用测量代替目测
+
+`tests/test_ui_layout.py` 现在会真建窗口、逐屏量每个按钮的"分配宽度 vs 所需宽度"，100 % 与 130 %
+各一遍。它上线当天抓出五个被裁控件（两个只有 1 px 宽），根因是 Windows `vista` 主题的
+`TButton -width = -11`（11 字符最小宽度 ≈ 153 px/按钮）。修法见 `BUTTON_MIN_CHARS = -3` 与各屏的
+行结构调整，细节写在 `CHANGELOG_DOCS.md` 第 42 轮。

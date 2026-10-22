@@ -90,7 +90,7 @@ class RunScreen(Screen):
                   style="Muted.TLabel",
                   font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w")
         self.fast_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(solver_row, text="快速预设（BDF + 解析雅可比 + rtol 1e-4）",
+        ttk.Checkbutton(solver_row, text="快速预设（隐式 BDF + 解析）",
                         variable=self.fast_var, style="TCheckbutton").pack(anchor="w")
         hint = ttk.Label(solver_row, text="约 4–5× 墙钟，八接触峰值偏差 ≤0.2%；派生算例写在输出目录的 "
                                           "case_used.json，原算例文件不动。",

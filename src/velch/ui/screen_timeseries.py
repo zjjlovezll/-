@@ -68,10 +68,14 @@ class TimeSeriesScreen(Screen):
                   font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w")
         row = ttk.Frame(preset_card, style="Raised.TFrame")
         row.pack(fill="x", pady=(2, 0))
-        for label in PRESETS:
+        # Three preset buttons in a 320 px column: sharing the row keeps all three the same size,
+        # where packing them left let the last one collapse to half its label.
+        for index, label in enumerate(PRESETS):
+            row.columnconfigure(index % 2, weight=1, uniform="preset")
             ttk.Button(row, text=label, style="Ghost.TButton",
-                       command=lambda name=label: self.apply_preset(name)).pack(
-                side="left", padx=(0, theme.SPACE["1"]))
+                       command=lambda name=label: self.apply_preset(name)).grid(
+                row=index // 2, column=index % 2, sticky="ew", pady=(0, 2),
+                padx=(0 if index % 2 == 0 else theme.SPACE["1"], 0))
 
         chan_card = ttk.Frame(left, style="Card.TFrame", padding=theme.SPACE["3"])
         chan_card.grid(row=3, column=0, sticky="nsew")
@@ -107,18 +111,28 @@ class TimeSeriesScreen(Screen):
 
         toolbar = ttk.Frame(right, style="Bg.TFrame")
         toolbar.grid(row=0, column=0, sticky="ew", pady=(0, theme.SPACE["2"]))
+        toolbar.columnconfigure(0, weight=1)
+        upper = ttk.Frame(toolbar, style="Bg.TFrame")
+        upper.grid(row=0, column=0, sticky="ew")
+        lower = ttk.Frame(toolbar, style="Bg.TFrame")
+        lower.grid(row=1, column=0, sticky="ew", pady=(theme.SPACE["1"], 0))
         for text, command in (("重置", self.reset_zoom),
                               ("放大", lambda: self.zoom(0.7)),
                               ("缩小", lambda: self.zoom(1.4)),
-                              ("←", lambda: self.pan(-0.25)),
-                              ("→", lambda: self.pan(0.25)),
                               ("PNG", self.export_figure)):
-            ttk.Button(toolbar, text=text, style="Ghost.TButton",
+            ttk.Button(upper, text=text, style="Ghost.TButton",
                        command=command).pack(side="left", padx=(0, theme.SPACE["1"]))
-        ttk.Spinbox(toolbar, from_=200, to=20000, increment=200,
+        # Panning moved to the second row: six buttons in one strip lost 「→」 and 「PNG」 to a
+        # 1 px allocation, and a control nobody can see is a control that does not exist.
+        ttk.Button(lower, text="◀ 左移", style="Ghost.TButton",
+                   command=lambda: self.pan(-0.25)).pack(side="left",
+                                                          padx=(0, theme.SPACE["1"]))
+        ttk.Button(lower, text="右移 ▶", style="Ghost.TButton",
+                   command=lambda: self.pan(0.25)).pack(side="left")
+        ttk.Spinbox(lower, from_=200, to=20000, increment=200,
                     textvariable=self.max_points_var, width=6,
                     style="TSpinbox", command=self.draw_selected).pack(side="right")
-        ttk.Label(toolbar, text="点数上限", style="Subtitle.TLabel",
+        ttk.Label(lower, text="点数上限", style="Subtitle.TLabel",
                   background=theme.BG).pack(side="right", padx=(theme.GAP, theme.SPACE["1"]))
 
         self.chart_area = ttk.Frame(right, style="Bg.TFrame")

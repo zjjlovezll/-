@@ -146,17 +146,11 @@ class CasesScreen(Screen):
         nav.pack(fill="x", pady=(theme.SPACE["1"], 0))
         for column, (text, command) in enumerate((
                 ("在「运行」屏打开", self.open_in_run),
-                ("刷新列表", self.reload))):
+                ("刷新列表", self.reload),
+                ("Simpack 导入", self.import_from_simpack))):
             nav.columnconfigure(column, weight=1, uniform="case-nav")
             ttk.Button(nav, text=text, style="Ghost.TButton", command=command).grid(
                 row=0, column=column, sticky="ew", padx=(0 if column == 0 else theme.GAP, 0))
-
-        # Simpack geometry lives one button away, not in a sub-menu: "read my Simpack model" is a
-        # thing the interface must be able to do, and the CLI command behind it is the contract.
-        import_row = ttk.Frame(detail, style="Card.TFrame")
-        import_row.pack(fill="x", pady=(theme.SPACE["1"], 0))
-        ttk.Button(import_row, text="从 Simpack 模型派生算例…", style="Ghost.TButton",
-                   command=self.import_from_simpack).pack(fill="x")
 
         self.result_label = ttk.Label(detail, text="", style="Muted.TLabel",
                                       wraplength=int(560 * theme.SCALE), justify="left")

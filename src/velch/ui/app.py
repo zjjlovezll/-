@@ -29,6 +29,10 @@ from . import theme
 from .screen import PlaceholderScreen, Screen
 from .widgets import Chip, MATPLOTLIB_BACKEND, ui_font
 
+#: Minimum button width in characters.  Windows' vista theme defaults to 11, which in a
+#: CJK face reserves ~153 px per button and pushes the last buttons of a row to 1 px.
+BUTTON_MIN_CHARS = -3
+
 SCREENS: tuple[tuple[str, str, str, str], ...] = (
     ("cases", "① 算例", "选择、检视与派生算例", "Ctrl+1"),
     ("run", "② 运行", "启动 CLI、跟踪日志、批量并行", "Ctrl+2"),
@@ -154,6 +158,11 @@ class VelchUI:
                         fieldbackground=theme.RAISED, font=base,
                         bordercolor=theme.BORDER, darkcolor=theme.SURFACE,
                         lightcolor=theme.SURFACE, troughcolor=theme.RAISED)
+        # The vista theme asks every button for at least eleven characters (``-11``).  In a CJK
+        # face that is ~153 px, so a four-button row demanded 600 px and the last ones were
+        # allocated 1 px — present in the widget tree, impossible to click.  A three-character
+        # floor keeps the target ~34 px wide and lets the label decide the rest.
+        style.configure("TButton", width=BUTTON_MIN_CHARS)
         for name, background in (("Bg.TFrame", theme.BG), ("Card.TFrame", theme.SURFACE),
                                  ("Raised.TFrame", theme.RAISED),
                                  ("Nav.TFrame", theme.BG)):
@@ -185,6 +194,7 @@ class VelchUI:
             style.configure(name, background=background, foreground=foreground,
                             bordercolor=theme.BORDER_CONTROL, focuscolor=theme.ACCENT,
                             focusthickness=2, padding=(theme.SPACE["3"], 5),
+                            width=BUTTON_MIN_CHARS,
                             relief="flat", font=ui_font(theme.FONT_SIZE["tiny"]))
             active = theme.OVERLAY if name == "Ghost.TButton" else theme.BORDER_STRONG
             style.map(name, background=[("pressed", theme.BORDER_STRONG),

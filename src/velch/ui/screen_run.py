@@ -25,6 +25,12 @@ class RunScreen(Screen):
     title = "启动 CLI 与日志"
     subtitle = "选算例 → 设输出目录 → 启动 CLI 子进程，实时查看 stdout 与耗时；可取消、可批量"
 
+    #: First entry of each pair means "keep whatever the case file declares".
+    METHOD_CHOICES = ("按算例声明", "显式 DOP853", "隐式 Radau", "隐式 BDF")
+    METHOD_VALUES = ("", "DOP853", "Radau", "BDF")
+    JACOBIAN_CHOICES = ("按算例声明", "解析（隐式专用）", "稀疏差分", "不用")
+    JACOBIAN_VALUES = ("", "analytic", "sparse_fd", "none")
+
     def _build(self) -> None:
         self.cases: list[store.CaseInfo] = []
         self.log_lines = 0
@@ -73,6 +79,40 @@ class RunScreen(Screen):
                     style="TSpinbox").pack(side="left", padx=(theme.GAP, 0))
         ttk.Checkbutton(jobs_row, text="自动滚动日志", variable=self.autoscroll_var,
                         style="TCheckbutton").pack(side="left", padx=(theme.PAD, 0))
+
+        solver_row = ttk.Frame(body, style="Card.TFrame")
+        solver_row.pack(fill="x", pady=(0, theme.SPACE["2"]))
+        ttk.Label(solver_row, text="求解器（算例文件本身不改，另派生 case_used.json）",
+                  style="Muted.TLabel",
+                  font=ui_font(theme.FONT_SIZE["micro"])).pack(anchor="w")
+        self.fast_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(solver_row, text="快速预设（BDF + 解析雅可比 + rtol 1e-4）",
+                        variable=self.fast_var, style="TCheckbutton").pack(anchor="w")
+        hint = ttk.Label(solver_row, text="约 4–5× 墙钟，八接触峰值偏差 ≤0.2%；派生算例写在输出目录的 "
+                                          "case_used.json，原算例文件不动。",
+                         style="Dim.TLabel", font=ui_font(theme.FONT_SIZE["micro"]),
+                         justify="left")
+        hint.pack(anchor="w", fill="x")
+        self.wrap_with(hint, solver_row, reserve=8)
+        pick_row = ttk.Frame(solver_row, style="Card.TFrame")
+        pick_row.pack(fill="x", pady=(2, 0))
+        ttk.Label(pick_row, text="方法", style="Muted.TLabel",
+                  font=ui_font(theme.FONT_SIZE["micro"])).pack(side="left")
+        self.method_var = tk.StringVar(value=self.METHOD_CHOICES[0])
+        ttk.Combobox(pick_row, textvariable=self.method_var, values=list(self.METHOD_CHOICES),
+                     state="readonly", width=13,
+                     style="TCombobox").pack(side="left", padx=(theme.GAP, theme.PAD))
+        ttk.Label(pick_row, text="雅可比", style="Muted.TLabel",
+                  font=ui_font(theme.FONT_SIZE["micro"])).pack(side="left")
+        self.jacobian_var = tk.StringVar(value=self.JACOBIAN_CHOICES[0])
+        ttk.Combobox(pick_row, textvariable=self.jacobian_var,
+                     values=list(self.JACOBIAN_CHOICES), state="readonly", width=12,
+                     style="TCombobox").pack(side="left", padx=(theme.GAP, theme.PAD))
+        ttk.Label(pick_row, text="rtol", style="Muted.TLabel",
+                  font=ui_font(theme.FONT_SIZE["micro"])).pack(side="left")
+        self.rtol_var = tk.StringVar(value="")
+        ttk.Entry(pick_row, textvariable=self.rtol_var, width=9,
+                  style="Field.TEntry").pack(side="left", padx=(theme.GAP, 0))
 
         actions = ttk.Frame(body, style="Card.TFrame")
         actions.pack(fill="x", pady=(theme.SPACE["2"], 0))
@@ -174,9 +214,27 @@ class RunScreen(Screen):
             self.outdir_var.set(target)
 
     # -- launching ---------------------------------------------------------
+    def _solver_flags(self) -> list[str]:
+        """Translate the solver row into CLI flags; the case file is never rewritten."""
+
+        flags: list[str] = []
+        if self.fast_var.get():
+            flags.append("--fast")
+        method = self.METHOD_VALUES[self.METHOD_CHOICES.index(self.method_var.get())]
+        if method:
+            flags += ["--method", method]
+        jacobian = self.JACOBIAN_VALUES[self.JACOBIAN_CHOICES.index(self.jacobian_var.get())]
+        if jacobian:
+            flags += ["--jacobian", jacobian]
+        rtol = self.rtol_var.get().strip()
+        if rtol:
+            flags += ["--rtol", rtol]
+        return flags
+
     def _argv_single(self, case: store.CaseInfo, outdir: Path) -> list[str]:
         return [sys.executable, "-X", "utf8", "-m", "velch", "run-vehicle",
-                str(case.path), "--output", str(outdir)]
+                str(case.path), "--output", str(outdir), *self._solver_flags()]
+
 
     def _argv_batch(self, cases: list[store.CaseInfo], root: Path) -> list[str]:
         argv = [sys.executable, "-X", "utf8", "-m", "velch", "run-vehicle-batch"]

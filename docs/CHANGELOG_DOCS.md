@@ -966,3 +966,34 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 `vehicle_solver.py`（812 行）仍在 `§2.4 S2` 的清单上，它比 `contact.py` 更难：跨调用可变状态五个
 （`_contact_seed`/`_body_cache`/`_seed_misses`/`_contact_age`/`_active_body`）与 `save_vehicle_result`
 的落盘字节耦合，拆之前要先把这些状态收进一个对象。
+
+---
+
+## 2026-10-22 ② 运行屏的求解器选择（第 31 轮）
+
+### 一、问题
+
+`--fast`（第 26 轮）与 `--method/--jacobian/--rtol` 只在命令行存在。界面里的人点"启动单次运行"，
+永远拿到算例声明的配置——也就是新用户第一次必然等 14 分钟。这不是性能问题，是**入口缺失**。
+
+### 二、做法
+
+`src/velch/ui/screen_run.py` 新增"求解器"一行：
+
+- 复选框 **快速预设（BDF + 解析雅可比 + rtol 1e-4）** → `--fast`，下面一行小字写清代价
+  （约 4–5× 墙钟、八接触峰值偏差 ≤0.2%、派生算例写在输出目录的 `case_used.json`、原算例不动）；
+- 两个下拉 **方法**（按算例声明 / 显式 DOP853 / 隐式 Radau / 隐式 BDF）与 **雅可比**
+  （按算例声明 / 解析 / 稀疏差分 / 不用），外加 **rtol** 输入框；
+- 首项"按算例声明"映射为空字符串 → **不加任何 flag**，界面不会偷偷覆盖算例；
+- `--fast` 与显式选择同时出现时按 CLI 的既定顺序（预设打底、显式优先）。
+
+界面只做翻译，不写算例、不解析几何、不 import 求解器：`_solver_flags()` 把控件状态变成参数列表，
+`_argv_single()` 拼进 argv，其余照旧走子进程。
+
+### 三、验证
+
+- 新增 `tests/test_ui_run_solver_flags.py`（6 项）：标签与取值索引对齐、CLI 仍有这四个 flag、
+  默认行**不产生任何 flag**、勾选预设只产生 `--fast`、预设与显式覆盖并存时的参数顺序、
+  以及"该屏源码里没有 `write_text`/`json.dump`/`replace(`"——不碰算例文件这条要能被测试证明；
+- `pytest` **435 passed**（429 + 6）；
+- 截图：`reports/` 下 ② 运行屏（可再生产物）。

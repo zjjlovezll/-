@@ -1034,6 +1034,20 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 新增 `tests/test_ui_robustness.py`（19 项，含一条真建 Tk 窗口验证"坏事件之后队列继续被消费"的用例）。
 验证：`pytest` **473 passed in 17.1 s**、`--selftest` 7 屏 0 报错、`scripts/auto_accept.py` ACCEPT。
 
+## 第 36 轮 2026-10-22 深夜：读 Simpack 模型算一个算例
+
+- 新增 `src/velch/simpack_case.py` 与 `velch simpack-case` 子命令：几何（里程布置、型面文件）从
+  Simpack catalog 来，物理从模板算例来，并写 `<算例>.simpack.json` 溯源旁挂。
+- 实测真实模型 `CRH380A_M_Wheelset.spck`：238 条型面引用 / 233 个唯一 PRR / 0 缺失 / 10 处同里程
+  多表面 / 里程 0–150 m / `geometry_readable = true`。
+- `--keep-profiles`（只导入里程布置）：跑通，`numerically_checked`、七门全 true、静载
+  59 680.5769 N、侵入 65.47 µm、BDF nfev 116。
+- 默认模式（导入模型自己的断面）：静平衡失败 `the heaviest carries 119316.3 N`（单侧承担两倍载荷）
+  —— 原因是同里程多表面 + 横向布置未导入，属已知未做的下一层，已写进文档而不是当成 bug 修。
+- 派生规矩：里程不位移（越界直接拒绝）、四种错误一律 `SimpackCaseError` 且不落半个算例。
+- 新增 `tests/test_simpack_case.py`（10 项，真实模型未设置时 skip）；`pytest` **493 passed**。
+- 文档：新增 `docs/SIMPACK_IMPORT_2026-10-22.md`。
+
 ## 第 35 轮 2026-10-22 夜间：可读性剩余四项（对比度/斑马纹/焦点环/字号）
 
 按视觉验收的清单做完最后四项，全部带可测判据：
@@ -1045,7 +1059,7 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 
 抬字号后暴露的两处新问题，都用"减法"而不是"再压字号"解决：① 算例表四列 476 px 放不下 → 砍掉"起始里程 m"（值仍在右侧契约卡，有断言保证），三列 396 px；② 横向滚动条常驻像"右边还有内容" → `_sync_scrollbars()` 按 `<Configure>` 比较列最小宽与控件宽，放得下就隐藏。
 
-验证：`pytest` **483 passed**、`velch.ui --selftest` 7 屏 / 424 控件 / **0 屏报错**。
+验证：`pytest` **493 passed**、`velch.ui --selftest` 7 屏 / 424 控件 / **0 屏报错**。
 
 ## 第 34 轮 · 0.4.1 安装包（2026-10-22 22:30）
 
@@ -1061,5 +1075,5 @@ PowerShell 5.1 的 `Set-Content -Encoding utf8` **写 BOM**，`json.loads` 读�
 - 入口点统一：`velch/launcher.py`（`launcher_argv` / `worker_argv` / `console_executable` /
   `child_environment`），六处 `sys.executable` 全部收敛，测试禁止新出现（白名单三处）。
 - 修 B017–B020（见 `BUGS.md`）：冻结输出改 UTF-8、窗口版无 stdout、日志管道探针误报、doctor 提示。
-- 验证：`pytest` **483 passed**；`smoke_test.py` **ACCEPT**；产物 `Velch-0.4.1-win64.zip` 88.9 MB。
+- 验证：`pytest` **493 passed**；`smoke_test.py` **ACCEPT**；产物 `Velch-0.4.1-win64.zip` 88.9 MB。
 - 新文档：`docs/RELEASE_NOTES_0.4.1.md`、`docs/PACKAGING_2026-10-22.md`（含构建命令与 5 步冒烟）。

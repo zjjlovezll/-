@@ -59,6 +59,23 @@ def main(argv: list[str] | None = None) -> int:
     simpack_track.add_argument("model", type=Path)
     simpack_track.add_argument("--model-root", type=Path, required=True)
     simpack_track.add_argument("--output", type=Path, required=True)
+    simpack_case = sub.add_parser(
+        "simpack-case",
+        help="derive a runnable case: rail geometry from a Simpack catalog, physics from a template")
+    simpack_case.add_argument("--catalog", type=Path, required=True)
+    simpack_case.add_argument("--template", type=Path, required=True,
+                              help="existing Velch case whose physics (mass, stiffness, contact) is kept")
+    simpack_case.add_argument("--out", type=Path, required=True)
+    simpack_case.add_argument("--side", choices=("left", "right"), default="left")
+    simpack_case.add_argument("--rail", default=None, help="restrict to one Simpack rail variable")
+    simpack_case.add_argument("--sample", type=int, default=None,
+                              help="keep at most N stations (default: every station in the model)")
+    simpack_case.add_argument("--x-start", type=float, required=True,
+                              help="mileage where the run starts; stations are shifted to match")
+    simpack_case.add_argument("--duration", type=float, default=None)
+    simpack_case.add_argument("--case-id", default=None)
+    simpack_case.add_argument("--keep-profiles", action="store_true",
+                              help="import only the station layout; keep the template's surface file")
     native_status = sub.add_parser("contact-native-status", help="check official CONTACT Python interface and native DLL")
     native_status.add_argument("--contact-root", type=Path, required=True)
     native_status.add_argument("--output", type=Path)
@@ -128,6 +145,21 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"catalog": str(args.output), "summary": report["summary"]},
                              ensure_ascii=False, indent=2))
             return 0 if report["summary"]["geometry_readable"] else 2
+        if args.command == "simpack-case":
+            from .simpack_case import SimpackCaseError, build_case
+            try:
+                built = build_case(
+                    catalog_path=args.catalog, template_path=args.template, out_path=args.out,
+                    side=args.side, rail=args.rail, sample=args.sample,
+                    x_start_m=args.x_start, duration_s=args.duration, case_id=args.case_id,
+                    keep_profiles=args.keep_profiles)
+            except SimpackCaseError as error:
+                print(json.dumps({"status": "failed", "error_type": type(error).__name__,
+                                  "message": str(error)}, ensure_ascii=False, indent=2),
+                      file=sys.stderr)
+                return 2
+            print(json.dumps(built.summary(), ensure_ascii=False, indent=2))
+            return 0
         if args.command == "inspect-profile":
             profile = load_profile(args.file, file_format=args.format, surface=args.surface)
             print(json.dumps({"source": profile.source, "sha256": profile.source_sha256,

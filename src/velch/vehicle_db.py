@@ -230,8 +230,93 @@ def validate(model: VehicleModel) -> list[str]:
     if not isinstance(provenance, dict) or not provenance:
         problems.append("provenance is required: every physics number must name where it came from")
 
+    problems.extend(_geometry_problems(raw))
     return problems
 
+
+def _geometry_problems(raw: dict[str, Any]) -> list[str]:
+    """The recorded geometry must agree with the numbers the solver actually uses.
+
+    Every check below is an *identity* that follows from the frame convention: if the carbody CG is
+    at -1.55 m and the air spring's upper surface at -1.0 m, then the solver's relative anchor has
+    to be 0.55 m.  A geometry block that disagrees with ``vehicle`` would be worse than none at all,
+    because it would look authoritative while describing a different car.
+    """
+    problems: list[str] = []
+    geometry = raw.get("geometry")
+    if geometry is None:
+        return problems
+    if not isinstance(geometry, dict):
+        return ["geometry must be an object"]
+    frame = geometry.get("frame")
+    if not isinstance(frame, dict) or not all(frame.get(axis) for axis in ("x", "y", "z")):
+        problems.append("geometry.frame must describe the x/y/z convention")
+
+    block = raw.get("vehicle") or {}
+    carbody = geometry.get("carbody") or {}
+    used = block.get("carbody") or {}
+    for recorded, mined in (("mass_kg", "mass_kg"), ("roll_inertia_kg_m2", "roll_inertia_kg_m2"),
+                            ("pitch_inertia_kg_m2", "pitch_inertia_kg_m2"),
+                            ("yaw_inertia_kg_m2", "yaw_inertia_kg_m2")):
+        value = carbody.get(mined)
+        if not isinstance(value, (int, float)):
+            problems.append(f"geometry.carbody.{mined} must be a number, got {value!r}")
+        elif not isinstance(used.get(recorded), (int, float)):
+            continue
+        elif abs(float(value) - float(used[recorded])) > 1e-6 * max(1.0, abs(float(used[recorded]))):
+            problems.append(f"geometry.carbody.{mined}={value} disagrees with "
+                            f"vehicle.carbody.{recorded}={used[recorded]}")
+    cg = (carbody.get("cg_m") or {})
+    if isinstance(cg.get("z"), (int, float)) and float(cg["z"]) >= 0:
+        problems.append(f"geometry.carbody.cg_m.z must be below the rail top, got {cg['z']}")
+    if not isinstance(carbody.get("reference_x_m"), (int, float)):
+        problems.append("geometry.carbody.reference_x_m must be a number")
+
+    bogies = geometry.get("bogies") or {}
+    distance = bogies.get("distance_m")
+    spacing = block.get("bogie_half_spacing_m")
+    if isinstance(distance, (int, float)) and isinstance(spacing, (int, float)):
+        if abs(float(distance) - 2.0 * float(spacing)) > 1e-6:
+            problems.append(f"geometry.bogies.distance_m={distance} must be twice "
+                            f"vehicle.bogie_half_spacing_m={spacing}")
+    for key, mine in (("wheelbase_m", "wheelbase_m"),):
+        if isinstance(bogies.get(mine), (int, float)) and isinstance(block.get(key), (int, float)):
+            if abs(float(bogies[mine]) - float(block[key])) > 1e-6:
+                problems.append(f"geometry.bogies.{mine}={bogies[mine]} disagrees with "
+                                f"vehicle.{key}={block[key]}")
+
+    secondary = geometry.get("secondary") or {}
+    used_secondary = block.get("secondary") or {}
+    half = secondary.get("half_width_m")
+    if isinstance(half, (int, float)) and isinstance(used_secondary.get("half_width_m"), (int, float)):
+        if abs(float(half) - float(used_secondary["half_width_m"])) > 1e-6:
+            problems.append(f"geometry.secondary.half_width_m={half} disagrees with "
+                            f"vehicle.secondary.half_width_m={used_secondary['half_width_m']}")
+    cg_z = cg.get("z")
+    for recorded, mined in (("upper_anchor_height_m", "air_spring_upper_z_m"),
+                            ("lower_anchor_height_m", "air_spring_lower_z_m")):
+        value = secondary.get(mined)
+        expected = used_secondary.get(recorded)
+        if not isinstance(value, (int, float)) or not isinstance(expected, (int, float)):
+            continue
+        reference = float(cg_z) if recorded.startswith("upper") else float(bogies.get("cg_z_m", 0.0))
+        implied = float(value) - reference
+        if abs(implied - float(expected)) > 1e-3:
+            problems.append(f"geometry.secondary.{mined}={value} implies {implied:.4f} m against "
+                            f"vehicle.secondary.{recorded}={expected}")
+
+    primary = geometry.get("primary") or {}
+    used_primary = block.get("primary") or {}
+    for recorded, mined in (("upper_anchor_height_m", "damper_lower_z_m"),
+                            ("lower_anchor_height_m", "spring_lower_z_m")):
+        value = primary.get(mined)
+        expected = used_primary.get(recorded)
+        if not isinstance(value, (int, float)) or not isinstance(expected, (int, float)):
+            continue
+        if abs(float(value) - float(expected)) > 2e-3:
+            problems.append(f"geometry.primary.{mined}={value} disagrees with "
+                            f"vehicle.primary.{recorded}={expected}")
+    return problems
 
 def index(*, root: Path | None = None) -> dict[str, Any]:
     """``index.json`` 的内容；文件缺失时按目录现算，避免索引与文件脱节。"""
@@ -259,6 +344,19 @@ def main_report(models: list[VehicleModel]) -> str:
         lines.append(f"  {summary['axle_count']} 轴 · {summary['state_dimension']} 自由度 · "
                      f"总质量 {summary['mass_total_kg']} kg · "
                      f"{float(summary['travel_speed_m_s'] or 0) * 3.6:.1f} km/h")
+        geometry = (model.raw.get("geometry") or {})
+        carbody = geometry.get("carbody") or {}
+        if carbody:
+            cg = carbody.get("cg_m") or {}
+            lines.append(f"  车体几何：质量 {carbody.get('mass_kg')} kg · "
+                         f"Ixx/Iyy/Izz {carbody.get('roll_inertia_kg_m2')}/"
+                         f"{carbody.get('pitch_inertia_kg_m2')}/"
+                         f"{carbody.get('yaw_inertia_kg_m2')} kg·m² · "
+                         f"质心 z {cg.get('z')} m")
+            bogies = geometry.get("bogies") or {}
+            lines.append(f"  车体位置：参考点 x {carbody.get('reference_x_m')} m · "
+                         f"定距 {bogies.get('distance_m')} m（前 {bogies.get('front_x_m')} / "
+                         f"后 {bogies.get('rear_x_m')}）· 轴距 {bogies.get('wheelbase_m')} m")
         lines.append(f"  验证状态：{summary['status']}")
         lines.append(f"  文件：{summary['file']}")
     return "\n".join(lines)

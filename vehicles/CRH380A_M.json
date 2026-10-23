@@ -116,11 +116,108 @@
     "primary.k_z_n_m": "同上（1.176e6 N/m）",
     "secondary.k_yaw_nm_rad": "同上（8.85e6 N·m/rad）",
     "contact.effective_modulus_pa": "不在本文件里：接触律属于算例，见 case_*.json 的 contact 块",
-    "travel_speed_m_s": "97.2222 m/s = 350 km/h（算例声明）"
+    "travel_speed_m_s": "97.2222 m/s = 350 km/h（算例声明）",
+    "geometry": {
+      "source": "Simpack 2021x submodels CRH380A_M_Bogie.spck / CRH380A_M_Carbody.spck",
+      "bogie_spck_sha256": "b813b479563427b638d6debdd334db17aa5a68e716eb65f7b63cb24fa86737e3",
+      "carbody_spck_sha256": "ab291570643d582781bc6ae420df9ffa463f3b186eb2ac50cde318f673f48172",
+      "read_by": "velch.simpack_model (subvariable + expression resolution, GBK comments)",
+      "report": "docs/SIMPACK_CARBODY_MINING_2026-10-23.md"
+    }
   },
   "not_verified": [
     "车体/转向架/轮对的惯性张量只声明了三个方向，缺 Ixy/Ixz/Iyz 交叉项",
     "一系二系只声明 k_y/k_z/k_yaw 与对应阻尼，无 k_x、无侧滚/点头刚度",
-    "无轴箱、无止挡、无抗蛇行减振器"
-  ]
+    "无轴箱、无止挡、无抗蛇行减振器",
+    "carbody x freedom and carbody pitch/yaw coupling to the bogies are recorded here but not solved: the current layout has no longitudinal degree of freedom",
+    "the anti-roll bar, traction rod, lateral damper, bump stop and axle-box bushings are recorded geometry and stiffness only - none of them is assembled into the solver yet",
+    "carbody-mounted points on the left and right side are recorded as half-widths from the model's own subvariables; the Simpack model stores |y| per side, so sign conventions must be re-derived per element before assembly"
+  ],
+  "geometry": {
+    "frame": {
+      "x": "carbody reference point; the model's own carbody position is 13.5 m",
+      "y": "track centreline, positive to the right (the Simpack model stores |y| per side)",
+      "z": "rail top, negative downwards",
+      "_note": "Simpack stores absolute z from the rail top; we keep the same convention here so a value can be copied without a silent offset"
+    },
+    "carbody": {
+      "mass_kg": 34934.0,
+      "roll_inertia_kg_m2": 113200.0,
+      "pitch_inertia_kg_m2": 1711800.0,
+      "yaw_inertia_kg_m2": 1615300.0,
+      "cg_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -1.55
+      },
+      "reference_x_m": 13.5
+    },
+    "bogies": {
+      "distance_m": 17.5,
+      "front_x_m": 22.25,
+      "rear_x_m": 4.75,
+      "wheelbase_m": 2.5,
+      "cg_z_m": -0.51
+    },
+    "primary": {
+      "spring_lower_z_m": -0.585,
+      "spring_upper_z_m": -0.833,
+      "damper_lower_z_m": -0.322,
+      "damper_upper_z_m": -0.684,
+      "damper_lower_x_m": 0.235,
+      "half_width_m": 1.0,
+      "bushing_center_x_m": 0.5,
+      "bushing_center_z_m": -0.446
+    },
+    "secondary": {
+      "air_spring_lower_z_m": -0.8,
+      "air_spring_upper_z_m": -1.0,
+      "half_width_m": 1.23,
+      "vertical_damper_bogie_x_m": 0.163,
+      "vertical_damper_bogie_half_width_m": 0.593,
+      "vertical_damper_bogie_z_m": -0.383,
+      "vertical_damper_carbody_z_m": -0.888,
+      "lateral_damper_bogie_m": {
+        "x": 8.95,
+        "y": 0.33,
+        "z": -0.797
+      },
+      "lateral_damper_carbody_m": {
+        "x": 8.55,
+        "y": 0.14,
+        "z": -0.785
+      },
+      "anti_hunt_bogie_m": {
+        "x_down": 8.7,
+        "x_top": 8.7,
+        "y_down": 2.7,
+        "y_top": 2.92,
+        "z_down": -0.415,
+        "z_top": -0.545
+      },
+      "anti_hunt_carbody_m": {
+        "x_down": 7.995,
+        "x_top": 7.995,
+        "z_down": -0.415,
+        "z_top": -0.545
+      }
+    },
+    "carbody_mounted": {
+      "anti_roll_bar_bogie_x_m": 0.165,
+      "anti_roll_bar_bogie_z_m": -0.487,
+      "anti_roll_bar_stiffness_nm_rad": 1000000.0,
+      "bump_stop_bogie_half_width_m": 0.38,
+      "traction_rod_bogie_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -0.38
+      },
+      "traction_rod_carbody_m": {
+        "x": 0.0,
+        "y": null,
+        "z": -0.38
+      },
+      "traction_rod_stiffness_n_m": 7880000.0
+    }
+  }
 }

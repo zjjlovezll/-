@@ -1506,6 +1506,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.22.md](RELEASE_NOTES_0.4.22.md) | Velch 0.4.22 发布说明 |
 | [RELEASE_NOTES_0.4.23.md](RELEASE_NOTES_0.4.23.md) | Velch 0.4.23 发布说明 |
 | [RELEASE_NOTES_0.4.24.md](RELEASE_NOTES_0.4.24.md) | 0.4.24：一台车只有一个定义 |
+| [RELEASE_NOTES_0.4.25.md](RELEASE_NOTES_0.4.25.md) | Velch 0.4.25 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -1525,6 +1526,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |
 | [SIMPACK_BOGIE_MINING_2026-10-23.md](SIMPACK_BOGIE_MINING_2026-10-23.md) | CRH380A 转向架子模型的深度挖掘（2026-10-23） |
+| [SIMPACK_CARBODY_MINING_2026-10-23.md](SIMPACK_CARBODY_MINING_2026-10-23.md) | 车体子模型：把 `CRH380A_M_Carbody.spck` 读成数字 |
 | [SIMPACK_COMPARE_2026-10-23.md](SIMPACK_COMPARE_2026-10-23.md) | Simpack 与 Velch 的定量对照（前轮对，23.5–138.5 m） |
 | [SIMPACK_IMPORT_2026-10-22.md](SIMPACK_IMPORT_2026-10-22.md) | 从 Simpack 模型算一个算例（2026-10-22） |
 | [SOFTWARE_ARCHITECTURE_V0_4.md](SOFTWARE_ARCHITECTURE_V0_4.md) | Velch 0.4 软件架构与模型边界 |
@@ -2070,3 +2072,35 @@ import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并�
 ### 数字
 
 `pytest` **644 passed / 1 skipped**（新增 9 项）。文档索引 92 篇。
+
+## 第 65 轮：车体的数字齐了（0.4.25）
+
+用户要求"继续完善车体"。这一轮把 `CRH380A_M_Carbody.spck` 读干净，并把结果**落到唯一一份
+车辆定义里**——不是写在报告里让人再去抄一遍。
+
+**读出来的**：12 个全局参数全部解出（627 条记录 / 1 刚体 / 39 力元条目）；车体的
+**质量 34 934 kg 与三个惯量 113 200 / 1 711 800 / 1 615 300 kg·m² 与我们原有数值逐位相同**
+——说明当年从算例抄进 `vehicle.carbody` 的数是对的，这一轮补的是它们的**位置**：
+质心 (0, 0, −1.55 m)、参考点 13.5 m、定距 17.5 m（前 22.25 / 后 4.75）、轴距 2.5 m。
+
+**新增 `geometry` 块**（`vehicles/CRH380A_M.json`，3 613 B → 7 225 B）：`frame` 写明坐标约定
+（z 轨面为 0 向下为负、y 中心线右正、x 车体参考点）、`carbody`、`bogies`、`primary`、
+`secondary`（空簧上下表面、垂向/横向/抗蛇形减震器两端坐标）、`carbody_mounted`
+（抗侧滚扭杆、横向止挡、牵引拉杆及其刚度），外加 `provenance.geometry`（两个 `.spck` 的
+sha256 与读取器名）与三条 `not_verified`。
+
+**校验**：`velch/vehicle_db.py` 新增 `_geometry_problems()`，把记录几何与求解器真正用的数字
+用恒等式对齐——`17.5 = 2 × 8.75`、`−1.0 − (−1.55) = 0.55`、`−0.8 − (−0.51) = −0.29`、
+一系两条按 1 mm 容差（原模型自己有 1 mm 取整，容差不抹平）；任何一条不成立，`load()` 直接拒绝。
+`velch vehicle show` 多打两行"车体几何 / 车体位置"。
+
+**证据**：`tests/test_vehicle_db.py` 新增 6 项（自洽通过 + 四类矛盾被拒 + 报告含几何）；
+全仓 `pytest` **652 passed, 1 skipped**；`scripts/verify_vehicle_ref.py` →
+**`VERDICT: EQUIVALENT`**（`history.csv` sha256 `7bfbaa1c…8566ad88`、244 404 B、
+`numerically_checked`、七门全 true）——几何块是旁挂证据，一个数字都没动。
+
+**为什么分两步**：车体纵向自由度、抗侧滚扭杆、牵引拉杆、横向减震器、横向止挡、轴箱体都还
+没有对应的自由度或元件。它们现在"有值、有出处、有校验、没有装配"，`bogies` 里的 `cg_z_m`
+同样如此。这一步不假装能做，只保证下一步有据可依。
+
+文档：`docs/SIMPACK_CARBODY_MINING_2026-10-23.md`。

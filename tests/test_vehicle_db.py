@@ -95,3 +95,63 @@ def test_the_summary_report_shows_the_status_verbatim() -> None:
     assert "CRH380A_M" in text
     assert "35 自由度" in text
     assert "unvalidated_against_measurement_or_Simpack" in text
+
+
+# --- 车体几何：记录值必须与求解器真正用的数字自洽 -------------------------------------------
+
+def test_the_recorded_geometry_agrees_with_the_numbers_the_solver_uses(tmp_path: Path) -> None:
+    raw = _raw()
+    geometry = raw["geometry"]
+    block = raw["vehicle"]
+    assert geometry["carbody"]["mass_kg"] == block["carbody"]["mass_kg"]
+    assert geometry["bogies"]["distance_m"] == pytest.approx(2.0 * block["bogie_half_spacing_m"])
+    assert geometry["bogies"]["wheelbase_m"] == pytest.approx(block["wheelbase_m"])
+    # 空气簧上表面 −1.0 m、车体质心 −1.55 m → 求解器的相对锚高 0.55 m
+    assert (geometry["secondary"]["air_spring_upper_z_m"] - geometry["carbody"]["cg_m"]["z"]
+            == pytest.approx(block["secondary"]["upper_anchor_height_m"], abs=1e-3))
+    # 空气簧下表面 −0.8 m、构架质心 −0.51 m → −0.29 m
+    assert (geometry["secondary"]["air_spring_lower_z_m"] - geometry["bogies"]["cg_z_m"]
+            == pytest.approx(block["secondary"]["lower_anchor_height_m"], abs=1e-3))
+    assert vehicle_db.validate(vehicle_db.load(_write(tmp_path, raw))) == []
+
+
+def test_geometry_that_contradicts_the_vehicle_block_is_refused(tmp_path: Path) -> None:
+    raw = _raw()
+    raw["geometry"]["carbody"]["mass_kg"] = 34000.0
+    problems = vehicle_db.validate(vehicle_db.VehicleModel(path=tmp_path, raw=raw))
+    assert any("geometry.carbody.mass_kg" in item and "disagrees" in item for item in problems)
+    with pytest.raises(vehicle_db.VehicleModelError, match="geometry.carbody.mass_kg"):
+        vehicle_db.load(_write(tmp_path, raw))
+
+
+def test_a_carbody_centre_of_gravity_above_the_rail_is_refused(tmp_path: Path) -> None:
+    raw = _raw()
+    raw["geometry"]["carbody"]["cg_m"]["z"] = 0.4
+    problems = vehicle_db.validate(vehicle_db.VehicleModel(path=tmp_path, raw=raw))
+    assert any("cg_m.z must be below the rail top" in item for item in problems)
+    with pytest.raises(vehicle_db.VehicleModelError, match="below the rail top"):
+        vehicle_db.load(_write(tmp_path, raw))
+
+
+def test_bogie_distance_must_be_twice_the_half_spacing(tmp_path: Path) -> None:
+    raw = _raw()
+    raw["geometry"]["bogies"]["distance_m"] = 17.0
+    problems = vehicle_db.validate(vehicle_db.VehicleModel(path=tmp_path, raw=raw))
+    assert any("must be twice" in item for item in problems)
+    with pytest.raises(vehicle_db.VehicleModelError, match="must be twice"):
+        vehicle_db.load(_write(tmp_path, raw))
+
+
+def test_an_anchor_that_does_not_follow_from_the_frame_is_refused(tmp_path: Path) -> None:
+    raw = _raw()
+    raw["geometry"]["secondary"]["air_spring_upper_z_m"] = -1.20
+    problems = vehicle_db.validate(vehicle_db.VehicleModel(path=tmp_path, raw=raw))
+    assert any("implies" in item and "upper_anchor_height_m" in item for item in problems)
+    with pytest.raises(vehicle_db.VehicleModelError, match="upper_anchor_height_m"):
+        vehicle_db.load(_write(tmp_path, raw))
+
+
+def test_the_report_names_the_carbody_geometry() -> None:
+    text = vehicle_db.main_report([vehicle_db.load("CRH380A_M")])
+    assert "车体几何" in text and "34934" in text and "-1.55" in text
+    assert "定距 17.5" in text

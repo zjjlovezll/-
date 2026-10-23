@@ -1524,6 +1524,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |
+| [SIMPACK_BOGIE_MINING_2026-10-23.md](SIMPACK_BOGIE_MINING_2026-10-23.md) | CRH380A 转向架子模型的深度挖掘（2026-10-23） |
 | [SIMPACK_COMPARE_2026-10-23.md](SIMPACK_COMPARE_2026-10-23.md) | Simpack 与 Velch 的定量对照（前轮对，23.5–138.5 m） |
 | [SIMPACK_IMPORT_2026-10-22.md](SIMPACK_IMPORT_2026-10-22.md) | 从 Simpack 模型算一个算例（2026-10-22） |
 | [SOFTWARE_ARCHITECTURE_V0_4.md](SOFTWARE_ARCHITECTURE_V0_4.md) | Velch 0.4 软件架构与模型边界 |
@@ -2028,3 +2029,44 @@ import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并�
 `VERDICT: EQUIVALENT`。
 
 **未解决**（写进文档与发布说明）：拓扑仍写死 2×2×2、自由度缺 x/pitch/spin、悬挂无 6×6、界面选车未接线。
+
+## 第 64 轮：把 Simpack 模型文件读成数字，而不是读成描述
+
+用户指出 `CRH380A_M_Bogie.spck` 就是转向架的悬挂定义，要求继续深挖。这一轮做了两件事：一个能复算的
+读取器，一页能对账的结论。
+
+### 读取器（`Velch/src/velch/simpack_model.py`，9 项测试）
+
+`.spck` 是 ASCII 模型库，难点不在解码而在**求值**：值经常是符号（`$G_PrimSusp.$_Prim_Damp_d`），
+符号又可能是表达式（`{ $G_PrimSusp.$_Prim_Damp_c/2 }`），而"这个数是什么"只写在 GBK 编码的
+行尾中文注释里。三处都做了，并且**解不出就报 `None` 并列进 `unresolved`，不猜**。
+
+三处最容易写错的地方，都由测试钉住：①限定名 `$G_PrimSusp.$_xxx` 必须按**尾段**回落到短名
+（否则真实文件 39 个力元的参数全是符号）；②符号正则必须把 `$G_X.$_y` 当一个 token
+（否则只匹配到 `$G_X` 就判解不出）；③类型号在文件里只有一句 `! Type`，元素类型只能**按参数槽位判读**
+（type 5 = 三向衬套、type 6 = 并联弹簧-阻尼、type 13 = 扭转类、`{ 6 }` = 只有刚度的弹簧）。
+
+### 结论（`Velch/docs/SIMPACK_BOGIE_MINING_2026-10-23.md`）
+
+- 该文件 2 341 条记录 / 85 个全局参数（解出 82）/ 6 刚体 / 39 力元 / 8 铰 / 75 标记。
+- **和我们车辆定义逐位对得上的**：一系横向 980 000、一系垂向 1 176 000、一系垂向阻尼 10 000、
+  二系横向 160 000、二系垂向 240 000、二系垂向阻尼 20 000、抗蛇行 8 850 000 / 2 450 000、
+  构架 3 300 kg 与 2 673/1 807/3 300 kg·m²、转向架中心距 17.5 m、轴距 2.5 m、车轮半径 0.43 m。
+- **我们缺的，现在有确切数值**：一系纵向 980 000 N/m、轴箱转臂节点 13.7e6 / 5.49e6 N/m、
+  二系横向减震器 17.15e6 N/m + 40 000 N·s/m、抗侧滚扭杆 1e6 N·m/rad、牵引拉杆 7.88e6 N/m、
+  轴箱 4 × 48.2 kg（含转动惯量）、一系减振器接头刚度 4.9e6 N/m、齿轮箱吊杆 2e6/1e5/7e6 N/m。
+- **一个容易记错的细节**：Simpack 的二系垂向减震器**只有刚度、没有阻尼槽位**，
+  所以 `secondary.c_z = 20 000` 的来源是空气弹簧 `$_SecSpr_d_z`，不是减震器。
+- `primary.k_yaw = 1 960 000` 是"轴箱节点约束"的集总替身，Stage 2 换成节点力元后它就没有物理对应物了，
+  替换时必须重跑静载门与八接触峰值并在文档里分清"标定值"与"模型值"。
+
+### REA 这一步的边界
+
+用 Ghidra 工具箱的静态取证方式扫了安装目录 460 个 exe/dll，确认 `Spring-Damper`/`Bushing`/
+`Bump Stop`/`Air Spring` 这些元素名确实在这套安装里（`FortranInterface.dll`、`GUI.dll`、`IO.dll` 等），
+结果落 `Simpack_REA_Ghidra_Batch_V1/output/element_name_strings.json`。但**没有**用反编译去给类型号贴名字：
+字符串表里名字与号码不在一处，而参数槽位已经把类型判死；`O005`（Simpack 侧物理量不自动映射）仍然成立。
+
+### 数字
+
+`pytest` **644 passed / 1 skipped**（新增 9 项）。文档索引 92 篇。

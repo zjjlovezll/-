@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+
+from . import __version__
 from dataclasses import asdict, replace
 import json
 import sys
@@ -22,6 +24,8 @@ from .parallel import run_vehicle_batch
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="velch", description="Reduced-order turnout wheel/rail dynamics")
+    # 正式发布的命令行必须能回答"我是哪一版"；没有它，用户只能去翻 Release Notes。
+    parser.add_argument("--version", action="version", version=f"velch {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
     run = sub.add_parser("run", help="run one JSON case using its declared solver method")
     run.add_argument("case", type=Path)

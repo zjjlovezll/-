@@ -34,14 +34,36 @@ class Connector:
     damping: float
     rest: float
     jacobian: np.ndarray
+    #: Optional nonlinear force law; ``None`` keeps the linear row this solver always used.
+    law: object | None = None
+
+    def extension(self, q: np.ndarray) -> float:
+        return float(self.jacobian @ q) - self.rest
+
+    def speed(self, v: np.ndarray) -> float:
+        return float(self.jacobian @ v)
 
     def force(self, q: np.ndarray, v: np.ndarray) -> np.ndarray:
-        extension = float(self.jacobian @ q) - self.rest
-        speed = float(self.jacobian @ v)
-        return -(self.stiffness * extension + self.damping * speed) * self.jacobian
+        if self.law is not None:
+            return -float(self.law.force(self.extension(q), self.speed(v))) * self.jacobian
+        return -(self.stiffness * self.extension(q) + self.damping * self.speed(v)) * self.jacobian
+
+    def stiffness_at(self, q: np.ndarray) -> float:
+        """Local dF/dextension: the number the analytic Jacobian must use at this state."""
+
+        if self.law is not None:
+            return float(self.law.stiffness(self.extension(q)))
+        return self.stiffness
+
+    def damping_at(self, v: np.ndarray) -> float:
+        if self.law is not None:
+            return float(self.law.damping(self.speed(v)))
+        return self.damping
 
     def potential(self, q: np.ndarray) -> float:
-        return 0.5 * self.stiffness * (float(self.jacobian @ q) - self.rest) ** 2
+        if self.law is not None:
+            return float(self.law.potential(self.extension(q)))
+        return 0.5 * self.stiffness * self.extension(q) ** 2
 
 
 @dataclass
@@ -113,7 +135,7 @@ class VehicleDynamics:
 
         return tuple(
             Connector(spec.name, spec.axis, spec.stiffness, spec.damping, spec.rest,
-                      spec.jacobian(self.dimension))
+                      spec.jacobian(self.dimension), spec.law)
             for spec in self.topology.link_specs
         )
 

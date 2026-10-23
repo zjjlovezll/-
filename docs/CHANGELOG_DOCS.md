@@ -1482,6 +1482,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [MEASURED_VALIDATION_2026-10-21.md](MEASURED_VALIDATION_2026-10-21.md) | 实测数据接入验证（2026-10-21） |
+| [NONLINEAR_ELEMENTS_2026-10-23.md](NONLINEAR_ELEMENTS_2026-10-23.md) | 非线性力元 |
 | [OBSERVATION_LAYER_2026-10-20.md](OBSERVATION_LAYER_2026-10-20.md) | 观测量层：仿真对仿真 + 实测对模型（2026-10-20） |
 | [ONBOARDING_2026-10-21.md](ONBOARDING_2026-10-21.md) | 新增车体 / 新增道岔的接入指南 |
 | [OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md](OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md) | 开源轮轨接触算法调查（2026-10-19） |
@@ -1510,6 +1511,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.25.md](RELEASE_NOTES_0.4.25.md) | Velch 0.4.25 |
 | [RELEASE_NOTES_0.4.26.md](RELEASE_NOTES_0.4.26.md) | Velch 0.4.26 发布说明 |
 | [RELEASE_NOTES_0.4.27.md](RELEASE_NOTES_0.4.27.md) | Velch 0.4.27 发布说明 |
+| [RELEASE_NOTES_0.4.28.md](RELEASE_NOTES_0.4.28.md) | Velch 0.4.28 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -2150,3 +2152,24 @@ sha256 与读取器名）与三条 `not_verified`。
 **踩到自己两次**：①元件库第一次接管装配时丢了 `convention`，二系垂向弹簧的点头项符号翻转
 （+8.75 而非 −8.75），逐元件比较当场抓到；②`axial_spec` 的"必须有正刚度"未放宽，纯减振器
 装配报错——测试先红后绿。
+
+## 第 68 轮：力律不再必须是直线（0.4.28）
+
+**起点**：用户问"能不能把 Simpack 的力学元件库全搬过来"，我答"能搬的是元件类型与力律，搬不动的
+是求解器内部"，并按"先建好再优化"开工。
+
+**做了什么**：`Connector` 增加可选 `law`；力来自 `law.force(δ, δ̇)`，雅可比用 `law.stiffness(δ)` /
+`law.damping(δ̇)` 在**工作点**现算（线性连接仍在构造时缓存，所以冻结基线一位没动），机械能用
+`law.potential(δ)`。新增两种元件：`bump_stop`（自由行程 + 止挡）与 `damper_blowoff`（两段阻尼）。
+`axial_spec` 允许"只带力律、没有名义刚度"。
+
+**验证**：`tests/test_elements_nonlinear.py` 7 项；其中端到端那条把真实算例的二系垂向连接换成
+"已压到限位"的止挡，用 `frozen_geometry_error` 确认解析雅可比与中心差分一致（两列误差 < 2e-4），
+解耦后该行刚度归零。全仓 `pytest` 676 passed / 1 skipped；`verify_vehicle_ref.py` 仍
+`VERDICT: EQUIVALENT`。
+
+**踩到的三处**：①`_axial` 没转发 `law`（`TypeError: unexpected keyword argument`）；
+②`axial_spec` 的"必须有正刚度或正阻尼"把带力律的元件挡在门外；③势能导数与力的**符号**我一开始
+写反了——`dV/dδ = F`（不是 `−F`），测试在间隙点还多测了一个单侧导数不可用的位置。
+
+**没做**（写进文档）：间隙/阀门切换的事件检测、元件内部状态（滞回）、空气簧、查表力、元件对照报告。

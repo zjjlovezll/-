@@ -45,7 +45,66 @@ PARAMETERS: dict[str, dict[str, tuple[str, bool]]] = {
                       "preload_force": ("N", False)},
     "bushing": {"stiffness": ("N/m", True), "damping": ("N·s/m", False),
                 "cross_stiffness": ("N/m", False)},
+    # Nonlinear: the two rows below are this solver's first force laws that are not lines.
+    "bump_stop": {"stiffness": ("N/m", True), "gap_m": ("m", False),
+                  "preload_force": ("N", False)},
+    "damper_blowoff": {"low_speed_damping": ("N·s/m", True),
+                       "high_speed_damping": ("N·s/m", True),
+                       "blowoff_speed": ("m/s", True)},
 }
+
+
+@dataclass(frozen=True)
+class BumpStopLaw:
+    """A gap, then a spring: the force element every Simpack vehicle uses at its travel limit.
+
+    Compression is negative extension (the same sign the linear rows use), so the stop engages
+    when ``extension < -gap_m``. The law is C0 but not C1 at the gap -- that is the physics; the
+    solver sees the slope switch and the integrator has to step over it.
+    """
+
+    stiffness_n_m: float
+    gap_m: float = 0.0
+
+    def force(self, extension: float, rate: float) -> float:
+        travel = -extension - self.gap_m
+        return -self.stiffness_n_m * travel if travel > 0.0 else 0.0
+
+    def stiffness(self, extension: float) -> float:
+        return self.stiffness_n_m if -extension > self.gap_m else 0.0
+
+    def damping(self, rate: float) -> float:
+        return 0.0
+
+    def potential(self, extension: float) -> float:
+        travel = max(0.0, -extension - self.gap_m)
+        return 0.5 * self.stiffness_n_m * travel * travel
+
+
+@dataclass(frozen=True)
+class BlowoffDamperLaw:
+    """Two slopes: below ``blowoff_speed`` the damper is stiff, above it the valve opens."""
+
+    low_speed_n_s_m: float
+    high_speed_n_s_m: float
+    blowoff_speed_m_s: float
+
+    def force(self, extension: float, rate: float) -> float:
+        magnitude = abs(rate)
+        low = min(magnitude, self.blowoff_speed_m_s)
+        high = max(0.0, magnitude - self.blowoff_speed_m_s)
+        value = self.low_speed_n_s_m * low + self.high_speed_n_s_m * high
+        return value if rate >= 0.0 else -value
+
+    def stiffness(self, extension: float) -> float:
+        return 0.0
+
+    def damping(self, rate: float) -> float:
+        return (self.low_speed_n_s_m if abs(rate) <= self.blowoff_speed_m_s
+                else self.high_speed_n_s_m)
+
+    def potential(self, extension: float) -> float:
+        return 0.0
 
 
 @dataclass(frozen=True)
@@ -120,6 +179,19 @@ def parse(spec: Mapping[str, Any]) -> ElementSpec:
     if kind == "bushing":
         if float(parameters.get("stiffness", 0.0)) <= 0.0:
             raise TopologyError(f"element {name!r} (bushing) needs a positive stiffness")
+    if kind == "bump_stop":
+        if float(parameters.get("stiffness", 0.0)) <= 0.0:
+            raise TopologyError(f"element {name!r} (bump_stop) needs a positive stiffness")
+    if kind == "damper_blowoff":
+        if float(parameters.get("low_speed_damping", 0.0)) <= 0.0:
+            raise TopologyError(
+                f"element {name!r} (damper_blowoff) needs a positive low_speed_damping")
+        if float(parameters.get("high_speed_damping", 0.0)) <= 0.0:
+            raise TopologyError(
+                f"element {name!r} (damper_blowoff) needs a positive high_speed_damping")
+        if float(parameters.get("blowoff_speed", 0.0)) <= 0.0:
+            raise TopologyError(
+                f"element {name!r} (damper_blowoff) needs a positive blowoff_speed")
     return ElementSpec(kind=kind, name=name, from_body=from_body, to_body=to_body,
                        from_point=from_point, to_point=to_point, direction=direction,
                        parameters=parameters)
@@ -127,12 +199,13 @@ def parse(spec: Mapping[str, Any]) -> ElementSpec:
 
 def _axial(element: ElementSpec, topology: Topology, *, stiffness: float, damping: float,
            name: str, direction: Sequence[float], preload_force: float = 0.0,
-           convention: Mapping[str, float] | None = None) -> LinkSpec:
+           convention: Mapping[str, float] | None = None,
+           law: object | None = None) -> LinkSpec:
     return axial_spec(topology, name, stiffness=stiffness, damping=damping,
                       direction=direction, from_body=element.from_body,
                       from_point=element.from_point, to_body=element.to_body,
                       to_point=element.to_point, preload_force=preload_force,
-                      convention=convention)
+                      convention=convention, law=law)
 
 
 def build(element: ElementSpec, topology: Topology,
@@ -163,6 +236,19 @@ def build(element: ElementSpec, topology: Topology,
     if element.kind == "bushing":
         return _bushing(element, topology, stiffness=stiffness, damping=damping,
                         convention=convention)
+    if element.kind == "bump_stop":
+        law = BumpStopLaw(stiffness_n_m=stiffness,
+                          gap_m=float(element.parameters.get("gap_m", 0.0)))
+        return [_axial(element, topology, stiffness=0.0, damping=0.0, name=element.name,
+                       direction=element.direction, preload_force=preload,
+                       convention=convention, law=law)]
+    if element.kind == "damper_blowoff":
+        law = BlowoffDamperLaw(
+            low_speed_n_s_m=float(element.parameters["low_speed_damping"]),
+            high_speed_n_s_m=float(element.parameters["high_speed_damping"]),
+            blowoff_speed_m_s=float(element.parameters["blowoff_speed"]))
+        return [_axial(element, topology, stiffness=0.0, damping=0.0, name=element.name,
+                       direction=element.direction, convention=convention, law=law)]
     raise TopologyError(f"element {element.name!r}: {element.kind!r} has no builder")  # pragma: no cover
 
 

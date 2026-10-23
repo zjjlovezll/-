@@ -104,6 +104,9 @@ class LinkSpec:
     damping: float
     entries: tuple[tuple[int, float], ...]
     preload_force: float = 0.0
+    #: Optional force law for a nonlinear element. ``None`` means the linear
+    #: ``-(k*extension + c*rate)`` row the solver has always assembled.
+    law: object | None = None
 
     @property
     def rest(self) -> float:
@@ -246,10 +249,11 @@ def axial_spec(topology: Topology, name: str, *, stiffness: float, damping: floa
                from_body: str, from_point: Sequence[float],
                to_body: str | None = None, to_point: Sequence[float] = (0.0, 0.0, 0.0),
                preload_force: float = 0.0,
-               convention: Mapping[str, float] | None = None) -> LinkSpec:
+               convention: Mapping[str, float] | None = None,
+               law: object | None = None) -> LinkSpec:
     """A spring-damper between two anchor points, measured along ``direction``."""
 
-    if stiffness <= 0.0 and damping <= 0.0:
+    if stiffness <= 0.0 and damping <= 0.0 and law is None:
         raise TopologyError(f"element {name!r} needs a positive stiffness or damping")
     entries: dict[int, float] = {}
     _add_translation(entries, topology, from_body, from_point, direction, +1.0,
@@ -262,7 +266,8 @@ def axial_spec(topology: Topology, name: str, *, stiffness: float, damping: floa
             f"element {name!r} connects no degree of freedom in this topology "
             f"({from_body} -> {to_body}); widen the body's dof list or drop the element")
     return LinkSpec(name=name, axis="axial", stiffness=float(stiffness), damping=float(damping),
-                    entries=tuple(sorted(entries.items())), preload_force=float(preload_force))
+                    entries=tuple(sorted(entries.items())), preload_force=float(preload_force),
+                    law=law)
 
 
 def torsional_spec(topology: Topology, name: str, *, stiffness: float, damping: float,

@@ -59,6 +59,8 @@ class JacobianAssembler:
         stiffness = np.zeros((self.n, self.n))
         damping = np.zeros((self.n, self.n))
         for link in self.dynamics.connectors:
+            if link.law is not None:
+                continue  # handled at the operating point in _blocks_at
             outer = np.outer(link.jacobian, link.jacobian)
             stiffness -= link.stiffness * outer
             damping -= link.damping * outer
@@ -294,6 +296,15 @@ class JacobianAssembler:
         dynamics.evaluate(t_s, q, v)  # refreshes the per-body contact cache
         jacobian_q = self._stiffness_q + self._track_q
         jacobian_v = self._stiffness_v + self._track_v
+        # Nonlinear elements contribute the slope at this operating point, not a constant.
+        # Re-assembling them per evaluation is cheap (a handful of rows) and keeps the frozen
+        # linear blocks -- and therefore the old trajectory -- bit-identical.
+        for link in dynamics.connectors:
+            if link.law is None:
+                continue
+            outer = np.outer(link.jacobian, link.jacobian)
+            jacobian_q -= link.stiffness_at(q) * outer
+            jacobian_v -= link.damping_at(v) * outer
         cfg = dynamics.case.vehicle
         law = self.law
         for rail_index, rail in enumerate(dynamics.case.rails):

@@ -144,6 +144,17 @@ class CompareScreen(Screen):
         self.force_combo = ttk.Combobox(map_row, textvariable=self.force_col,
                                         state="readonly", width=14)
         self.force_combo.pack(side="left")
+        # 猜出来的列必须一直看得见：状态栏那句话下一次操作就没了，而"力列猜错了"会让整张
+        # 对照图安静地比较两根不同的轨。
+        self.mapping_var = tk.StringVar(value="尚未选择 CSV")
+        self.mapping_label = ttk.Label(body, textvariable=self.mapping_var, style="Dim.TLabel",
+                                       font=ui_font(theme.FONT_SIZE["micro"]), justify="left")
+        self.mapping_label.pack(anchor="w", fill="x", pady=(2, 0))
+        self.wrap_with(self.mapping_label, body, reserve=12)
+        self._station_guess: Guess | None = None
+        self._force_guess: Guess | None = None
+        self.station_combo.bind("<<ComboboxSelected>>", lambda _e: self._describe_mapping())
+        self.force_combo.bind("<<ComboboxSelected>>", lambda _e: self._describe_mapping())
         scale_row = ttk.Frame(body, style="Card.TFrame")
         scale_row.pack(fill="x", pady=(2, 0))
         ttk.Label(scale_row, text="力单位系数（CSV→N）", style="Dim.TLabel",
@@ -247,8 +258,11 @@ class CompareScreen(Screen):
         self.force_combo.configure(values=self.csv_columns)
         station = _guess_column(self.csv_columns, STATION_TOKENS)
         force = _guess_column(self.csv_columns, FORCE_TOKENS, prefer_last=True)
+        self._station_guess = station
+        self._force_guess = force
         self.station_col.set(station.name)
         self.force_col.set(force.name)
+        self._describe_mapping()
         self.source_var.set("csv")
         self.on_source()
         # A guess that silently picks one of five matching columns is how a comparison file ends up
@@ -264,6 +278,30 @@ class CompareScreen(Screen):
         detail = "（" + "，".join(skipped) + "，可在下拉里改）" if skipped else ""
         tone = "warn" if (skipped or station.fallback or force.fallback) else "info"
         self.app.set_status(f"已选择 {' / '.join(notes)}{detail}", tone=tone)
+
+
+    def _describe_mapping(self) -> None:
+        """常驻一行：选的是哪两列、是猜的还是人选的、还有几个候选没被选。"""
+        if self._station_guess is None or self._force_guess is None:
+            self.mapping_var.set("尚未选择 CSV")
+            return
+        parts = []
+        skipped = 0
+        for label, variable, guess in (("里程列", self.station_col, self._station_guess),
+                                       ("力列", self.force_col, self._force_guess)):
+            chosen = variable.get()
+            auto = chosen == guess.name
+            alternatives = max(guess.alternatives - 1, 0) if auto else 0
+            skipped += alternatives
+            suffix = "（自动" + (f"，另有 {alternatives} 个候选" if alternatives else "") + "）" \
+                if auto else "（手动选择）"
+            if guess.fallback and auto:
+                suffix = "（自动，列名无法识别，请确认）"
+            parts.append(f"{label} ← {chosen}{suffix}")
+        text = "；".join(parts)
+        if skipped:
+            text += "　—— 猜错的代价是整张对照图比较了两根不同的轨，请确认"
+        self.mapping_var.set(text)
 
     # -- compute -----------------------------------------------------------
     def compute(self) -> None:

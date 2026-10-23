@@ -1503,6 +1503,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
 | [RELEASE_NOTES_0.4.20.md](RELEASE_NOTES_0.4.20.md) | Velch 0.4.20 发布说明 |
 | [RELEASE_NOTES_0.4.21.md](RELEASE_NOTES_0.4.21.md) | Velch 0.4.21 发布说明 |
+| [RELEASE_NOTES_0.4.22.md](RELEASE_NOTES_0.4.22.md) | Velch 0.4.22 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -1759,6 +1760,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.19.md` | 0.4.19：⑤ 屏常驻「本运行不是标定」横幅 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.20.md` | 0.4.20：页眉「发布证据」只读窗口 + 两个动作搬家 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.21.md` | 0.4.21：页眉「已知问题」窗口 + 账本双向守卫 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.22.md` | 0.4.22：⑥ 对照屏常驻显示选中的两列，O003 关闭 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1951,3 +1953,19 @@ import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并�
 `BUGS.md` 里 `O006` 还写着"⑦ 屏没有接触斑着色，属功能增量"，而它已在 0.4.10 实现。这类
 "关了但账本没改"的漂移正是双向守卫要防的，这次是我先读到才发现的——所以守卫生效之后我把这一行
 就地改成 ✅ 已实现并注明截图。
+
+## 第 60 轮：对照屏的列选择从"猜"变成"看得见"
+
+`O003` 记的是：⑥ 对照屏用 `"x"`/`"力"`/`"_n"` 子串猜 CSV 的里程列与力列，**猜错不提示**。
+上一版已经会把结果写进状态栏，但状态栏那句话下一次操作就没了——而"力列猜成另一根轨"会让整张对照图
+安静地比较两件不同的东西。这一轮把它变成面板上常驻的一行：
+
+   里程列 ← ch_003（自动）；力列 ← SumQ（自动，另有 2 个候选）
+   —— 猜错的代价是整张对照图比较了两根不同的轨，请确认
+
+- 改了下拉框立刻重写这一行，措辞从「自动」变「手动选择」；
+- 自动且**有多个候选**时把"另有 N 个候选"写出来，并在句末提醒代价；
+- 列名一个都不认识时写「列名无法识别，请确认」，而不是静默取第一列。
+
+数据流没有变：仍然是 `store.measured_reference(path, station_col, force_col, scale)`，改的只是
+"用户能不能看见自己比较的是哪两列"。

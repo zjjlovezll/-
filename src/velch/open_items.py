@@ -33,7 +33,7 @@ class OpenItem:
     @property
     def blocking_release(self) -> bool:
         """``True`` when a careful reader should know before quoting a number."""
-        return self.status == "open" and self.id in {"O003", "O008"}
+        return self.status == "open" and self.id == "O008"
 
 
 ITEMS: tuple[OpenItem, ...] = (
@@ -49,9 +49,9 @@ ITEMS: tuple[OpenItem, ...] = (
     OpenItem(
         id="O003",
         title="⑥ 对照屏的 CSV 列靠猜",
-        why="`screen_compare.choose_csv()` 用 `\"x\"`/`\"力\"`/`\"_n\"` 子串挑里程列与力列，猜错不提示。"
-            "正确做法要么先看实测 CSV 的列名约定，要么让界面显示\"我选了哪两列\"并允许改。",
-        status="open",
+        why="已修（0.4.22）：面板上常驻一行写明选了哪两列、是自动还是手动、还有几个候选；"
+            "列名全不认识时明说「列名无法识别」，不再静默取第一列。",
+        status="closed",
         since="0.4.7",
     ),
     OpenItem(

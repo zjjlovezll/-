@@ -46,12 +46,13 @@ def test_open_items_excludes_closed_ones() -> None:
 
     assert opened == {item.id for item in items.ITEMS if item.status != "closed"}
     assert "O006" not in opened, "O006 已在 0.4.10 实现，不该再算未修"
+    assert "O003" not in opened, "O003 已在 0.4.22 实现"
 
 
 def test_a_deliberate_limitation_is_not_counted_as_a_bug() -> None:
     # O005 是设计约束：Simpack 侧物理量不自动映射。它要显示，但不该算进"待修"数字。
     assert items.by_id("O005").status == "by_design"
-    assert items.counts()["open"] == 3
+    assert items.counts()["open"] == 2
 
 
 def test_every_item_says_why_and_when() -> None:
@@ -85,7 +86,7 @@ def test_the_dialog_does_not_import_the_forward_stack() -> None:
         assert forbidden not in source
 
 
-@pytest.mark.parametrize("item_id", ["O001", "O003", "O005", "O008"])
+@pytest.mark.parametrize("item_id", ["O001", "O005", "O008"])
 def test_the_still_open_ids_are_exactly_these(item_id: str) -> None:
     # 钉住集合：关掉一项是件值得改测试的事，不是悄悄消失。
     assert items.by_id(item_id).status in {"open", "by_design"}

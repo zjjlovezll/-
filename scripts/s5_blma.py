@@ -140,9 +140,10 @@ def main() -> int:
     measured = measure(run("target", {band: truth[index] for index, band in enumerate(BANDS)},
                             {band: phase for band in BANDS}, base, length))
 
-    # Compare the distortion with the *signal at this amplitude*, not with the per-unit response:
-    # dividing by |H| alone makes the test almost always pass (5e-5) and hides the real boundary.
-    ratios = [distortion[index, index] / max(abs(matrix[index, index]) * AMPLITUDE_M, 1e-12)
+    # ``distortion`` is stored per unit amplitude (spread/A) and ``matrix`` likewise, so their ratio
+    # *is* distortion/signal: (spread/A)/|H| = spread/(A*|H|).  Dividing by A a second time inflates
+    # the ratio by 1/A (1e4 here); that mistake was made and reverted on 2026-10-24.
+    ratios = [distortion[index, index] / max(abs(matrix[index, index]), 1e-12)
               for index in range(len(BANDS))]
     usable = [index for index, ratio in enumerate(ratios) if ratio < 0.5]
     print("distortion/signal per band:",

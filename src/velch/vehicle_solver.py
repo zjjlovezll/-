@@ -21,6 +21,7 @@ from . import __version__
 from .contact import (ContactGeometry, ContactResponse, deduplicate_contacts, evaluate_contact,
                       find_graph_contact, merge_contact_responses)
 from .solver import SimulationFailure
+from .topology import Topology, topology_for
 from .track_models import TrackKernel
 from .vehicle import VehicleCase
 
@@ -67,17 +68,12 @@ class VehicleDynamics:
                                          thread_name_prefix="velch-contact")
                       if self.contact_workers > 1 else None)
         cfg = case.vehicle
-        self.track = TrackKernel(case.track_kind, case.rails, case.modal_track, case.track_layers)
-        self.mass = np.array([
-            *([cfg.wheelset.mass_kg, cfg.wheelset.mass_kg,
-               cfg.wheelset.roll_inertia_kg_m2, cfg.wheelset.spin_inertia_kg_m2,
-               cfg.wheelset.yaw_inertia_kg_m2] * 4),
-            *([cfg.bogie.mass_kg, cfg.bogie.mass_kg, cfg.bogie.roll_inertia_kg_m2,
-               cfg.bogie.pitch_inertia_kg_m2, cfg.bogie.yaw_inertia_kg_m2] * 2),
-            cfg.carbody.mass_kg, cfg.carbody.mass_kg, cfg.carbody.roll_inertia_kg_m2,
-            cfg.carbody.pitch_inertia_kg_m2, cfg.carbody.yaw_inertia_kg_m2,
-            *self.track.mass,
-        ], dtype=float)
+        # The topology decides the state vector: which bodies exist, what each carries, and
+        # in which order.  With no node table it reproduces the frozen 35-slot layout.
+        self.topology: Topology = topology_for(case)
+        self.track = TrackKernel(case.track_kind, case.rails, case.modal_track,
+                                 case.track_layers, offset=self.topology.body_dimension)
+        self.mass = self.topology.mass_array(self.track.mass)
         self.wheels = {wheel.id: wheel for wheel in case.wheels}
         self.connectors = self._build_connectors()
         # Assemble the strip-contact gradients (dN/dq, d(lever)/dq) only while the
@@ -106,66 +102,34 @@ class VehicleDynamics:
     def dimension(self) -> int:
         return len(self.mass)
 
+    @property
+    def dof(self) -> int:
+        """Number of vehicle coordinates; the track block starts here."""
+
+        return self.topology.body_dimension
+
     def _build_connectors(self) -> tuple[Connector, ...]:
-        cfg = self.case.vehicle
-        n = self.dimension
-        links: list[Connector] = []
+        """Turn the topology's link specs into connectors, one row each."""
 
-        def add(name: str, axis: str, k: float, c: float, entries: dict[int, float], preload=0.0):
-            jac = np.zeros(n)
-            for index, coefficient in entries.items():
-                jac[index] += coefficient
-            links.append(Connector(name, axis, k, c, preload / k if preload else 0.0, jac))
-
-        body = 30
-        secondary = cfg.secondary
-        secondary_preload = cfg.carbody.mass_kg * cfg.gravity_m_s2 / 4
-        for bogie_index in range(2):
-            bogie = 20 + 5 * bogie_index
-            x = cfg.bogie_half_spacing_m * (1 if bogie_index == 0 else -1)
-            for side in (-1, 1):
-                width = side * secondary.half_width_m
-                label = f"secondary_b{bogie_index + 1}_{'L' if side < 0 else 'R'}"
-                add(label + "_z", "z", secondary.k_z_n_m, secondary.c_z_n_s_m,
-                    {body + 1: 1, body + 2: width, body + 3: x,
-                     bogie + 1: -1, bogie + 2: -width}, secondary_preload)
-                add(label + "_y", "y", secondary.k_y_n_m, secondary.c_y_n_s_m,
-                    {body: 1, body + 2: -secondary.upper_anchor_height_m, body + 4: x,
-                     bogie: -1, bogie + 2: secondary.lower_anchor_height_m})
-            add(f"secondary_b{bogie_index + 1}_yaw", "yaw", secondary.k_yaw_nm_rad,
-                secondary.c_yaw_nm_s_rad, {body + 4: 1, bogie + 4: -1})
-
-        primary = cfg.primary
-        primary_preload = (cfg.carbody.mass_kg / 2 + cfg.bogie.mass_kg) * cfg.gravity_m_s2 / 4
-        for axle in range(4):
-            bogie = 20 + 5 * (axle // 2)
-            wheel = 5 * axle
-            x = cfg.wheelbase_m / 2 * (1 if axle % 2 == 0 else -1)
-            for side in (-1, 1):
-                width = side * primary.half_width_m
-                label = f"primary_a{axle + 1}_{'L' if side < 0 else 'R'}"
-                add(label + "_z", "z", primary.k_z_n_m, primary.c_z_n_s_m,
-                    {bogie + 1: 1, bogie + 2: width, bogie + 3: x,
-                     wheel + 1: -1, wheel + 2: -width}, primary_preload)
-                add(label + "_y", "y", primary.k_y_n_m, primary.c_y_n_s_m,
-                    {bogie: 1, bogie + 2: -primary.upper_anchor_height_m, bogie + 4: x,
-                     wheel: -1, wheel + 2: primary.lower_anchor_height_m})
-            add(f"primary_a{axle + 1}_yaw", "yaw", primary.k_yaw_nm_rad,
-                primary.c_yaw_nm_s_rad, {bogie + 4: 1, wheel + 4: -1})
-        return tuple(links)
+        return tuple(
+            Connector(spec.name, spec.axis, spec.stiffness, spec.damping, spec.rest,
+                      spec.jacobian(self.dimension))
+            for spec in self.topology.link_specs
+        )
 
     def evaluate(self, t_s: float, q: np.ndarray, v: np.ndarray) -> tuple[np.ndarray, dict[str, ContactResponse]]:
         cfg = self.case.vehicle
         force = np.zeros(self.dimension)
-        for axle in range(4):
-            force[5 * axle + 1] -= cfg.wheelset.mass_kg * cfg.gravity_m_s2
-            force[5 * axle + 3] += cfg.drive_torque_per_wheelset_nm
-        for bogie in range(2):
-            force[20 + 5 * bogie + 1] -= cfg.bogie.mass_kg * cfg.gravity_m_s2
-        force[31] -= cfg.carbody.mass_kg * cfg.gravity_m_s2
+        for body in self.topology.wheelsets():
+            force[self.topology.require(body.id, "z")] -= body.mass_kg * cfg.gravity_m_s2
+            force[self.topology.require(body.id, "spin")] += cfg.drive_torque_per_wheelset_nm
+        for body in self.topology.bogies():
+            force[self.topology.require(body.id, "z")] -= body.mass_kg * cfg.gravity_m_s2
+        carbody = self.topology.carbody()
+        force[self.topology.require(carbody.id, "z")] -= carbody.mass_kg * cfg.gravity_m_s2
         for connector in self.connectors:
             force += connector.force(q, v)
-        force[35:] += self.track.internal_force(q, v)
+        force[self.dof:] += self.track.internal_force(q, v)
         contacts: dict[str, ContactResponse] = {}
         direction = 1 if cfg.travel_speed_m_s >= 0 else -1
         half_width = self.case.run.contact_search_half_width_m
@@ -201,7 +165,7 @@ class VehicleDynamics:
         else:
             results = list(self._pool.map(self._evaluate_patch, jobs))
         for (rail_index, rail, x), body_results in results:
-            wh = 5 * rail.axle_index
+            wh = self.topology.offset(self.topology.wheelset_id(rail.axle_index))
             body_results = self._attribute_bodies(rail_index, body_results)
             overlap = self.case.contact.duplicate_patch_window_m
             if overlap > 0.0 and len(body_results) > 1:
@@ -217,14 +181,20 @@ class VehicleDynamics:
                 if misses >= self.CONTACT_RESEARCH_INTERVAL:
                     self._contact_seed.pop((rail_index, "__rail__"), None)
                     self._seed_misses[rail_index] = 0
+            wheel_id = self.topology.wheelset_id(rail.axle_index)
+            y_index = self.topology.require(wheel_id, "y")
+            z_index = self.topology.require(wheel_id, "z")
+            roll_index = self.topology.require(wheel_id, "roll")
+            spin_index = self.topology.require(wheel_id, "spin")
+            yaw_index = self.topology.index(wheel_id, "yaw")
             for _body_id, geometry, response in body_results:
-                force[wh] += response.wheel_force_y_n
-                force[wh + 1] += response.wheel_force_z_n
-                force[wh + 2] += response.wheel_roll_moment_nm
-                force[wh + 3] += response.wheel_spin_moment_nm
-                if geometry:
-                    force[wh + 4] -= geometry.lever_y_m * response.longitudinal_force_n
-                force[35:] += self.track.contact_reaction(rail_index, x,
+                force[y_index] += response.wheel_force_y_n
+                force[z_index] += response.wheel_force_z_n
+                force[roll_index] += response.wheel_roll_moment_nm
+                force[spin_index] += response.wheel_spin_moment_nm
+                if geometry and yaw_index is not None:
+                    force[yaw_index] -= geometry.lever_y_m * response.longitudinal_force_n
+                force[self.dof:] += self.track.contact_reaction(rail_index, x,
                                                           response.wheel_force_y_n,
                                                           response.wheel_force_z_n)
         if not np.all(np.isfinite(force)):
@@ -287,7 +257,7 @@ class VehicleDynamics:
         (rail_index, rail, bodies, t_s, q, v, direction,
          seeds, half_width) = job
         cfg = self.case.vehicle
-        wh = 5 * rail.axle_index
+        wh = self.topology.offset(self.topology.wheelset_id(rail.axle_index))
         wheel = self.wheels[rail.wheel_id]
         x = self.case.run.x_start_m + cfg.travel_speed_m_s * t_s + cfg.axle_offsets_m[rail.axle_index]
         path = self.case.path
@@ -446,9 +416,13 @@ class VehicleDynamics:
                             contacts: dict[str, ContactResponse]) -> float:
         cfg = self.case.vehicle
         energy = 0.5 * float(np.dot(self.mass, v * v))
-        energy += cfg.gravity_m_s2 * (cfg.carbody.mass_kg * q[31] +
-                                      sum(cfg.bogie.mass_kg * q[20 + 5 * i + 1] for i in range(2)) +
-                                      sum(cfg.wheelset.mass_kg * q[5 * i + 1] for i in range(4)))
+        topology = self.topology
+        energy += cfg.gravity_m_s2 * (
+            cfg.carbody.mass_kg * q[topology.require(topology.carbody().id, "z")] +
+            sum(cfg.bogie.mass_kg * q[topology.require(body.id, "z")]
+                for body in topology.bogies()) +
+            sum(body.mass_kg * q[topology.require(body.id, "z")]
+                for body in topology.wheelsets()))
         energy += sum(link.potential(q) for link in self.connectors)
         energy += self.track.potential_j(q)
         for responses in self._body_cache.values():
@@ -469,21 +443,27 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     branch reproduces a doubled flat-section force and a non-physical set-down,
     so every seed is solved and the branch with the *least starved* rail is kept.
     """
-    indices = [5 * i + 1 for i in range(4)] + [21, 26, 31]
+    topology = dynamics.topology
+    # The seven vertical coordinates: four wheelsets, two bogies, one carbody, wherever the
+    # topology put them.  With the legacy layout these are the historical 1/6/11/16/21/26/31.
+    indices = ([topology.require(body.id, "z") for body in topology.wheelsets()] +
+               [topology.require(body.id, "z") for body in topology.bogies()] +
+               [topology.require(topology.carbody().id, "z")])
     if case.track_kind == "local_compliant":
-        indices += [35 + 2 * i + 1 for i in range(len(case.rails))]
+        indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]
     elif case.track_kind == "two_layer":
         for i in range(len(case.rails)):
-            indices += [35 + 4 * i + 1, 35 + 4 * i + 3]
+            indices += [topology.body_dimension + 4 * i + 1,
+                        topology.body_dimension + 4 * i + 3]
     elif case.track_kind == "layered":
         stride = 2 * (1 + len(case.track_layers))
         for i in range(len(case.rails)):
-            indices += [35 + stride * i + 2 * j + 1
+            indices += [topology.body_dimension + stride * i + 2 * j + 1
                         for j in range(1 + len(case.track_layers))]
     elif case.track_kind == "modal":
-        indices += list(range(35, dynamics.dimension))
-    wheel_rows = [5 * i + 1 for i in range(4)]
-    bogie_rows = [21, 26]
+        indices += list(range(topology.body_dimension, dynamics.dimension))
+    wheel_rows = [topology.require(body.id, "z") for body in topology.wheelsets()]
+    bogie_rows = [topology.require(body.id, "z") for body in topology.bogies()]
 
     seeds: list[np.ndarray] = [q[indices].copy()]
     for wheel_drop, bogie_drop in ((2.0e-3, 2.0e-3), (5.0e-4, 5.0e-4), (2.0e-3, 0.0), (0.0, 2.0e-3)):
@@ -655,21 +635,24 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         contact_history.append(contacts)
         energies.append(dynamics.mechanical_energy_j(position, velocity, contacts))
         if case.track_kind in {"rigid", "local_compliant", "two_layer", "layered"}:
-            y_indices = [5 * i for i in range(4)] + [20, 25, 30]
-            z_indices = [5 * i + 1 for i in range(4)] + [21, 26, 31]
+            # Every body's lateral and vertical coordinates, wherever the topology put them.
+            topology = dynamics.topology
+            bodies = (*topology.wheelsets(), *topology.bogies(), topology.carbody())
+            y_indices = [topology.require(body.id, "y") for body in bodies]
+            z_indices = [topology.require(body.id, "z") for body in bodies]
             if case.track_kind == "local_compliant":
-                y_indices += [35 + 2 * i for i in range(len(case.rails))]
-                z_indices += [35 + 2 * i + 1 for i in range(len(case.rails))]
+                y_indices += [topology.body_dimension + 2 * i for i in range(len(case.rails))]
+                z_indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]
             elif case.track_kind == "two_layer":
                 for i in range(len(case.rails)):
-                    y_indices += [35 + 4 * i, 35 + 4 * i + 2]
-                    z_indices += [35 + 4 * i + 1, 35 + 4 * i + 3]
+                    y_indices += [topology.body_dimension + 4 * i, topology.body_dimension + 4 * i + 2]
+                    z_indices += [topology.body_dimension + 4 * i + 1, topology.body_dimension + 4 * i + 3]
             elif case.track_kind == "layered":
                 stride = 2 * (1 + len(case.track_layers))
                 for i in range(len(case.rails)):
                     for j in range(1 + len(case.track_layers)):
-                        y_indices.append(35 + stride * i + 2 * j)
-                        z_indices.append(35 + stride * i + 2 * j + 1)
+                        y_indices.append(topology.body_dimension + stride * i + 2 * j)
+                        z_indices.append(topology.body_dimension + stride * i + 2 * j + 1)
             reaction = dynamics.track.support_reaction(position, velocity,
                 [(contacts[rail.id].wheel_force_y_n, contacts[rail.id].wheel_force_z_n)
                  for rail in case.rails])
@@ -685,9 +668,9 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                 py, pz, _, _ = case.modal_track.shapes[rail.template_id].sample(x)
                 rail_force = dynamics.track.contact_reaction(rail_index, x,
                     response.wheel_force_y_n, response.wheel_force_z_n)
-                power_error = float(rail_force @ velocity[35:] +
-                                    response.wheel_force_y_n * (py @ velocity[35:]) +
-                                    response.wheel_force_z_n * (pz @ velocity[35:]))
+                power_error = float(rail_force @ velocity[topology.body_dimension:] +
+                                    response.wheel_force_y_n * (py @ velocity[topology.body_dimension:]) +
+                                    response.wheel_force_z_n * (pz @ velocity[topology.body_dimension:]))
                 max_modal_projection_error_w = max(max_modal_projection_error_w, abs(power_error))
         for rail in case.rails:
             response = contacts[rail.id]
@@ -743,7 +726,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         "case_id": case.case_id, "case_purpose": case.purpose,
         "result_status": "numerically_checked" if all(gates.values()) else "numerical_gate_failed",
         "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
-        "vehicle_dof": 35, "total_dof": dynamics.dimension,
+        "vehicle_dof": topology.body_dimension, "total_dof": dynamics.dimension,
         "track_kind": case.track_kind, "track_dof": dynamics.track.dimension,
         "rail_patch_count": len(case.rails), "connector_count": len(dynamics.connectors),
         "gates": gates, "solver": {"method": run.method, "nfev": int(solution.nfev),

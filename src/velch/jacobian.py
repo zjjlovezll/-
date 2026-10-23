@@ -42,6 +42,9 @@ class JacobianAssembler:
     def __init__(self, dynamics) -> None:
         self.dynamics = dynamics
         self.n = dynamics.dimension
+        #: A node table may widen the vehicle block; the track block starts here.
+        self.dof = dynamics.dof
+        self.dynamics = dynamics
         self.mass = dynamics.mass
         self.law = dynamics.case.contact
         self.speed = dynamics.case.vehicle.travel_speed_m_s
@@ -75,13 +78,13 @@ class JacobianAssembler:
         zero_state = np.zeros(self.n)
         stiffness = np.zeros((self.n, self.n))
         damping = np.zeros((self.n, self.n))
-        for index in range(35, self.n):
+        for index in range(self.dof, self.n):
             unit = np.zeros(self.n)
             unit[index] = 1.0
-            # internal_force spans the rail dofs only; it lands on force[35:] in the
+            # internal_force spans the rail dofs only; it lands on force[self.dof:] in the
             # right-hand side, so the column starts at 35 as well.
-            stiffness[35:, index] = track.internal_force(unit, zero_state)
-            damping[35:, index] = track.internal_force(zero_state, unit)
+            stiffness[self.dof:, index] = track.internal_force(unit, zero_state)
+            damping[self.dof:, index] = track.internal_force(zero_state, unit)
         return stiffness, damping
 
     # -- kinematic rows ------------------------------------------------------
@@ -93,20 +96,20 @@ class JacobianAssembler:
         z_row = np.zeros(self.n)
         kind = track.kind
         if kind == "local_compliant":
-            y_row[35 + 2 * rail_index] = 1.0
-            z_row[35 + 2 * rail_index + 1] = 1.0
+            y_row[self.dof + 2 * rail_index] = 1.0
+            z_row[self.dof + 2 * rail_index + 1] = 1.0
         elif kind == "two_layer":
-            y_row[35 + 4 * rail_index] = 1.0
-            z_row[35 + 4 * rail_index + 1] = 1.0
+            y_row[self.dof + 4 * rail_index] = 1.0
+            z_row[self.dof + 4 * rail_index + 1] = 1.0
         elif kind == "layered":
             stride = 2 * (1 + len(track.layers))
-            y_row[35 + stride * rail_index] = 1.0
-            z_row[35 + stride * rail_index + 1] = 1.0
+            y_row[self.dof + stride * rail_index] = 1.0
+            z_row[self.dof + stride * rail_index + 1] = 1.0
         elif kind == "modal":
             rail = self.dynamics.case.rails[rail_index]
             py, pz, _dpy, _dpz = track.modal.shapes[rail.template_id].sample(x_m)
-            y_row[35:] = py
-            z_row[35:] = pz
+            y_row[self.dof:] = py
+            z_row[self.dof:] = pz
         return y_row, z_row
 
     def _kinematic_row(self, rail_index: int, x_m: float, geometry) -> np.ndarray:
@@ -117,7 +120,8 @@ class JacobianAssembler:
         enters through its lever arm, the rail through its own vertical dof.
         """
         rail = self.dynamics.case.rails[rail_index]
-        wheel = 5 * rail.axle_index
+        wheel = self.dynamics.topology.offset(
+            self.dynamics.topology.wheelset_id(rail.axle_index))
         ny, nz = geometry.normal_y, geometry.normal_z
         row = np.zeros(self.n)
         row[wheel] -= ny
@@ -135,7 +139,8 @@ class JacobianAssembler:
         the three scalar force components symbolic so the chain rule can be applied.
         """
         track = self.dynamics.track
-        wheel = 5 * self.dynamics.case.rails[rail_index].axle_index
+        wheel = self.dynamics.topology.offset(self.dynamics.topology.wheelset_id(
+            self.dynamics.case.rails[rail_index].axle_index))
         ny, nz = geometry.normal_y, geometry.normal_z
         ty, tz = geometry.tangent_y, geometry.tangent_z
         ly, lz = geometry.lever_y_m, geometry.lever_z_m
@@ -144,13 +149,13 @@ class JacobianAssembler:
         normal_row[wheel] += ny
         normal_row[wheel + 1] += nz
         normal_row[wheel + 2] += ly * nz - lz * ny
-        normal_row[35:] += track.contact_reaction(rail_index, x_m, ny, nz)
+        normal_row[self.dof:] += track.contact_reaction(rail_index, x_m, ny, nz)
 
         tangent_row = np.zeros(self.n)
         tangent_row[wheel] += ty
         tangent_row[wheel + 1] += tz
         tangent_row[wheel + 2] += ly * tz - lz * ty
-        tangent_row[35:] += track.contact_reaction(rail_index, x_m, ty, tz)
+        tangent_row[self.dof:] += track.contact_reaction(rail_index, x_m, ty, tz)
 
         longitudinal_row = np.zeros(self.n)
         longitudinal_row[wheel + 3] += lz
@@ -295,7 +300,8 @@ class JacobianAssembler:
             x_m = (dynamics.case.run.x_start_m + cfg.travel_speed_m_s * t_s
                    + cfg.axle_offsets_m[rail.axle_index])
             support_compliance = (self.support.at(x_m) if self.support is not None else None)
-            wheel = 5 * rail.axle_index
+            wheel = self.dynamics.topology.offset(
+            self.dynamics.topology.wheelset_id(rail.axle_index))
             y_row, z_row = self._rail_rows(rail_index, x_m)
             for response in dynamics.body_contacts.get(rail.id, ()):
                 geometry = response.geometry
@@ -447,7 +453,7 @@ class JacobianAssembler:
                                 if force == 0.0:
                                     continue
                                 turn = np.zeros(self.n)
-                                turn[35:] = dynamics.track.contact_reaction(
+                                turn[self.dof:] = dynamics.track.contact_reaction(
                                     rail_index, x_m, float(dy_k), float(dz_k))
                                 jacobian_q += np.outer(turn, force * mode_rows[k])
                 jacobian_v += np.outer(normal_row, normal_dv)

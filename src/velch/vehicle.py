@@ -16,6 +16,7 @@ from typing import Any
 from .contact import ContactParameters
 from .model import LinearSupport, RunSettings, TrackLayer, Wheel
 from .paths import PathTrack, load_path
+from .topology import topology_of
 from .profiles import ProfileSeries, Station, load_profile
 from .support_compliance import SupportCompliance
 from .track_models import ModalTrack, load_modal_track
@@ -172,6 +173,7 @@ class VehicleCase:
     support_compliance: SupportCompliance | None = None
     track_layers: tuple[TrackLayer, ...] = ()
     path: "PathTrack | None" = None
+    topology: "dict | None" = None
 
     def __post_init__(self) -> None:
         if not self.case_id or self.purpose not in {"synthetic", "engineering"} or not self.parameter_source:
@@ -190,11 +192,14 @@ class VehicleCase:
             raise ValueError("unknown track dynamics kind")
         if (self.track_kind == "modal") != (self.modal_track is not None):
             raise ValueError("modal track kind requires a modal exchange file")
-        n = 35 + (2 * len(self.rails) if self.track_kind == "local_compliant"
-                  else 4 * len(self.rails) if self.track_kind == "two_layer"
-                  else 2 * (1 + len(self.track_layers)) * len(self.rails)
-                  if self.track_kind == "layered"
-                  else self.modal_track.mode_count if self.modal_track else 0)
+        # The vehicle block is whatever the topology declared; only the track block below it
+        # depends on the track kind.  With the legacy layout this is the historical 35.
+        n = topology_of(self.topology, self.vehicle).body_dimension + (
+            2 * len(self.rails) if self.track_kind == "local_compliant"
+            else 4 * len(self.rails) if self.track_kind == "two_layer"
+            else 2 * (1 + len(self.track_layers)) * len(self.rails)
+            if self.track_kind == "layered"
+            else self.modal_track.mode_count if self.modal_track else 0)
         if len(self.initial_q) != n or len(self.initial_v) != n:
             raise ValueError(f"initial q/v must each have {n} coordinates")
         if any(not math.isfinite(x) for x in (*self.initial_q, *self.initial_v)):
@@ -302,7 +307,14 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
         modal_path = (base / track_spec["modal_file"]).resolve(strict=True)
         modal_track = load_modal_track(modal_path, [template["id"] for template in raw["rail_templates"]])
         assets[str(modal_path)] = hashlib.sha256(modal_path.read_bytes()).hexdigest()
-    n = 35 + (2 * len(rails) if track_kind == "local_compliant"
+    # The vehicle block size comes from the topology: the legacy 5-DOF layout gives the
+    # frozen 35, a node table gives whatever its bodies declare.
+    # A case may carry its own topology; otherwise it inherits the one its vehicle reference
+    # declares, so "which bodies does this car have" lives with the car and not with each case.
+    topology_block = raw.get("topology") or (
+        None if "vehicle_ref" not in raw else (model.topology or None))
+    topology = topology_of(topology_block, vehicle)
+    n = topology.body_dimension + (2 * len(rails) if track_kind == "local_compliant"
               else 4 * len(rails) if track_kind == "two_layer"
               else 2 * (1 + len(layers)) * len(rails) if track_kind == "layered"
               else modal_track.mode_count if modal_track else 0)
@@ -310,7 +322,8 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     q = tuple(float(x) for x in state.get("q", [0.0] * n))
     default_v = [0.0] * n
     for axle in range(4):
-        default_v[5 * axle + 3] = vehicle.travel_speed_m_s / vehicle.nominal_wheel_radius_m
+        default_v[topology.require(f"wheelset{axle + 1}", "spin")] = (
+            vehicle.travel_speed_m_s / vehicle.nominal_wheel_radius_m)
     velocity = tuple(float(x) for x in state.get("v", default_v))
     support_spec = raw.get("support_compliance")
     compliance = SupportCompliance(**support_spec) if support_spec else None
@@ -319,4 +332,5 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                        RunSettings(**raw["run"]), q, velocity,
                        bool(raw.get("equilibrate_vertical", False)), target,
                        hashlib.sha256(raw_bytes).hexdigest(), assets, compliance,
-                       layers, load_path(raw.get("path")))
+                       layers, load_path(raw.get("path")),
+                       dict(topology_block) if topology_block else None)

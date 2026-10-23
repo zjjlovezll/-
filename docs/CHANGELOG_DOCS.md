@@ -1507,6 +1507,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.23.md](RELEASE_NOTES_0.4.23.md) | Velch 0.4.23 发布说明 |
 | [RELEASE_NOTES_0.4.24.md](RELEASE_NOTES_0.4.24.md) | 0.4.24：一台车只有一个定义 |
 | [RELEASE_NOTES_0.4.25.md](RELEASE_NOTES_0.4.25.md) | Velch 0.4.25 |
+| [RELEASE_NOTES_0.4.26.md](RELEASE_NOTES_0.4.26.md) | Velch 0.4.26 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -1539,6 +1540,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [UI_READABILITY_2026-10-22.md](UI_READABILITY_2026-10-22.md) | 界面可读性：字号缩放与不截断 |
 | [UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md](UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md) | 统一口径复核 + 代码体检（2026-10-22） |
 | [VEHICLE_DATABASE_2026-10-23.md](VEHICLE_DATABASE_2026-10-23.md) | 车辆数据库（Stage 1）：一台车只有一个定义 |
+| [VEHICLE_TOPOLOGY_2026-10-23.md](VEHICLE_TOPOLOGY_2026-10-23.md) | 车辆拓扑：从写死的 35 个坐标到节点表 |
 | [VEHICLE_V2_DESIGN_AND_EVIDENCE.md](VEHICLE_V2_DESIGN_AND_EVIDENCE.md) | Velch v0.2：车辆—轮对—道岔轨道耦合的证据与实现 |
 <!-- DOCS:ALL:END -->` 之间生成
   "文件 → 首行标题"表（73 行，机械取自每篇自己的标题，不改写内容）；
@@ -2104,3 +2106,24 @@ sha256 与读取器名）与三条 `not_verified`。
 同样如此。这一步不假装能做，只保证下一步有据可依。
 
 文档：`docs/SIMPACK_CARBODY_MINING_2026-10-23.md`。
+
+## 第 66 轮：车辆拓扑从代码搬到数据（0.4.26）
+
+**做了什么**：新增 `velch/topology.py`（`Body`/`LinkSpec`/`Topology`、`legacy_topology`、
+`node_topology`、`axial_spec`/`torsional_spec`、`topology_of`），把求解器里写死的 35 坐标改成
+按拓扑求索引；`VehicleCase` 携带 `topology` 块，`vehicle_db` 校验 `v2-node` 并允许算例从
+`vehicle_ref` 继承；新增两台车型定义 `CRH380A_M_node`（等价重述）与 `CRH380A_M_6dof`
+（装上牵引拉杆 7.88e6 N/m、抗侧滚扭杆 1.0e6 N·m/rad、二系横向减振器 17.15e6 N/m + 40 kN·s/m）。
+
+**怎么知道没有改坏**：`scripts/verify_vehicle_ref.py` 冻结基线 `history.csv` sha256 仍是
+`7bfbaa1cc7c464918c08bc05ef6d96f68a4e740f2e2bcc733ecac7468566ad88`（244 404 B、七门全 true）；
+节点表与冻结连接器**逐元件按 (刚体, 坐标) 比较雅可比系数，最大差 0.000e+00**。
+
+**两处自己写错的物理约定**（已修）：二系垂向弹簧在冻结模型里没有点头力臂——车体锚点放在
+转向架站位的 x、转向架锚点放在自己中心；先写成对称多出 −8.75，再改成两侧都 0 又丢了车体那一侧。
+
+**还没对上的**：同一辙叉窗口最大侵入 154.97 µm vs 155.03 µm，但各轨峰值的**归属轮换**了
+（峰值集合相同），因此**不能称轨迹等价**；下一步查轮对与轨道站位的时间对齐。
+
+**验证**：`pytest` 657 passed / 1 skipped；新增 `tests/test_topology.py`（5 项）与
+`tests/test_topology_corpus.py`（3 项，带 corpus 标记）；冒烟 8 步全过。

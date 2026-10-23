@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .vehicle import VehicleParameters
+
 MODEL_SCHEMA = "velch-vehicle-model-v1"
 INDEX_SCHEMA = "velch-vehicle-index-v1"
 INDEX_NAME = "index.json"
@@ -51,6 +53,13 @@ class VehicleModel:
     @property
     def name(self) -> str:
         return str(self.raw.get("name") or self.id)
+
+    @property
+    def topology(self) -> dict | None:
+        """Node table carried by this vehicle, if it has one."""
+
+        block = self.raw.get("topology")
+        return dict(block) if isinstance(block, dict) else None
 
     @property
     def block(self) -> dict[str, Any]:
@@ -206,12 +215,40 @@ def validate(model: VehicleModel) -> list[str]:
             problems.append(f"vehicle.{key} must be positive, got {value!r}")
 
     layout = raw.get("layout") or {}
-    if layout.get("model") != "v2-5dof":
-        problems.append("layout.model must be 'v2-5dof' (this release has no topology engine yet)")
-    if layout.get("bogies") != 2 or layout.get("axles_per_bogie") != 2:
-        problems.append("layout must be 2 bogies x 2 axles (the v2 builder hard-codes it)")
-    if layout.get("state_dimension") != 35:
-        problems.append("layout.state_dimension must be 35 for v2-5dof")
+    model = layout.get("model")
+    if model not in {"v2-5dof", "v2-node"}:
+        problems.append("layout.model must be 'v2-5dof' or 'v2-node'")
+    elif model == "v2-5dof":
+        if layout.get("bogies") != 2 or layout.get("axles_per_bogie") != 2:
+            problems.append("layout must be 2 bogies x 2 axles (the v2 builder hard-codes it)")
+        if layout.get("state_dimension") != 35:
+            problems.append("layout.state_dimension must be 35 for v2-5dof")
+        if raw.get("topology"):
+            problems.append("a v2-5dof model must not also carry a topology block")
+    else:
+        # v2-node: the state size and every element have to be checkable, so build the
+        # topology here instead of trusting two places to agree.
+        if not raw.get("topology"):
+            problems.append("a v2-node model needs a 'topology' block with bodies and elements")
+        else:
+            try:
+                from .topology import topology_of  # local: keeps the import graph a leaf
+                topology = topology_of(raw["topology"], VehicleParameters(**block))
+            except Exception as error:  # noqa: BLE001 - report, never crash the listing
+                problems.append(f"topology is invalid: {error}")
+            else:
+                declared = layout.get("state_dimension")
+                if declared != topology.body_dimension:
+                    problems.append(
+                        f"layout.state_dimension {declared!r} does not match the topology "
+                        f"({topology.body_dimension} coordinates over {len(topology.bodies)} bodies)")
+                for kind in ("wheelset", "bogie", "carbody"):
+                    if not topology.of_kind(kind):
+                        problems.append(f"topology has no body of kind {kind!r}")
+                if len(topology.wheelsets()) != 4:
+                    problems.append("topology must define four wheelsets")
+                if len(topology.bogies()) != 2:
+                    problems.append("topology must define two bogies")
 
     wheels = raw.get("wheels")
     if not isinstance(wheels, list) or len(wheels) != 2:

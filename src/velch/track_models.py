@@ -112,13 +112,17 @@ class TrackKernel:
     """Map rail contact forces to track coordinates using conjugate shapes."""
 
     def __init__(self, kind: str, rails: Sequence[Any], modal: ModalTrack | None = None,
-                 layers: Sequence[Any] = ()):
+                 layers: Sequence[Any] = (), offset: int = 35):
         if kind not in {"rigid", "local_compliant", "two_layer", "layered", "modal"}:
             raise ValueError("track kind must be rigid, local_compliant, two_layer, layered or modal")
         if (kind == "layered") != bool(layers) and kind == "layered":
             raise ValueError("layered track requires at least one layer below the rail")
         if (kind == "modal") != (modal is not None):
             raise ValueError("modal track kind requires exactly one modal exchange file")
+        #: Index of the first track coordinate in the state vector.  It used to be the
+        #: literal 35, which hardcoded a five-DOF vehicle; a node table may carry more
+        #: coordinates, so the block starts wherever the vehicle block ends.
+        self.offset = int(offset)
         self.kind, self.rails, self.modal = kind, tuple(rails), modal
         self.layers = tuple(layers)
         if kind == "rigid":
@@ -174,18 +178,18 @@ class TrackKernel:
         if self.kind == "rigid":
             return 0.0, 0.0, 0.0, 0.0
         if self.kind == "local_compliant":
-            pos = 35 + 2 * rail_index
+            pos = self.offset + 2 * rail_index
             return float(q[pos]), float(q[pos + 1]), float(v[pos]), float(v[pos + 1])
         if self.kind == "two_layer":
-            pos = 35 + 4 * rail_index
+            pos = self.offset + 4 * rail_index
             return float(q[pos]), float(q[pos + 1]), float(v[pos]), float(v[pos + 1])
         if self.kind == "layered":
-            pos = 35 + 2 * (1 + len(self.layers)) * rail_index
+            pos = self.offset + 2 * (1 + len(self.layers)) * rail_index
             return float(q[pos]), float(q[pos + 1]), float(v[pos]), float(v[pos + 1])
         assert self.modal is not None
         rail = self.rails[rail_index]
         py, pz, dpy, dpz = self.modal.shapes[rail.template_id].sample(x_m)
-        eta, etadot = q[35:], v[35:]
+        eta, etadot = q[self.offset:], v[self.offset:]
         return (float(py @ eta), float(pz @ eta),
                 float(py @ etadot + speed_m_s * (dpy @ eta)),
                 float(pz @ etadot + speed_m_s * (dpz @ eta)))
@@ -196,7 +200,7 @@ class TrackKernel:
         if self.kind == "local_compliant":
             result = np.empty(self.dimension)
             for i, rail in enumerate(self.rails):
-                result[2 * i] = -rail.support.k_y_n_m * q[35 + 2 * i] - rail.support.c_y_n_s_m * v[35 + 2 * i]
+                result[2 * i] = -rail.support.k_y_n_m * q[self.offset + 2 * i] - rail.support.c_y_n_s_m * v[self.offset + 2 * i]
                 result[2 * i + 1] = -rail.support.k_z_n_m * q[36 + 2 * i] - rail.support.c_z_n_s_m * v[36 + 2 * i]
             return result
         if self.kind == "layered":
@@ -211,8 +215,8 @@ class TrackKernel:
                         below = here + 2 if j + 1 < len(springs) else None
                         stiffness = spring.k_y_n_m if axis == 0 else spring.k_z_n_m
                         damping = spring.c_y_n_s_m if axis == 0 else spring.c_z_n_s_m
-                        gap = q[35 + here] - (q[35 + below] if below is not None else 0.0)
-                        rate = v[35 + here] - (v[35 + below] if below is not None else 0.0)
+                        gap = q[self.offset + here] - (q[self.offset + below] if below is not None else 0.0)
+                        rate = v[self.offset + here] - (v[self.offset + below] if below is not None else 0.0)
                         force = stiffness * gap + damping * rate
                         result[here] -= force
                         if below is not None:
@@ -221,7 +225,7 @@ class TrackKernel:
         if self.kind == "two_layer":
             result = np.empty(self.dimension)
             for i, rail in enumerate(self.rails):
-                base, out = 35 + 4 * i, 4 * i
+                base, out = self.offset + 4 * i, 4 * i
                 for axis, pad_k, pad_c, ballast_k, ballast_c in (
                         (0, rail.support.k_y_n_m, rail.support.c_y_n_s_m,
                          rail.support.ballast_k_y_n_m, rail.support.ballast_c_y_n_s_m),
@@ -236,7 +240,7 @@ class TrackKernel:
                         ballast_c * v[base + 2 + axis])
             return result
         assert self.modal is not None
-        return -self.modal.stiffness_n_m * q[35:] - self.modal.damping_n_s_m * v[35:]
+        return -self.modal.stiffness_n_m * q[self.offset:] - self.modal.damping_n_s_m * v[self.offset:]
 
     def contact_reaction(self, rail_index: int, x_m: float, fy_n: float, fz_n: float) -> np.ndarray:
         """Return generalized rail force opposing the wheel's y/z force."""
@@ -259,7 +263,7 @@ class TrackKernel:
 
     def potential_j(self, q: np.ndarray) -> float:
         if self.kind == "local_compliant":
-            return float(sum(0.5 * (rail.support.k_y_n_m * q[35 + 2 * i] ** 2 +
+            return float(sum(0.5 * (rail.support.k_y_n_m * q[self.offset + 2 * i] ** 2 +
                                     rail.support.k_z_n_m * q[36 + 2 * i] ** 2)
                              for i, rail in enumerate(self.rails)))
         if self.kind == "layered":
@@ -273,13 +277,13 @@ class TrackKernel:
                         here = base + 2 * j + axis
                         below = here + 2 if j + 1 < len(springs) else None
                         stiffness = spring.k_y_n_m if axis == 0 else spring.k_z_n_m
-                        gap = q[35 + here] - (q[35 + below] if below is not None else 0.0)
+                        gap = q[self.offset + here] - (q[self.offset + below] if below is not None else 0.0)
                         total += 0.5 * stiffness * gap ** 2
             return float(total)
         if self.kind == "two_layer":
             total = 0.0
             for i, rail in enumerate(self.rails):
-                base = 35 + 4 * i
+                base = self.offset + 4 * i
                 for axis, pad_k, ballast_k in (
                         (0, rail.support.k_y_n_m, rail.support.ballast_k_y_n_m),
                         (1, rail.support.k_z_n_m, rail.support.ballast_k_z_n_m)):
@@ -289,7 +293,7 @@ class TrackKernel:
             return float(total)
         if self.kind == "modal":
             assert self.modal is not None
-            return float(0.5 * np.dot(self.modal.stiffness_n_m, q[35:] ** 2))
+            return float(0.5 * np.dot(self.modal.stiffness_n_m, q[self.offset:] ** 2))
         return 0.0
 
     def support_reaction(self, q: np.ndarray, v: np.ndarray,
@@ -297,7 +301,7 @@ class TrackKernel:
         if self.kind == "rigid":
             return -sum(force[0] for force in wheel_contact_forces), -sum(force[1] for force in wheel_contact_forces)
         if self.kind == "local_compliant":
-            return (sum(rail.support.k_y_n_m * q[35 + 2 * i] + rail.support.c_y_n_s_m * v[35 + 2 * i]
+            return (sum(rail.support.k_y_n_m * q[self.offset + 2 * i] + rail.support.c_y_n_s_m * v[self.offset + 2 * i]
                         for i, rail in enumerate(self.rails)),
                     sum(rail.support.k_z_n_m * q[36 + 2 * i] + rail.support.c_z_n_s_m * v[36 + 2 * i]
                         for i, rail in enumerate(self.rails)))
@@ -309,15 +313,15 @@ class TrackKernel:
             for i, rail in enumerate(self.rails):
                 here = stride * i + 2 * bottom
                 spring = self.layers[-1]
-                lateral += spring.k_y_n_m * q[35 + here] + spring.c_y_n_s_m * v[35 + here]
-                vertical += (spring.k_z_n_m * q[35 + here + 1] +
-                             spring.c_z_n_s_m * v[35 + here + 1])
+                lateral += spring.k_y_n_m * q[self.offset + here] + spring.c_y_n_s_m * v[self.offset + here]
+                vertical += (spring.k_z_n_m * q[self.offset + here + 1] +
+                             spring.c_z_n_s_m * v[self.offset + here + 1])
             return lateral, vertical
         if self.kind == "two_layer":
             # The ground only carries what the ballast passes on.
             lateral = vertical = 0.0
             for i, rail in enumerate(self.rails):
-                base = 35 + 4 * i
+                base = self.offset + 4 * i
                 lateral += (rail.support.ballast_k_y_n_m * q[base + 2] +
                             rail.support.ballast_c_y_n_s_m * v[base + 2])
                 vertical += (rail.support.ballast_k_z_n_m * q[base + 3] +

@@ -1,0 +1,1105 @@
+{
+  "schema_version": "velch-vehicle-model-v1",
+  "id": "CRH380A_M_node",
+  "name": "CRH380A 动车（M 车，纯刚性标定版）（节点表·等价重述）",
+  "kind": "EMU power car",
+  "source_case": "case_A_final_law.json（validation/crh380a_m）",
+  "layout": {
+    "model": "v2-node",
+    "state_dimension": 38,
+    "note": "wheelsets keep five coordinates (x prescribed by the travel speed); bogies and carbody carry six",
+    "dof": {
+      "wheelset": [
+        "y",
+        "z",
+        "roll",
+        "spin",
+        "yaw"
+      ],
+      "bogie": [
+        "x",
+        "y",
+        "z",
+        "roll",
+        "pitch",
+        "yaw"
+      ],
+      "carbody": [
+        "x",
+        "y",
+        "z",
+        "roll",
+        "pitch",
+        "yaw"
+      ]
+    }
+  },
+  "gauge_m": 1.435,
+  "vehicle": {
+    "carbody": {
+      "mass_kg": 34934.0,
+      "roll_inertia_kg_m2": 113200.0,
+      "pitch_inertia_kg_m2": 1711800.0,
+      "yaw_inertia_kg_m2": 1615300.0
+    },
+    "bogie": {
+      "mass_kg": 3300.0,
+      "roll_inertia_kg_m2": 2673.0,
+      "pitch_inertia_kg_m2": 1807.0,
+      "yaw_inertia_kg_m2": 3300.0
+    },
+    "wheelset": {
+      "mass_kg": 1780.0,
+      "roll_inertia_kg_m2": 949.0,
+      "spin_inertia_kg_m2": 118.0,
+      "yaw_inertia_kg_m2": 967.0
+    },
+    "primary": {
+      "k_y_n_m": 980000.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 1176000.0,
+      "c_z_n_s_m": 10000.0,
+      "k_yaw_nm_rad": 1960000.0,
+      "c_yaw_nm_s_rad": 0.0,
+      "half_width_m": 1.0,
+      "upper_anchor_height_m": -0.32299999999999995,
+      "lower_anchor_height_m": -0.585
+    },
+    "secondary": {
+      "k_y_n_m": 160000.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 240000.0,
+      "c_z_n_s_m": 20000.0,
+      "k_yaw_nm_rad": 8850000.0,
+      "c_yaw_nm_s_rad": 2450000.0,
+      "half_width_m": 1.23,
+      "upper_anchor_height_m": 0.55,
+      "lower_anchor_height_m": -0.29000000000000004
+    },
+    "bogie_half_spacing_m": 8.75,
+    "wheelbase_m": 2.5,
+    "wheel_center_height_m": 0.43,
+    "nominal_wheel_radius_m": 0.43,
+    "travel_speed_m_s": 97.22222222222221,
+    "gravity_m_s2": 9.81,
+    "drive_torque_per_wheelset_nm": 0.0
+  },
+  "wheels": [
+    {
+      "id": "L",
+      "lateral_offset_m": -0.7465,
+      "profile_filename": "LMA.prw",
+      "profile_format": "prr"
+    },
+    {
+      "id": "R",
+      "lateral_offset_m": 0.7465,
+      "profile_filename": "LMA.prw",
+      "profile_format": "prr"
+    }
+  ],
+  "baseline": {
+    "case": "case_A_final_law.json",
+    "static_contact_force_n": 59680.5768587,
+    "static_penetration_m": 6.547e-05,
+    "eight_contact_peaks_kn": [
+      89.68,
+      170.61
+    ],
+    "note": "静载门与八接触峰值来自 case_full12_cap05 / out_full12_cap05；换车后必须重建"
+  },
+  "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
+  "provenance": {
+    "carbody.mass_kg": "case_A_final_law.json（继承自 CHANGELOG_DOCS 第 12 轮之前的标定工作）",
+    "carbody.roll_inertia_kg_m2": "同上（算例内声明值，未与图纸逐项核对）",
+    "bogie.mass_kg": "同上",
+    "wheelset.mass_kg": "同上（1780 kg，与 CRE 轮对名义值同量级）",
+    "primary.k_z_n_m": "同上（1.176e6 N/m）",
+    "secondary.k_yaw_nm_rad": "同上（8.85e6 N·m/rad）",
+    "contact.effective_modulus_pa": "不在本文件里：接触律属于算例，见 case_*.json 的 contact 块",
+    "travel_speed_m_s": "97.2222 m/s = 350 km/h（算例声明）",
+    "geometry": {
+      "source": "Simpack 2021x submodels CRH380A_M_Bogie.spck / CRH380A_M_Carbody.spck",
+      "bogie_spck_sha256": "b813b479563427b638d6debdd334db17aa5a68e716eb65f7b63cb24fa86737e3",
+      "carbody_spck_sha256": "ab291570643d582781bc6ae420df9ffa463f3b186eb2ac50cde318f673f48172",
+      "read_by": "velch.simpack_model (subvariable + expression resolution, GBK comments)",
+      "report": "docs/SIMPACK_CARBODY_MINING_2026-10-23.md"
+    }
+  },
+  "not_verified": [
+    "wheelset longitudinal x is prescribed by the travel speed, not solved",
+    "bump stops, gearbox links and the vertical damper's series stiffness are not assembled",
+    "the sixth coordinate is unvalidated against measurement or Simpack output",
+    "车体/转向架/轮对的惯性张量只声明了三个方向，缺 Ixy/Ixz/Iyz 交叉项",
+    "一系二系只声明 k_y/k_z/k_yaw 与对应阻尼，无 k_x、无侧滚/点头刚度",
+    "无轴箱、无止挡、无抗蛇行减振器",
+    "carbody x freedom and carbody pitch/yaw coupling to the bogies are recorded here but not solved: the current layout has no longitudinal degree of freedom",
+    "the anti-roll bar, traction rod, lateral damper, bump stop and axle-box bushings are recorded geometry and stiffness only - none of them is assembled into the solver yet",
+    "carbody-mounted points on the left and right side are recorded as half-widths from the model's own subvariables; the Simpack model stores |y| per side, so sign conventions must be re-derived per element before assembly"
+  ],
+  "geometry": {
+    "frame": {
+      "x": "carbody reference point; the model's own carbody position is 13.5 m",
+      "y": "track centreline, positive to the right (the Simpack model stores |y| per side)",
+      "z": "rail top, negative downwards",
+      "_note": "Simpack stores absolute z from the rail top; we keep the same convention here so a value can be copied without a silent offset"
+    },
+    "carbody": {
+      "mass_kg": 34934.0,
+      "roll_inertia_kg_m2": 113200.0,
+      "pitch_inertia_kg_m2": 1711800.0,
+      "yaw_inertia_kg_m2": 1615300.0,
+      "cg_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -1.55
+      },
+      "reference_x_m": 13.5
+    },
+    "bogies": {
+      "distance_m": 17.5,
+      "front_x_m": 22.25,
+      "rear_x_m": 4.75,
+      "wheelbase_m": 2.5,
+      "cg_z_m": -0.51
+    },
+    "primary": {
+      "spring_lower_z_m": -0.585,
+      "spring_upper_z_m": -0.833,
+      "damper_lower_z_m": -0.322,
+      "damper_upper_z_m": -0.684,
+      "damper_lower_x_m": 0.235,
+      "half_width_m": 1.0,
+      "bushing_center_x_m": 0.5,
+      "bushing_center_z_m": -0.446
+    },
+    "secondary": {
+      "air_spring_lower_z_m": -0.8,
+      "air_spring_upper_z_m": -1.0,
+      "half_width_m": 1.23,
+      "vertical_damper_bogie_x_m": 0.163,
+      "vertical_damper_bogie_half_width_m": 0.593,
+      "vertical_damper_bogie_z_m": -0.383,
+      "vertical_damper_carbody_z_m": -0.888,
+      "lateral_damper_bogie_m": {
+        "x": 8.95,
+        "y": 0.33,
+        "z": -0.797
+      },
+      "lateral_damper_carbody_m": {
+        "x": 8.55,
+        "y": 0.14,
+        "z": -0.785
+      },
+      "anti_hunt_bogie_m": {
+        "x_down": 8.7,
+        "x_top": 8.7,
+        "y_down": 2.7,
+        "y_top": 2.92,
+        "z_down": -0.415,
+        "z_top": -0.545
+      },
+      "anti_hunt_carbody_m": {
+        "x_down": 7.995,
+        "x_top": 7.995,
+        "z_down": -0.415,
+        "z_top": -0.545
+      }
+    },
+    "carbody_mounted": {
+      "anti_roll_bar_bogie_x_m": 0.165,
+      "anti_roll_bar_bogie_z_m": -0.487,
+      "anti_roll_bar_stiffness_nm_rad": 1000000.0,
+      "bump_stop_bogie_half_width_m": 0.38,
+      "traction_rod_bogie_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -0.38
+      },
+      "traction_rod_carbody_m": {
+        "x": 0.0,
+        "y": null,
+        "z": -0.38
+      },
+      "traction_rod_stiffness_n_m": 7880000.0
+    }
+  },
+  "topology": {
+    "model": "v2-node",
+    "pitch_sign": -1.0,
+    "bodies": [
+      {
+        "id": "wheelset1",
+        "kind": "wheelset",
+        "dof": [
+          "y",
+          "z",
+          "roll",
+          "spin",
+          "yaw"
+        ],
+        "axle": 0,
+        "bogie": 0,
+        "mass_kg": "$vehicle.wheelset.mass_kg",
+        "inertia": {
+          "roll": "$vehicle.wheelset.roll_inertia_kg_m2",
+          "spin": "$vehicle.wheelset.spin_inertia_kg_m2",
+          "yaw": "$vehicle.wheelset.yaw_inertia_kg_m2"
+        }
+      },
+      {
+        "id": "wheelset2",
+        "kind": "wheelset",
+        "dof": [
+          "y",
+          "z",
+          "roll",
+          "spin",
+          "yaw"
+        ],
+        "axle": 1,
+        "bogie": 0,
+        "mass_kg": "$vehicle.wheelset.mass_kg",
+        "inertia": {
+          "roll": "$vehicle.wheelset.roll_inertia_kg_m2",
+          "spin": "$vehicle.wheelset.spin_inertia_kg_m2",
+          "yaw": "$vehicle.wheelset.yaw_inertia_kg_m2"
+        }
+      },
+      {
+        "id": "wheelset3",
+        "kind": "wheelset",
+        "dof": [
+          "y",
+          "z",
+          "roll",
+          "spin",
+          "yaw"
+        ],
+        "axle": 2,
+        "bogie": 1,
+        "mass_kg": "$vehicle.wheelset.mass_kg",
+        "inertia": {
+          "roll": "$vehicle.wheelset.roll_inertia_kg_m2",
+          "spin": "$vehicle.wheelset.spin_inertia_kg_m2",
+          "yaw": "$vehicle.wheelset.yaw_inertia_kg_m2"
+        }
+      },
+      {
+        "id": "wheelset4",
+        "kind": "wheelset",
+        "dof": [
+          "y",
+          "z",
+          "roll",
+          "spin",
+          "yaw"
+        ],
+        "axle": 3,
+        "bogie": 1,
+        "mass_kg": "$vehicle.wheelset.mass_kg",
+        "inertia": {
+          "roll": "$vehicle.wheelset.roll_inertia_kg_m2",
+          "spin": "$vehicle.wheelset.spin_inertia_kg_m2",
+          "yaw": "$vehicle.wheelset.yaw_inertia_kg_m2"
+        }
+      },
+      {
+        "id": "bogie1",
+        "kind": "bogie",
+        "dof": [
+          "x",
+          "y",
+          "z",
+          "roll",
+          "pitch",
+          "yaw"
+        ],
+        "bogie": 0,
+        "mass_kg": "$vehicle.bogie.mass_kg",
+        "inertia": {
+          "roll": "$vehicle.bogie.roll_inertia_kg_m2",
+          "pitch": "$vehicle.bogie.pitch_inertia_kg_m2",
+          "yaw": "$vehicle.bogie.yaw_inertia_kg_m2"
+        }
+      },
+      {
+        "id": "bogie2",
+        "kind": "bogie",
+        "dof": [
+          "x",
+          "y",
+          "z",
+          "roll",
+          "pitch",
+          "yaw"
+        ],
+        "bogie": 1,
+        "mass_kg": "$vehicle.bogie.mass_kg",
+        "inertia": {
+          "roll": "$vehicle.bogie.roll_inertia_kg_m2",
+          "pitch": "$vehicle.bogie.pitch_inertia_kg_m2",
+          "yaw": "$vehicle.bogie.yaw_inertia_kg_m2"
+        }
+      },
+      {
+        "id": "carbody",
+        "kind": "carbody",
+        "dof": [
+          "x",
+          "y",
+          "z",
+          "roll",
+          "pitch",
+          "yaw"
+        ],
+        "mass_kg": "$vehicle.carbody.mass_kg",
+        "inertia": {
+          "roll": "$vehicle.carbody.roll_inertia_kg_m2",
+          "pitch": "$vehicle.carbody.pitch_inertia_kg_m2",
+          "yaw": "$vehicle.carbody.yaw_inertia_kg_m2"
+        }
+      }
+    ],
+    "elements": [
+      {
+        "kind": "axial",
+        "name": "secondary_b1_L_z",
+        "stiffness": "$vehicle.secondary.k_z_n_m",
+        "damping": "$vehicle.secondary.c_z_n_s_m",
+        "preload_force": 85675.63500000001,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            8.75,
+            -1.23,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "bogie1",
+          "point": [
+            0.0,
+            -1.23,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "secondary_b1_L_y",
+        "stiffness": "$vehicle.secondary.k_y_n_m",
+        "damping": "$vehicle.secondary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            8.75,
+            0.0,
+            0.55
+          ]
+        },
+        "to": {
+          "body": "bogie1",
+          "point": [
+            0.0,
+            0.0,
+            -0.29000000000000004
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "secondary_b1_R_z",
+        "stiffness": "$vehicle.secondary.k_z_n_m",
+        "damping": "$vehicle.secondary.c_z_n_s_m",
+        "preload_force": 85675.63500000001,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            8.75,
+            1.23,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "bogie1",
+          "point": [
+            0.0,
+            1.23,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "secondary_b1_R_y",
+        "stiffness": "$vehicle.secondary.k_y_n_m",
+        "damping": "$vehicle.secondary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            8.75,
+            0.0,
+            0.55
+          ]
+        },
+        "to": {
+          "body": "bogie1",
+          "point": [
+            0.0,
+            0.0,
+            -0.29000000000000004
+          ]
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "secondary_b1_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.secondary.k_yaw_nm_rad",
+        "damping": "$vehicle.secondary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "carbody"
+        },
+        "to": {
+          "body": "bogie1"
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "secondary_b2_L_z",
+        "stiffness": "$vehicle.secondary.k_z_n_m",
+        "damping": "$vehicle.secondary.c_z_n_s_m",
+        "preload_force": 85675.63500000001,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            -8.75,
+            -1.23,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "bogie2",
+          "point": [
+            0.0,
+            -1.23,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "secondary_b2_L_y",
+        "stiffness": "$vehicle.secondary.k_y_n_m",
+        "damping": "$vehicle.secondary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            -8.75,
+            0.0,
+            0.55
+          ]
+        },
+        "to": {
+          "body": "bogie2",
+          "point": [
+            0.0,
+            0.0,
+            -0.29000000000000004
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "secondary_b2_R_z",
+        "stiffness": "$vehicle.secondary.k_z_n_m",
+        "damping": "$vehicle.secondary.c_z_n_s_m",
+        "preload_force": 85675.63500000001,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            -8.75,
+            1.23,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "bogie2",
+          "point": [
+            0.0,
+            1.23,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "secondary_b2_R_y",
+        "stiffness": "$vehicle.secondary.k_y_n_m",
+        "damping": "$vehicle.secondary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "carbody",
+          "point": [
+            -8.75,
+            0.0,
+            0.55
+          ]
+        },
+        "to": {
+          "body": "bogie2",
+          "point": [
+            0.0,
+            0.0,
+            -0.29000000000000004
+          ]
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "secondary_b2_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.secondary.k_yaw_nm_rad",
+        "damping": "$vehicle.secondary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "carbody"
+        },
+        "to": {
+          "body": "bogie2"
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a1_L_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset1",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a1_L_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset1",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a1_R_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset1",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a1_R_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset1",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "primary_a1_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie1"
+        },
+        "to": {
+          "body": "wheelset1"
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a2_L_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset2",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a2_L_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset2",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a2_R_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset2",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a2_R_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset2",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "primary_a2_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie1"
+        },
+        "to": {
+          "body": "wheelset2"
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a3_L_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset3",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a3_L_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset3",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a3_R_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset3",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a3_R_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset3",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "primary_a3_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie2"
+        },
+        "to": {
+          "body": "wheelset3"
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a4_L_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset4",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a4_L_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset4",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a4_R_z",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "wheelset4",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "kind": "axial",
+        "name": "primary_a4_R_y",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            0.0,
+            -0.32299999999999995
+          ]
+        },
+        "to": {
+          "body": "wheelset4",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "primary_a4_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie2"
+        },
+        "to": {
+          "body": "wheelset4"
+        }
+      }
+    ]
+  }
+}

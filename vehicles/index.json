@@ -1,0 +1,42 @@
+{
+  "schema_version": "velch-vehicle-index-v1",
+  "models": [
+    {
+      "id": "CRH380A_M",
+      "name": "CRH380A 动车（M 车，纯刚性标定版）",
+      "kind": "EMU power car",
+      "file": "CRH380A_M.json",
+      "layout": {
+        "model": "v2-5dof",
+        "bogies": 2,
+        "axles_per_bogie": 2,
+        "dof": {
+          "wheelset": [
+            "y",
+            "z",
+            "roll",
+            "spin",
+            "yaw"
+          ],
+          "bogie": [
+            "y",
+            "z",
+            "roll",
+            "pitch",
+            "yaw"
+          ],
+          "carbody": [
+            "y",
+            "z",
+            "roll",
+            "pitch",
+            "yaw"
+          ]
+        },
+        "state_dimension": 35
+      },
+      "axle_count": 4,
+      "physics_validation_status": "unvalidated_against_measurement_or_Simpack"
+    }
+  ]
+}

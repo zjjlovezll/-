@@ -1505,6 +1505,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.21.md](RELEASE_NOTES_0.4.21.md) | Velch 0.4.21 发布说明 |
 | [RELEASE_NOTES_0.4.22.md](RELEASE_NOTES_0.4.22.md) | Velch 0.4.22 发布说明 |
 | [RELEASE_NOTES_0.4.23.md](RELEASE_NOTES_0.4.23.md) | Velch 0.4.23 发布说明 |
+| [RELEASE_NOTES_0.4.24.md](RELEASE_NOTES_0.4.24.md) | 0.4.24：一台车只有一个定义 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -1534,6 +1535,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [UI_CHINESE_LABELS_2026-10-22.md](UI_CHINESE_LABELS_2026-10-22.md) | 界面中文命名规则（Velch UI） |
 | [UI_READABILITY_2026-10-22.md](UI_READABILITY_2026-10-22.md) | 界面可读性：字号缩放与不截断 |
 | [UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md](UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md) | 统一口径复核 + 代码体检（2026-10-22） |
+| [VEHICLE_DATABASE_2026-10-23.md](VEHICLE_DATABASE_2026-10-23.md) | 车辆数据库（Stage 1）：一台车只有一个定义 |
 | [VEHICLE_V2_DESIGN_AND_EVIDENCE.md](VEHICLE_V2_DESIGN_AND_EVIDENCE.md) | Velch v0.2：车辆—轮对—道岔轨道耦合的证据与实现 |
 <!-- DOCS:ALL:END -->` 之间生成
   "文件 → 首行标题"表（73 行，机械取自每篇自己的标题，不改写内容）；
@@ -2011,3 +2013,18 @@ import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并�
 
 仍然没有的：与实测/Simpack 的物理标定（`physics_validation_status` 仍未置位）、安装包签名、
 曲向双体交接、Kalker 级切向律。这些都写在 `docs/EVIDENCE_MAP.md` 的"不在这张表里的东西"。
+
+## 第 63 轮：车辆数据库 Stage 1（一台车只有一个定义）
+
+新增 `Velch/vehicles/CRH380A_M.json` + `index.json`、`src/velch/vehicle_db.py`、
+`velch vehicle list|show|validate|dir`、`tests/test_vehicle_db.py`（17 项）、
+`scripts/verify_vehicle_ref.py`、`docs/VEHICLE_DATABASE_2026-10-23.md`。
+
+算例可以写 `"vehicle_ref": "CRH380A_M"` 代替整块 `vehicle`；两个来源同时出现会被拒绝（避免漂移），
+解析时车辆文件的 sha256 进 `asset_hashes`（改车即让产物校验失败）。
+
+**验收**：`scripts/verify_vehicle_ref.py` 用 `case_frog_N_strip05.json` 跑两遍，
+`history.csv` sha256 相同（`7bfbaa1c…`，244 404 字节）、`result_status` 相同、七门 7/7，
+`VERDICT: EQUIVALENT`。
+
+**未解决**（写进文档与发布说明）：拓扑仍写死 2×2×2、自由度缺 x/pitch/spin、悬挂无 6×6、界面选车未接线。

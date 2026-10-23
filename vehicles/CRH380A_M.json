@@ -1,0 +1,126 @@
+{
+  "schema_version": "velch-vehicle-model-v1",
+  "id": "CRH380A_M",
+  "name": "CRH380A 动车（M 车，纯刚性标定版）",
+  "kind": "EMU power car",
+  "source_case": "case_A_final_law.json（validation/crh380a_m）",
+  "layout": {
+    "model": "v2-5dof",
+    "bogies": 2,
+    "axles_per_bogie": 2,
+    "dof": {
+      "wheelset": [
+        "y",
+        "z",
+        "roll",
+        "spin",
+        "yaw"
+      ],
+      "bogie": [
+        "y",
+        "z",
+        "roll",
+        "pitch",
+        "yaw"
+      ],
+      "carbody": [
+        "y",
+        "z",
+        "roll",
+        "pitch",
+        "yaw"
+      ]
+    },
+    "state_dimension": 35
+  },
+  "gauge_m": 1.435,
+  "vehicle": {
+    "carbody": {
+      "mass_kg": 34934.0,
+      "roll_inertia_kg_m2": 113200.0,
+      "pitch_inertia_kg_m2": 1711800.0,
+      "yaw_inertia_kg_m2": 1615300.0
+    },
+    "bogie": {
+      "mass_kg": 3300.0,
+      "roll_inertia_kg_m2": 2673.0,
+      "pitch_inertia_kg_m2": 1807.0,
+      "yaw_inertia_kg_m2": 3300.0
+    },
+    "wheelset": {
+      "mass_kg": 1780.0,
+      "roll_inertia_kg_m2": 949.0,
+      "spin_inertia_kg_m2": 118.0,
+      "yaw_inertia_kg_m2": 967.0
+    },
+    "primary": {
+      "k_y_n_m": 980000.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 1176000.0,
+      "c_z_n_s_m": 10000.0,
+      "k_yaw_nm_rad": 1960000.0,
+      "c_yaw_nm_s_rad": 0.0,
+      "half_width_m": 1.0,
+      "upper_anchor_height_m": -0.32299999999999995,
+      "lower_anchor_height_m": -0.585
+    },
+    "secondary": {
+      "k_y_n_m": 160000.0,
+      "c_y_n_s_m": 0.0,
+      "k_z_n_m": 240000.0,
+      "c_z_n_s_m": 20000.0,
+      "k_yaw_nm_rad": 8850000.0,
+      "c_yaw_nm_s_rad": 2450000.0,
+      "half_width_m": 1.23,
+      "upper_anchor_height_m": 0.55,
+      "lower_anchor_height_m": -0.29000000000000004
+    },
+    "bogie_half_spacing_m": 8.75,
+    "wheelbase_m": 2.5,
+    "wheel_center_height_m": 0.43,
+    "nominal_wheel_radius_m": 0.43,
+    "travel_speed_m_s": 97.22222222222221,
+    "gravity_m_s2": 9.81,
+    "drive_torque_per_wheelset_nm": 0.0
+  },
+  "wheels": [
+    {
+      "id": "L",
+      "lateral_offset_m": -0.7465,
+      "profile_filename": "LMA.prw",
+      "profile_format": "prr"
+    },
+    {
+      "id": "R",
+      "lateral_offset_m": 0.7465,
+      "profile_filename": "LMA.prw",
+      "profile_format": "prr"
+    }
+  ],
+  "baseline": {
+    "case": "case_A_final_law.json",
+    "static_contact_force_n": 59680.5768587,
+    "static_penetration_m": 6.547e-05,
+    "eight_contact_peaks_kn": [
+      89.68,
+      170.61
+    ],
+    "note": "静载门与八接触峰值来自 case_full12_cap05 / out_full12_cap05；换车后必须重建"
+  },
+  "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
+  "provenance": {
+    "carbody.mass_kg": "case_A_final_law.json（继承自 CHANGELOG_DOCS 第 12 轮之前的标定工作）",
+    "carbody.roll_inertia_kg_m2": "同上（算例内声明值，未与图纸逐项核对）",
+    "bogie.mass_kg": "同上",
+    "wheelset.mass_kg": "同上（1780 kg，与 CRE 轮对名义值同量级）",
+    "primary.k_z_n_m": "同上（1.176e6 N/m）",
+    "secondary.k_yaw_nm_rad": "同上（8.85e6 N·m/rad）",
+    "contact.effective_modulus_pa": "不在本文件里：接触律属于算例，见 case_*.json 的 contact 块",
+    "travel_speed_m_s": "97.2222 m/s = 350 km/h（算例声明）"
+  },
+  "not_verified": [
+    "车体/转向架/轮对的惯性张量只声明了三个方向，缺 Ixy/Ixz/Iyz 交叉项",
+    "一系二系只声明 k_y/k_z/k_yaw 与对应阻尼，无 k_x、无侧滚/点头刚度",
+    "无轴箱、无止挡、无抗蛇行减振器"
+  ]
+}

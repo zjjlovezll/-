@@ -1,0 +1,264 @@
+"""车辆数据库：把"一台车"作为数据文件管理，算例可以只引用它。
+
+这一层只做三件事：找到文件、校验内容、把其中的 ``vehicle`` 块交给 ``load_vehicle_case``。
+它不解析型面、不碰求解器——型面路径仍然写在算例的 ``wheels``/``rail_templates`` 里，
+因为那属于"轨道几何"，不属于"这台车"。
+
+为什么单独一层：算例里重复抄一份车辆参数，就会出现"同一台车在十个 case 里十个样子"。
+让算例写 ``"vehicle_ref": "CRH380A_M"``，则这台车只有一个定义，改一处、全部生效，
+并且校验规则只需要守一处。
+"""
+from __future__ import annotations
+
+import json
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+MODEL_SCHEMA = "velch-vehicle-model-v1"
+INDEX_SCHEMA = "velch-vehicle-index-v1"
+INDEX_NAME = "index.json"
+
+#: v2 剖面下每个刚体的自由度；节点表的顺序就是这个顺序。
+V2_LAYOUT = {"wheelset": ["y", "z", "roll", "spin", "yaw"],
+             "bogie": ["y", "z", "roll", "pitch", "yaw"],
+             "carbody": ["y", "z", "roll", "pitch", "yaw"]}
+
+#: 车辆文件里 ``vehicle`` 块必须有的标量键（与 VehicleParameters 一一对应）。
+SCALARS = ("bogie_half_spacing_m", "wheelbase_m", "wheel_center_height_m",
+           "nominal_wheel_radius_m", "travel_speed_m_s", "gravity_m_s2",
+           "drive_torque_per_wheelset_nm")
+
+#: 悬挂阶段必须有的键（v2 剖面：只有 y / z / yaw）。
+STAGE_KEYS = ("k_y_n_m", "c_y_n_s_m", "k_z_n_m", "c_z_n_s_m", "k_yaw_nm_rad",
+              "c_yaw_nm_s_rad", "half_width_m", "upper_anchor_height_m", "lower_anchor_height_m")
+
+
+class VehicleModelError(ValueError):
+    """车辆文件不合法。消息要说清是哪一条、错在哪、怎么改。"""
+
+
+@dataclass(frozen=True)
+class VehicleModel:
+    path: Path
+    raw: dict[str, Any]
+
+    @property
+    def id(self) -> str:
+        return str(self.raw.get("id") or "")
+
+    @property
+    def name(self) -> str:
+        return str(self.raw.get("name") or self.id)
+
+    @property
+    def block(self) -> dict[str, Any]:
+        """交给 ``VehicleParameters`` 的那一块（逐字，不换算、不补默认值）。"""
+        return dict(self.raw["vehicle"])
+
+    @property
+    def status(self) -> str:
+        return str(self.raw.get("physics_validation_status") or "unknown")
+
+    @property
+    def axle_count(self) -> int:
+        layout = self.raw.get("layout") or {}
+        return int(layout.get("bogies", 0)) * int(layout.get("axles_per_bogie", 0))
+
+    def summary(self) -> dict[str, Any]:
+        block = self.block
+        body = block.get("carbody", {})
+        bogie = block.get("bogie", {})
+        wheelset = block.get("wheelset", {})
+        return {
+            "id": self.id,
+            "name": self.name,
+            "kind": self.raw.get("kind", ""),
+            "axle_count": self.axle_count,
+            "state_dimension": (self.raw.get("layout") or {}).get("state_dimension"),
+            "mass_total_kg": round(float(body.get("mass_kg", 0.0))
+                                    + float(bogie.get("mass_kg", 0.0))
+                                    * int((self.raw.get("layout") or {}).get("bogies", 0))
+                                    + float(wheelset.get("mass_kg", 0.0)) * self.axle_count,
+                                    1),
+            "travel_speed_m_s": block.get("travel_speed_m_s"),
+            "status": self.status,
+            "file": self.path.name,
+        }
+
+
+def _root() -> Path:
+    """车辆库位置：``VELCH_VEHICLE_DIR`` → 仓库 ``vehicles/`` → 安装目录 ``vehicles/``。"""
+    override = os.environ.get("VELCH_VEHICLE_DIR")
+    if override:
+        return Path(override).expanduser().resolve()
+    from .data_root import repository_root  # 局部导入：避免 vehicle_db 成为 data_root 的依赖
+
+    candidate = repository_root() / "vehicles"
+    if candidate.is_dir():
+        return candidate
+    try:
+        from .data_root import frozen_install_root, is_frozen
+
+        if is_frozen():
+            frozen = frozen_install_root() / "vehicles"
+            if frozen.is_dir():
+                return frozen
+    except Exception:  # pragma: no cover - 只在异常环境下走
+        pass
+    return candidate
+
+
+def vehicle_dir() -> Path:
+    return _root()
+
+
+def list_models(*, root: Path | None = None) -> list[VehicleModel]:
+    """目录里所有 ``*.json``（除 ``index.json``），按 id 排序；坏文件跳过并在返回值里不含它。"""
+    folder = Path(root) if root is not None else _root()
+    if not folder.is_dir():
+        return []
+    models: list[VehicleModel] = []
+    for path in sorted(folder.glob("*.json")):
+        if path.name == INDEX_NAME:
+            continue
+        try:
+            models.append(load(path))
+        except (VehicleModelError, json.JSONDecodeError, OSError):
+            continue
+    return sorted(models, key=lambda model: model.id)
+
+
+def load(source: str | Path, *, root: Path | None = None) -> VehicleModel:
+    """按 id 或路径加载并校验。``source`` 是裸 id 时在车辆库里找 ``<id>.json``。"""
+    text = str(source)
+    candidate = Path(text)
+    if candidate.suffix.lower() == ".json" or candidate.is_absolute():
+        path = candidate if candidate.is_absolute() else Path.cwd() / candidate
+    else:
+        folder = Path(root) if root is not None else _root()
+        path = folder / f"{text}.json"
+    if not path.is_file():
+        raise VehicleModelError(f"vehicle model not found: {path}")
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    model = VehicleModel(path=path, raw=raw)
+    problems = validate(model)
+    if problems:
+        raise VehicleModelError("; ".join(problems))
+    return model
+
+
+def validate(model: VehicleModel) -> list[str]:
+    """返回问题清单（空 = 合法）。逐条说清哪里错，便于按提示修文件。"""
+    problems: list[str] = []
+    raw = model.raw
+
+    if raw.get("schema_version") != MODEL_SCHEMA:
+        problems.append(f"schema_version must be {MODEL_SCHEMA!r}, got {raw.get('schema_version')!r}")
+    if not model.id:
+        problems.append("id is required")
+    block = raw.get("vehicle")
+    if not isinstance(block, dict):
+        return problems + ["vehicle block is required"]
+
+    for group, keys in (("carbody", ("mass_kg", "roll_inertia_kg_m2", "pitch_inertia_kg_m2",
+                                     "yaw_inertia_kg_m2")),
+                        ("bogie", ("mass_kg", "roll_inertia_kg_m2", "pitch_inertia_kg_m2",
+                                   "yaw_inertia_kg_m2")),
+                        ("wheelset", ("mass_kg", "roll_inertia_kg_m2", "spin_inertia_kg_m2",
+                                      "yaw_inertia_kg_m2"))):
+        spec = block.get(group)
+        if not isinstance(spec, dict):
+            problems.append(f"vehicle.{group} is required")
+            continue
+        for key in keys:
+            value = spec.get(key)
+            if not isinstance(value, (int, float)) or value <= 0:
+                problems.append(f"vehicle.{group}.{key} must be a positive number, got {value!r}")
+
+    for stage in ("primary", "secondary"):
+        spec = block.get(stage)
+        if not isinstance(spec, dict):
+            problems.append(f"vehicle.{stage} is required")
+            continue
+        missing = [key for key in STAGE_KEYS if key not in spec]
+        if missing:
+            problems.append(f"vehicle.{stage} missing {missing}")
+            continue
+        for key in STAGE_KEYS:
+            value = spec[key]
+            if not isinstance(value, (int, float)):
+                problems.append(f"vehicle.{stage}.{key} must be a number, got {value!r}")
+            elif key.startswith(("k_", "c_")) and value < 0:
+                problems.append(f"vehicle.{stage}.{key} must not be negative, got {value!r}")
+        if float(spec["half_width_m"]) <= 0:
+            problems.append(f"vehicle.{stage}.half_width_m must be positive")
+
+    for key in SCALARS:
+        value = block.get(key)
+        if not isinstance(value, (int, float)):
+            problems.append(f"vehicle.{key} must be a number, got {value!r}")
+    for key in ("wheelbase_m", "wheel_center_height_m", "nominal_wheel_radius_m",
+                "travel_speed_m_s", "gravity_m_s2"):
+        value = block.get(key)
+        if isinstance(value, (int, float)) and value <= 0:
+            problems.append(f"vehicle.{key} must be positive, got {value!r}")
+
+    layout = raw.get("layout") or {}
+    if layout.get("model") != "v2-5dof":
+        problems.append("layout.model must be 'v2-5dof' (this release has no topology engine yet)")
+    if layout.get("bogies") != 2 or layout.get("axles_per_bogie") != 2:
+        problems.append("layout must be 2 bogies x 2 axles (the v2 builder hard-codes it)")
+    if layout.get("state_dimension") != 35:
+        problems.append("layout.state_dimension must be 35 for v2-5dof")
+
+    wheels = raw.get("wheels")
+    if not isinstance(wheels, list) or len(wheels) != 2:
+        problems.append("wheels must list the two wheels (L and R)")
+    else:
+        offsets = [float(item.get("lateral_offset_m", 0.0)) for item in wheels]
+        if not (offsets[0] < 0 < offsets[1]):
+            problems.append(f"wheels must sit either side of the centre line, got {offsets}")
+        if abs(abs(offsets[0]) - abs(offsets[1])) > 1e-9:
+            problems.append(f"wheels must be symmetric about the centre line, got {offsets}")
+
+    status = raw.get("physics_validation_status")
+    if not status:
+        problems.append("physics_validation_status is required (say 'unvalidated...' if it is)")
+    provenance = raw.get("provenance")
+    if not isinstance(provenance, dict) or not provenance:
+        problems.append("provenance is required: every physics number must name where it came from")
+
+    return problems
+
+
+def index(*, root: Path | None = None) -> dict[str, Any]:
+    """``index.json`` 的内容；文件缺失时按目录现算，避免索引与文件脱节。"""
+    folder = Path(root) if root is not None else _root()
+    path = folder / INDEX_NAME
+    if path.is_file():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            data = None
+        if isinstance(data, dict) and data.get("schema_version") == INDEX_SCHEMA:
+            return data
+    return {"schema_version": INDEX_SCHEMA,
+            "models": [model.summary() for model in list_models(root=folder)]}
+
+
+def main_report(models: list[VehicleModel]) -> str:
+    lines = [f"车辆库：{_root()}", ""]
+    if not models:
+        lines.append("（空）")
+        return "\n".join(lines)
+    for model in models:
+        summary = model.summary()
+        lines.append(f"{summary['id']:<14} {summary['name']}")
+        lines.append(f"  {summary['axle_count']} 轴 · {summary['state_dimension']} 自由度 · "
+                     f"总质量 {summary['mass_total_kg']} kg · "
+                     f"{float(summary['travel_speed_m_s'] or 0) * 3.6:.1f} km/h")
+        lines.append(f"  验证状态：{summary['status']}")
+        lines.append(f"  文件：{summary['file']}")
+    return "\n".join(lines)

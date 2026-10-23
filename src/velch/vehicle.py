@@ -241,7 +241,20 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
             raise ValueError(f"body {body_id}: y_window_m must be increasing, got {raw_window}")
         return lo, hi
 
-    v = raw["vehicle"]
+    v = raw.get("vehicle")
+    reference = raw.get("vehicle_ref")
+    if v is not None and reference is not None:
+        # 两个来源同时存在就必然漂移：哪个才是真的？拒绝，让人删掉一个。
+        raise ValueError("case carries both 'vehicle' and 'vehicle_ref': keep exactly one")
+    if v is None:
+        if reference is None:
+            raise ValueError("case must carry either 'vehicle' or 'vehicle_ref'")
+        from .vehicle_db import load as load_vehicle_model
+
+        model = load_vehicle_model(str(reference))
+        v = model.block
+        # 把车辆文件也记进 assets：它是这台车唯一的定义，改了就必须让 manifest 校验失败。
+        assets[str(model.path)] = hashlib.sha256(model.path.read_bytes()).hexdigest()
     vehicle = VehicleParameters(
         RigidBody(**v["carbody"]), RigidBody(**v["bogie"]), WheelsetBody(**v["wheelset"]),
         SuspensionStage(**v["primary"]), SuspensionStage(**v["secondary"]),

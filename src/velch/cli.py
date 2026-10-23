@@ -108,11 +108,42 @@ def main(argv: list[str] | None = None) -> int:
                        help="manifest = the tool table; call = run one tool from JSON; "
                             "doctor = self-check; serve = MCP over stdio")
     agent.add_argument("payload", nargs="?", help="for 'call': {\"tool\": name, \"arguments\": {...}}")
+    vehicle = sub.add_parser("vehicle",
+                             help="list / show / validate the vehicle database (vehicles/*.json)")
+    vehicle.add_argument("action", choices=("list", "show", "validate", "dir"),
+                         help="list = one line per model; show = its numbers; "
+                              "validate = check the file; dir = where the database lives")
+    vehicle.add_argument("model", nargs="?", help="model id (e.g. CRH380A_M) or a path to a .json")
     selfcheck = sub.add_parser("selfcheck",
                                help="check this machine: corpus, Tk, matplotlib, Simpack paths, write access")
     selfcheck.add_argument("--json", action="store_true", help="also print the checks as JSON")
     args = parser.parse_args(argv)
     try:
+        if args.command == "vehicle":
+            from .vehicle_db import VehicleModelError, main_report, load, list_models, vehicle_dir
+
+            if args.action == "dir":
+                print(vehicle_dir())
+                return 0
+            if args.action == "list":
+                print(main_report(list_models()))
+                return 0
+            if args.model is None:
+                print(json.dumps({"status": "failed", "error_type": "UsageError",
+                                  "message": f"'{args.action}' needs a model id"}, ensure_ascii=False))
+                return 2
+            try:
+                model = load(args.model)
+            except (VehicleModelError, OSError) as error:
+                print(json.dumps({"status": "failed", "error_type": type(error).__name__,
+                                  "message": str(error)}, ensure_ascii=False))
+                return 2
+            if args.action == "validate":
+                print(f"{model.id}: {model.path}")
+                print("合法（字段、正负、左右对称、自由度剖面、出处齐全）")
+                return 0
+            print(json.dumps(model.raw, ensure_ascii=False, indent=2))
+            return 0
         if args.command == "selfcheck":
             # Late import: a plain simulation run should not pay for the UI probes.
             from .selfcheck import main as selfcheck_main

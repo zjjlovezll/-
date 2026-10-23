@@ -1519,6 +1519,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.30.md](RELEASE_NOTES_0.4.30.md) | Velch 0.4.30 发布说明 |
 | [RELEASE_NOTES_0.4.31.md](RELEASE_NOTES_0.4.31.md) | Velch 0.4.31 发布说明 |
+| [RELEASE_NOTES_0.4.32.md](RELEASE_NOTES_0.4.32.md) | Velch 0.4.32 发布说明 |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
@@ -1537,6 +1538,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [S5_BLMA_2026-10-24.md](S5_BLMA_2026-10-24.md) | S5c 第一版 BLMA：条件数降到 15、0.1 m 与 2 m 带可复原到 13 %，0.5 m 带仍失手 |
 | [S5_BLMA_ROUND32_2026-10-24.md](S5_BLMA_ROUND32_2026-10-24.md) | S5d：两带可用、0.5 m 卡在边界上——四判据的逐条结论 |
 | [S5_CLOSURE_2026-10-24.md](S5_CLOSURE_2026-10-24.md) | S5e：闭环 8.39 % 通过、盲测通过，但绝对误差 65 % 未过 30 % 判据 |
+| [S5_DUAL_2026-10-24.md](S5_DUAL_2026-10-24.md) | S5f：双带同时激励测出的 2×2 —— 两个估计器互相矛盾，线性反演到此为止 |
 | [S5_INVERSION_2026-10-23.md](S5_INVERSION_2026-10-23.md) | S5 第一轮：按波长反演是**非唯一**的（本工况），并且能给出非唯一的量 |
 | [S5_LINEARITY_2026-10-24.md](S5_LINEARITY_2026-10-24.md) | S5b 结论：线性可加性在任何测试幅值下都不成立——分带定量反演在本设计中不可达 |
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
@@ -2227,3 +2229,13 @@ S3（短波生成器）九带最差 5.25 %；S4 出增益表（96.5 / 1 322 / 3 
 `docs/S5_LINEARITY_2026-10-24.md`、`docs/TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md` §5；
 脚本 `scripts/s4_band_probe.py`、`scripts/s5_inversion.py`、`scripts/s5_linearity.py`。
 O010（柔轨 + 节点表静平衡）仍开放，未在本次收口中动。
+
+## 第 72 轮：S5 的最终判决——线性反演不适用（附判别实验）
+
+- **判据**：闭环 8.39 %（过）、盲测 87.1 % ≤ 1.5×标定（过）、**带限误差 65.2 %（不过，门槛 30 %）**、分辨表有。
+- **判别实验（本轮新增）**：`scripts/s5_dual.py` 用两带**同时**激励测完整复数 2×2（12 个方程解 4 个未知量），
+  得 `[[17785, 14], [340, 6718]]`，条件数 2.65。耦合项确实很小，但 **2.0 m 带对角增益比单带低 14 %**，
+  反演误差从 −23.5 % 恶化到 −39 %，闭环从 8.39 % 退化到 **14.28 %** → 线性常数矩阵不成立。
+- **结论与降级**：任务书 §5d 重写为最终版，主张限定为"两带可分辨 + 单带标定闭环自洽 + 线性 Tikhonov 不适用"；
+  下一步只有非线性辨识（分段 `H(A)` 或可微代理）。
+- 文档：`docs/S5_DUAL_2026-10-24.md`、`docs/S5_CLOSURE_2026-10-24.md`、`scripts/s5_dual.py`、`scripts/s5_closure.py`。

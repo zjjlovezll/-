@@ -1476,6 +1476,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
 | [EVIDENCE_MAP.md](EVIDENCE_MAP.md) | 证据地图：这一版凭什么可以说「可以发布」 |
+| [FORCE_ELEMENT_LIBRARY_2026-10-23.md](FORCE_ELEMENT_LIBRARY_2026-10-23.md) | 力学元件库 |
 | [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
 | [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
@@ -1508,6 +1509,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.24.md](RELEASE_NOTES_0.4.24.md) | 0.4.24：一台车只有一个定义 |
 | [RELEASE_NOTES_0.4.25.md](RELEASE_NOTES_0.4.25.md) | Velch 0.4.25 |
 | [RELEASE_NOTES_0.4.26.md](RELEASE_NOTES_0.4.26.md) | Velch 0.4.26 发布说明 |
+| [RELEASE_NOTES_0.4.27.md](RELEASE_NOTES_0.4.27.md) | Velch 0.4.27 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -2127,3 +2129,24 @@ sha256 与读取器名）与三条 `not_verified`。
 
 **验证**：`pytest` 657 passed / 1 skipped；新增 `tests/test_topology.py`（5 项）与
 `tests/test_topology_corpus.py`（3 项，带 corpus 标记）；冒烟 8 步全过。
+
+## 第 67 轮：力学元件变成"类型"，不再只有两种原语（0.4.27）
+
+**起点是用户的一句话**：Simpack 最强的地方是有成套可调用的力学元件，我们没有。
+
+**做了什么**：新增 `velch/elements.py`——`PARAMETERS` 类型表（`spring`/`damper`/`spring_damper`/
+`bushing`，旧的 `axial`/`torsional` 作为别名保留）、`parse()` 按表校验并给出带单位的中文报错、
+`build()` 产出连接、`catalogue()` 供文档与 `vehicle` 命令；`topology.node_topology` 的装配改为
+先把 `"$vehicle.…"` 解析成数字、再交给元件库，求解器一行没改；`axial_spec` 允许"只有阻尼没有
+刚度"（纯减振器）。
+
+**bushing 的做法**：对 3×3 刚度矩阵做特征分解，把每个主方向变成一个轴向弹簧-阻尼，因此行
+结构不变；矩阵不正定在装配阶段就报错并列出特征值；两个刚体都没有的坐标方向**跳过**而不是报错。
+
+**等价性**：节点表与冻结布局的 30 个连接器仍逐元件系数相同（最大差 `0.000e+00`）；
+`pytest` 669 passed / 1 skipped；新增 `tests/test_elements.py` 11 项（类型/单位/缺参/负值/
+未知类型/重名/继承解析/主方向跳过/不正定拒绝）。
+
+**踩到自己两次**：①元件库第一次接管装配时丢了 `convention`，二系垂向弹簧的点头项符号翻转
+（+8.75 而非 −8.75），逐元件比较当场抓到；②`axial_spec` 的"必须有正刚度"未放宽，纯减振器
+装配报错——测试先红后绿。

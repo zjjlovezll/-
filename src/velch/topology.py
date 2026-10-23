@@ -249,8 +249,8 @@ def axial_spec(topology: Topology, name: str, *, stiffness: float, damping: floa
                convention: Mapping[str, float] | None = None) -> LinkSpec:
     """A spring-damper between two anchor points, measured along ``direction``."""
 
-    if stiffness <= 0.0:
-        raise TopologyError(f"element {name!r} needs a positive stiffness")
+    if stiffness <= 0.0 and damping <= 0.0:
+        raise TopologyError(f"element {name!r} needs a positive stiffness or damping")
     entries: dict[int, float] = {}
     _add_translation(entries, topology, from_body, from_point, direction, +1.0,
                      convention=convention)
@@ -272,8 +272,8 @@ def torsional_spec(topology: Topology, name: str, *, stiffness: float, damping: 
 
     if axis not in ROTATIONS:
         raise TopologyError(f"element {name!r}: {axis!r} is not a rotation")
-    if stiffness <= 0.0:
-        raise TopologyError(f"element {name!r} needs a positive stiffness")
+    if stiffness <= 0.0 and damping <= 0.0:
+        raise TopologyError(f"element {name!r} needs a positive stiffness or damping")
     entries: dict[int, float] = {}
     index = topology.index(from_body, axis)
     if index is not None:
@@ -431,6 +431,46 @@ def node_topology(block: Mapping[str, Any], cfg: Any, *,
                         link_specs=(), track_offset=offset if track_offset is None else track_offset,
                         pitch_sign=float(block.get("pitch_sign", -1.0)))
     convention = {"pitch": topology.pitch_sign}
+    # The element vocabulary lives in ``velch.elements``: one place that knows what a spring,
+    # a damper, a bushing or a torsional link is and which parameters each needs.  Inherited
+    # values (``"$vehicle.primary.k_z_n_m"``) are resolved here first, so the library only ever
+    # sees numbers.
+    from .elements import parse as parse_element, build as build_element
+
+    links: list[LinkSpec] = []
+    resolved: list[dict[str, Any]] = []
+    for raw in block.get("elements", ()) or ():
+        if not isinstance(raw, Mapping):
+            raise TopologyError("every element must be an object")
+        resolved.append({
+            key: (_inherit(value, cfg) if isinstance(value, str) else value)
+            for key, value in raw.items()
+        })
+    seen: set[str] = set()
+    for raw in resolved:
+        element = parse_element(raw)
+        if element.name in seen:
+            raise TopologyError(f"duplicate element name {element.name!r}")
+        seen.add(element.name)
+        if element.kind == "torsional":
+            links.append(torsional_spec(
+                topology, element.name,
+                stiffness=float(element.parameters.get("stiffness", 0.0)),
+                damping=float(element.parameters.get("damping", 0.0)),
+                axis=str(raw.get("axis", "roll")),
+                from_body=element.from_body, to_body=element.to_body,
+                preload_force=float(element.parameters.get("preload_force", 0.0))))
+        else:
+            links.extend(build_element(element, topology, convention=convention))
+    return Topology(model=topology.model, bodies=topology.bodies, offsets=topology.offsets,
+                    link_specs=tuple(links), track_offset=topology.track_offset,
+                    pitch_sign=topology.pitch_sign)
+
+
+def _legacy_element_loop(block: Mapping[str, Any], topology: Topology, cfg: Any,
+                         convention: Mapping[str, float]) -> list[LinkSpec]:
+    """The first implementation, kept for reference while the library is young."""
+
     links: list[LinkSpec] = []
     for raw in block.get("elements", ()) or ():
         if not isinstance(raw, Mapping):

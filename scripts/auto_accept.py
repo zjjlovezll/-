@@ -155,6 +155,15 @@ def main(argv: list[str] | None = None) -> int:
                   "detail": {"tools": len((capabilities.get("data") or {}).get("tools", []))}})
 
     steps.append(_invariants_step())
+    series = subprocess.run([sys.executable, "-X", "utf8", str(REPO / "scripts" / "release_series.py"),
+                             "--check"], cwd=REPO, capture_output=True, text=True,
+                            encoding="utf-8", errors="replace")
+    steps.append({
+        "step": "release-series",
+        "ok": series.returncode == 0,
+        "detail": (series.stdout or series.stderr).strip().splitlines()[-1]
+                  if (series.stdout or series.stderr).strip() else "无输出",
+    })
 
     if not args.skip_run:
         case_path = _fast_case()

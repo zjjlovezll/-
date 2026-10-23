@@ -10,8 +10,8 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 MAP = REPO / "docs" / "EVIDENCE_MAP.md"
 
-SECTIONS = ("① 代码整理与稳定", "② 全仓 bug 清理", "③ 界面美观与可读性",
-            "④ 安装包", "⑤ 读取 Simpack 模型", "物理数值不变")
+SECTIONS = ("① 代码整理与稳定", "①b 发布物与标签一致", "② 全仓 bug 清理",
+            "③ 界面美观与可读性", "④ 安装包", "⑤ 读取 Simpack 模型", "物理数值不变")
 
 
 @pytest.fixture(scope="module")

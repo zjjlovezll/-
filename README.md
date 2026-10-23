@@ -48,6 +48,19 @@ python -X utf8 -m velch.ui --selftest       # 无头自检：7 屏逐个加载�
 界面里的字是中文，通道名（`axle1_right_normal_n`）仍按原始列名保留 —— 它是数据契约，
 翻译后无法再与 `history.csv`、manifest 对账；中文解释显示在标签与说明行。
 
+## 这版凭什么可信
+
+三份**都由脚本生成、都能一条命令复核**的材料：
+
+| 想回答的问题 | 打开 |
+| --- | --- |
+| 这版跑过什么？六个分项各自最近的结果 | `docs/EVIDENCE_MAP.md`（界面页眉「发布证据」也是它） |
+| 一夜之间 0.4.1→0.4.22 各解决什么问题 | `docs/RELEASE_SERIES.md`（`scripts/release_series.py --check` 与标签比对） |
+| 物理数值有没有漂移 | `docs/PHYSICS_INVARIANTS.md`（`scripts/physics_invariants.py`，归档 2401 帧 + 一次现跑） |
+
+还没修的东西也在软件里：页眉「已知问题」列出 `O001`/`O008` 与设计约束 `O005`，数据和
+`docs/BUGS.md` 由测试双向守着。
+
 ## 提交前闸门（本仓库没有远端，闸门就是 CI）
 
 ```powershell

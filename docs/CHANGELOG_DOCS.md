@@ -1532,6 +1532,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [S2_REMAINING_PATHS_2026-10-21.md](S2_REMAINING_PATHS_2026-10-21.md) | S2 剩余两条路：施工规格与口径校正 |
 | [S3_SAMPLE_FLEET_2026-10-21.md](S3_SAMPLE_FLEET_2026-10-21.md) | ﻿# S3 样本批量：theta 敏感度第一测（2026-10-21） |
 | [S4_BAND_TABLE_2026-10-23.md](S4_BAND_TABLE_2026-10-23.md) | S4 决定性实验：逐波长带增益与噪声本底（第一次可用的表） |
+| [S5_INVERSION_2026-10-23.md](S5_INVERSION_2026-10-23.md) | S5 第一轮：按波长反演是**非唯一**的（本工况），并且能给出非唯一的量 |
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |

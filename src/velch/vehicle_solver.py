@@ -468,9 +468,11 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     topology = dynamics.topology
     # The seven vertical coordinates: four wheelsets, two bogies, one carbody, wherever the
     # topology put them.  With the legacy layout these are the historical 1/6/11/16/21/26/31.
-    indices = ([topology.require(body.id, "z") for body in topology.wheelsets()] +
-               [topology.require(body.id, "z") for body in topology.bogies()] +
-               [topology.require(topology.carbody().id, "z")])
+    # Every body that owns a vertical coordinate is an unknown, not just the three kinds the
+    # legacy layout has: an axle box carries a z coordinate and a mass, and freezing it turns the
+    # primary spring into a rigid support (the car then rests on a motionless box while the
+    # wheelsets sink on their bearings).
+    indices = [topology.require(body.id, "z") for body in topology.bodies if "z" in body.dof]
     if case.track_kind == "local_compliant":
         indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]
     elif case.track_kind == "two_layer":
@@ -769,6 +771,36 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     return VehicleResult(times, positions, velocities, contact_history, summary)
 
 
+_COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",
+                  "pitch": "pitch_rad", "yaw": "yaw_rad", "spin": "spin_rad"}
+
+
+def _column_prefix(body) -> str:
+    if body.kind == "wheelset":
+        return f"axle{body.axle}"
+    if body.kind == "axlebox":
+        return f"axle{body.axle}_box"
+    if body.kind == "bogie":
+        return f"bogie{body.bogie}"
+    return body.id
+
+
+def _column_names(case: VehicleCase):
+    """History column names in state order, taken from the topology offsets.
+
+    The columns have to follow the order of the numbers in each row.  A hand-written list stops
+    matching as soon as the layout gains a body or a coordinate: with an axle box, or with the
+    longitudinal coordinate of a 6-DOF layout, every column after the first difference is mislabelled
+    while the numbers themselves stay right.
+    """
+
+    topology = topology_for(case)
+    for body in sorted(topology.bodies, key=lambda item: topology.offset(item.id)):
+        prefix = _column_prefix(body)
+        for axis in body.dof:
+            yield f"{prefix}_{_COLUMN_SUFFIX[axis]}"
+
+
 def save_vehicle_result(case: VehicleCase, result: VehicleResult,
                         output_dir: str | Path) -> tuple[Path, Path]:
     target = Path(output_dir).resolve()
@@ -781,9 +813,7 @@ def save_vehicle_result(case: VehicleCase, result: VehicleResult,
         if hashlib.sha256(Path(path).read_bytes()).hexdigest() != digest:
             raise SimulationFailure(f"v2 profile changed during simulation: {path}")
     snapshot.write_bytes(data)
-    names = [f"axle{i + 1}_{name}" for i in range(4) for name in ("y_m", "z_m", "roll_rad", "spin_rad", "yaw_rad")]
-    names += [f"bogie{i + 1}_{name}" for i in range(2) for name in ("y_m", "z_m", "roll_rad", "pitch_rad", "yaw_rad")]
-    names += [f"carbody_{name}" for name in ("y_m", "z_m", "roll_rad", "pitch_rad", "yaw_rad")]
+    names = list(_column_names(case))
     names += TrackKernel(case.track_kind, case.rails, case.modal_track,
                          case.track_layers).state_names
     columns = ["time_s", *[f"axle{i + 1}_x_m" for i in range(4)], *names,

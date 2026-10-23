@@ -143,12 +143,12 @@ class VehicleDynamics:
         cfg = self.case.vehicle
         force = np.zeros(self.dimension)
         for body in self.topology.wheelsets():
-            force[self.topology.require(body.id, "z")] -= body.mass_kg * cfg.gravity_m_s2
             force[self.topology.require(body.id, "spin")] += cfg.drive_torque_per_wheelset_nm
-        for body in self.topology.bogies():
-            force[self.topology.require(body.id, "z")] -= body.mass_kg * cfg.gravity_m_s2
-        carbody = self.topology.carbody()
-        force[self.topology.require(carbody.id, "z")] -= carbody.mass_kg * cfg.gravity_m_s2
+        # Gravity for every body the topology knows about.  Naming the three legacy kinds dropped
+        # the axle boxes' weight, which made the action/reaction gate read 3.8 kN short.
+        for body in self.topology.bodies:
+            if "z" in body.dof:
+                force[self.topology.require(body.id, "z")] -= body.mass_kg * cfg.gravity_m_s2
         for connector in self.connectors:
             force += connector.force(q, v)
         force[self.dof:] += self.track.internal_force(q, v)
@@ -653,7 +653,9 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     energies = []
     max_translation_balance_error_n = 0.0
     max_modal_projection_error_w = 0.0
-    total_weight = (4 * cfg.wheelset.mass_kg + 2 * cfg.bogie.mass_kg + cfg.carbody.mass_kg) * cfg.gravity_m_s2
+    # Every body that has mass, not "four wheelsets + two bogies + car": with axle boxes the old
+    # expression left 8 x 48.2 kg out and the action/reaction sum read permanently low by 3.8 kN.
+    total_weight = sum(body.mass_kg for body in dynamics.topology.bodies) * cfg.gravity_m_s2
     for t, position, velocity in zip(times, positions, velocities):
         force, contacts = dynamics.evaluate(float(t), position, velocity)
         contact_history.append(contacts)
@@ -661,9 +663,10 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         if case.track_kind in {"rigid", "local_compliant", "two_layer", "layered"}:
             # Every body's lateral and vertical coordinates, wherever the topology put them.
             topology = dynamics.topology
-            bodies = (*topology.wheelsets(), *topology.bogies(), topology.carbody())
+            bodies = tuple(body for body in topology.bodies if "y" in body.dof)
             y_indices = [topology.require(body.id, "y") for body in bodies]
-            z_indices = [topology.require(body.id, "z") for body in bodies]
+            z_indices = [topology.require(body.id, "z") for body in topology.bodies
+                         if "z" in body.dof]
             if case.track_kind == "local_compliant":
                 y_indices += [topology.body_dimension + 2 * i for i in range(len(case.rails))]
                 z_indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]

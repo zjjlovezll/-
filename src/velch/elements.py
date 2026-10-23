@@ -461,6 +461,35 @@ def specs_for(block: Sequence[Mapping[str, Any]], topology: Topology,
     return built
 
 
+def inventory(block: Mapping[str, Any]) -> dict[str, int]:
+    """Count the elements a model declares, by type.
+
+    ``block`` is a vehicle model (inline or the raw JSON of one). A model whose topology lives
+    behind a ``vehicle_ref`` has nothing here, which is a fact worth showing rather than a zero.
+    """
+
+    topology = block.get("topology") or {}
+    counts: dict[str, int] = {}
+    for item in topology.get("elements") or ():
+        if not isinstance(item, Mapping):
+            continue
+        kind = str(item.get("kind") or "?")
+        counts[kind] = counts.get(kind, 0) + 1
+    return counts
+
+
+#: Model files written before the element library still name the two raw kinds; show the
+#: element a reader knows, keeping the raw name so the line still matches the file.
+_INVENTORY_NAMES = {"axial": "弹簧-阻尼(axial)", "torsional": "扭转(torsional)"}
+
+
+def describe_inventory(counts: Mapping[str, int]) -> str:
+    if not counts:
+        return "（未声明元件）"
+    return " · ".join(f"{_INVENTORY_NAMES.get(kind, kind)} {count}"
+                      for kind, count in sorted(counts.items()))
+
+
 def catalogue() -> list[dict[str, Any]]:
     """What this library offers, for ``velch vehicle`` and for the manual."""
 

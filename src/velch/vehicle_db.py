@@ -73,7 +73,11 @@ class VehicleModel:
     @property
     def axle_count(self) -> int:
         layout = self.raw.get("layout") or {}
-        return int(layout.get("bogies", 0)) * int(layout.get("axles_per_bogie", 0))
+        count = int(layout.get("bogies", 0)) * int(layout.get("axles_per_bogie", 0))
+        if count:
+            return count
+        # A node table lists its axles as bodies, so the layout product is zero for it.
+        return _axle_count(self.raw)
 
     def summary(self) -> dict[str, Any]:
         block = self.block
@@ -88,7 +92,8 @@ class VehicleModel:
             "state_dimension": (self.raw.get("layout") or {}).get("state_dimension"),
             "mass_total_kg": round(float(body.get("mass_kg", 0.0))
                                     + float(bogie.get("mass_kg", 0.0))
-                                    * int((self.raw.get("layout") or {}).get("bogies", 0))
+                                    * (int((self.raw.get("layout") or {}).get("bogies", 0))
+                                       or max(1, self.axle_count // 2))
                                     + float(wheelset.get("mass_kg", 0.0)) * self.axle_count,
                                     1),
             "travel_speed_m_s": block.get("travel_speed_m_s"),
@@ -370,6 +375,24 @@ def index(*, root: Path | None = None) -> dict[str, Any]:
             "models": [model.summary() for model in list_models(root=folder)]}
 
 
+def _axle_count(raw) -> int:
+    """Count wheelsets.
+
+    A node table states them as bodies, which is authoritative. The older model keeps a ``wheels``
+    list holding the left/right *profile* definitions shared by every axle, so counting that list
+    would report one axle for a four-axle vehicle.
+    """
+
+    topology = raw.get("topology") or {}
+    bodies = topology.get("bodies") or ()
+    from_bodies = sum(1 for body in bodies
+                      if isinstance(body, dict) and str(body.get("kind")) == "wheelset")
+    if from_bodies:
+        return from_bodies
+    wheels = raw.get("wheels") or ()
+    return len(wheels) // 2 if len(wheels) % 2 == 0 else len(wheels)
+
+
 def main_report(models: list[VehicleModel]) -> str:
     lines = [f"车辆库：{_root()}", ""]
     if not models:
@@ -394,6 +417,11 @@ def main_report(models: list[VehicleModel]) -> str:
             lines.append(f"  车体位置：参考点 x {carbody.get('reference_x_m')} m · "
                          f"定距 {bogies.get('distance_m')} m（前 {bogies.get('front_x_m')} / "
                          f"后 {bogies.get('rear_x_m')}）· 轴距 {bogies.get('wheelbase_m')} m")
+        from .elements import describe_inventory, inventory
+
+        counts = inventory(model.raw)
+        if counts:
+            lines.append(f"  元件：{describe_inventory(counts)}")
         lines.append(f"  验证状态：{summary['status']}")
         lines.append(f"  文件：{summary['file']}")
     return "\n".join(lines)

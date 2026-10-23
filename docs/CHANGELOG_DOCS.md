@@ -1475,9 +1475,11 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
+| [ELEMENT_CATALOGUE_2026-10-23.md](ELEMENT_CATALOGUE_2026-10-23.md) | 元件目录与 Simpack 对照 |
 | [EVIDENCE_MAP.md](EVIDENCE_MAP.md) | 证据地图：这一版凭什么可以说「可以发布」 |
 | [FORCE_ELEMENT_LIBRARY_2026-10-23.md](FORCE_ELEMENT_LIBRARY_2026-10-23.md) | 力学元件库 |
 | [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
+| [GOAL_STATUS_2026-10-23.md](GOAL_STATUS_2026-10-23.md) | 整体目标：完成度与差距 |
 | [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
@@ -1514,6 +1516,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.28.md](RELEASE_NOTES_0.4.28.md) | Velch 0.4.28 发布说明 |
 | [RELEASE_NOTES_0.4.29.md](RELEASE_NOTES_0.4.29.md) | Velch 0.4.29 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
+| [RELEASE_NOTES_0.4.30.md](RELEASE_NOTES_0.4.30.md) | Velch 0.4.30 发布说明 |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
@@ -2189,3 +2192,15 @@ sha256 与读取器名）与三条 `not_verified`。
 `VERDICT: EQUIVALENT`。
 
 **没做**：事件检测、元件内部状态（滞回）、空气簧气室物理、Simpack 元件逐条对照。
+
+## 第 70 轮：把"做到哪一步"变成可查的两页（0.4.30）
+
+**为什么做这个**：用户问"整体任务做完了吗"。回答这种问题不能靠记忆，得让文档自己能被检查。
+
+**做了什么**：①`elements.inventory(block)` / `describe_inventory(counts)`，`velch vehicle list`
+打印每台车的元件清单；②新增 `docs/ELEMENT_CATALOGUE_2026-10-23.md`（七个元件 ↔ Simpack 对照、
+39 个真实力元的槽位判读、**六类明确没搬的东西及原因**）；③新增
+`docs/GOAL_STATUS_2026-10-23.md`（五步目标 × 状态 × 证据命令 × 剩余差距）。
+
+**验证**：`tests/test_element_catalogue.py`（目录覆盖全部元件类型、缺项清单在位、车型清单非空、
+`vehicle list` 输出含"元件："）；全仓 pytest 全绿；`verify_vehicle_ref.py` 仍 `EQUIVALENT`。

@@ -2,9 +2,9 @@
 
 由 `scripts/evidence_map.py` 生成——里面的结果都是**跑出来的**，不是抄来的。`tests/test_evidence_map.py` 会检查这里引用的每个文件都还在、每条命令都能解析，所以这一页没法悄悄过期。
 
-- 当前提交 **`4d11382`**
-- 标签 31 个：`v0.4.6`、`v0.4.7`、`v0.4.8`、`v0.4.9` …
-- 全仓测试 **692 passed, 1 skipped**
+- 当前提交 **`050e161`**
+- 标签 33 个：`v0.4.6`、`v0.4.7`、`v0.4.8`、`v0.4.9` …
+- 全仓测试 **723 passed, 1 skipped**
 
 ## 逐项证据
 
@@ -14,7 +14,7 @@
 | **①b 发布物与标签一致** | 发布序列表由 git 标签与发布说明生成，闸门比对内容 | `python -X utf8 scripts/release_series.py --check` | **21 passed, 0 skipped**（exit 0）<br>期望：「发布序列一致（N 个标签）」；每份 `RELEASE_NOTES_*.md` 都在表里 |
 | **② 全仓 bug 清理** | 缺陷账本归零：已修记 B 编号，仍开记 O 编号并写明理由 | `python -X utf8 scripts/auto_accept.py --skip-run` | `ACCEPT` — tests PASS、doctor PASS、contract PASS、invariants PASS、release-series PASS（exit 0）<br>期望：四步全 PASS（tests / doctor / contract / invariants） |
 | **③ 界面美观与可读性** | 截断由布局测试量出来，不是靠看图；对比度由主题测试算出来 | `python -X utf8 -m pytest tests/test_ui_layout.py tests/test_ui_scale.py -q` | （命令无法直接运行）<br>期望：7 屏 × 100%/130% 无被裁控件；`contrast_violations() == []` |
-| **④ 安装包** | onedir 双 exe（窗口版 + 控制台版），装完能双击运行，并在包内跑一次真实算例 | `python -X utf8 packaging/build_installer.py && python -X utf8 packaging/smoke_test.py` | `ACCEPT` · 8 步 · 失败 0 · 跳过 0（`packaging_smoke_20261023-193006.json`）<br>期望：冒烟 6 步全 PASS：selftest / cli-run / missing-corpus / agent-contract / unicode-path / install-dir-untouched |
+| **④ 安装包** | onedir 双 exe（窗口版 + 控制台版），装完能双击运行，并在包内跑一次真实算例 | `python -X utf8 packaging/build_installer.py && python -X utf8 packaging/smoke_test.py` | `ACCEPT` · 8 步 · 失败 0 · 跳过 0（`packaging_smoke_20261024-023913.json`）<br>期望：冒烟 6 步全 PASS：selftest / cli-run / missing-corpus / agent-contract / unicode-path / install-dir-untouched |
 | **⑤ 读取 Simpack 模型** | 只读几何导入（catalog → case），导入后由静平衡决定能不能算 | `python -X utf8 -m velch inspect-simpack-track <db>/substructure/<x>.spck --model-root <db> --output catalog.json` | 未设置 `VELCH_SIMPACK_MODEL`/`VELCH_SIMPACK_ROOT`（本机未挂模型；细节见文档）<br>期望：`geometry_readable = true`、`missing_profile_references = 0`；派生算例 `seats: true` 后跑出 `numerically_checked`（加 `--with-run` 才跑这一段） |
 | **物理数值不变** | 复算门：归档 2401 帧 + 一次 `--fast` 现跑，与 committed 参考值比较 | `python -X utf8 scripts/physics_invariants.py` | `UNCHANGED`（整程峰值 170.61 kN），exit 0<br>期望：VERDICT: UNCHANGED |
 
@@ -23,12 +23,12 @@
 | 文件 | 内容 | 最后改动 |
 |---|---|---|
 | [`docs/ARCHITECTURE_2026-10-21.md`](../docs/ARCHITECTURE_2026-10-21.md) | 分项 1 的细节 | `b73a932 2026-10-22` |
-| [`docs/CHANGELOG_DOCS.md`](../docs/CHANGELOG_DOCS.md) | 分项 1 的细节 | `8c8c304 2026-10-23` |
+| [`docs/CHANGELOG_DOCS.md`](../docs/CHANGELOG_DOCS.md) | 分项 1 的细节 | `050e161 2026-10-24` |
 | [`tests/test_docs_index.py`](../tests/test_docs_index.py) | 分项 1 的细节 | `3289507 2026-10-23` |
-| [`docs/RELEASE_SERIES.md`](../docs/RELEASE_SERIES.md) | 分项 2 的细节 | `4d11382 2026-10-23` |
+| [`docs/RELEASE_SERIES.md`](../docs/RELEASE_SERIES.md) | 分项 2 的细节 | `050e161 2026-10-24` |
 | [`scripts/release_series.py`](../scripts/release_series.py) | 分项 2 的细节 | `559b4c9 2026-10-23` |
 | [`tests/test_release_series.py`](../tests/test_release_series.py) | 分项 2 的细节 | `559b4c9 2026-10-23` |
-| [`docs/BUGS.md`](../docs/BUGS.md) | 分项 3 的细节 | `d519c28 2026-10-23` |
+| [`docs/BUGS.md`](../docs/BUGS.md) | 分项 3 的细节 | `5157d1c 2026-10-23` |
 | [`scripts/auto_accept.py`](../scripts/auto_accept.py) | 分项 3 的细节 | `559b4c9 2026-10-23` |
 | [`tests/test_ui_layout.py`](../tests/test_ui_layout.py) | 分项 4 的细节 | `03cea5d 2026-10-23` |
 | [`tests/test_ui_scale.py`](../tests/test_ui_scale.py) | 分项 4 的细节 | `e7c1c49 2026-10-23` |
@@ -38,7 +38,7 @@
 | [`packaging/Velch.spec`](../packaging/Velch.spec) | 分项 5 的细节 | `ab90767 2026-10-22` |
 | [`docs/SIMPACK_IMPORT_2026-10-22.md`](../docs/SIMPACK_IMPORT_2026-10-22.md) | 分项 6 的细节 | `c05bac1 2026-10-23` |
 | [`docs/SIMPACK_COMPARE_2026-10-23.md`](../docs/SIMPACK_COMPARE_2026-10-23.md) | 分项 6 的细节 | `12cea65 2026-10-23` |
-| [`src/velch/simpack_case.py`](../src/velch/simpack_case.py) | 分项 6 的细节 | `c05bac1 2026-10-23` |
+| [`src/velch/simpack_case.py`](../src/velch/simpack_case.py) | 分项 6 的细节 | `5157d1c 2026-10-23` |
 | [`docs/PHYSICS_INVARIANTS.md`](../docs/PHYSICS_INVARIANTS.md) | 物理不变量 | `20aa168 2026-10-23` |
 | [`docs/physics_invariants.json`](../docs/physics_invariants.json) | 物理不变量 | `20aa168 2026-10-23` |
 | [`scripts/physics_invariants.py`](../scripts/physics_invariants.py) | 物理不变量 | `20aa168 2026-10-23` |

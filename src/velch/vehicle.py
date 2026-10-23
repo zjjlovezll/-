@@ -174,6 +174,8 @@ class VehicleCase:
     track_layers: tuple[TrackLayer, ...] = ()
     path: "PathTrack | None" = None
     topology: "dict | None" = None
+    #: What irregularity was applied (``.tre`` path, window, channels), or ``None``.
+    irregularity: "dict | None" = None
 
     def __post_init__(self) -> None:
         if not self.case_id or self.purpose not in {"synthetic", "engineering"} or not self.parameter_source:
@@ -297,6 +299,30 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                                      finite("mass_y_kg", template["mass_y_kg"], positive=True),
                                      finite("mass_z_kg", template["mass_z_kg"], positive=True),
                                      support(template["support"]), series, bodies))
+    # Track irregularity is a mileage-dependent offset of the running surface, so it is applied
+    # where the surface is sampled (see velch.irregularity.ShiftedSeries) rather than baked into
+    # the station profiles: the stations are metres apart and the samples are 0.25 m apart.
+    irregularity_record = None
+    irregularity_spec = raw.get("irregularity")
+    if irregularity_spec:
+        from .irregularity import describe_application, read_tre, scaled_track, shift_rails
+
+        tre_path = (base / irregularity_spec["tre"]).resolve(strict=True)
+        assets[str(tre_path)] = hashlib.sha256(tre_path.read_bytes()).hexdigest()
+        raw_track = read_tre(tre_path)
+        channels = tuple(irregularity_spec.get("channels") or
+                         ("lateral", "vertical", "roll", "gauge"))
+        start_m = float(irregularity_spec.get("start_m", raw_track.span_m[0]))
+        end_m = float(irregularity_spec.get("end_m", raw_track.span_m[1]))
+        fade_m = float(irregularity_spec.get("fade_m", 0.0))
+        scale = float(irregularity_spec.get("scale", 1.0))
+        windowed = scaled_track(raw_track, scale=scale, channels=channels,
+                                start_m=start_m, end_m=end_m, fade_m=fade_m)
+        half_gauge_m = abs(wheels[0].lateral_offset_m)
+        rails = shift_rails(rails, windowed, half_gauge_m=half_gauge_m)
+        irregularity_record = describe_application(
+            raw_track, start_m=start_m, end_m=end_m, fade_m=fade_m, scale=scale, channels=channels)
+        irregularity_record["sha256"] = assets[str(tre_path)]
     track_spec = raw.get("track_dynamics", {"kind": "local_compliant"})
     track_kind = track_spec["kind"]
     if track_kind not in {"rigid", "local_compliant", "two_layer", "layered", "modal"}:
@@ -333,4 +359,5 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                        bool(raw.get("equilibrate_vertical", False)), target,
                        hashlib.sha256(raw_bytes).hexdigest(), assets, compliance,
                        layers, load_path(raw.get("path")),
-                       dict(topology_block) if topology_block else None)
+                       dict(topology_block) if topology_block else None,
+                       irregularity=irregularity_record)

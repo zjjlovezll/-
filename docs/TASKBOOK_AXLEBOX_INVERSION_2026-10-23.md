@@ -103,3 +103,43 @@ v2 的垂向载荷路径与旧模型等价（同样锚点、同样预载），�
 - 反演精度（带限 rms）：_待填_
 - 未达成项与原因：_待填_
 - 与前向模型不确定性的关系（轴箱体引入的 5 % 差异如何进入误差预算）：_待填_
+
+## 0b. S1/S2 结果与四次根因（2026-10-23 夜，提交 90175f5 / 61fb889）
+
+### 判据 A：通过（0.23 %，门槛 5 %）
+
+`case_frog`（0.05 s，`--fast`）同工况，内联 6dof vs 轴箱体（86 坐标）：
+
+| 接触 | 6dof kN | 轴箱体 kN | 差 |
+|---|---|---|---|
+| axle1_left / right | 82.20 / 171.08 | 82.20 / 170.72 | +0.00 / −0.21 % |
+| axle2_left / right | 72.53 / 208.90 | 72.52 / 208.41 | −0.01 / −0.23 % |
+| axle3_left / right | 67.29 / 67.17 | 67.29 / 67.18 | −0.00 / +0.00 % |
+| axle4_left / right | 89.10 / 91.65 | 89.10 / 91.67 | +0.00 / +0.02 % |
+
+最大侵入 155.04 → 155.31 µm，两车都 `numerically_checked` 7/7。
+
+### 四次根因（全部是"按 kind 硬编码"，与轴箱无关的通用缺陷）
+
+1. `_static_vertical_equilibrium` 的未知量只取轮对+构架+车体 → 轴箱 z 恒为 0，车重不传到轮对（300–500 kN / 228 µm）。改为按拓扑 `[body.z for body in bodies if "z" in body.dof]`。
+2. `evaluate()` 的重力按三个 kind 各写一段 → 8 个轴箱的 385.6 kg 不施重。
+3. 平动作用-反力门的力求和只取三个 kind，`total_weight` 也只算三 kind → 与真实总重差 3.78 kN，门必挂。两处都改按拓扑Σ。
+4. history 列名是手写的 123 列而数据行来自真实状态 → 轴箱体车型表头 123 / 行 129，读取器报 `got 129 columns instead of 123`。改为 `_column_names(case)` 按 `topology.offset` 生成；轴箱同一轴两个，列名必须带 side（`axle1_box_left/right`）。
+
+### 判据 B：通过（刚性轨道 0.8 s，`case_long_axlebox`，7/7）
+
+| 通道 | rms | 峰值 | 主导频率 |
+|---|---|---|---|
+| `axle1_box_left_z_acc` | 1.95 g | 10.58 g | 13.7 Hz |
+| `axle1_box_right_z_acc` | 1.95 g | 10.61 g | 13.7 Hz |
+| `axle1_z_acc`（轮对，对照） | 1.63 g | 9.29 g | 193.6 Hz |
+
+轮对在 193.6 Hz 看到辙叉冲击、轴箱只有 13.7 Hz —— 轴箱悬置在一系之上，低通是应有行为。
+
+### S2：解析加速度通道
+
+`VehicleResult.accelerations`（15 刚体 × y/z = 30 列）+ `history.csv` 的 `*_{y|z}_acc_m_per_s2`。与逐帧重算 `evaluate()` 的 `force/mass` 相比**相对误差 0.000e+00**；零幅值基线与冻结基线 `history.csv` 的 sha256 不变。
+
+### 仍未解决：O010（节点表 + 柔性轨道坐不住）
+
+同一 1.2 s 柔轨算例（`case_full12_cap05`，x_start 13.5）：内联 35 坐标 **通过**（550.54 µm），节点表 `_6dof`(38) 与 `_axlebox`(86) **都失败**（`no seed converged` / `unbalanced branch 240615 N = 4× even share`）。故与轴箱无关，属"拓扑化状态布局 + 16 轨道坐标同入静平衡"的组合缺陷；下一轮查残差归一化（`/1e5`）与轨道行量级。

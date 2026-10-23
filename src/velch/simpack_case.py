@@ -367,7 +367,7 @@ def seat_report(case_path: str | Path, *, catalog_path: str | Path | None = None
                     "rather than switch/blade geometry.")
             except (SimpackCaseError, OSError, ValueError, KeyError) as advice_error:
                 report["advice"] = f"could not measure alternative windows: {advice_error}"
-        report["hint"] = ("nothing was wrong with the case file: the seven vertical degrees of "
+        report["hint"] = ("nothing was wrong with the case file: the vertical coordinates of "
                           "freedom could not seat eight patches on these sections")
         return report
     _ = q_eq

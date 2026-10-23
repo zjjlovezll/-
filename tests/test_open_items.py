@@ -52,7 +52,9 @@ def test_open_items_excludes_closed_ones() -> None:
 def test_a_deliberate_limitation_is_not_counted_as_a_bug() -> None:
     # O005 是设计约束：Simpack 侧物理量不自动映射。它要显示，但不该算进"待修"数字。
     assert items.by_id("O005").status == "by_design"
-    assert items.counts()["open"] == 2
+    # O001, O005 (by design, counted separately), O008 and O010 are open: the count moves when a
+    # real limitation is registered, and that is the point of the ledger.
+    assert items.counts()["open"] == 3
 
 
 def test_every_item_says_why_and_when() -> None:

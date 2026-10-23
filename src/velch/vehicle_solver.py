@@ -491,20 +491,27 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     wheel_rows = [topology.require(body.id, "z") for body in topology.wheelsets()]
     bogie_rows = [topology.require(body.id, "z") for body in topology.bogies()]
 
+    box_rows = [topology.require(body.id, "z") for body in topology.bodies
+                if body.kind == "axlebox"]
     seeds: list[np.ndarray] = [q[indices].copy()]
-    for wheel_drop, bogie_drop in ((2.0e-3, 2.0e-3), (5.0e-4, 5.0e-4), (2.0e-3, 0.0), (0.0, 2.0e-3)):
-        seed = q[indices].copy()
+    # The seed grid has to span the bodies that actually exist.  An axle box sits between the
+    # primary spring and the bearing, so its set-down is a fraction of the wheel's; without a box
+    # dimension Newton settles on the symmetric branch where one side carries 2x and the other
+    # side lifts off, which is exactly the failure the 1.2 s case showed (240.6 kN vs 59.7 kN).
+    for wheel_drop, bogie_drop, box_drop in (
+            (2.0e-3, 2.0e-3, 2.0e-3), (5.0e-4, 5.0e-4, 5.0e-4), (2.0e-3, 0.0, 2.0e-3),
+            (0.0, 2.0e-3, 2.0e-3), (1.0e-3, 1.0e-3, 5.0e-4), (3.0e-3, 3.0e-3, 3.0e-3)):
         seeded = q.copy()
         for row in wheel_rows:
             seeded[row] -= wheel_drop
         for row in bogie_rows:
             seeded[row] -= bogie_drop
-        seed = seeded[indices].copy()
-        seeds.append(seed)
+        for row in box_rows:
+            seeded[row] -= box_drop
+        seeds.append(seeded[indices].copy())
 
     cfg = case.vehicle
-    weight_n = cfg.gravity_m_s2 * (cfg.carbody.mass_kg + 2.0 * cfg.bogie.mass_kg
-                                   + 4.0 * cfg.wheelset.mass_kg)
+    weight_n = cfg.gravity_m_s2 * sum(body.mass_kg for body in topology.bodies)
     expected_n = weight_n / max(len(case.rails), 1)
 
     best: tuple[float, np.ndarray, float, list[float]] | None = None
@@ -544,9 +551,9 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     over_loaded = max(loads) > 1.6 * expected_n
     if starved and over_loaded:
         raise SimulationFailure(
-            "vertical preload equilibrium failed: hung-bogie branch - the lightest "
+            "vertical preload equilibrium failed: unbalanced branch - the lightest "
             f"contact patch carries only {min(loads):.1f} N while the heaviest carries "
-            f"{max(loads):.1f} N (even share ~{expected_n:.0f} N); the seven vertical "
+            f"{max(loads):.1f} N (even share ~{expected_n:.0f} N); the vertical "
             "degrees of freedom cannot seat eight patches evenly")
     q[indices] = values
     return q, error_n
@@ -795,7 +802,10 @@ def _column_prefix(body) -> str:
     if body.kind == "wheelset":
         return f"axle{body.axle}"
     if body.kind == "axlebox":
-        return f"axle{body.axle}_box"
+        # Two boxes ride the same axle, so the side has to be in the name: duplicate headers make
+        # every reader after the first collision pick the wrong column.
+        side = "right" if str(body.id).endswith(("R", "r")) else "left"
+        return f"axle{body.axle}_box_{side}"
     if body.kind == "bogie":
         return f"bogie{body.bogie}"
     return body.id

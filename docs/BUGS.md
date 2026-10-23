@@ -110,3 +110,5 @@
 `simpack-case --import-lateral` 被拒时 stderr 的 JSON 带
 `detail.both_sides_possible == false` 与 `detail.other_side_stations == 2`。
 真要导入两侧，需要一个两条轨都带断面表的模型（或人工补左轨断面表）。
+
+| O010 | 节点表车型在柔性轨道（`local_compliant`）上静平衡失败 | 同一 1.2 s 算例，内联 35 坐标通过、节点表 38/86 坐标均失败（`no seed converged` / 4× even share）；与轴箱无关 | open |

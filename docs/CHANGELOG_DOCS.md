@@ -1512,6 +1512,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.26.md](RELEASE_NOTES_0.4.26.md) | Velch 0.4.26 发布说明 |
 | [RELEASE_NOTES_0.4.27.md](RELEASE_NOTES_0.4.27.md) | Velch 0.4.27 发布说明 |
 | [RELEASE_NOTES_0.4.28.md](RELEASE_NOTES_0.4.28.md) | Velch 0.4.28 发布说明 |
+| [RELEASE_NOTES_0.4.29.md](RELEASE_NOTES_0.4.29.md) | Velch 0.4.29 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -2173,3 +2174,18 @@ sha256 与读取器名）与三条 `not_verified`。
 写反了——`dV/dδ = F`（不是 `−F`），测试在间隙点还多测了一个单侧导数不可用的位置。
 
 **没做**（写进文档）：间隙/阀门切换的事件检测、元件内部状态（滞回）、空气簧、查表力、元件对照报告。
+
+## 第 69 轮：让止挡可平滑、让曲线能当元件（0.4.29）
+
+**做了什么**：①`BumpStopLaw` 增加 `transition_m`（C1 过渡段，默认 0）；②新元件 `force_table`
+（`points`/`rate_points`，段内线性、斜率=割线、表外斜率 0）。
+
+**一处必须记下的算术**：第一版过渡段只把 `t<T` 换成抛物线，`t≥T` 仍用 `−k·t`，于是 `t=T` 处力从
+`−k·T/2` 跳到 `−k·T`——**C0 都不成立**。正解是线性段同时抬高 `k·T/2`（`F = −(k t − kT/2)`），这样力与
+斜率都连续；势能也要跟着改成 `½k(t−T/2)² + …`。测试里直接量 `t=T±1e-9` 两侧的力与斜率，不靠读代码。
+
+**验证**：新增 `tests/test_elements_tables.py` 11 项（默认无过渡段、C1 连续性、势能导数=力、表的插值/钳制/
+双通道/排序校验/单位报错）；全仓 `pytest` 687 passed / 1 skipped；`verify_vehicle_ref.py` 仍
+`VERDICT: EQUIVALENT`。
+
+**没做**：事件检测、元件内部状态（滞回）、空气簧气室物理、Simpack 元件逐条对照。

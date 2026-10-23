@@ -26,7 +26,7 @@ import numpy as np  # noqa: E402
 from velch.case.derive import absolutise_profile_paths  # noqa: E402
 from velch.irregularity import IrregularityTrack, write_tre  # noqa: E402
 
-BASE = DATA / "case_long_axlebox.json"
+BASE = Path(sys.argv[1]) if len(sys.argv) > 1 else DATA / "case_long_axlebox.json"
 BANDS = (0.1, 0.5, 2.0, 8.0)
 SPEED = 97.2222
 WINDOW_S = (0.40, 0.80)
@@ -75,7 +75,9 @@ def measure(out: Path) -> np.ndarray:
         rows = list(csv.DictReader(handle))
     times = np.array([float(row["time_s"]) for row in rows])
     values = np.array([float(row["axle1_box_left_z_acc_m_per_s2"]) for row in rows])
-    mask = (times >= WINDOW_S[0]) & (times <= WINDOW_S[1])
+    span = times[-1] - times[0]
+    lo, hi = times[0] + 0.15 * span, times[0] + 0.90 * span
+    mask = (times >= lo) & (times <= hi)
     times, values = times[mask], values[mask]
     values = values - values.mean()
     out_values = []

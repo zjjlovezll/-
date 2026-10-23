@@ -1535,6 +1535,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [S3_SAMPLE_FLEET_2026-10-21.md](S3_SAMPLE_FLEET_2026-10-21.md) | ﻿# S3 样本批量：theta 敏感度第一测（2026-10-21） |
 | [S4_BAND_TABLE_2026-10-23.md](S4_BAND_TABLE_2026-10-23.md) | S4 决定性实验：逐波长带增益与噪声本底（第一次可用的表） |
 | [S5_BLMA_2026-10-24.md](S5_BLMA_2026-10-24.md) | S5c 第一版 BLMA：条件数降到 15、0.1 m 与 2 m 带可复原到 13 %，0.5 m 带仍失手 |
+| [S5_BLMA_ROUND32_2026-10-24.md](S5_BLMA_ROUND32_2026-10-24.md) | S5d：两带可用、0.5 m 卡在边界上——四判据的逐条结论 |
 | [S5_INVERSION_2026-10-23.md](S5_INVERSION_2026-10-23.md) | S5 第一轮：按波长反演是**非唯一**的（本工况），并且能给出非唯一的量 |
 | [S5_LINEARITY_2026-10-24.md](S5_LINEARITY_2026-10-24.md) | S5b 结论：线性可加性在任何测试幅值下都不成立——分带定量反演在本设计中不可达 |
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |

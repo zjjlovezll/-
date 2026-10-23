@@ -1989,3 +1989,25 @@ import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并�
 
 `README.md` 新增"这版凭什么可信"一节，用一张三行表指向：证据地图（跑过什么）、发布序列（一夜
 怎么走到今天）、物理不变量（数值有没有漂移）。还没修的东西也在软件里——页眉「已知问题」。
+
+## 第 62 轮：收尾核查（这一夜的最后一组数字）
+
+全量跑一遍，把"能不能交付"变成六个可复算的判定：
+
+| 核查项 | 命令 | 结果 |
+| --- | --- | --- |
+| 全仓测试 | `python -X utf8 -m pytest tests -q` | **614 passed, 1 skipped**（唯一 skip 是没有 `VELCH_SIMPACK_MODEL`） |
+| 自动验收（含端到端） | `python -X utf8 scripts/auto_accept.py` | **ACCEPT**：tests 61.8 s / doctor / contract / invariants / release-series / end-to-end |
+| 发布序列与标签 | `python -X utf8 scripts/release_series.py --check` | 一致（**24 个标签**） |
+| 物理不变量 | `python -X utf8 scripts/physics_invariants.py` | **VERDICT: UNCHANGED** |
+| 安装包冒烟 | `python -X utf8 packaging/smoke_test.py --readonly-acl` | **ACCEPT · 8 步 · 失败 0 · 跳过 0**（`reports/packaging_smoke_20261023-083640.json`） |
+| 工作区 | `git status --short` | 干净（HEAD `e3bb36f`，`v0.4.23`） |
+
+五个目标项各自的落点：①架构规则/文档索引/版本一致性由测试守着，发布序列表由闸门比对标签；
+②缺陷账本 `docs/BUGS.md` 已修 B001–B025、仍开 O001 与 O008、设计约束 O005，界面页眉「已知问题」
+与账本由测试双向对齐；③七屏 × 100 %/130 % 由布局测试量过、对比度由主题测试算过；
+④0.4.23 onedir 双 exe 出包并八步冒烟；⑤Simpack 几何能读、能派生、能裁决、能算，
+横向布置仍是 O008（模型本身左轨只有 2 个断面）。
+
+仍然没有的：与实测/Simpack 的物理标定（`physics_validation_status` 仍未置位）、安装包签名、
+曲向双体交接、Kalker 级切向律。这些都写在 `docs/EVIDENCE_MAP.md` 的"不在这张表里的东西"。

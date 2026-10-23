@@ -1504,6 +1504,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.20.md](RELEASE_NOTES_0.4.20.md) | Velch 0.4.20 发布说明 |
 | [RELEASE_NOTES_0.4.21.md](RELEASE_NOTES_0.4.21.md) | Velch 0.4.21 发布说明 |
 | [RELEASE_NOTES_0.4.22.md](RELEASE_NOTES_0.4.22.md) | Velch 0.4.22 发布说明 |
+| [RELEASE_NOTES_0.4.23.md](RELEASE_NOTES_0.4.23.md) | Velch 0.4.23 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
@@ -1762,6 +1763,7 @@ profile_references = 238；seats: true（8 个接触、最大侵入 65.47 µm）
 | `RELEASE_NOTES_0.4.20.md` | 0.4.20：页眉「发布证据」只读窗口 + 两个动作搬家 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.21.md` | 0.4.21：页眉「已知问题」窗口 + 账本双向守卫 | ✅ 2026-10-23 新增 |
 | `RELEASE_NOTES_0.4.22.md` | 0.4.22：⑥ 对照屏常驻显示选中的两列，O003 关闭 | ✅ 2026-10-23 新增 |
+| `RELEASE_NOTES_0.4.23.md` | 0.4.23：首页与证据地图指向三份可复算材料，发布序列成表 | ✅ 2026-10-23 新增 |
 
 ## 第 53 轮：只读安装变成可验证的一条（O009 关闭）
 
@@ -1970,3 +1972,20 @@ import 任意模块。处理方式是把它加进 `PRESENTATION_MAY_IMPORT` 并�
 
 数据流没有变：仍然是 `store.measured_reference(path, station_col, force_col, scale)`，改的只是
 "用户能不能看见自己比较的是哪两列"。
+
+## 第 61 轮：一夜 23 个包，压成一页可核对的序列
+
+`docs/RELEASE_SERIES.md`：每个 git 标签 → 打标签时间 → 提交 → **那一版解决了什么** → 对应发布
+说明。整张表**由脚本生成**（`scripts/release_series.py`），一句话取自各版发布说明的第一句实质描述。
+手写的索引一定会落后于标签，所以它同时被两处守着：
+
+- `tests/test_release_series.py`：文件内容必须等于 `render()` 的结果，且每个标签、每份发布说明都在表里；
+- `scripts/auto_accept.py` 新增第五步 `release-series`（`--check`）：打标签忘了更新这页，提交被拦。
+
+接进去的第一次它就把我拦了——不是因为漏更新表格，而是我把脚本路径拼成了 `src/scripts/...`
+（`SOURCE` 与 `REPO` 用错）。同一轮 `test_docs_index.py` 也拦了一次：新增文档没重新生成索引块。
+
+### 首页指向三份"能一条命令复核"的材料
+
+`README.md` 新增"这版凭什么可信"一节，用一张三行表指向：证据地图（跑过什么）、发布序列（一夜
+怎么走到今天）、物理不变量（数值有没有漂移）。还没修的东西也在软件里——页眉「已知问题」。

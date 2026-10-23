@@ -136,7 +136,7 @@
     "carbody x freedom and carbody pitch/yaw coupling to the bogies are recorded here but not solved: the current layout has no longitudinal degree of freedom",
     "the anti-roll bar, traction rod, lateral damper, bump stop and axle-box bushings are recorded geometry and stiffness only - none of them is assembled into the solver yet",
     "carbody-mounted points on the left and right side are recorded as half-widths from the model's own subvariables; the Simpack model stores |y| per side, so sign conventions must be re-derived per element before assembly",
-    "轴箱体由一系与转臂节点两段串联替代原来的轮对→构架直连；高频段必然与老车型不同，5 % 的轮轨力峰值差异是容忍上限，不是标定目标"
+    "轴箱体只插在垂向/横向载荷路径上：一系弹簧与转臂节点改为 轴箱↔构架，轮对↔轴箱取轴承刚体 1e9 N/m；一系点头约束仍留在 构架↔轮对，所以高频段与 5-DOF 车型必然不同"
   ],
   "geometry": {
     "frame": {
@@ -762,6 +762,58 @@
         }
       },
       {
+        "kind": "torsional",
+        "name": "primary_a1_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie1"
+        },
+        "to": {
+          "body": "wheelset1"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "primary_a2_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie1"
+        },
+        "to": {
+          "body": "wheelset2"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "primary_a3_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie2"
+        },
+        "to": {
+          "body": "wheelset3"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "primary_a4_yaw",
+        "axis": "yaw",
+        "stiffness": "$vehicle.primary.k_yaw_nm_rad",
+        "damping": "$vehicle.primary.c_yaw_nm_s_rad",
+        "from": {
+          "body": "bogie2"
+        },
+        "to": {
+          "body": "wheelset4"
+        }
+      },
+      {
         "kind": "axial",
         "name": "traction_rod_front",
         "stiffness": 7880000.0,
@@ -896,47 +948,20 @@
         }
       },
       {
-        "name": "primary_z_axle1L",
+        "name": "bearing_a1L_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
-        "from": {
-          "body": "wheelset1",
-          "point": [
-            0.0,
-            -0.7465,
-            -0.322
-          ]
-        },
-        "to": {
-          "body": "axlebox1L",
-          "point": [
-            0.0,
-            -0.7465,
-            0.585
-          ]
-        }
-      },
-      {
-        "name": "primary_y_axle1L",
-        "kind": "axial",
-        "direction": [
-          0.0,
-          1.0,
-          0.0
-        ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset1",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -944,13 +969,95 @@
           "body": "axlebox1L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle1L",
+        "name": "bearing_a1L_y",
+        "kind": "axial",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
+        "from": {
+          "body": "wheelset1",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox1L",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_1L_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox1L",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_1L_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox1L",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_1L_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -963,7 +1070,7 @@
           "body": "axlebox1L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -971,13 +1078,13 @@
           "body": "bogie1",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle1L",
+        "name": "arm_1L_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -990,7 +1097,7 @@
           "body": "axlebox1L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -998,53 +1105,26 @@
           "body": "bogie1",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "primary_z_axle1R",
+        "name": "bearing_a1R_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
-        "from": {
-          "body": "wheelset1",
-          "point": [
-            0.0,
-            0.7465,
-            -0.322
-          ]
-        },
-        "to": {
-          "body": "axlebox1R",
-          "point": [
-            0.0,
-            0.7465,
-            0.585
-          ]
-        }
-      },
-      {
-        "name": "primary_y_axle1R",
-        "kind": "axial",
-        "direction": [
-          0.0,
-          1.0,
-          0.0
-        ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset1",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1052,13 +1132,95 @@
           "body": "axlebox1R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle1R",
+        "name": "bearing_a1R_y",
+        "kind": "axial",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
+        "from": {
+          "body": "wheelset1",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox1R",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_1R_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox1R",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_1R_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox1R",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_1R_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -1071,7 +1233,7 @@
           "body": "axlebox1R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1079,13 +1241,13 @@
           "body": "bogie1",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle1R",
+        "name": "arm_1R_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -1098,7 +1260,7 @@
           "body": "axlebox1R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1106,53 +1268,26 @@
           "body": "bogie1",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "primary_z_axle2L",
+        "name": "bearing_a2L_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
-        "from": {
-          "body": "wheelset2",
-          "point": [
-            0.0,
-            -0.7465,
-            -0.322
-          ]
-        },
-        "to": {
-          "body": "axlebox2L",
-          "point": [
-            0.0,
-            -0.7465,
-            0.585
-          ]
-        }
-      },
-      {
-        "name": "primary_y_axle2L",
-        "kind": "axial",
-        "direction": [
-          0.0,
-          1.0,
-          0.0
-        ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset2",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1160,13 +1295,95 @@
           "body": "axlebox2L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle2L",
+        "name": "bearing_a2L_y",
+        "kind": "axial",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
+        "from": {
+          "body": "wheelset2",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox2L",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_2L_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox2L",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_2L_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox2L",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_2L_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -1179,7 +1396,7 @@
           "body": "axlebox2L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1187,13 +1404,13 @@
           "body": "bogie1",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle2L",
+        "name": "arm_2L_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -1206,7 +1423,7 @@
           "body": "axlebox2L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1214,53 +1431,26 @@
           "body": "bogie1",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "primary_z_axle2R",
+        "name": "bearing_a2R_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
-        "from": {
-          "body": "wheelset2",
-          "point": [
-            0.0,
-            0.7465,
-            -0.322
-          ]
-        },
-        "to": {
-          "body": "axlebox2R",
-          "point": [
-            0.0,
-            0.7465,
-            0.585
-          ]
-        }
-      },
-      {
-        "name": "primary_y_axle2R",
-        "kind": "axial",
-        "direction": [
-          0.0,
-          1.0,
-          0.0
-        ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset2",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1268,13 +1458,95 @@
           "body": "axlebox2R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle2R",
+        "name": "bearing_a2R_y",
+        "kind": "axial",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
+        "from": {
+          "body": "wheelset2",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox2R",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_2R_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox2R",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_2R_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie1",
+          "point": [
+            -1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox2R",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_2R_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -1287,7 +1559,7 @@
           "body": "axlebox2R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1295,13 +1567,13 @@
           "body": "bogie1",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle2R",
+        "name": "arm_2R_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -1314,7 +1586,7 @@
           "body": "axlebox2R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1322,53 +1594,53 @@
           "body": "bogie1",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "primary_z_axle3L",
+        "name": "bearing_a3L_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
         "from": {
           "body": "wheelset3",
           "point": [
             0.0,
-            -0.7465,
-            -0.322
+            -1.0,
+            0.0
           ]
         },
         "to": {
           "body": "axlebox3L",
           "point": [
             0.0,
-            -0.7465,
-            0.585
+            -1.0,
+            0.0
           ]
         }
       },
       {
-        "name": "primary_y_axle3L",
+        "name": "bearing_a3L_y",
         "kind": "axial",
         "direction": [
           0.0,
           1.0,
           0.0
         ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset3",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1376,13 +1648,68 @@
           "body": "axlebox3L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle3L",
+        "name": "primary_3L_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox3L",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_3L_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox3L",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_3L_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -1395,7 +1722,7 @@
           "body": "axlebox3L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1403,13 +1730,13 @@
           "body": "bogie2",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle3L",
+        "name": "arm_3L_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -1422,7 +1749,7 @@
           "body": "axlebox3L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1430,53 +1757,26 @@
           "body": "bogie2",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "primary_z_axle3R",
+        "name": "bearing_a3R_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
-        "from": {
-          "body": "wheelset3",
-          "point": [
-            0.0,
-            0.7465,
-            -0.322
-          ]
-        },
-        "to": {
-          "body": "axlebox3R",
-          "point": [
-            0.0,
-            0.7465,
-            0.585
-          ]
-        }
-      },
-      {
-        "name": "primary_y_axle3R",
-        "kind": "axial",
-        "direction": [
-          0.0,
-          1.0,
-          0.0
-        ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset3",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1484,13 +1784,95 @@
           "body": "axlebox3R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle3R",
+        "name": "bearing_a3R_y",
+        "kind": "axial",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
+        "from": {
+          "body": "wheelset3",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox3R",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_3R_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox3R",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_3R_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox3R",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_3R_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -1503,7 +1885,7 @@
           "body": "axlebox3R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1511,13 +1893,13 @@
           "body": "bogie2",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle3R",
+        "name": "arm_3R_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -1530,7 +1912,7 @@
           "body": "axlebox3R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1538,53 +1920,53 @@
           "body": "bogie2",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "primary_z_axle4L",
+        "name": "bearing_a4L_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
         "from": {
           "body": "wheelset4",
           "point": [
             0.0,
-            -0.7465,
-            -0.322
+            -1.0,
+            0.0
           ]
         },
         "to": {
           "body": "axlebox4L",
           "point": [
             0.0,
-            -0.7465,
-            0.585
+            -1.0,
+            0.0
           ]
         }
       },
       {
-        "name": "primary_y_axle4L",
+        "name": "bearing_a4L_y",
         "kind": "axial",
         "direction": [
           0.0,
           1.0,
           0.0
         ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset4",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1592,13 +1974,68 @@
           "body": "axlebox4L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle4L",
+        "name": "primary_4L_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            -1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox4L",
+          "point": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_4L_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox4L",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_4L_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -1611,7 +2048,7 @@
           "body": "axlebox4L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1619,13 +2056,13 @@
           "body": "bogie2",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle4L",
+        "name": "arm_4L_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -1638,7 +2075,7 @@
           "body": "axlebox4L",
           "point": [
             0.0,
-            -0.7465,
+            -1.0,
             0.0
           ]
         },
@@ -1646,53 +2083,53 @@
           "body": "bogie2",
           "point": [
             0.5,
-            -0.7465,
+            -1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "primary_z_axle4R",
+        "name": "bearing_a4R_z",
         "kind": "axial",
         "direction": [
           0.0,
           0.0,
           1.0
         ],
-        "stiffness": 1176000.0,
-        "damping": 10000.0,
+        "stiffness": 1000000000.0,
+        "damping": 0.0,
         "from": {
           "body": "wheelset4",
           "point": [
             0.0,
-            0.7465,
-            -0.322
+            1.0,
+            0.0
           ]
         },
         "to": {
           "body": "axlebox4R",
           "point": [
             0.0,
-            0.7465,
-            0.585
+            1.0,
+            0.0
           ]
         }
       },
       {
-        "name": "primary_y_axle4R",
+        "name": "bearing_a4R_y",
         "kind": "axial",
         "direction": [
           0.0,
           1.0,
           0.0
         ],
-        "stiffness": 980000.0,
+        "stiffness": 1000000000.0,
         "damping": 0.0,
         "from": {
           "body": "wheelset4",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1700,13 +2137,68 @@
           "body": "axlebox4R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         }
       },
       {
-        "name": "arm_x_axle4R",
+        "name": "primary_4R_z",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_z_n_m",
+        "damping": "$vehicle.primary.c_z_n_s_m",
+        "preload_force": 50931.067500000005,
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            1.0,
+            0.0
+          ]
+        },
+        "to": {
+          "body": "axlebox4R",
+          "point": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "primary_4R_y",
+        "kind": "axial",
+        "stiffness": "$vehicle.primary.k_y_n_m",
+        "damping": "$vehicle.primary.c_y_n_s_m",
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "from": {
+          "body": "bogie2",
+          "point": [
+            -1.25,
+            0.0,
+            -0.323
+          ]
+        },
+        "to": {
+          "body": "axlebox4R",
+          "point": [
+            0.0,
+            0.0,
+            -0.585
+          ]
+        }
+      },
+      {
+        "name": "arm_4R_x",
         "kind": "axial",
         "direction": [
           1.0,
@@ -1719,7 +2211,7 @@
           "body": "axlebox4R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1727,13 +2219,13 @@
           "body": "bogie2",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }
       },
       {
-        "name": "arm_y_axle4R",
+        "name": "arm_4R_y",
         "kind": "axial",
         "direction": [
           0.0,
@@ -1746,7 +2238,7 @@
           "body": "axlebox4R",
           "point": [
             0.0,
-            0.7465,
+            1.0,
             0.0
           ]
         },
@@ -1754,7 +2246,7 @@
           "body": "bogie2",
           "point": [
             0.5,
-            0.7465,
+            1.0,
             -0.446
           ]
         }

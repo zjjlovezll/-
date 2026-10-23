@@ -1517,6 +1517,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [RELEASE_NOTES_0.4.29.md](RELEASE_NOTES_0.4.29.md) | Velch 0.4.29 发布说明 |
 | [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
 | [RELEASE_NOTES_0.4.30.md](RELEASE_NOTES_0.4.30.md) | Velch 0.4.30 发布说明 |
+| [RELEASE_NOTES_0.4.31.md](RELEASE_NOTES_0.4.31.md) | Velch 0.4.31 发布说明 |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
@@ -2211,3 +2212,14 @@ sha256 与读取器名）与三条 `not_verified`。
 
 **验证**：`tests/test_element_catalogue.py`（目录覆盖全部元件类型、缺项清单在位、车型清单非空、
 `vehicle list` 输出含"元件："）；全仓 pytest 全绿；`verify_vehicle_ref.py` 仍 `EQUIVALENT`。
+
+## 第 71 轮（2026-10-24 凌晨）：轴箱反演任务书收口
+
+S1（轴箱体）判据 A 0.23 %、判据 B 轴箱 13.7 Hz / 1.95 g rms；S2（加速度通道）相对误差 0.000e+00；
+S3（短波生成器）九带最差 5.25 %；S4 出增益表（96.5 / 1 322 / 3 747 / 175 832 (1/s²)/m，SNR 1.9–4.7）；
+**S5 未通过并显式降级**——直线段四带叠加误差 61–213 %，线性 Tikhonov 反演在本设计下不可达。
+
+证据：`docs/S4_BAND_TABLE_2026-10-23.md`、`docs/S5_INVERSION_2026-10-23.md`、
+`docs/S5_LINEARITY_2026-10-24.md`、`docs/TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md` §5；
+脚本 `scripts/s4_band_probe.py`、`scripts/s5_inversion.py`、`scripts/s5_linearity.py`。
+O010（柔轨 + 节点表静平衡）仍开放，未在本次收口中动。

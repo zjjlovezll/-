@@ -73,6 +73,8 @@ class VehicleResult:
     velocities: np.ndarray
     contacts: list[dict[str, ContactResponse]]
     summary: dict[str, object]
+    #: Analytic ``force/mass`` for every vertical and lateral translation, one row per frame.
+    accelerations: np.ndarray | None = None
 
 
 class VehicleDynamics:
@@ -656,8 +658,16 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     # Every body that has mass, not "four wheelsets + two bogies + car": with axle boxes the old
     # expression left 8 x 48.2 kg out and the action/reaction sum read permanently low by 3.8 kN.
     total_weight = sum(body.mass_kg for body in dynamics.topology.bodies) * cfg.gravity_m_s2
+    # The loop below already calls evaluate() on every accepted state for the gates; that call
+    # *is* the right-hand side, so acceleration is force/mass with no finite difference.
+    acceleration_channels = [(dynamics.topology.require(body.id, axis), body)
+                             for body in dynamics.topology.bodies
+                             for axis in ("y", "z") if axis in body.dof]
+    acceleration_rows: list[list[float]] = []
     for t, position, velocity in zip(times, positions, velocities):
         force, contacts = dynamics.evaluate(float(t), position, velocity)
+        acceleration_rows.append([float(force[index]) / body.mass_kg
+                                  for index, body in acceleration_channels])
         contact_history.append(contacts)
         energies.append(dynamics.mechanical_energy_j(position, velocity, contacts))
         if case.track_kind in {"rigid", "local_compliant", "two_layer", "layered"}:
@@ -771,7 +781,10 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         "energy_change_j": energies[-1] - energies[0],
         "note": "Prescribed longitudinal motion and profile variation can do external work; energy difference alone is not a conservation test.",
     }
-    return VehicleResult(times, positions, velocities, contact_history, summary)
+    accelerations = (np.asarray(acceleration_rows, dtype=float)
+                     if acceleration_rows else None)
+    return VehicleResult(times, positions, velocities, contact_history, summary,
+                         accelerations=accelerations)
 
 
 _COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",
@@ -821,6 +834,9 @@ def save_vehicle_result(case: VehicleCase, result: VehicleResult,
                          case.track_layers).state_names
     columns = ["time_s", *[f"axle{i + 1}_x_m" for i in range(4)], *names,
                *[name + "_per_s" for name in names]]
+    acceleration_columns = [name.replace("_y_m", "_y_acc_m_per_s2").replace("_z_m", "_z_acc_m_per_s2")
+                            for name in names if name.endswith(("_y_m", "_z_m"))]
+    columns += acceleration_columns
     for rail in case.rails:
         columns += [f"{rail.id}_{field}" for field in ("normal_n", "fx_n", "fy_n", "fz_n",
                                                        "penetration_m", "active")]
@@ -828,9 +844,12 @@ def save_vehicle_result(case: VehicleCase, result: VehicleResult,
     with history.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream)
         writer.writerow(columns)
-        for t, q, v, contacts in zip(result.times_s, result.positions, result.velocities, result.contacts):
+        for index, (t, q, v, contacts) in enumerate(
+                zip(result.times_s, result.positions, result.velocities, result.contacts)):
             row = [float(t), *[case.run.x_start_m + case.vehicle.travel_speed_m_s * float(t) + offset
                                for offset in case.vehicle.axle_offsets_m], *map(float, q), *map(float, v)]
+            if result.accelerations is not None:
+                row += map(float, result.accelerations[index])
             for rail in case.rails:
                 response = contacts[rail.id]
                 row += [response.normal_force_n, response.longitudinal_force_n,

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import numpy as np
 from scipy.integrate import solve_ivp
-from scipy.optimize import root
+from scipy.optimize import least_squares, root
 
 from . import __version__
 from .contact import (ContactGeometry, ContactResponse, deduplicate_contacts, evaluate_contact,
@@ -526,7 +526,12 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
             force, _ = dynamics.evaluate(0.0, trial, v)
             return force[indices] / 1e5
 
-        solved = root(residual, seed, method="hybr", options={"xtol": 1e-10})
+        # Least squares, not a square root(): seven vertical coordinates carry eight patches, so
+        # the Jacobian has a near-null direction.  ``hybr`` requires a square system and its
+        # pivoting decides the outcome — the same equations converge in one layout and report
+        # "no progress" in another purely because the rows are numbered differently.
+        solved = least_squares(residual, seed, method="trf", xtol=1e-12, ftol=1e-12,
+                               gtol=1e-12, max_nfev=800)
         error_n = float(np.max(np.abs(residual(solved.x))) * 1e5)
         last_message = str(solved.message)
         if not np.all(np.isfinite(solved.x)) or error_n > 0.1:

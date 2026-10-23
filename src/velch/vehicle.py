@@ -16,7 +16,7 @@ from typing import Any
 from .contact import ContactParameters
 from .model import LinearSupport, RunSettings, TrackLayer, Wheel
 from .paths import PathTrack, load_path
-from .topology import topology_of
+from .topology import legacy_topology, remap_state, topology_of
 from .profiles import ProfileSeries, Station, load_profile
 from .support_compliance import SupportCompliance
 from .track_models import ModalTrack, load_modal_track
@@ -345,7 +345,22 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
               else 2 * (1 + len(layers)) * len(rails) if track_kind == "layered"
               else modal_track.mode_count if modal_track else 0)
     state = raw.get("initial_state", {})
-    q = tuple(float(x) for x in state.get("q", [0.0] * n))
+    # A balanced starting state is worth keeping: the compliant-track static solve cannot start from
+    # zeros (stiff rail rows make every seed look like "no progress").  A 35-coordinate state written
+    # for the legacy layout still describes the same car, so carry it over body by body.
+    supplied = state.get("q")
+    if supplied is not None and len(supplied) != n:
+        legacy = legacy_topology(vehicle)
+        track_extra = len(supplied) - legacy.body_dimension
+        tracks = n - topology.body_dimension
+        if track_extra == tracks:
+            supplied = remap_state(supplied[:legacy.body_dimension], legacy, topology) \
+                + [float(x) for x in supplied[legacy.body_dimension:]]
+        else:
+            raise ValueError(f"initial_state.q has {len(supplied)} values; the layout needs {n} "
+                             f"({topology.body_dimension} body + {tracks} track) and the legacy "
+                             f"layout takes {legacy.body_dimension} + {track_extra} track")
+    q = tuple(float(x) for x in (supplied or [0.0] * n))
     default_v = [0.0] * n
     for axle in range(4):
         default_v[topology.require(f"wheelset{axle + 1}", "spin")] = (

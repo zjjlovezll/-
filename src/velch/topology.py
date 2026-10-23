@@ -549,3 +549,24 @@ def topology_for(case: Any, *, track_offset: int | None = None) -> Topology:
 
     return topology_of(getattr(case, "topology", None), case.vehicle,
                        track_offset=track_offset)
+
+
+def remap_state(values, source: "Topology", target: "Topology") -> list[float]:
+    """Carry a state vector from one topology to another, matching bodies and axes by name.
+
+    A 35-coordinate initial state is a *balanced* guess for the same physical car; dropping it when
+    the layout grows by an ``x`` coordinate throws that information away and leaves the static solve
+    starting from zeros, which is why the first node-layout compliant-track runs reported
+    "no seed converged".  Coordinates the target does not share with the source start at zero.
+    """
+
+    out = [0.0] * target.body_dimension
+    for body in target.bodies:
+        source_body = next((b for b in source.bodies if b.id == body.id), None)
+        if source_body is None:
+            continue
+        for axis in body.dof:
+            if axis not in source_body.dof:
+                continue          # a coordinate the source never had (the new x) starts at zero
+            out[target.require(body.id, axis)] = float(values[source.require(body.id, axis)])
+    return out

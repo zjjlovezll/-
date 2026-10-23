@@ -140,8 +140,13 @@ def main() -> int:
     measured = measure(run("target", {band: truth[index] for index, band in enumerate(BANDS)},
                             {band: phase for band in BANDS}, base, length))
 
-    usable = [index for index, gamma in enumerate(coherence)
-              if distortion[index, index] / max(abs(matrix[index, index]), 1e-12) < 0.5]
+    # Compare the distortion with the *signal at this amplitude*, not with the per-unit response:
+    # dividing by |H| alone makes the test almost always pass (5e-5) and hides the real boundary.
+    ratios = [distortion[index, index] / max(abs(matrix[index, index]) * AMPLITUDE_M, 1e-12)
+              for index in range(len(BANDS))]
+    usable = [index for index, ratio in enumerate(ratios) if ratio < 0.5]
+    print("distortion/signal per band:",
+          " ".join(f"{BANDS[i]}:{ratios[i]:.2f}" for i in range(len(BANDS))))
     print("bands with distortion/signal < 0.5:", [BANDS[index] for index in usable])
     if usable:
         sub = matrix[np.ix_(usable, usable)]

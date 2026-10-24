@@ -10,7 +10,7 @@ import hashlib
 import json
 import math
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -358,6 +358,36 @@ class VehicleDynamics:
                 return [challenger]
         return [current]
 
+    def _deform_geometry(self, geometry: ContactGeometry, rail, q: np.ndarray) -> ContactGeometry:
+        """Bias the contact depth by the tread displacement the mode shapes carry.
+
+        Literature (Chen Jiayin §2.2, VSD 2017 "High-speed wheel/rail contact determining method
+        with rotating flexible wheelset") does the same thing in one order: the deformed tread
+        position is ``x_rigid + Phi q``, and the contact is searched on that deformed surface.
+        Here the search still runs on the undeformed profile section and only the *depth* is
+        corrected, which is the part that sets the force.  Moving the contact point laterally
+        with the modes is a separate step and is deliberately not done yet.
+
+        Sign: the shapes are stored with z up, so a positive tread displacement lifts the steel
+        away from the rail and *reduces* the penetration.
+        """
+
+        coupling = self.contact_coupling
+        if coupling is None:
+            return geometry
+        side = -1 if "left" in str(rail.template_id) else 1
+        ring = coupling.rings[side]
+        block = coupling.block(rail.axle_index)
+        block_q = np.asarray(q, dtype=float)[block]
+        if not np.any(block_q):
+            return geometry
+        point = ring.bottom_point(geometry.penetration_m)
+        move_z = float(ring.displacement(point, block_q)[2])
+        if not np.isfinite(move_z):
+            raise SimulationFailure(f"non-finite tread deformation at {rail.id}: {move_z!r} m")
+        return replace(geometry, penetration_m=geometry.penetration_m - move_z,
+                       wheel_z_m=geometry.wheel_z_m + move_z)
+
     def _evaluate_patch(self, job):
         """Evaluate every rail body of one wheel/rail patch.
 
@@ -420,6 +450,12 @@ class VehicleDynamics:
                 # Attribution gate: a head whose running surface is not under the
                 # wheel tread cannot carry load, however deep its crown measures.
                 geometry = None
+            if geometry is not None and self.contact_coupling is not None:
+                # S8-3: the steel moves.  The tread displacement from the mode shapes changes how
+                # deep the wheel sits in the rail, so it enters the geometry *before* the force
+                # law — a correction applied to the force afterwards would not reproduce the
+                # sqrt(delta) stiffness the law uses.
+                geometry = self._deform_geometry(geometry, rail, q)
             if half_width is not None and self._pool is None:
                 # A lost contact leaves no point worth tracking: drop the seed so
                 # the next evaluation re-acquires it with the exhaustive span.

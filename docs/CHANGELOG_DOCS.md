@@ -1440,7 +1440,32 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 提到**，其余 32 篇（`CONTACT_*`、`DIVERGING_ROUTE`、`MEASURED_VALIDATION`、`RACK_CASE_DATA_CONTRACT`
 等）在索引里根本不存在。手写清单必然漂移，所以改成生成 + 校验：
 
-- `.tmp/gen_docs_index.py` 在 `
+- `.tmp/gen_docs_index.py` 在 `## 第 81 轮：柔性轮对从 STEP 做到振型文件，论文表 2-3 只用来核对族序
+
+§11 交的是框架（论文频率 + 空振型）。这一轮把**振型**做出来了，用的是用户给的 CRH3C 轮对 STEP 和本机 Abaqus 2022。
+
+| 步骤 | 工具 | 产物 |
+|---|---|---|
+| ① 剖分 | gmsh 4.15.2，HXT + 二次四面体 + HighOrderOptimize=2 | 85 371 节点 / 43 291 C3D10 / 256 113 自由度，质量 1.023795 t |
+| ② 自由模态 | `abaqus job=wheelset_modal cpus=4 interactive` | 6 刚体 + 35 弹性，首阶 76.79 Hz |
+| ③ 踏面振型 | `abaqus python` + odbAccess | 41 阶 × 8 476 节点 |
+| ④ 归并出货 | `scripts/wheelset_fe_modes.py` | `vehicles/modes/CRH3C_wheelset_fe.json`，33 阶 × 772 节点，1.75 MB |
+
+**三次失败都不是调参问题**：拿 `getElements` 的连接关系喂 Abaqus，43 291 个单元全被判零/负体积（gmsh 的 C3D10 节点顺序与 Abaqus 不同，必须让 gmsh 自己写 INP）；`*SOLID SECTION` 要单元集而不是节点集；过盈配合按 96–105 mm 取半径取到了座面**倒角**（96.70 mm），`*TIE … ADJUST=YES` 把孔节点拖到轮平面外 95 mm，改成 `|r − 95.50| < 0.75` 后每侧 580/592 主面节点、789 从节点，20 mm 网格上 1537 个孔节点里 1541 个调整、只有 22 个绑不上（98.6%）。
+
+**收敛性**：30 mm 首阶 75.71 / ND2 348.76 / ND3 961.0；20 mm 76.79 / 347.08–347.12 / 957.28–957.36（差 1.4%，取 20 mm）；15 mm 因个别 HXT 坏单元直接报 `The volume of 41 elements is zero, small, or negative`，不追。
+
+**节径数是量出来的**：踏面环取 455–465 mm（第一次用"最大半径 − 6 mm"取到轮缘尖 485.77 mm），径向分量沿环做傅里叶分解取主阶次。**族序与节径和论文表 2-3 逐条对上**（含 ND2 四阶、ND3 四阶的族大小），但频率低 5–39%，车轮盘面类 0.61–0.71、轴弯曲类 0.82–0.95 —— 这张 CAD 车轮的辐板比论文那套刚性梁轴 + MASS21 软，**两者是不同结构**，所以表 2-3 只能核对振型归属，不能当频率标定目标。
+
+出货时两个约束：FE 一族内频率差 0.04–0.08 Hz（0.01–0.1%，网格不对称）而 `ModeSet._pairs()` 要求严格简并，故按**族均值**报；只有 1748.90 Hz 那一阶因 40 阶请求截掉了兄弟而被丢弃（脚本会打印）。
+
+新增 `tests/test_wheel_modes_fe.py` 8 项（格式、踏面振型非零、滚动半径 0.460、每阶行波都有配对且分裂 = ND×转数/秒、族大小、最低阶频率、截断族被拒、分裂用轮半径）。写测试时改正了三处自己的错：分裂断言差 2π（`ND×spin` vs `ND×n`）、`76.792` 直接与 `76.79` 相等比较、截断测试用 `index == 9` 过滤导致什么都没删（改成按频率选第一个匹配，并在删完后重编号、同步 shapes，才能测到配对规则本身）。
+
+文档：`FLEXIBLE_WHEELSET_PORT_2026-10-24.md` 新增 **§12**（流水线、三次失败、收敛表、节径测量、与论文的对比表、出货约束、装进求解器后的样子、S8-2/S8-3 入口）。`pytest tests/test_wheel_modes_fe.py tests/test_wheel_modes.py` → 22 passed。
+
+**还没有的**：模态块仍未与力耦合（车体、一系、接触力都没经 Φᵀ 映射，所以振型装上也激不起来，S8-2）；接触点仍在未变形踏面上找（S8-3）；阻尼比仍是论文的按节径取值。
+
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 

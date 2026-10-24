@@ -44,6 +44,9 @@ class JacobianAssembler:
         self.n = dynamics.dimension
         #: A node table may widen the vehicle block; the track block starts here.
         self.dof = dynamics.dof
+        #: The track block ends here. It used to be the tail of the vector; a flexible wheelset
+        #: appends modal coordinates after it, so "to the end" is no longer "the track".
+        self.track_stop = dynamics.dof + dynamics.track.dimension
         self.dynamics = dynamics
         self.mass = dynamics.mass
         self.law = dynamics.case.contact
@@ -52,6 +55,7 @@ class JacobianAssembler:
         self.support = dynamics.case.support_compliance
         self._stiffness_q, self._stiffness_v = self._connector_blocks()
         self._track_q, self._track_v = self._track_blocks()
+        self._modal_q, self._modal_v = self._modal_blocks()
 
     # -- exact linear blocks -------------------------------------------------
 
@@ -61,9 +65,31 @@ class JacobianAssembler:
         for link in self.dynamics.connectors:
             if link.law is not None:
                 continue  # handled at the operating point in _blocks_at
-            outer = np.outer(link.jacobian, link.jacobian)
-            stiffness -= link.stiffness * outer
-            damping -= link.damping * outer
+            stiffness -= link.stiffness * np.outer(link.jacobian, link.jacobian)
+            # The rate row can differ from the force row (gyroscopic coupling), so the
+            # damping block is an outer product of two different vectors, not a square.
+            damping -= link.damping * np.outer(link.jacobian, link.speed_row)
+        return stiffness, damping
+
+    def _modal_blocks(self) -> tuple[np.ndarray, np.ndarray]:
+        """The flexible-wheelset block: constant, and linear even though it carries gyroscopics.
+
+        ``f = −(K q + C v)`` with ``K = diag(ω²) + Ω²C_centrifugal`` and
+        ``C = diag(2ζω) + 2ΩG``. Both terms are linear and constant in the state, so they belong
+        in the precomputed blocks rather than at the operating point. Without a flexible wheelset
+        these two are zero and the sum below is the identity.
+        """
+
+        stiffness = np.zeros((self.n, self.n))
+        damping = np.zeros((self.n, self.n))
+        modal = getattr(self.dynamics, "modal", None)
+        if modal is None:
+            return stiffness, damping
+        start = modal.offset
+        stop = modal.stop
+        # d(f/m)/dq and d(f/m)/dv: the modal mass is 1 by normalisation, so no division.
+        stiffness[start:stop, start:stop] = -modal.stiffness()
+        damping[start:stop, start:stop] = -modal.damping()
         return stiffness, damping
 
     def _track_blocks(self) -> tuple[np.ndarray, np.ndarray]:
@@ -80,13 +106,13 @@ class JacobianAssembler:
         zero_state = np.zeros(self.n)
         stiffness = np.zeros((self.n, self.n))
         damping = np.zeros((self.n, self.n))
-        for index in range(self.dof, self.n):
+        for index in range(self.dof, self.track_stop):
             unit = np.zeros(self.n)
             unit[index] = 1.0
-            # internal_force spans the rail dofs only; it lands on force[self.dof:] in the
-            # right-hand side, so the column starts at 35 as well.
-            stiffness[self.dof:, index] = track.internal_force(unit, zero_state)
-            damping[self.dof:, index] = track.internal_force(zero_state, unit)
+            # internal_force spans the rail dofs only; it lands on force[self.dof:...] in the
+            # right-hand side, so the column starts at the first vehicle coordinate as well.
+            stiffness[self.dof:self.track_stop, index] = track.internal_force(unit, zero_state)
+            damping[self.dof:self.track_stop, index] = track.internal_force(zero_state, unit)
         return stiffness, damping
 
     # -- kinematic rows ------------------------------------------------------
@@ -110,8 +136,8 @@ class JacobianAssembler:
         elif kind == "modal":
             rail = self.dynamics.case.rails[rail_index]
             py, pz, _dpy, _dpz = track.modal.shapes[rail.template_id].sample(x_m)
-            y_row[self.dof:] = py
-            z_row[self.dof:] = pz
+            y_row[self.dof:self.track_stop] = py
+            z_row[self.dof:self.track_stop] = pz
         return y_row, z_row
 
     def _kinematic_row(self, rail_index: int, x_m: float, geometry) -> np.ndarray:
@@ -151,13 +177,13 @@ class JacobianAssembler:
         normal_row[wheel] += ny
         normal_row[wheel + 1] += nz
         normal_row[wheel + 2] += ly * nz - lz * ny
-        normal_row[self.dof:] += track.contact_reaction(rail_index, x_m, ny, nz)
+        normal_row[self.dof:self.track_stop] += track.contact_reaction(rail_index, x_m, ny, nz)
 
         tangent_row = np.zeros(self.n)
         tangent_row[wheel] += ty
         tangent_row[wheel + 1] += tz
         tangent_row[wheel + 2] += ly * tz - lz * ty
-        tangent_row[self.dof:] += track.contact_reaction(rail_index, x_m, ty, tz)
+        tangent_row[self.dof:self.track_stop] += track.contact_reaction(rail_index, x_m, ty, tz)
 
         longitudinal_row = np.zeros(self.n)
         longitudinal_row[wheel + 3] += lz
@@ -294,17 +320,16 @@ class JacobianAssembler:
                    v: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         dynamics = self.dynamics
         dynamics.evaluate(t_s, q, v)  # refreshes the per-body contact cache
-        jacobian_q = self._stiffness_q + self._track_q
-        jacobian_v = self._stiffness_v + self._track_v
+        jacobian_q = self._stiffness_q + self._track_q + self._modal_q
+        jacobian_v = self._stiffness_v + self._track_v + self._modal_v
         # Nonlinear elements contribute the slope at this operating point, not a constant.
         # Re-assembling them per evaluation is cheap (a handful of rows) and keeps the frozen
         # linear blocks -- and therefore the old trajectory -- bit-identical.
         for link in dynamics.connectors:
             if link.law is None:
                 continue
-            outer = np.outer(link.jacobian, link.jacobian)
-            jacobian_q -= link.stiffness_at(q) * outer
-            jacobian_v -= link.damping_at(v) * outer
+            jacobian_q -= link.stiffness_at(q) * np.outer(link.jacobian, link.jacobian)
+            jacobian_v -= link.damping_at(v) * np.outer(link.jacobian, link.speed_row)
         cfg = dynamics.case.vehicle
         law = self.law
         for rail_index, rail in enumerate(dynamics.case.rails):
@@ -464,7 +489,7 @@ class JacobianAssembler:
                                 if force == 0.0:
                                     continue
                                 turn = np.zeros(self.n)
-                                turn[self.dof:] = dynamics.track.contact_reaction(
+                                turn[self.dof:self.track_stop] = dynamics.track.contact_reaction(
                                     rail_index, x_m, float(dy_k), float(dz_k))
                                 jacobian_q += np.outer(turn, force * mode_rows[k])
                 jacobian_v += np.outer(normal_row, normal_dv)

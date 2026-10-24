@@ -63,6 +63,11 @@ def classify(name: str) -> Channel:
 
     if name == "time_s":
         return Channel(name, "s", "time")
+    # Modal coordinates and their rates: mass-normalised, so the unit is "-" for both. This has
+    # to precede the length/angle rules, which would otherwise never match ``_q_per_s`` anyway —
+    # the point is that the fall-through is silent and the whole file becomes unreadable.
+    if name.endswith("_q_per_s"):
+        return Channel(name, "-", "velocity")
     if name.endswith("_m_per_s"):
         return Channel(name, "m/s", "velocity")
     if name.endswith("_rad_per_s"):
@@ -85,6 +90,10 @@ def classify(name: str) -> Channel:
         return Channel(name, "rad", "state")
     if name.endswith("_m"):
         return Channel(name, "m", "state")
+    # Modal coordinates of a flexible wheelset are mass-normalised generalised displacements:
+    # dimensionless, and named ``axle1_mode3_q`` so they cannot be mistaken for a length.
+    if name.endswith("_q"):
+        return Channel(name, "-", "state")
     raise HistoryError(f"cannot classify history channel {name!r}")
 
 

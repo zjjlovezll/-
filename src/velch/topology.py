@@ -107,6 +107,10 @@ class LinkSpec:
     #: Optional force law for a nonlinear element. ``None`` means the linear
     #: ``-(k*extension + c*rate)`` row the solver has always assembled.
     law: object | None = None
+    #: Generalised coordinate that senses the rate, when it differs from ``entries``.  Only
+    #: used for the gyroscopic coupling of flexible-wheelset modes; ``None`` means "the same
+    #: row", which is what every symmetric spring and damper wants.
+    speed_entries: tuple[tuple[int, float], ...] | None = None
 
     @property
     def rest(self) -> float:
@@ -115,6 +119,14 @@ class LinkSpec:
     def jacobian(self, dimension: int) -> np.ndarray:
         row = np.zeros(dimension)
         for index, coefficient in self.entries:
+            row[index] += coefficient
+        return row
+
+    def speed_jacobian(self, dimension: int) -> np.ndarray:
+        if self.speed_entries is None:
+            return self.jacobian(dimension)
+        row = np.zeros(dimension)
+        for index, coefficient in self.speed_entries:
             row[index] += coefficient
         return row
 

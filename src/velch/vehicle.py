@@ -20,6 +20,7 @@ from .topology import legacy_topology, remap_state, topology_of
 from .profiles import ProfileSeries, Station, load_profile
 from .support_compliance import SupportCompliance
 from .track_models import ModalTrack, load_modal_track
+from .wheel_modes import ModeSet, load_modes, thesis_crh380a_modes
 
 
 def finite(name: str, value: Any, *, positive: bool = False, nonnegative: bool = False) -> float:
@@ -152,6 +153,59 @@ class VehicleRail:
         return self.bodies or (RailBody(self.id, self.profiles),)
 
 
+def _track_size(track_kind: str, rails, layers, modal_track: "ModalTrack | None") -> int:
+    """Coordinates the track block contributes. One implementation, both call sites."""
+
+    if track_kind == "local_compliant":
+        return 2 * len(rails)
+    if track_kind == "two_layer":
+        return 4 * len(rails)
+    if track_kind == "layered":
+        return 2 * (1 + len(layers)) * len(rails)
+    return modal_track.mode_count if modal_track else 0
+
+
+def _modal_size(modes: "dict[int, ModeSet] | None") -> int:
+    """Coordinates the flexible-wheelset blocks contribute (they sit after the track block)."""
+
+    return sum(len(item.modes) for item in modes.values()) if modes else 0
+
+
+def _load_wheel_modes(spec: "dict | None", vehicle, base: Path,
+                      assets: dict[str, str]) -> "dict[int, ModeSet] | None":
+    """Parse the ``flexible_wheelset`` block: which wheelsets, and where their modes come from.
+
+    ``source`` is either ``"table-2-3"`` (the thesis's free-free modal table, shipable now) or
+    ``"file"`` (a ``velch-wheel-modes/1`` document exported from ANSYS).  Both produce the same
+    object, so swapping the numbers later changes nothing downstream.
+    """
+
+    if not spec:
+        return None
+    source = str(spec.get("source", "table-2-3"))
+    radius = float(spec.get("radius_m", vehicle.nominal_wheel_radius_m))
+    if source in ("table-2-3", "thesis"):
+        modes = thesis_crh380a_modes(radius_m=radius, cutoff_hz=float(spec.get("cutoff_hz", 2000.0)))
+    elif source == "file":
+        if "file" not in spec:
+            raise ValueError("flexible_wheelset with source 'file' needs a 'file' entry")
+        path = (base / spec["file"]).resolve(strict=True)
+        modes = load_modes(path)
+        assets[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
+    else:
+        raise ValueError(f"unknown flexible_wheelset source {source!r}: use 'table-2-3' or 'file'")
+    axles = spec.get("axles", [1, 2, 3, 4])
+    result: dict[int, ModeSet] = {}
+    for axle in axles:
+        number = int(axle)
+        if number not in (1, 2, 3, 4):
+            raise ValueError("flexible_wheelset axles are 1-based wheelset numbers 1..4")
+        result[number - 1] = modes
+    if not result:
+        raise ValueError("flexible_wheelset selects no axles")
+    return result
+
+
 @dataclass(frozen=True)
 class VehicleCase:
     case_id: str
@@ -176,6 +230,8 @@ class VehicleCase:
     topology: "dict | None" = None
     #: What irregularity was applied (``.tre`` path, window, channels), or ``None``.
     irregularity: "dict | None" = None
+    #: Flexible wheelsets, zero-based axle number → its modal set, or ``None`` for rigid wheels.
+    wheel_modes: "dict[int, ModeSet] | None" = None
 
     def __post_init__(self) -> None:
         if not self.case_id or self.purpose not in {"synthetic", "engineering"} or not self.parameter_source:
@@ -195,13 +251,11 @@ class VehicleCase:
         if (self.track_kind == "modal") != (self.modal_track is not None):
             raise ValueError("modal track kind requires a modal exchange file")
         # The vehicle block is whatever the topology declared; only the track block below it
-        # depends on the track kind.  With the legacy layout this is the historical 35.
-        n = topology_of(self.topology, self.vehicle).body_dimension + (
-            2 * len(self.rails) if self.track_kind == "local_compliant"
-            else 4 * len(self.rails) if self.track_kind == "two_layer"
-            else 2 * (1 + len(self.track_layers)) * len(self.rails)
-            if self.track_kind == "layered"
-            else self.modal_track.mode_count if self.modal_track else 0)
+        # depends on the track kind.  With the legacy layout this is the historical 35, and a
+        # flexible wheelset appends its modal coordinates after the track block.
+        n = (topology_of(self.topology, self.vehicle).body_dimension
+             + _track_size(self.track_kind, self.rails, self.track_layers, self.modal_track)
+             + _modal_size(self.wheel_modes))
         if len(self.initial_q) != n or len(self.initial_v) != n:
             raise ValueError(f"initial q/v must each have {n} coordinates")
         if any(not math.isfinite(x) for x in (*self.initial_q, *self.initial_v)):
@@ -340,10 +394,12 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     topology_block = raw.get("topology") or (
         None if "vehicle_ref" not in raw else (model.topology or None))
     topology = topology_of(topology_block, vehicle)
-    n = topology.body_dimension + (2 * len(rails) if track_kind == "local_compliant"
-              else 4 * len(rails) if track_kind == "two_layer"
-              else 2 * (1 + len(layers)) * len(rails) if track_kind == "layered"
-              else modal_track.mode_count if modal_track else 0)
+    # A flexible wheelset adds modal coordinates *after* the track block; a rigid one adds none,
+    # which is why every existing case keeps its exact state size and results.
+    wheel_modes = _load_wheel_modes(raw.get("flexible_wheelset"), vehicle, base, assets)
+    modal_size = _modal_size(wheel_modes)
+    tracks = _track_size(track_kind, rails, layers, modal_track)
+    n = topology.body_dimension + tracks + modal_size
     state = raw.get("initial_state", {})
     # A balanced starting state is worth keeping: the compliant-track static solve cannot start from
     # zeros (stiff rail rows make every seed look like "no progress").  A 35-coordinate state written
@@ -352,13 +408,14 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     if supplied is not None and len(supplied) != n:
         legacy = legacy_topology(vehicle)
         track_extra = len(supplied) - legacy.body_dimension
-        tracks = n - topology.body_dimension
         if track_extra == tracks:
             supplied = remap_state(supplied[:legacy.body_dimension], legacy, topology) \
-                + [float(x) for x in supplied[legacy.body_dimension:]]
+                + [float(x) for x in supplied[legacy.body_dimension:]] \
+                + [0.0] * modal_size
         else:
             raise ValueError(f"initial_state.q has {len(supplied)} values; the layout needs {n} "
-                             f"({topology.body_dimension} body + {tracks} track) and the legacy "
+                             f"({topology.body_dimension} body + {tracks} track "
+                             f"+ {modal_size} modal) and the legacy "
                              f"layout takes {legacy.body_dimension} + {track_extra} track")
     q = tuple(float(x) for x in (supplied or [0.0] * n))
     default_v = [0.0] * n
@@ -375,4 +432,4 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                        hashlib.sha256(raw_bytes).hexdigest(), assets, compliance,
                        layers, load_path(raw.get("path")),
                        dict(topology_block) if topology_block else None,
-                       irregularity=irregularity_record)
+                       irregularity=irregularity_record, wheel_modes=wheel_modes)

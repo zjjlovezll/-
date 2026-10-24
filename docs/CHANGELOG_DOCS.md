@@ -2399,3 +2399,43 @@ A = 文件契约与校验钩子先立好，真 ANSYS 模态集到了只换一张
 
 证据：[docs/FLEXIBLE_WHEELSET_PORT_2026-10-24.md](FLEXIBLE_WHEELSET_PORT_2026-10-24.md) §10。
 
+
+## 第 78 轮：S8-1 接进求解器——模态块落在轨道块之后，两条原计划被现实改正
+
+上一轮写死的三件"还没做"里，**第一件就错了**，本轮当场改正并落地。
+
+**原计划 ①「把模态坐标接进 `Topology`」作废**。单位模态质量 `1.0` 是归一化，不是 124 kg 真实质量；
+做成 `Body` 后 `total_weight = Σ m·g` 会多算 `31×4 = 124 kg`，而重力没有对应项 ——
+`translational_action_reaction` 门必挂。那是一个"看起来在算物理、其实在给幻影质量记账"的错。
+正解：模态块由 `VehicleDynamics._build_modal_block()` 拥有，`mass` 用 `np.concatenate` 追加，
+`Topology` 一行未改。
+
+**落地的四处**：
+
+| 文件 | 改动 |
+|---|---|
+| `wheel_modes.py` | `ModalBlock`（`K = diag(ω²) + Ω²·G·G`、`C = diag(2ζω) + 2Ω·G`、`f = −(Kq+Cv)`、`V = ½qᵀKq`、`names()`、`free_frequencies_hz()`）与 `ModalAssembly`（连续性校验、常数块求和、`mode_slice`） |
+| `vehicle_solver.py` | `self.modal` 在连接器之前构建；`evaluate` 里轨道力与接触反力按 `[dof, dof+len)` 切片，模态力加在偏移处；能量加模态势能；稀疏骨架把整块标实心（静止时反对称陀螺行在 FD 探测里看不见） |
+| `vehicle.py` | `_track_size`/`_modal_size` 单一实现；`flexible_wheelset` 块（`table-2-3` 或 `file`，文件 sha256 进 `asset_hashes`）；旧算例重映射后补 `[0.0]*n_modes` |
+| `jacobian.py` | `self.track_stop = dof + track.dimension`；四处"尾部就是轨道块"改成切片；`_modal_blocks()` 常数块 |
+
+**顺带修掉一个与 B026 同类的缺口**：`axle1_mode1_q_per_s` 无法分类 —— 状态规则只管 `_q`，
+而写入器给每个状态都写速度孪生。**是测试先失败**（`HistoryError: cannot classify history channel
+'axle1_mode1_q_per_s'`），不是我先想到。已补 `_q_per_s → "-"/velocity`。
+
+**判据与实测**（`tests/test_modal_assembly.py` 9 项）：刚性算例 `dynamics.modal is None`；
+`modal.offset == rigid.dimension`；未激励时前 `body+track` 行 `np.array_equal`、模态行恰为 0；
+组装矩阵复现 420.2/499.1 与 1145.4/1263.0；模态雅可比 = 力律导数 `rtol=1e-12`；
+能量恒等式中心差分 `atol=1e-6`；示例算例 59 → **183 坐标**、`max|q| = 0.000e+00`、八接触峰值差 **0.17 N**、
+两车均 7/7 门。
+
+**第二条原计划也作废**：「零模态时 `history.csv` sha256 逐位相同」在**轨迹层**做不到 ——
+状态长度一变，右端浮点求和顺序就变，实测位置差 `1e-10…3e-9 m`（首帧与时间轴完全相同）。
+判据拆成两条：**刚性算例逐位不变**（原有 755 项测试与冻结基线负责），
+**柔性算例在模态不激励时模态坐标恰为 0、车身与轨道差 < 1e-8 m**。
+把"加了 124 个零也要逐位相同"当目标是错的 —— 那是浮点顺序要求，不是物理要求。
+
+**边界（不含糊）**：现在没有任何力映射到 `Φᵀf`，所以整程 `max|q| = 0`。
+骨架到位、激励未接 —— 那是 S8-2，需要振型 `Φ`，也就是"要不要 ANSYS"的分界点。
+
+全仓 **764 passed, 1 skipped**。证据：[docs/FLEXIBLE_WHEELSET_PORT_2026-10-24.md](FLEXIBLE_WHEELSET_PORT_2026-10-24.md) §11。

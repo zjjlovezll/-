@@ -335,6 +335,173 @@ def load_modes(path: str | Path) -> ModeSet:
     return modes
 
 
+# --------------------------------------------------------------------------------------------
+# The modal block as the solver sees it
+# --------------------------------------------------------------------------------------------
+#
+# A modal coordinate has mass 1.0 *by normalisation*, not one kilogram.  That is why it cannot
+# be a body in the topology: ``total_weight`` sums ``body.mass_kg``, so 31 modes on 4 wheelsets
+# would add 124 kg of phantom mass and break the action-reaction gate.  The block therefore
+# lives beside the track block, after it, and its mass enters only the mass array used to turn
+# force into acceleration.
+#
+# Equation (thesis 2-30): ``q̈ + 2ΩG q̇ + (K + Ω²C) q = Q`` with ``K = diag(ω²)``,
+# ``C = G·G`` and ``G`` antisymmetric per degenerate pair.  Ω = 0 reduces this to a set of
+# independent oscillators at the tabulated frequencies, which is what makes the at-rest check
+# a real check rather than a restatement of the input.
+
+
+def modal_channel_name(prefix: str, mode: Mode) -> str:
+    """One modal coordinate's history column name. Both call sites go through here."""
+
+    return f"{prefix}_mode{mode.index}_q"
+
+
+def modal_channel_names(modes: "dict[int, ModeSet] | None") -> tuple[str, ...]:
+    """Every modal coordinate of every flexible wheelset, in state order.
+
+    The writer and the state-vector builder must agree on this or the file is mislabelled, so
+    neither of them builds the string itself.
+    """
+
+    if not modes:
+        return ()
+    return tuple(modal_channel_name(f"axle{axle + 1}", mode)
+                 for axle in sorted(modes) for mode in modes[axle].modes)
+
+
+@dataclass(frozen=True)
+class ModalBlock:
+    """One wheelset's modal coordinates, occupying ``[offset, offset + size)``."""
+
+    modes: ModeSet
+    offset: int
+    prefix: str
+    spin_rad_s: float = 0.0
+
+    @property
+    def size(self) -> int:
+        return len(self.modes)
+
+    @property
+    def stop(self) -> int:
+        return self.offset + self.size
+
+    @property
+    def omega2(self) -> float:
+        return self.spin_rad_s**2
+
+    def stiffness(self) -> np.ndarray:
+        """``K + Ω²C`` — the centrifugal term stiffens the modes with nodal diameters."""
+        return np.diag(self.modes.stiffness_diagonal()) + self.omega2 * self.modes.centrifugal()
+
+    def damping(self) -> np.ndarray:
+        """``diag(2ζω) + 2ΩG`` — the second term is antisymmetric and does no work."""
+        return np.diag(self.modes.damping_diagonal()) + 2.0 * self.spin_rad_s * self.modes.gyroscopic()
+
+    def force(self, q: np.ndarray, v: np.ndarray) -> np.ndarray:
+        return -(self.stiffness() @ q + self.damping() @ v)
+
+    def potential(self, q: np.ndarray) -> float:
+        return 0.5 * float(q @ (self.stiffness() @ q))
+
+    def names(self) -> tuple[str, ...]:
+        return tuple(modal_channel_name(self.prefix, mode) for mode in self.modes.modes)
+
+    def free_frequencies_hz(self) -> np.ndarray:
+        """Eigenfrequencies of the assembled block — the check that it *is* the same system."""
+        n = self.size
+        k = self.stiffness()
+        c = self.damping()
+        companion = np.zeros((2 * n, 2 * n))
+        companion[:n, n:] = np.eye(n)
+        companion[n:, :n] = -k
+        companion[n:, n:] = -c
+        values = np.linalg.eigvals(companion)
+        return np.sort(np.abs(values.imag[values.imag > 0.0]) / (2.0 * np.pi))
+
+
+@dataclass(frozen=True)
+class ModalAssembly:
+    """Every wheelset's modal block, laid out contiguously in one state vector."""
+
+    blocks: tuple[ModalBlock, ...]
+
+    def __post_init__(self) -> None:
+        if not self.blocks:
+            raise ModeError("a modal assembly needs at least one block")
+        for previous, following in zip(self.blocks, self.blocks[1:]):
+            if following.offset != previous.stop:
+                raise ModeError(
+                    f"modal blocks must be contiguous: {previous.prefix} ends at "
+                    f"{previous.stop} but {following.prefix} starts at {following.offset}")
+
+    @property
+    def size(self) -> int:
+        return sum(block.size for block in self.blocks)
+
+    @property
+    def offset(self) -> int:
+        return self.blocks[0].offset
+
+    @property
+    def stop(self) -> int:
+        return self.blocks[-1].stop
+
+    def mass(self) -> np.ndarray:
+        return np.ones(self.size)
+
+    def stiffness(self) -> np.ndarray:
+        return self._assemble("stiffness")
+
+    def damping(self) -> np.ndarray:
+        return self._assemble("damping")
+
+    def _assemble(self, attribute: str) -> np.ndarray:
+        total = np.zeros((self.size, self.size))
+        for block in self.blocks:
+            start = block.offset - self.offset
+            total[start:start + block.size, start:start + block.size] = getattr(block, attribute)()
+        return total
+
+    def force(self, q: np.ndarray, v: np.ndarray) -> np.ndarray:
+        q = np.asarray(q, dtype=float)
+        v = np.asarray(v, dtype=float)
+        if q.shape != (self.size,) or v.shape != (self.size,):
+            raise ModeError(f"modal state must have {self.size} coordinates, got {q.shape} and {v.shape}")
+        return -(self.stiffness() @ q + self.damping() @ v)
+
+    def potential(self, q: np.ndarray) -> float:
+        q = np.asarray(q, dtype=float)
+        return 0.5 * float(q @ (self.stiffness() @ q))
+
+    def names(self) -> tuple[str, ...]:
+        return tuple(name for block in self.blocks for name in block.names())
+
+    def free_frequencies_hz(self) -> np.ndarray:
+        n = self.size
+        k = self.stiffness()
+        c = self.damping()
+        companion = np.zeros((2 * n, 2 * n))
+        companion[:n, n:] = np.eye(n)
+        companion[n:, :n] = -k
+        companion[n:, n:] = -c
+        values = np.linalg.eigvals(companion)
+        return np.sort(np.abs(values.imag[values.imag > 0.0]) / (2.0 * np.pi))
+
+    def mode_slice(self, indices: tuple[int, ...]) -> tuple[np.ndarray, np.ndarray]:
+        """``(K, C)`` restricted to the given zero-based mode indices of this assembly.
+
+        Used to check one degenerate pair without guessing which eigenvalues belong to it —
+        the full spectrum has 31 modes between 90 Hz and 1.9 kHz and several of them sit
+        closer to a pair's at-rest frequency than the pair's own split does.
+        """
+        k = self.stiffness()
+        c = self.damping()
+        i = np.asarray(indices, dtype=int)
+        return k[np.ix_(i, i)], c[np.ix_(i, i)]
+
+
 #: Thesis table 2-3, free-free CRH380A wheelset, one row per *mode number*: (frequency Hz,
 #: nodal diameter, label).  The thesis prints travelling pairs as ``f(2,3)``, so a pair is
 #: two rows here — ``_pairs`` needs both to build the antisymmetric block.  ``f(31)`` is

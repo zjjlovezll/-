@@ -24,6 +24,7 @@ from .solver import SimulationFailure
 from .topology import Topology, topology_for
 from .track_models import TrackKernel
 from .vehicle import VehicleCase
+from .wheel_modes import ModalAssembly, ModalBlock, modal_channel_names
 
 
 @dataclass(frozen=True)
@@ -36,12 +37,21 @@ class Connector:
     jacobian: np.ndarray
     #: Optional nonlinear force law; ``None`` keeps the linear row this solver always used.
     law: object | None = None
+    #: Row that senses the *rate*, when it is not the same row the force pushes on.  The
+    #: gyroscopic term ``−2Ω G q̇`` couples one mode's force to another mode's velocity, and
+    #: that is antisymmetric: no spring-damper row built from one vector can express it.
+    #: ``None`` keeps the symmetric ``k``/``c`` behaviour every existing element relies on.
+    speed_jacobian: np.ndarray | None = None
+
+    @property
+    def speed_row(self) -> np.ndarray:
+        return self.jacobian if self.speed_jacobian is None else self.speed_jacobian
 
     def extension(self, q: np.ndarray) -> float:
         return float(self.jacobian @ q) - self.rest
 
     def speed(self, v: np.ndarray) -> float:
-        return float(self.jacobian @ v)
+        return float(self.speed_row @ v)
 
     def force(self, q: np.ndarray, v: np.ndarray) -> np.ndarray:
         if self.law is not None:
@@ -101,6 +111,14 @@ class VehicleDynamics:
         self.track = TrackKernel(case.track_kind, case.rails, case.modal_track,
                                  case.track_layers, offset=self.topology.body_dimension)
         self.mass = self.topology.mass_array(self.track.mass)
+        # Flexible-wheelset modal coordinates go *after* the track block, never among the
+        # bodies: their mass of 1.0 is a normalisation, and ``total_weight`` adds up
+        # ``body.mass_kg`` — 31 modes on four wheelsets would inject 124 kg of phantom mass
+        # into the action-reaction gate.  With no ``flexible_wheelset`` block in the case this
+        # is None and every line below behaves exactly as before.
+        self.modal = self._build_modal_block()
+        if self.modal is not None:
+            self.mass = np.concatenate((self.mass, self.modal.mass()))
         self.wheels = {wheel.id: wheel for wheel in case.wheels}
         self.connectors = self._build_connectors()
         # Assemble the strip-contact gradients (dN/dq, d(lever)/dq) only while the
@@ -135,12 +153,29 @@ class VehicleDynamics:
 
         return self.topology.body_dimension
 
+    def _build_modal_block(self) -> ModalAssembly | None:
+        """Lay out one modal block per wheelset after the track block."""
+
+        modes = getattr(self.case, "wheel_modes", None)
+        if not modes:
+            return None
+        speed = abs(float(self.case.vehicle.travel_speed_m_s))
+        offset = self.topology.body_dimension + len(self.track.mass)
+        blocks = []
+        for axle in sorted(modes):
+            mode_set = modes[axle]
+            blocks.append(ModalBlock(modes=mode_set, offset=offset, prefix=f"axle{axle + 1}",
+                                     spin_rad_s=speed / mode_set.radius_m))
+            offset += len(mode_set.modes)
+        return ModalAssembly(tuple(blocks))
+
     def _build_connectors(self) -> tuple[Connector, ...]:
         """Turn the topology's link specs into connectors, one row each."""
 
         return tuple(
             Connector(spec.name, spec.axis, spec.stiffness, spec.damping, spec.rest,
-                      spec.jacobian(self.dimension), spec.law)
+                      spec.jacobian(self.dimension), spec.law,
+                      spec.speed_jacobian(self.dimension))
             for spec in self.topology.link_specs
         )
 
@@ -156,7 +191,13 @@ class VehicleDynamics:
                 force[self.topology.require(body.id, "z")] -= body.mass_kg * cfg.gravity_m_s2
         for connector in self.connectors:
             force += connector.force(q, v)
-        force[self.dof:] += self.track.internal_force(q, v)
+        # The track block is no longer the tail of the vector once modal coordinates exist, so
+        # add it by length rather than by open-ended slice.  Without modes the two are identical.
+        track_force = self.track.internal_force(q, v)
+        force[self.dof:self.dof + len(track_force)] += track_force
+        if self.modal is not None:
+            start = self.modal.offset
+            force[start:] += self.modal.force(q[start:], v[start:])
         contacts: dict[str, ContactResponse] = {}
         direction = 1 if cfg.travel_speed_m_s >= 0 else -1
         half_width = self.case.run.contact_search_half_width_m
@@ -221,9 +262,10 @@ class VehicleDynamics:
                 force[spin_index] += response.wheel_spin_moment_nm
                 if geometry and yaw_index is not None:
                     force[yaw_index] -= geometry.lever_y_m * response.longitudinal_force_n
-                force[self.dof:] += self.track.contact_reaction(rail_index, x,
-                                                          response.wheel_force_y_n,
-                                                          response.wheel_force_z_n)
+                reaction = self.track.contact_reaction(rail_index, x,
+                                                       response.wheel_force_y_n,
+                                                       response.wheel_force_z_n)
+                force[self.dof:self.dof + len(reaction)] += reaction
         if not np.all(np.isfinite(force)):
             raise SimulationFailure(f"non-finite v2 force at t={t_s:.9g} s")
         return force, contacts
@@ -452,6 +494,11 @@ class VehicleDynamics:
                 for body in topology.wheelsets()))
         energy += sum(link.potential(q) for link in self.connectors)
         energy += self.track.potential_j(q)
+        if self.modal is not None:
+            # Kinetic part already arrived through ``self.mass`` (unit modal mass); this is the
+            # elastic energy the modal block stores, so an energy check still closes with modes on.
+            start = self.modal.offset
+            energy += self.modal.potential(q[start:])
         for responses in self._body_cache.values():
             for response in responses:
                 if response.geometry and response.geometry.penetration_m > 0:
@@ -622,6 +669,13 @@ def _rhs_sparsity(dynamics: VehicleDynamics, state: np.ndarray, t_s: float) -> "
         if coupled.size:
             skeleton[np.ix_(coupled, coupled - dof)] = True
             skeleton[np.ix_(coupled, coupled)] = True
+    # A modal block is dense in itself and always coupled: its damping matrix carries the
+    # antisymmetric gyroscopic term, which at rest is invisible to the probe whenever the pair is
+    # momentarily at zero amplitude.  Marking the whole block costs nothing when there is none.
+    modal = getattr(dynamics, "modal", None)
+    if modal is not None:
+        rows = np.arange(modal.offset, modal.stop)
+        skeleton[np.ix_(rows, rows)] = True
 
     return mask | skeleton
 
@@ -743,9 +797,12 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                 py, pz, _, _ = case.modal_track.shapes[rail.template_id].sample(x)
                 rail_force = dynamics.track.contact_reaction(rail_index, x,
                     response.wheel_force_y_n, response.wheel_force_z_n)
-                power_error = float(rail_force @ velocity[topology.body_dimension:] +
-                                    response.wheel_force_y_n * (py @ velocity[topology.body_dimension:]) +
-                                    response.wheel_force_z_n * (pz @ velocity[topology.body_dimension:]))
+                # The track block is no longer the tail once modal wheelset coordinates exist.
+                start = topology.body_dimension
+                track_velocity = velocity[start:start + case.modal_track.mode_count]
+                power_error = float(rail_force @ track_velocity +
+                                    response.wheel_force_y_n * (py @ track_velocity) +
+                                    response.wheel_force_z_n * (pz @ track_velocity))
                 max_modal_projection_error_w = max(max_modal_projection_error_w, abs(power_error))
         for rail in case.rails:
             response = contacts[rail.id]
@@ -899,8 +956,9 @@ def save_vehicle_result(case: VehicleCase, result: VehicleResult,
             raise SimulationFailure(f"v2 profile changed during simulation: {path}")
     snapshot.write_bytes(data)
     body_names = list(_column_names(case))
-    names = body_names + TrackKernel(case.track_kind, case.rails, case.modal_track,
-                                     case.track_layers).state_names
+    names = body_names + list(TrackKernel(case.track_kind, case.rails, case.modal_track,
+                                         case.track_layers).state_names) \
+        + list(modal_channel_names(case.wheel_modes))
     columns = ["time_s", *[f"axle{i + 1}_x_m" for i in range(4)], *names,
                *[name + "_per_s" for name in names]]
     acceleration_columns = list(result.acceleration_names)

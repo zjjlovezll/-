@@ -674,11 +674,13 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     # *is* the right-hand side, so acceleration is force/mass with no finite difference.
     acceleration_channels = [(dynamics.topology.require(body.id, axis), body)
                              for body in dynamics.topology.bodies
-                             for axis in ("y", "z") if axis in body.dof]
+                             for axis in ("y", "z", "roll", "pitch", "yaw") if axis in body.dof]
     acceleration_rows: list[list[float]] = []
     for t, position, velocity in zip(times, positions, velocities):
         force, contacts = dynamics.evaluate(float(t), position, velocity)
-        acceleration_rows.append([float(force[index]) / body.mass_kg
+        # Inertia lives in mass[index] for the rotation coordinates; body.mass_kg is only right
+        # for translations, so divide by the entry the equation of motion actually uses.
+        acceleration_rows.append([float(force[index]) / float(dynamics.mass[index])
                                   for index, body in acceleration_channels])
         contact_history.append(contacts)
         energies.append(dynamics.mechanical_energy_j(position, velocity, contacts))
@@ -832,6 +834,21 @@ def _column_names(case: VehicleCase):
             yield f"{prefix}_{_COLUMN_SUFFIX[axis]}"
 
 
+_ACCELERATION_SUFFIX = (("_pitch_rad", "_pitch_acc_rad_per_s2"),
+                        ("_roll_rad", "_roll_acc_rad_per_s2"),
+                        ("_yaw_rad", "_yaw_acc_rad_per_s2"),
+                        ("_y_m", "_y_acc_m_per_s2"),
+                        ("_z_m", "_z_acc_m_per_s2"))
+
+
+def _acceleration_name(name: str) -> str | None:
+    """Column name for the acceleration that belongs to a state column, or None."""
+    for old, new in _ACCELERATION_SUFFIX:
+        if name.endswith(old):
+            return name[: -len(old)] + new
+    return None
+
+
 def save_vehicle_result(case: VehicleCase, result: VehicleResult,
                         output_dir: str | Path) -> tuple[Path, Path]:
     target = Path(output_dir).resolve()
@@ -849,8 +866,8 @@ def save_vehicle_result(case: VehicleCase, result: VehicleResult,
                          case.track_layers).state_names
     columns = ["time_s", *[f"axle{i + 1}_x_m" for i in range(4)], *names,
                *[name + "_per_s" for name in names]]
-    acceleration_columns = [name.replace("_y_m", "_y_acc_m_per_s2").replace("_z_m", "_z_acc_m_per_s2")
-                            for name in names if name.endswith(("_y_m", "_z_m"))]
+    acceleration_columns = [column for column in (_acceleration_name(name) for name in names)
+                           if column is not None]
     columns += acceleration_columns
     for rail in case.rails:
         columns += [f"{rail.id}_{field}" for field in ("normal_n", "fx_n", "fy_n", "fz_n",

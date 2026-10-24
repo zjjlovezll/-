@@ -1477,6 +1477,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
 | [ELEMENT_CATALOGUE_2026-10-23.md](ELEMENT_CATALOGUE_2026-10-23.md) | 元件目录与 Simpack 对照 |
 | [EVIDENCE_MAP.md](EVIDENCE_MAP.md) | 证据地图：这一版凭什么可以说「可以发布」 |
+| [FLEXIBLE_WHEELSET_PORT_2026-10-24.md](FLEXIBLE_WHEELSET_PORT_2026-10-24.md) | 柔性轮对移植：SDITT 的数据契约与我们的落点（2026-10-24） |
 | [FORCE_ELEMENT_LIBRARY_2026-10-23.md](FORCE_ELEMENT_LIBRARY_2026-10-23.md) | 力学元件库 |
 | [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
 | [GOAL_STATUS_2026-10-23.md](GOAL_STATUS_2026-10-23.md) | 整体目标：完成度与差距 |
@@ -2325,5 +2326,41 @@ V 变体**逐位复现 S5 发表过的 65.2 % / 8.39 % / 87.1 %**，先立住口
 [scripts/s7c_cross_direction.py](../scripts/s7c_cross_direction.py)（约 3 min）、
 [scripts/s7c_conditioning.py](../scripts/s7c_conditioning.py)（约 10 s，重读既有产物）。
 `pytest tests -q` **734 passed / 1 skipped**。
+
+## 第 76 轮：柔性轮对的移植契约——SDITT 那边到底有什么、没有什么
+
+用户指出 SDITT 源码在 `G:\研究生\SDITT-RW-FT-250728`。这一轮只做一件事：把"要借的那一层"的
+**数据契约**钉死，免得后面按猜测写代码。没有改任何求解器代码。
+
+**决定性发现：这份交付是 RW-FT，不是 FW。** 驱动
+`SDITT_CR400_NoStrTIrr_250728_Face.m:303-304` 里 `NM_FW = 31*1` 被注释、`NM_FW = 0` 生效，
+包名 `SDITT-RW-FT` 就是这个意思：刚性轮对 + 柔性轨道。柔性轮对的 **14 个 `.m` 全在**
+（`Load_ModeShape_FW` / `Load_Rotation_FW` / `Matrix_Vehicle_FW_230409` / `Cal_Vjd_FW_230515` 等），
+但**一个数据文件都没有**。
+
+**数据契约（七个输入、两个产物）**：`Load_ModeShape_FW.m:10` 把工作目录 `addpath` 到
+`E:\# Flex-Rigid-20200418\# FW_Rotation\ANSYS_FW_SDITT_220608_Mass21\Modes_RigidBeam_Mass21_6DOF_NRC_230506`
+（E: 盘在、这个目录不在），读 `NodePos_FW_*.txt`、`ELIST.lis`、Harwell-Boeing 的
+`HBFILE_FW_Free_MASS` / `_STIFF`、`Modefile_FW_*_FreqModal.txt`、逐阶 `Mode<k>.txt`、`NLIST_Trend_Lat.lis`，
+最后 `:277` **现场生成** `FW_SDITT_230506_Mass21_v2.mat`。第二个产物 `Par_FW_Rotation.mat`
+（`Matrix_J/E/L/G` + `Matrix_F_SumAll`，`C = GG + GJ − JG − JJ − E`）由**另一个工程**生成，
+本树里只有消费者。四个轮对位置：`Pos_Z = [0.436619, 0.42223, 0.436619, 0.42223]`。
+
+**本机实测缺什么**：2375 个文件里名字含 `FW` 的 14 个全是 `.m`；`Par_FW_Rotation.mat`、
+`FW_SDITT_230506_Mass21_v2.mat`、两个 `HBFILE_FW_*`、各阶 `Modefile_FW_*`、`NodePos_FW_*`、
+`ELIST.lis` 在 F:/G:/H:/E: 均搜不到；`D:\# Flex-Rigid-20200418`、`E:\# Flex-Rigid-20200418` 不存在。
+结论：**能借方法与契约，借不到数字。**
+
+**另一层倒是能借**：`Mat_FT_S8b.mat`（983.63 MB）是 `07(009)` 齿轨道岔的 Abaqus 模态集，
+配 `DR_S8b_v*_Crossing.txt` / `_WeldAcc.txt` 逐阶实测阻尼比与 `Mileage_prr_2.txt`；
+`Mat_FT_CN18_T4.mat`（18 号道岔）**不在包内**。我们已有 `ModalTrack`/`TrackKernel`（验到 3002 阶），
+所以这一层是"换更细的模态集"，不是新能力。
+
+**S8 五步计划与判据**（细节见新文档）：S8-1 模态坐标块 → S8-2 Φᵀ 映射 → S8-3 变形踏面接触几何
+→ S8-4 `Ω²C`/`−2ΩG` 进 RHS 与雅可比 → S8-5 整车对照。其中 S8-1/S8-2/S8-4 的框架与模态来源无关，
+可以先用合成模态（两阶 300/600 Hz）做出来。
+
+证据：[docs/FLEXIBLE_WHEELSET_PORT_2026-10-24.md](FLEXIBLE_WHEELSET_PORT_2026-10-24.md)。
+文档清单重生成 **125 篇**，`--check` 一致。
 
 

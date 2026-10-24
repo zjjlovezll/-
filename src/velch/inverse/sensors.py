@@ -4,16 +4,22 @@ The point is to compare *what a sensor would have recorded*, not the state varia
 easiest to print.  Two structural limits are stated up front because they decide how far a
 comparison can legitimately be pushed:
 
-* the 35-DOF vehicle has no axle-box body, so an "axle-box acceleration" computed here is the
-  wheelset's own acceleration.  A real axle-box accelerometer is mounted above the bearing and
-  carries the box/bearing local dynamics on top of it, so this value is a *lower bound* on what
-  such an accelerometer would read, not a substitute;
+* a vehicle without axle-box bodies (``CRH380A_M``, ``CRH380A_M_node``, ``CRH380A_M_6dof``) has no
+  box, so an "axle-box acceleration" for those vehicles is the wheelset's own acceleration.  A real
+  axle-box accelerometer is mounted above the bearing and carries the box/bearing local dynamics on
+  top of it, so for *those* vehicles the value is a *lower bound*, not a substitute.  A vehicle with
+  boxes (``CRH380A_M_axlebox``, eight 48.2 kg bodies) is read directly through
+  :func:`axle_box_acceleration`, and then the caveat does not apply -- the box is solved and its
+  translational accelerations are written analytically by the solver;
 * the rail carries one lumped vertical degree of freedom per rail, not one per sleeper bay, so
   "rail acceleration at a station" is only defined as that lumped quantity until the rail is
   discretised (``track_dynamics = local_compliant``/``layered`` both keep one node per rail).
 
-Both limits are properties of the current model; the functions below stay correct and get sharper
-when the model gains axle boxes and a discretised rail.
+Note the direction of the axle-box channel, because it is not the obvious one: S7 measured that the
+**lateral** box acceleration is the only extra channel that adds a direction the vertical ones cannot
+see (novelty 0.374 against seven vertical channels, whose seven rows span only 4 directions).  So the
+``axis`` argument is not decoration -- ``"z"`` and ``"y"`` are different sensors with different
+information content, and both are offered here.
 """
 
 from __future__ import annotations
@@ -88,7 +94,53 @@ def wheelset_acceleration(history: HistoryTable, axle: int) -> SensorTrace:
         unit="m/s^2",
         time_s=np.asarray(history.time_s, dtype=float),
         values=values,
-        note="wheelset DOF, no axle-box body: lower bound on an axle-box accelerometer",
+        note="wheelset DOF: a lower bound on an axle-box accelerometer "
+             "(use axle_box_acceleration on a vehicle that has boxes)",
+    )
+
+
+#: translation axis -> the suffix the solver writes for its analytic acceleration
+_ACCELERATION_AXIS = {"x": "x_acc_m_per_s2", "y": "y_acc_m_per_s2", "z": "z_acc_m_per_s2"}
+
+
+def axle_box_acceleration(history: HistoryTable, axle: int, side: str,
+                          axis: str = "z") -> SensorTrace:
+    """Axle-box acceleration **as the solver recorded it**, not as a difference of positions.
+
+    The solver writes each box's translational accelerations analytically (``force / mass`` in the
+    same evaluation that the numerical gates use), so nothing is differentiated here.  That matters:
+    a second difference of the position channel is a smoothing filter that hides exactly the
+    high-frequency content a box accelerometer is deployed to see.
+
+    ``axis`` is ``"x"``, ``"y"`` or ``"z"``.  ``"y"`` is the one S7 found worth installing -- the
+    vertical channels alone span only four of twelve measurable directions, and the lateral box
+    acceleration is what adds a fifth.  Rotation (``roll``/``pitch``/``yaw``) is deliberately not
+    accepted here: those channels carry ``rad/s^2`` and a different unit, so they belong to a caller
+    that can hold an angular quantity rather than under a ``m/s^2`` trace.
+
+    A vehicle without axle-box bodies has no such channel; the error says which column was missing
+    and which function to use instead, rather than silently differentiating the wheelset.
+    """
+    if side not in ("left", "right"):
+        raise SensorModelError(f"side must be 'left' or 'right', got {side!r}")
+    if axis not in _ACCELERATION_AXIS:
+        raise SensorModelError(
+            f"axis must be one of {sorted(_ACCELERATION_AXIS)}, got {axis!r}"
+            " (angular axes carry rad/s^2 and are not offered as translational traces)")
+    column = f"axle{int(axle)}_box_{side}_{_ACCELERATION_AXIS[axis]}"
+    try:
+        values = _channel(history, column)
+    except SensorModelError as exc:
+        raise SensorModelError(
+            f"{exc}; this history has no axle-box channel {column!r}.  Only a vehicle with axle-box "
+            "bodies emits it (e.g. vehicle_ref CRH380A_M_axlebox); for a wheelset-only vehicle use "
+            "wheelset_acceleration instead") from exc
+    return SensorTrace(
+        name=f"axle{int(axle)}_box_{side}_acceleration_{axis}",
+        unit="m/s^2",
+        time_s=np.asarray(history.time_s, dtype=float),
+        values=values,
+        note="analytic solver output (force/mass); not a differentiated position",
     )
 
 
@@ -147,11 +199,23 @@ def resample(time_s: Sequence[float], values: Sequence[float], rate_hz: float) -
 
 def sensor_table(history: HistoryTable, *, axles: Iterable[int] = (1, 2, 3, 4),
                  sides: Sequence[str] = ("left", "right")) -> list[SensorTrace]:
-    """Every sensor-like trace this history can supply."""
+    """Every sensor-like trace this history can supply.
+
+    Axle-box traces are offered for all three translation axes that the history actually carries.
+    A wheelset-only history yields none of them, and its wheelset acceleration is added instead --
+    the two are never both claimed for the same axle, because the box *is* the thing an accelerometer
+    is bolted to and reading the wheelset as well would double-count one measurement.
+    """
     traces: list[SensorTrace] = []
     for axle in axles:
         prefix = f"axle{int(axle)}"
-        if f"{prefix}_z_m" in history:
+        boxes: list[str] = []
+        for side in sides:
+            for axis in _ACCELERATION_AXIS:
+                if f"{prefix}_box_{side}_{_ACCELERATION_AXIS[axis]}" in history:
+                    traces.append(axle_box_acceleration(history, axle, side, axis))
+                    boxes.append(axis)
+        if not boxes and f"{prefix}_z_m" in history:
             traces.append(wheelset_acceleration(history, axle))
         for side in sides:
             if f"{prefix}_{side}_z_m" in history:

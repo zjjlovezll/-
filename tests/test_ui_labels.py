@@ -45,6 +45,15 @@ GRAMMAR = (
     ("sleeper3_y_m", "轨枕3 横移 [m]"),
     ("axle1_left_rail_z_m", "第1轴左轨 钢轨垂向位移 [m]"),
     ("axle1_left_sleeper_y_m_per_s", "第1轴左轨 轨枕横向位移速度 [m/s]"),
+    # accelerations (B026 started emitting them; without their own suffix rules they fell back to
+    # the raw identifier, which is how the axle-box lateral channel reached the screens untranslated)
+    ("axle1_z_acc_m_per_s2", "第1轴 沉浮加速度 [m/s²]"),
+    ("axle1_box_left_y_acc_m_per_s2", "第1轴左轴箱 横移加速度 [m/s²]"),
+    ("axle4_box_right_z_acc_m_per_s2", "第4轴右轴箱 沉浮加速度 [m/s²]"),
+    ("carbody_roll_acc_rad_per_s2", "车体 侧滚角加速度 [rad/s²]"),
+    ("bogie1_pitch_acc_rad_per_s2", "前转向架 点头角加速度 [rad/s²]"),
+    # ``x`` is mileage for a position but longitudinal motion once it is an acceleration
+    ("axle2_box_left_x_acc_m_per_s2", "第2轴左轴箱 纵向加速度 [m/s²]"),
 )
 
 
@@ -67,6 +76,17 @@ def test_velocity_columns_are_labelled_as_speeds() -> None:
     assert store.channel_label("carbody_roll_rad_per_s").endswith("速度 [rad/s]")
     # A position suffix must not win over the velocity suffix just because it is shorter-lived.
     assert store.channel_unit("axle2_y_m") == "m"
+
+
+def test_acceleration_columns_get_their_own_unit_and_group() -> None:
+    """The two acceleration suffixes must be matched before ``_m``/``_rad``, not after."""
+
+    assert store.channel_unit("axle1_z_acc_m_per_s2") == "m/s²"
+    assert store.channel_unit("carbody_roll_acc_rad_per_s2") == "rad/s²"
+    assert store.channel_group("axle1_z_acc_m_per_s2") == "加速度"
+    assert store.channel_group("carbody_roll_acc_rad_per_s2") == "角加速度"
+    # and the velocity rule must not steal an acceleration column
+    assert store.channel_unit("axle1_z_m_per_s") == "m/s"
 
 
 def test_gate_names_are_all_chinese() -> None:

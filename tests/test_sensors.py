@@ -9,6 +9,7 @@ import pytest
 
 from velch.inverse.sensors import (
     SensorModelError,
+    axle_box_acceleration,
     bending_strain_micro,
     differentiate,
     rail_acceleration,
@@ -120,3 +121,65 @@ def test_sensor_table_covers_every_axle_and_side() -> None:
     assert len(names) == len(traces)
     assert "axle1_wheelset_acceleration_z" in names
     assert "axle4_right_rail_displacement_z" in names
+
+
+# --- axle-box accelerations -------------------------------------------------------------
+#
+# The solver writes these channels analytically, so the sensor layer must *read* them.  A test that
+# only checked the shape would pass on a second difference of the position, which is the mistake
+# this function exists to avoid -- so the first test below asserts equality with the channel.
+
+def test_axle_box_acceleration_is_read_not_differentiated() -> None:
+    rng = np.random.default_rng(20261024)
+    raw = rng.normal(scale=0.3, size=600)          # deliberately not smooth
+    history = _history({"axle1_box_left_z_acc_m_per_s2": raw})
+    trace = axle_box_acceleration(history, 1, "left")
+    assert trace.name == "axle1_box_left_acceleration_z"
+    assert trace.unit == "m/s^2"
+    assert np.array_equal(trace.values, raw)
+    assert "not a differentiated position" in trace.note
+
+
+def test_axle_box_lateral_is_a_separate_sensor() -> None:
+    z = np.linspace(0.0, 1.0, 500)
+    y = np.linspace(1.0, 0.0, 500)
+    history = _history({
+        "axle2_box_right_z_acc_m_per_s2": z,
+        "axle2_box_right_y_acc_m_per_s2": y,
+    })
+    vertical = axle_box_acceleration(history, 2, "right")
+    lateral = axle_box_acceleration(history, 2, "right", axis="y")
+    assert lateral.name == "axle2_box_right_acceleration_y"
+    assert np.array_equal(vertical.values, z)
+    assert np.array_equal(lateral.values, y)
+    assert not np.array_equal(vertical.values, lateral.values)
+
+
+def test_axle_box_refuses_an_angular_axis_and_a_bad_side() -> None:
+    history = _history({"axle1_box_left_z_acc_m_per_s2": np.zeros(200)})
+    with pytest.raises(SensorModelError) as angular:
+        axle_box_acceleration(history, 1, "left", axis="pitch")
+    assert "rad/s^2" in str(angular.value)
+    with pytest.raises(SensorModelError):
+        axle_box_acceleration(history, 1, "middle")
+
+
+def test_axle_box_missing_channel_names_the_column_and_the_fallback() -> None:
+    history = _history({"axle1_z_m": np.zeros(200)})
+    with pytest.raises(SensorModelError) as excinfo:
+        axle_box_acceleration(history, 1, "left")
+    message = str(excinfo.value)
+    assert "axle1_box_left_z_acc_m_per_s2" in message
+    assert "wheelset_acceleration" in message
+
+
+def test_sensor_table_prefers_the_box_over_the_wheelset_on_the_same_axle() -> None:
+    channels: dict[str, np.ndarray] = {"axle1_z_m": np.zeros(300), "axle2_z_m": np.zeros(300)}
+    for axis in ("x", "y", "z"):
+        channels[f"axle1_box_left_{axis}_acc_m_per_s2"] = np.zeros(300)
+    names = {trace.name for trace in sensor_table(_history(channels))}
+    # axle 1 has a box: three axes, and no wheelset trace standing in for it
+    assert {f"axle1_box_left_acceleration_{axis}" for axis in ("x", "y", "z")} <= names
+    assert "axle1_wheelset_acceleration_z" not in names
+    # axle 2 has no box: the wheelset channel is the honest fallback
+    assert "axle2_wheelset_acceleration_z" in names

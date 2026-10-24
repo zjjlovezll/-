@@ -83,7 +83,12 @@ class StoreError(RuntimeError):
 
 #: ``(suffix, unit, group)`` ordered most-specific first; the first match wins.  Length matters:
 #: ``_m_per_s`` has to be tested before ``_m`` or every velocity would be labelled a position.
+#: The acceleration suffixes go first for the same reason: ``axle1_z_acc_m_per_s2`` ends in neither
+#: ``_m_per_s`` nor ``_m``, and without these two rules every acceleration channel would fall back to
+#: its raw identifier -- which is what happened when B026 started emitting them.
 _UNIT_RULES: tuple[tuple[str, str, str], ...] = (
+    ("_acc_m_per_s2", "m/s²", "加速度"),
+    ("_acc_rad_per_s2", "rad/s²", "角加速度"),
     ("_m_per_s", "m/s", "速度"),
     ("_rad_per_s", "rad/s", "角速度"),
     ("_normal_n", "N", "接触力"),
@@ -199,7 +204,9 @@ def channel_label(column: str) -> str:
     if not tokens:
         return column
     velocity = unit in {"m/s", "rad/s"}
-    suffix_word = "速度" if velocity else ""
+    acceleration = unit in {"m/s²", "rad/s²"}
+    # ``侧滚角`` already carries the 角, so the suffix word is 加速度 and not 角加速度
+    suffix_word = "速度" if velocity else ("加速度" if acceleration else "")
 
     head = tokens[0]
     remainder = tokens[1:]
@@ -220,7 +227,17 @@ def channel_label(column: str) -> str:
         return f"{column} [{unit}]"
 
     side = ""
-    if remainder[:1] and remainder[0] in _SIDE:
+    if remainder[:1] and remainder[0] == "box":
+        # ``axle1_box_left`` is the axle-box body, not the rail: the box rides the axle, and left and
+        # right are two separate 48.2 kg bodies.  The side word has to say 轴箱 too, otherwise
+        # ``第1轴左轨`` would claim it is a rail channel.
+        remainder = remainder[1:]
+        if remainder[:1] and remainder[0] in _SIDE:
+            side = {"left": "左轴箱", "right": "右轴箱"}[remainder[0]]
+            remainder = remainder[1:]
+        else:
+            side = "轴箱"
+    elif remainder[:1] and remainder[0] in _SIDE:
         side = _SIDE[remainder[0]]
         remainder = remainder[1:]
     # Flexible-track channels name the structural part after the side: ``axle1_left_rail_z_m``
@@ -235,6 +252,10 @@ def channel_label(column: str) -> str:
     else:
         quantity_token = remainder[0] if remainder else _SUFFIX_QUANTITY.get(suffix, "")
         quantity = _QUANTITY.get(quantity_token, "")
+        # ``x`` is mileage for a position (``axle1_x_m`` runs along the track) but the acceleration
+        # along it is longitudinal motion, and 里程加速度 would be nonsense.
+        if acceleration and quantity_token == "x":
+            quantity = "纵向"
     if not quantity:
         return f"{column} [{unit}]"
     spoken = f"{owner}{side} {part}{quantity}{suffix_word}".strip()

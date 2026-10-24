@@ -17,12 +17,12 @@ VSVersionInfo(
                     [
                         StringStruct("CompanyName", "Velch contributors"),
                         StringStruct("FileDescription", "道岔车辆-轮对-钢轨动力学仿真"),
-                        StringStruct("FileVersion", "0.4.32.0"),
+                        StringStruct("FileVersion", "0.4.33.0"),
                         StringStruct("InternalName", "velch"),
                         StringStruct("LegalCopyright", "MIT License"),
                         StringStruct("OriginalFilename", "Velch.exe"),
                         StringStruct("ProductName", "Velch 道岔动力学工作台"),
-                        StringStruct("ProductVersion", "0.4.32.0"),
+                        StringStruct("ProductVersion", "0.4.33.0"),
                     ],
                 )
             ]

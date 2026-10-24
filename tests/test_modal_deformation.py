@@ -1,32 +1,34 @@
-"""The deformed tread has to change the depth the force law sees, and nothing else.
+"""The search has to run on the *deformed* tread, not on a corrected copy of its output.
 
-S8-3 is easy to get wrong in a way no peak force reveals.  Two mistakes matter:
+S9-1 moved the deformation from a fix-up applied after :func:`find_graph_contact` to the wheel
+profile that goes *into* it.  That single change is what makes position, slope and depth agree:
+the search picks the deepest point of the moved surface, so the depth it reports already contains
+the tread displacement and the point it reports is where the moved steel is.
 
-* the tread displacement is applied to the *force* rather than to the *depth* — then the
-  ``delta**1.5`` law never sees it, and a 20 um tread movement produces a linear-looking
-  effect instead of the asymmetric one a one-sided contact must produce;
-* the displacement is applied with the wrong sign or without the left/right mirror — the
-  mode shapes live in the CAD assembly frame, where the two wheels sit at opposite ``y``
-  and their z components are mirrored.
+The tests pin the four things that can go wrong, in the order they would bite:
 
-The quantitative handle used here is the force law itself: with the velocities zero there is
-no damping term, so the normal force is exactly ``C * depth**1.5`` and moving the tread by
-``d`` must scale it by ``((depth - d) / depth)**1.5``.
+* a rigid case must pass the **same profile object** — anything else perturbs trajectories that
+  are supposed to be frozen;
+* the profile must move by exactly the shift field, not by a resampled or smoothed version of it;
+* the force must follow ``((depth - dz) / depth) ** 1.5`` — the ``delta**1.5`` law has to see the
+  moved depth, otherwise a 11 um tread movement produces a linear-looking effect;
+* the contact point must **move** with a strong slope, and the normal must turn by ``-atan(slope)``
+  because ``contact_search`` takes its normal from the rail's slope grid and cannot know the
+  wheel moved.
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
-from velch.contact_models import ContactGeometry
-
 REPO = Path(__file__).resolve().parents[1]
 MODES = REPO / "vehicles" / "modes" / "CRH3C_wheelset_fe.json"
 EXAMPLE = REPO / "examples" / "vehicle_v2" / "case.json"
+RIGHT = "axle1_right_stock"
+LEFT = "axle1_left_stock"
 
 
 def _coupled_case(tmp_path: Path) -> Path:
@@ -43,10 +45,10 @@ def _coupled_case(tmp_path: Path) -> Path:
                 absolute(value)
 
     absolute(raw)
-    raw["case_id"] = "deformed_wheelset"
+    raw["case_id"] = "deformed_wheelset_profile"
     raw["flexible_wheelset"] = {"source": "file", "file": str(MODES), "axles": [1, 2, 3, 4]}
     raw.setdefault("run", {})["duration_s"] = 0.002
-    target = tmp_path / "case_deformed.json"
+    target = tmp_path / "case_deformed_profile.json"
     target.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
     return target
 
@@ -56,144 +58,146 @@ def dynamics(tmp_path_factory):
     from velch.vehicle import load_vehicle_case
     from velch.vehicle_solver import VehicleDynamics
 
-    case = load_vehicle_case(_coupled_case(tmp_path_factory.mktemp("deformed")))
+    case = load_vehicle_case(_coupled_case(tmp_path_factory.mktemp("deformed_profile")))
     return VehicleDynamics(case), case
 
 
-def _rail(side: str, axle: int = 0):
-    return SimpleNamespace(id=f"axle{axle + 1}_{side}_stock",
-                           template_id=f"{side}_stock", axle_index=axle)
+def _rail(dynamics, rail_id: str):
+    return next(rail for rail in dynamics.case.rails if rail.id == rail_id)
 
 
-def _geometry(depth_m: float = 227e-6) -> ContactGeometry:
-    return ContactGeometry(y_m=0.753, wheel_z_m=0.0, rail_z_m=0.0, penetration_m=depth_m,
-                           normal_y=0.0, normal_z=1.0, tangent_y=1.0, tangent_z=0.0,
-                           lever_y_m=0.0, lever_z_m=-0.46, rail_dz_ds=0.0,
-                           stiffness_n_m_1p5=1.37e9)
+def _q_for_shift(dynamics, case, target_z_m: float, axle: int = 0) -> np.ndarray:
+    """Modal vector whose vertical tread shift at the wheel centre is ``target_z_m``.
 
+    The first mode is used alone because its shift across the running surface is nearly constant,
+    which keeps the arithmetic of the force-law test readable.
+    """
 
-def _modal_q(case, dynamics, ring_side: int, target_z_m: float,
-             lateral_m: float = 0.0, penetration_m: float = 227e-6) -> np.ndarray:
-    """Fill every axle's modal block so the tread moves ``target_z_m`` in z at the contact."""
-
+    ring = dynamics.contact_coupling.rings[1]
+    probe = np.zeros(ring.n_modes)
+    probe[0] = 1.0
+    unit = float(ring.tread_shift(probe, np.array([0.0]))[0])
+    assert abs(unit) > 0.0
     q = np.array(case.initial_q, dtype=float)
-    ring = dynamics.contact_coupling.rings[ring_side]
-    point = ring.contact_point(lateral_m, penetration_m)
-    unit = ring.displacement(point, np.ones(ring.n_modes))[2]
-    assert unit != 0.0
-    fill = target_z_m / unit
-    start = dynamics.modal.offset
-    per = ring.n_modes
-    for axle in range(4):
-        q[start + axle * per: start + (axle + 1) * per] += fill
+    q[dynamics.contact_coupling.block(axle)] = probe * (target_z_m / unit)
     return q
 
 
-def test_zero_modal_coordinates_leave_the_contact_untouched(dynamics) -> None:
+def _contact(dynamics, case, q: np.ndarray, rail_id: str = RIGHT):
+    force, contacts = dynamics.evaluate(0.0, q, np.zeros(dynamics.dimension))
+    return force, contacts[rail_id]
+
+
+def test_zero_modal_coordinate_returns_the_original_profile(dynamics):
     dyn, case = dynamics
-    geometry = _geometry()
     q = np.array(case.initial_q, dtype=float)
-    assert np.all(np.asarray(q)[dyn.modal.offset:] == 0.0)
-    assert dyn._deform_geometry(geometry, _rail("right"), q) is geometry
+    assert dyn._deformed_profile(dyn.wheels["R"], _rail(dyn, RIGHT), q) is dyn.wheels["R"].profile
 
 
-def test_the_tread_moves_the_depth_by_its_own_displacement(dynamics) -> None:
-    dyn, case = dynamics
-    geometry = _geometry()
-    for target in (2.0e-5, -2.0e-5):
-        q = _modal_q(case, dyn, 1, target)
-        moved = dyn._deform_geometry(geometry, _rail("right"), q)
-        # penetration is measured down into the rail, so raising the steel by d removes d
-        assert moved.penetration_m == pytest.approx(geometry.penetration_m - target, abs=1e-15)
-        # and the height the search reported has to travel with it, or the two disagree
-        assert moved.wheel_z_m == pytest.approx(geometry.wheel_z_m + target, abs=1e-15)
-
-
-def test_the_two_wheels_are_mirrors(dynamics) -> None:
-    """One set of mode shapes serves both wheels through a mirror; the z signs must oppose."""
-
-    dyn, case = dynamics
-    q = _modal_q(case, dyn, 1, 2.0e-5)
-    right = dyn._deform_geometry(_geometry(), _rail("right"), q)
-    left = dyn._deform_geometry(_geometry(), _rail("left"), q)
-    moved_right = right.penetration_m - _geometry().penetration_m
-    moved_left = left.penetration_m - _geometry().penetration_m
-    assert moved_right < 0.0 < moved_left
-    assert abs(moved_left) == pytest.approx(abs(moved_right), rel=0.08)
-
-
-def test_the_elastic_force_follows_the_new_depth(dynamics) -> None:
-    """The end-to-end statement: the *elastic* force is C*delta**1.5 with delta moved by the tread."""
-
-    dyn, case = dynamics
-    q0 = np.array(case.initial_q, dtype=float)
-    v = np.zeros_like(q0)
-    _, base = dyn.evaluate(0.0, q0, v)
-    rail_id = "axle1_right_stock"
-    depth = base[rail_id].geometry.penetration_m
-    elastic = base[rail_id].normal_elastic_n
-    assert depth > 2.0e-4 and elastic > 0.0
-
-    lateral = base[rail_id].geometry.y_m - 0.75  # contact offset from the wheel centre
-    for target in (2.0e-5, -2.0e-5):
-        q = _modal_q(case, dyn, 1, target, lateral_m=lateral, penetration_m=depth)
-        _, moved = dyn.evaluate(0.0, q, v)
-        expected = ((depth - target) / depth) ** 1.5
-        assert moved[rail_id].normal_elastic_n / elastic == pytest.approx(expected, rel=1e-6)
-        # the depth the law saw equals the shifted one
-        assert moved[rail_id].geometry.penetration_m == pytest.approx(depth - target, rel=1e-9)
-
-
-def test_the_normal_turns_with_the_tread_slope(dynamics) -> None:
-    """Gao & Dai take the normal *after* deformation; a tread ring can supply its slope."""
-
-    dyn, case = dynamics
-    geometry = _geometry()
-    lateral = geometry.y_m - 0.75
-    q = _modal_q(case, dyn, 1, 2.0e-5, lateral_m=lateral,
-                 penetration_m=geometry.penetration_m)
-    moved = dyn._deform_geometry(geometry, _rail("right"), q, lateral_m=lateral)
-    ring = dyn.contact_coupling.rings[1]
-    first = dyn.modal.blocks[0]
-    block = slice(first.offset, first.stop)
-    _, slope = ring.deformation(np.asarray(q)[block], lateral, geometry.penetration_m)
-    assert abs(slope) > 1e-6
-    # a tread whose surface is z = f(y) has normal (-f'', 1)/sqrt(1+f''^2), so a slope of s turns
-    # the normal by -atan(s): the measured angle must be the negative of the applied one
-    angle = np.degrees(np.arctan2(moved.normal_y, moved.normal_z)
-                       - np.arctan2(geometry.normal_y, geometry.normal_z))
-    assert angle == pytest.approx(-np.degrees(np.arctan(slope)), rel=1e-6)
-    assert moved.normal_y / moved.normal_z == pytest.approx(-slope, rel=1e-6)
-    # rotating both keeps the creep basis orthonormal, so the pair cannot shear apart
-    for y, z in ((moved.normal_y, moved.normal_z), (moved.tangent_y, moved.tangent_z)):
-        assert np.hypot(y, z) == pytest.approx(1.0, rel=1e-12)
-    assert moved.normal_y * moved.tangent_y + moved.normal_z * moved.tangent_z == pytest.approx(0.0, abs=1e-12)
-
-
-def test_the_vertical_force_is_the_normal_projected_on_the_tilted_normal(dynamics) -> None:
-    dyn, case = dynamics
-    q0 = np.array(case.initial_q, dtype=float)
-    v = np.zeros_like(q0)
-    _, base = dyn.evaluate(0.0, q0, v)
-    rail_id = "axle1_right_stock"
-    assert base[rail_id].wheel_force_z_n / base[rail_id].normal_force_n == pytest.approx(
-        base[rail_id].geometry.normal_z, rel=1e-12)
-    q = _modal_q(case, dyn, 1, 2.0e-5, lateral_m=0.004, penetration_m=base[rail_id].geometry.penetration_m)
-    _, moved = dyn.evaluate(0.0, q, v)
-    assert moved[rail_id].wheel_force_z_n / moved[rail_id].normal_force_n == pytest.approx(
-        moved[rail_id].geometry.normal_z, rel=1e-12)
-    # and the tilt is not a rounding effect: the vertical share of the normal moved
-    assert moved[rail_id].geometry.normal_z != base[rail_id].geometry.normal_z
-
-
-def test_a_rigid_case_never_deforms(dynamics) -> None:
+def test_a_rigid_case_has_no_deformation(dynamics):
     from velch.vehicle import load_vehicle_case
     from velch.vehicle_solver import VehicleDynamics
 
-    case = load_vehicle_case(EXAMPLE)
-    dyn = VehicleDynamics(case)
-    assert dyn.contact_coupling is None
-    geometry = _geometry()
+    rigid = VehicleDynamics(load_vehicle_case(EXAMPLE))
+    q = np.zeros(rigid.dimension)
+    wheel = rigid.wheels["R"]
+    assert rigid.contact_coupling is None
+    assert rigid._deformed_profile(wheel, _rail(rigid, RIGHT), q) is wheel.profile
+
+
+def test_the_profile_moves_by_exactly_the_shift_field(dynamics):
+    dyn, case = dynamics
+    q = _q_for_shift(dyn, case, 20e-6)
+    wheel = dyn.wheels["R"]
+    deformed = dyn._deformed_profile(wheel, _rail(dyn, RIGHT), q)
+    shift = dyn.contact_coupling.rings[1].tread_shift(
+        q[dyn.contact_coupling.block(0)], np.asarray(wheel.profile.y_m))
+    assert np.array_equal(np.asarray(deformed.z_m),
+                          np.asarray(wheel.profile.z_m, dtype=float) + shift)
+    assert np.max(np.abs(shift)) > 1e-5
+
+
+def test_the_force_follows_the_deformed_depth(dynamics):
+    dyn, case = dynamics
     q = np.array(case.initial_q, dtype=float)
-    q[-1] = 1.0  # even a nonsense tail cannot reach a coupling that does not exist
-    assert dyn._deform_geometry(geometry, _rail("right"), q) is geometry
+    _force, base = _contact(dyn, case, q)
+    moved = _q_for_shift(dyn, case, 20e-6)
+    _force, deformed = _contact(dyn, case, moved)
+    depth = base.geometry.penetration_m
+    # What the tread actually moved by, read at the lateral offset the contact sits at — not at
+    # the wheel centre.  This is the mistake that made an earlier round report 1.13 where the
+    # arithmetic said 1.49: the contact is 4 mm away from the point that was calibrated.
+    wheel = dyn.wheels["R"]
+    lateral = float(base.geometry.y_m) - float(wheel.lateral_offset_m)
+    dz = float(dyn.contact_coupling.rings[1].tread_shift(
+        moved[dyn.contact_coupling.block(0)], np.array([lateral]))[0])
+    predicted = ((depth - dz) / depth) ** 1.5
+    measured = deformed.normal_elastic_n / base.normal_elastic_n
+    assert measured == pytest.approx(predicted, rel=2e-3)
+    # The search runs on the moved surface, so the depth it reports *is* depth minus the shift.
+    # This is the exact statement that the deformation is not being double counted or dropped.
+    assert deformed.geometry.penetration_m - (depth - dz) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_the_contact_point_responds_to_a_steep_deformation(dynamics):
+    """A shallow shift only moves the depth; a steep one also moves where the wheel touches.
+
+    Both have to be true of a search that runs on the moved surface.  At 20 um the lateral
+    position is unchanged to six decimals — the tread's own shift varies by only 1.6 um over the
+    20 mm contact window, far less than the rail curvature — so the movement is demonstrated where
+    it is measurable rather than asserted where it is not.
+    """
+
+    dyn, case = dynamics
+    q = np.array(case.initial_q, dtype=float)
+    _force, base = _contact(dyn, case, q)
+    ring = dyn.contact_coupling.rings[1]
+    probe = np.zeros(ring.n_modes)
+    probe[1] = 1.0
+    unit = float(ring.tread_shift(probe, np.array([0.0]))[0])
+    strong = np.array(case.initial_q, dtype=float)
+    strong[dyn.contact_coupling.block(0)] = probe * (-120e-6 / unit)
+    _force, deformed = _contact(dyn, case, strong)
+    assert abs(deformed.geometry.y_m - base.geometry.y_m) > 1e-3
+
+
+def test_the_normal_turns_with_the_tread_slope(dynamics):
+    dyn, case = dynamics
+    q = np.array(case.initial_q, dtype=float)
+    _force, base = _contact(dyn, case, q)
+    moved = _q_for_shift(dyn, case, 20e-6)
+    _force, deformed = _contact(dyn, case, moved)
+    wheel = dyn.wheels["R"]
+    lateral = float(base.geometry.y_m) - float(wheel.lateral_offset_m)
+    slope = float(dyn.contact_coupling.rings[1].tread_slope(
+        moved[dyn.contact_coupling.block(0)], lateral))
+    # n = (-f', 1)/sqrt(1+f'^2): the tilt added to the base normal is -atan(slope).
+    assert deformed.geometry.normal_y - base.geometry.normal_y == pytest.approx(-slope, rel=5e-2)
+    norm = np.hypot(deformed.geometry.normal_y, deformed.geometry.normal_z)
+    assert norm == pytest.approx(1.0, abs=1e-12)
+    assert (deformed.geometry.normal_y * deformed.geometry.tangent_y
+            + deformed.geometry.normal_z * deformed.geometry.tangent_z) == pytest.approx(0.0, abs=1e-12)
+
+
+def test_the_left_wheel_reads_the_mirrored_lateral_coordinate(dynamics):
+    """The profile's own lateral axis points outboard on both wheels; the CAD frame does not.
+
+    Both wheel profiles peak in z at y = -0.045 (the flange), and the flange is inboard, so the
+    left wheel's local +y is physical -y.  A test on the sign of the vertical shift would not see
+    this — the symmetric first mode lifts both wheels together.  What pins it is that the left
+    profile is shifted by the field evaluated at -y, and the right at +y.
+    """
+
+    dyn, case = dynamics
+    q = _q_for_shift(dyn, case, 20e-6)
+    block = q[dyn.contact_coupling.block(0)]
+    wheel = dyn.wheels["L"]
+    left_profile = dyn._deformed_profile(wheel, _rail(dyn, LEFT), q)
+    expected = dyn.contact_coupling.rings[-1].tread_shift(
+        block, -np.asarray(wheel.profile.y_m, dtype=float))
+    assert np.array_equal(np.asarray(left_profile.z_m),
+                          np.asarray(wheel.profile.z_m, dtype=float) + expected)
+    # And it is not the same array the right wheel uses: the mirror has to change something.
+    right_shift = dyn.contact_coupling.rings[1].tread_shift(
+        block, np.asarray(wheel.profile.y_m, dtype=float))
+    assert not np.allclose(expected, right_shift, atol=1e-9)

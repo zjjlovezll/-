@@ -23,6 +23,7 @@ nominal tread point and the response is linear in it.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cached_property
 
 import numpy as np
 
@@ -109,6 +110,58 @@ class TreadRing:
     def bottom_point(self, penetration_m: float = 0.0) -> np.ndarray:
         """Tread point under the wheel centre — where the normal force of a level track acts."""
         return self.contact_point(0.0, penetration_m)
+
+    @cached_property
+    def profile_projection(self) -> np.ndarray:
+        """Matrix taking a modal coordinate to the tread's vertical displacement at each node.
+
+        ``dz_node = A . q`` with ``A = K_normalised Phi_z^T``.  The kernel does not depend on
+        ``q``, so this is computed once per ring: a per-evaluation cost of 386x33 instead of
+        386x386x33, which is the difference between "usable in the right-hand side" and "not".
+        """
+
+        nodes = self.nodes
+        squared = ((nodes[:, None, :] - nodes[None, :, :]) ** 2).sum(axis=2)
+        kernel = np.exp(-0.5 * squared / (self.sigma_m ** 2))
+        kernel = kernel / kernel.sum(axis=1, keepdims=True)
+        return kernel @ self.shapes[:, :, 2].T
+
+    def tread_shift(self, q, lateral_m) -> np.ndarray:
+        """Vertical tread displacement at given lateral offsets from the wheel plane.
+
+        Linear between the ring's own nodes and clamped outside them: the ring covers the
+        running surface, so an offset beyond it is the flange root where the tread model has
+        nothing to say, and extrapolating there would invent a slope.
+        """
+
+        q = np.asarray(q, dtype=float)
+        dz_nodes = self.profile_projection @ q
+        offsets = self.lateral_offsets_m
+        dz_nodes = dz_nodes[self._lateral_order]
+        return np.interp(np.asarray(lateral_m, dtype=float), offsets, dz_nodes)
+
+    @cached_property
+    def _lateral_order(self) -> np.ndarray:
+        return np.argsort(self.nodes[:, 1], kind="stable")
+
+    @cached_property
+    def lateral_offsets_m(self) -> np.ndarray:
+        """Node lateral offsets measured from this wheel's plane, ascending."""
+        return self.nodes[self._lateral_order, 1] - self.plane_y_m
+
+    def tread_slope(self, q, lateral_m: float, span_m: float = 0.002) -> float:
+        """Lateral slope of the deformed tread at a lateral offset, from the same shift field.
+
+        The contact search takes its normal from the *rail* profile (``contact_search`` interpolates
+        the rail's own slope grid), so a deformed wheel has to tilt that normal explicitly.  The
+        slope is measured on the very same ``tread_shift`` field the deformed profile was built
+        from, so the depth and the normal can never describe two different surfaces.
+        """
+
+        lateral_m = float(lateral_m)
+        plus = float(self.tread_shift(q, np.array([lateral_m + span_m]))[0])
+        minus = float(self.tread_shift(q, np.array([lateral_m - span_m]))[0])
+        return (plus - minus) / (2.0 * span_m)
 
     def deformation(self, q, lateral_m: float = 0.0, penetration_m: float = 0.0,
                     span_m: float = 0.01) -> tuple[float, float]:

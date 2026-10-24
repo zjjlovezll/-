@@ -358,23 +358,53 @@ class VehicleDynamics:
                 return [challenger]
         return [current]
 
-    def _deform_geometry(self, geometry: ContactGeometry, rail, q: np.ndarray,
-                         lateral_m: float = 0.0) -> ContactGeometry:
-        """Bias the contact depth and normal by the tread displacement the mode shapes carry.
+    def _deformed_profile(self, wheel, rail, q: np.ndarray):
+        """Return the wheel profile with the tread displacement of the mode shapes added.
 
-        Literature: Gao & Dai (AMM 105-107, 2012, 1284) build a *wheel-rail contact line* from
+        This is the second half of the flexible contact: the steel *moves*, so the search has to
+        run on the moved surface.  Gao & Dai (AMM 105-107, 2012, 1284) build a contact line from
         the deformed normal of every rolling circle and pick the point of least vertical
-        distance; Chen Jiayin §2.2 and VSD 2017 do the same at the level of `x = x_rigid + Phi q`.
-        Two things can be taken from that with what a tread ring provides:
+        distance; Chen Jiayin §2.2 and VSD 2017 write the same thing as ``x = x_rigid + Phi q``.
+        Deforming the profile gets all three quantities from one search — position, slope and
+        depth — instead of correcting the depth and the normal afterwards, where the three can
+        disagree with each other.
 
-        * the **depth** — a positive tread displacement lifts the steel away from the rail and
-          therefore *reduces* the penetration;
-        * the **normal** — the tread's lateral slope turns the common normal, which changes the
-          split between the normal and tangential force components even when the depth is right.
+        Two conventions matter and neither is guessable from the numbers:
 
-        What is deliberately still not done: searching the contact point itself on the deformed
-        surface (the point stays where the rigid search put it), and the roll-angle
-        reconstruction from deformed nodes that the thesis uses.
+        * the profile's own ``y_m`` is measured from the wheel plane and points *outboard* for
+          both wheels, while the tread ring is in CAD (assembly) coordinates where +y points to
+          the right.  The left wheel is therefore mirrored: its local +y is physical -y.  The
+          flange settles it — both profiles peak in ``z`` at ``y = -0.045``, and the flange is
+          inboard, so local -y is inboard on the right wheel and local +y is inboard on the left.
+        * zero modal coordinate returns ``wheel.profile`` itself, so a rigid case keeps passing
+          the same object to the search and its trajectory stays bit-identical.
+        """
+
+        coupling = self.contact_coupling
+        if coupling is None:
+            return wheel.profile
+        side = -1 if "left" in str(rail.template_id) else 1
+        ring = coupling.rings[side]
+        block_q = np.asarray(q, dtype=float)[coupling.block(rail.axle_index)]
+        if not np.any(block_q):
+            return wheel.profile
+        shift = ring.tread_shift(block_q, side * np.asarray(wheel.profile.y_m, dtype=float))
+        if not np.all(np.isfinite(shift)):
+            raise SimulationFailure(
+                f"non-finite tread deformation at {rail.id}: max|dz|={np.max(np.abs(shift))!r} m")
+        return replace(wheel.profile, z_m=np.asarray(wheel.profile.z_m, dtype=float) + shift)
+
+    def _tilted_geometry(self, geometry: ContactGeometry, rail, q: np.ndarray,
+                         lateral_m: float) -> ContactGeometry:
+        """Turn the contact normal by the slope of the deformed tread.
+
+        The depth is already inside the geometry — the search ran on the deformed profile, so the
+        point it picked *is* where the moved steel touches.  What the search cannot know is that
+        the deformed surface is tilted: ``find_graph_contact`` takes its normal from the rail's own
+        slope grid, so a wheel whose tread has a lateral slope would keep a normal that does not
+        belong to it.  Rotating normal and tangent together keeps the pair orthonormal, and the
+        rotation is by ``-atan(slope)`` because a tread ``z = f(y)`` has normal
+        ``(-f', 1)/sqrt(1 + f'^2)``.
         """
 
         coupling = self.contact_coupling
@@ -382,25 +412,19 @@ class VehicleDynamics:
             return geometry
         side = -1 if "left" in str(rail.template_id) else 1
         ring = coupling.rings[side]
-        block = coupling.block(rail.axle_index)
-        block_q = np.asarray(q, dtype=float)[block]
+        block_q = np.asarray(q, dtype=float)[coupling.block(rail.axle_index)]
         if not np.any(block_q):
             return geometry
-        move_z, slope = ring.deformation(block_q, lateral_m, geometry.penetration_m)
-        if not (math.isfinite(move_z) and math.isfinite(slope)):
-            raise SimulationFailure(
-                f"non-finite tread deformation at {rail.id}: z={move_z!r} m, dz/dy={slope!r}")
-        # R(theta) with tan(theta) = slope acts on both the normal and the tangent, so the pair
-        # stays orthonormal and the creep basis does not silently shear.
+        slope = ring.tread_slope(block_q, lateral_m)
+        if not math.isfinite(slope):
+            raise SimulationFailure(f"non-finite tread slope at {rail.id}: {slope!r} rad")
         angle = math.atan(slope)
         cosine, sine = math.cos(angle), math.sin(angle)
         normal_y = cosine * geometry.normal_y - sine * geometry.normal_z
         normal_z = sine * geometry.normal_y + cosine * geometry.normal_z
         tangent_y = cosine * geometry.tangent_y - sine * geometry.tangent_z
         tangent_z = sine * geometry.tangent_y + cosine * geometry.tangent_z
-        return replace(geometry, penetration_m=geometry.penetration_m - move_z,
-                       wheel_z_m=geometry.wheel_z_m + move_z,
-                       normal_y=normal_y, normal_z=normal_z,
+        return replace(geometry, normal_y=normal_y, normal_z=normal_z,
                        tangent_y=tangent_y, tangent_z=tangent_z)
 
     def _evaluate_patch(self, job):
@@ -425,6 +449,10 @@ class VehicleDynamics:
         rail_y, rail_z, rail_vy, rail_vz = self.track.local_state(q, v, rail_index, x,
                                                                   cfg.travel_speed_m_s)
         body_results = []
+        # S9-1: the steel moves, so the contact is searched on the deformed tread.  Computed once
+        # per patch because the deformation depends on the axle and the side, not on the body.
+        profile = self._deformed_profile(wheel, rail, q)
+        side_sign = -1 if "left" in str(rail.template_id) else 1
         for body in bodies:
             if not body.active_at(x):
                 continue
@@ -434,7 +462,7 @@ class VehicleDynamics:
             if seed_y is None and seeds:
                 seed_y = seeds.get("__rail__")
             geometry = find_graph_contact(
-                wheel.profile, sample, wheel_y_m=float(q[wh]),
+                profile, sample, wheel_y_m=float(q[wh]),
                 wheel_z_m=cfg.wheel_center_height_m + float(q[wh + 1]),
                 wheel_roll_rad=float(q[wh + 2]),
                 wheel_lateral_offset_m=wheel.lateral_offset_m + lateral_extra,
@@ -466,13 +494,10 @@ class VehicleDynamics:
                 # wheel tread cannot carry load, however deep its crown measures.
                 geometry = None
             if geometry is not None and self.contact_coupling is not None:
-                # S8-3: the steel moves.  The tread displacement from the mode shapes changes how
-                # deep the wheel sits in the rail, so it enters the geometry *before* the force
-                # law — a correction applied to the force afterwards would not reproduce the
-                # sqrt(delta) stiffness the law uses.
-                geometry = self._deform_geometry(
+                geometry = self._tilted_geometry(
                     geometry, rail, q,
-                    lateral_m=float(geometry.y_m) - float(wheel.lateral_offset_m + lateral_extra))
+                    side_sign * (float(geometry.y_m)
+                                 - float(wheel.lateral_offset_m + lateral_extra)))
             if half_width is not None and self._pool is None:
                 # A lost contact leaves no point worth tracking: drop the seed so
                 # the next evaluation re-acquires it with the exhaustive span.

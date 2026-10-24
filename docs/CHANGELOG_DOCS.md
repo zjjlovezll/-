@@ -2591,3 +2591,30 @@ S7d 否掉短波段的位移通道后，剩下的疑点是：文献（L5）的 `
 方向与 L6（SNR 影响有限、误差由模型保真度决定）一致。
 
 证据：[docs/S7E_LONGWAVE_2026-10-24.md](S7E_LONGWAVE_2026-10-24.md)、`scripts/s7e_longwave.py`（列数据缓存在 `F:\velch_tmp\s7e\columns.json`）、`.tmp/s7e_recompute.py`。
+
+## 第 84 轮：S9-1 把变形放进型面，让接触搜索自己去发现（2026-10-25 凌晨）
+
+S8-3 的变形是事后修正（先搜未变形型面，再手改深度与法向），三个量可以互相矛盾。本轮按 L11
+（Gao & Dai 的接触线法：先有变形后的踏面，再取竖直距离最小点）把顺序正过来。
+
+| 文件 | 改动 |
+|---|---|
+| `src/velch/modal_coupling.py` | `TreadRing.profile_projection`（核矩阵 × Φ_z，每环算一次）/ `tread_shift(q, u)`（按横向位置插值，环外钳制）/ `tread_slope(q, u)`（同一张场的斜率） |
+| `src/velch/vehicle_solver.py` | 新增 `_deformed_profile(wheel, rail, q)`（零模态返回**原对象**）、`_tilted_geometry`（法向按变形斜率旋转）；删除 `_deform_geometry` 与手改深度路径；`_evaluate_patch` 每个 patch 只算一次变形型面 |
+| `tests/test_modal_deformation.py` | 重写为 7 项，钉住"型面精确平移 / `penetration = δ − dz` 到 1e-9 / 力按 `δ^1.5` / 深位移移动接触点 / 法向 `−atan(slope)` / 左轮读镜像横向坐标" |
+
+实测（同一算例，目标位移取在轮心）：
+
+| 目标 | 接触点处 dz | 深度变化 | 力比 | `((δ-dz)/δ)^1.5` |
+|---|---|---|---|---|
+| +5 µm | −2.75 µm | +2.75 µm | 1.018269 | 1.018270 |
+| +20 µm | −11.02 µm | +11.02 µm | 1.073732 | 1.073735 |
+| −20 µm | +11.02 µm | −11.02 µm | 0.928037 | 0.928034 |
+
+接触点在 20 µm 量级不动（这条振型在 20 mm 窗内只变 1.6 µm，远小于钢轨曲率），放大到 120 µm
+才移动 1.75 mm——测试据此写成"深位移移动接触点"，不编造浅位移下的移动。
+
+一处口径再次确认：`dz` 必须量在**接触点所在的横向位置**（距轮心 4 mm），量在轮心会得到 1.49 而
+不是 1.13，上一轮就是因此误判。
+
+全仓 `pytest` **790 passed, 1 skipped**；文档 `FLEXIBLE_WHEELSET_PORT_2026-10-24.md` 新增 §15。

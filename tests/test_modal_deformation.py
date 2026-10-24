@@ -72,12 +72,14 @@ def _geometry(depth_m: float = 227e-6) -> ContactGeometry:
                            stiffness_n_m_1p5=1.37e9)
 
 
-def _modal_q(case, dynamics, ring_side: int, target_z_m: float) -> np.ndarray:
-    """Fill every axle's modal block so the tread moves ``target_z_m`` in z."""
+def _modal_q(case, dynamics, ring_side: int, target_z_m: float,
+             lateral_m: float = 0.0, penetration_m: float = 227e-6) -> np.ndarray:
+    """Fill every axle's modal block so the tread moves ``target_z_m`` in z at the contact."""
 
     q = np.array(case.initial_q, dtype=float)
     ring = dynamics.contact_coupling.rings[ring_side]
-    unit = ring.displacement(ring.bottom_point(227e-6), np.ones(ring.n_modes))[2]
+    point = ring.contact_point(lateral_m, penetration_m)
+    unit = ring.displacement(point, np.ones(ring.n_modes))[2]
     assert unit != 0.0
     fill = target_z_m / unit
     start = dynamics.modal.offset
@@ -120,8 +122,8 @@ def test_the_two_wheels_are_mirrors(dynamics) -> None:
     assert abs(moved_left) == pytest.approx(abs(moved_right), rel=0.08)
 
 
-def test_the_force_follows_the_new_depth(dynamics) -> None:
-    """The end-to-end statement: C*delta**1.5 with delta moved by the tread."""
+def test_the_elastic_force_follows_the_new_depth(dynamics) -> None:
+    """The end-to-end statement: the *elastic* force is C*delta**1.5 with delta moved by the tread."""
 
     dyn, case = dynamics
     q0 = np.array(case.initial_q, dtype=float)
@@ -129,16 +131,59 @@ def test_the_force_follows_the_new_depth(dynamics) -> None:
     _, base = dyn.evaluate(0.0, q0, v)
     rail_id = "axle1_right_stock"
     depth = base[rail_id].geometry.penetration_m
-    force = base[rail_id].wheel_force_z_n
-    assert depth > 2.0e-4 and force > 0.0
+    elastic = base[rail_id].normal_elastic_n
+    assert depth > 2.0e-4 and elastic > 0.0
 
+    lateral = base[rail_id].geometry.y_m - 0.75  # contact offset from the wheel centre
     for target in (2.0e-5, -2.0e-5):
-        q = _modal_q(case, dyn, 1, target)
+        q = _modal_q(case, dyn, 1, target, lateral_m=lateral, penetration_m=depth)
         _, moved = dyn.evaluate(0.0, q, v)
         expected = ((depth - target) / depth) ** 1.5
-        assert moved[rail_id].wheel_force_z_n / force == pytest.approx(expected, rel=1e-6)
+        assert moved[rail_id].normal_elastic_n / elastic == pytest.approx(expected, rel=1e-6)
         # the depth the law saw equals the shifted one
         assert moved[rail_id].geometry.penetration_m == pytest.approx(depth - target, rel=1e-9)
+
+
+def test_the_normal_turns_with_the_tread_slope(dynamics) -> None:
+    """Gao & Dai take the normal *after* deformation; a tread ring can supply its slope."""
+
+    dyn, case = dynamics
+    geometry = _geometry()
+    lateral = geometry.y_m - 0.75
+    q = _modal_q(case, dyn, 1, 2.0e-5, lateral_m=lateral,
+                 penetration_m=geometry.penetration_m)
+    moved = dyn._deform_geometry(geometry, _rail("right"), q, lateral_m=lateral)
+    ring = dyn.contact_coupling.rings[1]
+    first = dyn.modal.blocks[0]
+    block = slice(first.offset, first.stop)
+    _, slope = ring.deformation(np.asarray(q)[block], lateral, geometry.penetration_m)
+    assert abs(slope) > 1e-6
+    # a tread whose surface is z = f(y) has normal (-f'', 1)/sqrt(1+f''^2), so a slope of s turns
+    # the normal by -atan(s): the measured angle must be the negative of the applied one
+    angle = np.degrees(np.arctan2(moved.normal_y, moved.normal_z)
+                       - np.arctan2(geometry.normal_y, geometry.normal_z))
+    assert angle == pytest.approx(-np.degrees(np.arctan(slope)), rel=1e-6)
+    assert moved.normal_y / moved.normal_z == pytest.approx(-slope, rel=1e-6)
+    # rotating both keeps the creep basis orthonormal, so the pair cannot shear apart
+    for y, z in ((moved.normal_y, moved.normal_z), (moved.tangent_y, moved.tangent_z)):
+        assert np.hypot(y, z) == pytest.approx(1.0, rel=1e-12)
+    assert moved.normal_y * moved.tangent_y + moved.normal_z * moved.tangent_z == pytest.approx(0.0, abs=1e-12)
+
+
+def test_the_vertical_force_is_the_normal_projected_on_the_tilted_normal(dynamics) -> None:
+    dyn, case = dynamics
+    q0 = np.array(case.initial_q, dtype=float)
+    v = np.zeros_like(q0)
+    _, base = dyn.evaluate(0.0, q0, v)
+    rail_id = "axle1_right_stock"
+    assert base[rail_id].wheel_force_z_n / base[rail_id].normal_force_n == pytest.approx(
+        base[rail_id].geometry.normal_z, rel=1e-12)
+    q = _modal_q(case, dyn, 1, 2.0e-5, lateral_m=0.004, penetration_m=base[rail_id].geometry.penetration_m)
+    _, moved = dyn.evaluate(0.0, q, v)
+    assert moved[rail_id].wheel_force_z_n / moved[rail_id].normal_force_n == pytest.approx(
+        moved[rail_id].geometry.normal_z, rel=1e-12)
+    # and the tilt is not a rounding effect: the vertical share of the normal moved
+    assert moved[rail_id].geometry.normal_z != base[rail_id].geometry.normal_z
 
 
 def test_a_rigid_case_never_deforms(dynamics) -> None:

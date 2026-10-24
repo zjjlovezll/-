@@ -93,10 +93,40 @@ class TreadRing:
         return cls(side=side, nodes=modes.nodes[mask], shapes=modes.shapes[:, mask, :],
                    radius_m=modes.radius_m, sigma_m=sigma_m)
 
+    def contact_point(self, lateral_m: float = 0.0, penetration_m: float = 0.0) -> np.ndarray:
+        """Tread point under the contact, at a given lateral offset from the wheel plane.
+
+        ``lateral_m`` is where the contact actually sits relative to the wheel centre, so a
+        flange contact reads the tread above the flange root rather than above the wheel
+        centre.  The vertical position still assumes the point sits at the bottom of the ring:
+        with a rolled wheel the lowest tread point is not exactly there, which is the next
+        order of the same approximation (see the module docstring).
+        """
+        centre = self.centre
+        return np.array([centre[0], centre[1] + float(lateral_m),
+                         centre[2] - self.radius_m + float(penetration_m)])
+
     def bottom_point(self, penetration_m: float = 0.0) -> np.ndarray:
         """Tread point under the wheel centre — where the normal force of a level track acts."""
-        centre = self.centre
-        return np.array([centre[0], centre[1], centre[2] - self.radius_m + float(penetration_m)])
+        return self.contact_point(0.0, penetration_m)
+
+    def deformation(self, q, lateral_m: float = 0.0, penetration_m: float = 0.0,
+                    span_m: float = 0.01) -> tuple[float, float]:
+        """Tread displacement and its lateral slope at the contact point.
+
+        Both come from the same kernel and the same shapes: the displacement is what changes the
+        depth, and the slope is what turns the contact normal (Gao & Dai's contact-line method
+        takes the normal *after* deformation, and the slope is the only part of that rotation a
+        tread ring can supply).  ``span_m`` is the finite-difference step along the ring; 10 mm
+        is a tenth of the kernel width, so it reads the ring's own gradient rather than noise.
+        """
+        q = np.asarray(q, dtype=float)
+        here = float(self.displacement(self.contact_point(lateral_m, penetration_m), q)[2])
+        right = self.contact_point(lateral_m + span_m, penetration_m)
+        left = self.contact_point(lateral_m - span_m, penetration_m)
+        slope = (float(self.displacement(right, q)[2])
+                 - float(self.displacement(left, q)[2])) / (2.0 * span_m)
+        return here, slope
 
     def weights(self, point) -> np.ndarray:
         """Kernel weights over the nodes, normalised to sum to one."""

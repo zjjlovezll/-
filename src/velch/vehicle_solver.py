@@ -358,18 +358,23 @@ class VehicleDynamics:
                 return [challenger]
         return [current]
 
-    def _deform_geometry(self, geometry: ContactGeometry, rail, q: np.ndarray) -> ContactGeometry:
-        """Bias the contact depth by the tread displacement the mode shapes carry.
+    def _deform_geometry(self, geometry: ContactGeometry, rail, q: np.ndarray,
+                         lateral_m: float = 0.0) -> ContactGeometry:
+        """Bias the contact depth and normal by the tread displacement the mode shapes carry.
 
-        Literature (Chen Jiayin §2.2, VSD 2017 "High-speed wheel/rail contact determining method
-        with rotating flexible wheelset") does the same thing in one order: the deformed tread
-        position is ``x_rigid + Phi q``, and the contact is searched on that deformed surface.
-        Here the search still runs on the undeformed profile section and only the *depth* is
-        corrected, which is the part that sets the force.  Moving the contact point laterally
-        with the modes is a separate step and is deliberately not done yet.
+        Literature: Gao & Dai (AMM 105-107, 2012, 1284) build a *wheel-rail contact line* from
+        the deformed normal of every rolling circle and pick the point of least vertical
+        distance; Chen Jiayin §2.2 and VSD 2017 do the same at the level of `x = x_rigid + Phi q`.
+        Two things can be taken from that with what a tread ring provides:
 
-        Sign: the shapes are stored with z up, so a positive tread displacement lifts the steel
-        away from the rail and *reduces* the penetration.
+        * the **depth** — a positive tread displacement lifts the steel away from the rail and
+          therefore *reduces* the penetration;
+        * the **normal** — the tread's lateral slope turns the common normal, which changes the
+          split between the normal and tangential force components even when the depth is right.
+
+        What is deliberately still not done: searching the contact point itself on the deformed
+        surface (the point stays where the rigid search put it), and the roll-angle
+        reconstruction from deformed nodes that the thesis uses.
         """
 
         coupling = self.contact_coupling
@@ -381,12 +386,22 @@ class VehicleDynamics:
         block_q = np.asarray(q, dtype=float)[block]
         if not np.any(block_q):
             return geometry
-        point = ring.bottom_point(geometry.penetration_m)
-        move_z = float(ring.displacement(point, block_q)[2])
-        if not np.isfinite(move_z):
-            raise SimulationFailure(f"non-finite tread deformation at {rail.id}: {move_z!r} m")
+        move_z, slope = ring.deformation(block_q, lateral_m, geometry.penetration_m)
+        if not (math.isfinite(move_z) and math.isfinite(slope)):
+            raise SimulationFailure(
+                f"non-finite tread deformation at {rail.id}: z={move_z!r} m, dz/dy={slope!r}")
+        # R(theta) with tan(theta) = slope acts on both the normal and the tangent, so the pair
+        # stays orthonormal and the creep basis does not silently shear.
+        angle = math.atan(slope)
+        cosine, sine = math.cos(angle), math.sin(angle)
+        normal_y = cosine * geometry.normal_y - sine * geometry.normal_z
+        normal_z = sine * geometry.normal_y + cosine * geometry.normal_z
+        tangent_y = cosine * geometry.tangent_y - sine * geometry.tangent_z
+        tangent_z = sine * geometry.tangent_y + cosine * geometry.tangent_z
         return replace(geometry, penetration_m=geometry.penetration_m - move_z,
-                       wheel_z_m=geometry.wheel_z_m + move_z)
+                       wheel_z_m=geometry.wheel_z_m + move_z,
+                       normal_y=normal_y, normal_z=normal_z,
+                       tangent_y=tangent_y, tangent_z=tangent_z)
 
     def _evaluate_patch(self, job):
         """Evaluate every rail body of one wheel/rail patch.
@@ -455,7 +470,9 @@ class VehicleDynamics:
                 # deep the wheel sits in the rail, so it enters the geometry *before* the force
                 # law — a correction applied to the force afterwards would not reproduce the
                 # sqrt(delta) stiffness the law uses.
-                geometry = self._deform_geometry(geometry, rail, q)
+                geometry = self._deform_geometry(
+                    geometry, rail, q,
+                    lateral_m=float(geometry.y_m) - float(wheel.lateral_offset_m + lateral_extra))
             if half_width is not None and self._pool is None:
                 # A lost contact leaves no point worth tracking: drop the seed so
                 # the next evaluation re-acquires it with the exhaustive span.

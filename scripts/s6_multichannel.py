@@ -66,7 +66,7 @@ def main() -> int:
 
     seen = profile_at_axle(times)
     picks = {
-        "wheelset": "axle0_z_acc_m_per_s2",
+        "wheelset": "axle1_z_acc_m_per_s2",
         "axlebox": next((n for n in history if "box" in n and n.endswith("_z_acc_m_per_s2")), None),
         "bogie": next((n for n in history if n.startswith("bogie1") and n.endswith("_z_acc_m_per_s2")), None),
     }

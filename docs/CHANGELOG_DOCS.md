@@ -2242,3 +2242,36 @@ O010（柔轨 + 节点表静平衡）仍开放，未在本次收口中动。
 - **结论与降级**：任务书 §5d 重写为最终版，主张限定为"两带可分辨 + 单带标定闭环自洽 + 线性 Tikhonov 不适用"；
   下一步只有非线性辨识（分段 `H(A)` 或可微代理）。
 - 文档：`docs/S5_DUAL_2026-10-24.md`、`docs/S5_CLOSURE_2026-10-24.md`、`scripts/s5_dual.py`、`scripts/s5_closure.py`。
+
+## 第 73 轮：先让"自己写的表自己能读回来"，再谈观测设计（B026）
+
+上一轮末尾开 S7（观测设计：非共线通道）时，第一次读自己刚跑出的 `history.csv` 就撞了：
+
+```
+HistoryError: cannot classify history channel 'axle0_y_acc_m_per_s2'
+```
+
+两个都是**静默**缺陷，723 项测试一个都没拦住：
+
+1. **读不回来**：`io/history.py` 的 `classify()` 只认位移/速度/力/力矩/接触，没有 `_acc_m_per_s2` /
+   `_acc_rad_per_s2` 规则，而 `read_history` 是按列逐个分类的 —— 一列不认识就整张表读不了。
+   既有算例全是加加速度通道**之前**生成的，所以测试从没走到这条路。
+2. **编号从 0 开始**：`_column_prefix` 用拓扑里的 0 基索引直出列名，于是同一根轴上
+   状态列是 `axle0_y_m`、接触列却是 `axle1_left_normal_n`，而归档 oracle、全部文档与界面标签表
+   都是 1 基。按名配对永远差一位，数值本身却完全正常。
+
+修法与证据：
+
+- `Kind` 增 `"acceleration"`，两条后缀规则给 `m/s^2` 与 `rad/s^2`；`channel_names()` 补上加速度名，
+  并在 docstring 里写清节点表布局额外会发 `_x_acc_*` 与 `axle<k>_box_<left|right>_*`。
+- 轮对/构架列名 `+1`；轴箱体的 `axle` 在 `vehicles/CRH380A_M_axlebox.json` 里统一改成 0 基，
+  并由 `topology` 校验"轴箱所在的轴必须是某根轮对的轴"（写错就报错，而不是悄悄偏一位）。
+- **顺手补上纵向加速度**：`_acceleration_channels()` 改为按 `body.dof` 遍历（原先是固定的
+  `("y","z","roll","pitch","yaw")`，节点表里解出来的 `x` 加速度从来没被发出过），
+  加速度列名改为与数字**同源**（`VehicleResult.acceleration_names`），写盘时再与状态列推导结果
+  逐项对照，不一致就拒绝落盘（`SimulationFailure`）。
+- `tests/test_history_naming.py` 6 项：真跑一个算例 → 整表读回；表头不得含 `axle0`/`bogie0`；
+  加速度行与状态列逐项相等；唯一的例外只能是 `_spin_rad`（无轨道输入的簧下自由转动）；
+  轴箱轴号与轮对一致。
+- 全仓 `pytest` **729 passed, 1 skipped**（`--basetemp F:\velch_tmp\pytest`）。
+

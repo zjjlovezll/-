@@ -73,8 +73,11 @@ class VehicleResult:
     velocities: np.ndarray
     contacts: list[dict[str, ContactResponse]]
     summary: dict[str, object]
-    #: Analytic ``force/mass`` for every vertical and lateral translation, one row per frame.
+    #: Analytic ``force/mass`` per emitted acceleration channel, one row per frame.  The channel
+    #: list travels with the numbers: deriving the column names a second time in the writer is
+    #: exactly how a table ends up with one more column than it has values.
     accelerations: np.ndarray | None = None
+    acceleration_names: tuple[str, ...] = ()
 
 
 class VehicleDynamics:
@@ -623,6 +626,27 @@ def _rhs_sparsity(dynamics: VehicleDynamics, state: np.ndarray, t_s: float) -> "
     return mask | skeleton
 
 
+#: Coordinates whose analytic acceleration is written out.  ``spin`` is deliberately absent: it is
+#: an unsprung free rotation that no track input drives, so four near-zero channels would widen
+#: every table without adding information.  ``x`` matters: on a node-table layout the longitudinal
+#: coordinate is solved, and its acceleration is the only wheel-rail observation that is not
+#: collinear with the vertical one (see docs/S7_OBSERVATION_DESIGN).
+_ACCELERATED_AXES = frozenset({"x", "y", "z", "roll", "pitch", "yaw"})
+
+
+def _acceleration_channels(dynamics: VehicleDynamics) -> list[tuple[int, object, str]]:
+    """``(state_index, body, axis)`` for every emitted acceleration, in ``history.csv`` order.
+
+    Iterating ``body.dof`` rather than a fixed axis tuple is what keeps the rows and their column
+    names aligned: the writer builds the names by walking the same list.
+    """
+
+    topology = dynamics.topology
+    ordered = sorted(topology.bodies, key=lambda item: topology.offset(item.id))
+    return [(topology.require(body.id, axis), body, axis)
+            for body in ordered for axis in body.dof if axis in _ACCELERATED_AXES]
+
+
 def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleResult:
     cfg, run = case.vehicle, case.run
     direction = 1 if cfg.travel_speed_m_s >= 0 else -1
@@ -672,16 +696,16 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     total_weight = sum(body.mass_kg for body in dynamics.topology.bodies) * cfg.gravity_m_s2
     # The loop below already calls evaluate() on every accepted state for the gates; that call
     # *is* the right-hand side, so acceleration is force/mass with no finite difference.
-    acceleration_channels = [(dynamics.topology.require(body.id, axis), body)
-                             for body in dynamics.topology.bodies
-                             for axis in ("y", "z", "roll", "pitch", "yaw") if axis in body.dof]
+    acceleration_channels = _acceleration_channels(dynamics)
+    acceleration_names = tuple(f"{_column_prefix(body)}_{_ACCELERATION_SUFFIX_BY_AXIS[axis]}"
+                               for _index, body, axis in acceleration_channels)
     acceleration_rows: list[list[float]] = []
     for t, position, velocity in zip(times, positions, velocities):
         force, contacts = dynamics.evaluate(float(t), position, velocity)
         # Inertia lives in mass[index] for the rotation coordinates; body.mass_kg is only right
         # for translations, so divide by the entry the equation of motion actually uses.
         acceleration_rows.append([float(force[index]) / float(dynamics.mass[index])
-                                  for index, body in acceleration_channels])
+                                  for index, _body, _axis in acceleration_channels])
         contact_history.append(contacts)
         energies.append(dynamics.mechanical_energy_j(position, velocity, contacts))
         if case.track_kind in {"rigid", "local_compliant", "two_layer", "layered"}:
@@ -798,7 +822,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     accelerations = (np.asarray(acceleration_rows, dtype=float)
                      if acceleration_rows else None)
     return VehicleResult(times, positions, velocities, contact_history, summary,
-                         accelerations=accelerations)
+                         accelerations=accelerations, acceleration_names=acceleration_names)
 
 
 _COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",
@@ -806,15 +830,24 @@ _COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",
 
 
 def _column_prefix(body) -> str:
+    """History-column prefix for a body, numbered the way the rest of the schema numbers it.
+
+    Rails are ``axle1_left`` … ``axle4_right`` (1-based, see :mod:`velch.vehicle`) and the archive
+    every document quotes uses ``axle1_y_m``.  The topology stores wheelset/bogie indices 0-based,
+    so they have to be shifted here: without it a run labels its first wheelset ``axle0`` while the
+    contact on the same axle is ``axle1_left``, and any reader pairing the two is off by one.
+    """
+
     if body.kind == "wheelset":
-        return f"axle{body.axle}"
+        return f"axle{body.axle + 1}"
     if body.kind == "axlebox":
         # Two boxes ride the same axle, so the side has to be in the name: duplicate headers make
-        # every reader after the first collision pick the wrong column.
+        # every reader after the first collision pick the wrong column.  ``axle`` is 0-based like a
+        # wheelset's, checked by the loader.
         side = "right" if str(body.id).endswith(("R", "r")) else "left"
-        return f"axle{body.axle}_box_{side}"
+        return f"axle{body.axle + 1}_box_{side}"
     if body.kind == "bogie":
-        return f"bogie{body.bogie}"
+        return f"bogie{body.bogie + 1}"
     return body.id
 
 
@@ -834,18 +867,22 @@ def _column_names(case: VehicleCase):
             yield f"{prefix}_{_COLUMN_SUFFIX[axis]}"
 
 
-_ACCELERATION_SUFFIX = (("_pitch_rad", "_pitch_acc_rad_per_s2"),
-                        ("_roll_rad", "_roll_acc_rad_per_s2"),
-                        ("_yaw_rad", "_yaw_acc_rad_per_s2"),
-                        ("_y_m", "_y_acc_m_per_s2"),
-                        ("_z_m", "_z_acc_m_per_s2"))
+#: Coordinate → acceleration column suffix.  ``x`` is here because node-table layouts solve the
+#: longitudinal coordinate; leaving it out silently dropped every longitudinal acceleration, which
+#: is the one channel a multi-level observation design cannot reconstruct from the vertical ones.
+_ACCELERATION_SUFFIX_BY_AXIS = {"x": "x_acc_m_per_s2", "y": "y_acc_m_per_s2",
+                                "z": "z_acc_m_per_s2", "roll": "roll_acc_rad_per_s2",
+                                "pitch": "pitch_acc_rad_per_s2",
+                                "yaw": "yaw_acc_rad_per_s2"}
+
+_AXIS_BY_COLUMN_SUFFIX = {suffix: axis for axis, suffix in _COLUMN_SUFFIX.items()}
 
 
 def _acceleration_name(name: str) -> str | None:
     """Column name for the acceleration that belongs to a state column, or None."""
-    for old, new in _ACCELERATION_SUFFIX:
-        if name.endswith(old):
-            return name[: -len(old)] + new
+    for suffix, axis in _AXIS_BY_COLUMN_SUFFIX.items():
+        if axis in _ACCELERATED_AXES and name.endswith("_" + suffix):
+            return f"{name[: -len(suffix)]}{_ACCELERATION_SUFFIX_BY_AXIS[axis]}"
     return None
 
 
@@ -861,13 +898,21 @@ def save_vehicle_result(case: VehicleCase, result: VehicleResult,
         if hashlib.sha256(Path(path).read_bytes()).hexdigest() != digest:
             raise SimulationFailure(f"v2 profile changed during simulation: {path}")
     snapshot.write_bytes(data)
-    names = list(_column_names(case))
-    names += TrackKernel(case.track_kind, case.rails, case.modal_track,
-                         case.track_layers).state_names
+    body_names = list(_column_names(case))
+    names = body_names + TrackKernel(case.track_kind, case.rails, case.modal_track,
+                                     case.track_layers).state_names
     columns = ["time_s", *[f"axle{i + 1}_x_m" for i in range(4)], *names,
                *[name + "_per_s" for name in names]]
-    acceleration_columns = [column for column in (_acceleration_name(name) for name in names)
-                           if column is not None]
+    acceleration_columns = list(result.acceleration_names)
+    # Two walks produce the numbers and the header (the integrator, and _column_names).  If they
+    # ever disagree the file would be silently mislabelled, so compare and refuse instead.  Only the
+    # body columns are compared: a compliant rail's own states also end in ``_y_m``/``_z_m`` but
+    # their acceleration is not emitted, and pretending otherwise would invent channels.
+    derived = [column for column in (_acceleration_name(name) for name in body_names) if column]
+    if result.accelerations is not None and acceleration_columns != derived:
+        raise SimulationFailure(
+            "acceleration header disagrees with the emitted channels: "
+            f"{len(acceleration_columns)} names vs {len(derived)} derivable from the state columns")
     columns += acceleration_columns
     for rail in case.rails:
         columns += [f"{rail.id}_{field}" for field in ("normal_n", "fx_n", "fy_n", "fz_n",

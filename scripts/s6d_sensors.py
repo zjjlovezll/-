@@ -75,7 +75,7 @@ def sensors(history, times, case):
             out["box1L"] = history[name]
         elif name.startswith("axle1_box_right") and name.endswith("_z_acc_m_per_s2"):
             out["box1R"] = history[name]
-        elif name == "axle0_z_acc_m_per_s2":
+        elif name == "axle1_z_acc_m_per_s2":
             out["wheelset0"] = history[name]
     az = history.get("carbody_z_acc_m_per_s2")
     roll = history.get("carbody_roll_acc_rad_per_s2")

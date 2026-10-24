@@ -432,6 +432,21 @@ def node_topology(block: Mapping[str, Any], cfg: Any, *,
         offset += body.width
         bodies.append(body)
 
+    # An axle box rides a wheelset, so its ``axle`` has to use the same numbering the wheelsets do.
+    # Getting this wrong is not a crash: it shifts every column name of that body by one (a box on
+    # axle 1 would be labelled ``axle2_box_left``) and the numbers stay plausible.
+    wheelset_axles = {item.axle for item in bodies if item.kind == "wheelset" and item.axle is not None}
+    for body in bodies:
+        if body.kind != "axlebox":
+            continue
+        if body.axle is None:
+            raise TopologyError(
+                f"axle box {body.id!r} needs 'axle': the number of the wheelset it rides (0-based)")
+        if wheelset_axles and body.axle not in wheelset_axles:
+            raise TopologyError(
+                f"axle box {body.id!r} rides axle {body.axle}, but the wheelsets are numbered "
+                f"{sorted(wheelset_axles)}; axle numbers are 0-based, exactly like the wheelset's")
+
     topology = Topology(model="v2-node", bodies=tuple(bodies), offsets=offsets,
                         link_specs=(), track_offset=offset if track_offset is None else track_offset,
                         pitch_sign=float(block.get("pitch_sign", -1.0)))

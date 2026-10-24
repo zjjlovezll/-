@@ -378,7 +378,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 1
+        "axle": 0
       },
       {
         "id": "axlebox1R",
@@ -397,7 +397,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 1
+        "axle": 0
       },
       {
         "id": "axlebox2L",
@@ -416,7 +416,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 2
+        "axle": 1
       },
       {
         "id": "axlebox2R",
@@ -435,7 +435,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 2
+        "axle": 1
       },
       {
         "id": "axlebox3L",
@@ -454,7 +454,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 3
+        "axle": 2
       },
       {
         "id": "axlebox3R",
@@ -473,7 +473,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 3
+        "axle": 2
       },
       {
         "id": "axlebox4L",
@@ -492,7 +492,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 4
+        "axle": 3
       },
       {
         "id": "axlebox4R",
@@ -511,7 +511,7 @@
           "pitch": 2.76,
           "yaw": 2.62
         },
-        "axle": 4
+        "axle": 3
       }
     ],
     "elements": [

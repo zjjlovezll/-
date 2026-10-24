@@ -35,9 +35,9 @@ BASE = Path(r"F:\velch_tmp\straight\case_straight_axlebox.json")
 SPEED = 97.2222
 BANDS_M = ((0.1, 0.2), (0.2, 0.5), (0.5, 1.0), (1.0, 2.0), (2.0, 5.0), (5.0, 10.0), (10.0, 25.0))
 CHANNELS = {
-    "轮对": "axle0_z_acc_m_per_s2",
+    "轮对": "axle1_z_acc_m_per_s2",
     "轴箱": "axle1_box_left_z_acc_m_per_s2",
-    "构架": "bogie0_z_acc_m_per_s2",
+    "构架": "bogie1_z_acc_m_per_s2",
     "车体": "carbody_z_acc_m_per_s2",
 }
 NOISE_M_S2 = 0.01

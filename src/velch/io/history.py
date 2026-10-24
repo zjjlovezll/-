@@ -31,7 +31,7 @@ import numpy as np
 
 HISTORY_SCHEMA = "velch-history-v1"
 
-Kind = Literal["time", "state", "velocity", "force", "moment", "contact", "flag"]
+Kind = Literal["time", "state", "velocity", "acceleration", "force", "moment", "contact", "flag"]
 
 
 class HistoryError(ValueError):
@@ -67,6 +67,12 @@ def classify(name: str) -> Channel:
         return Channel(name, "m/s", "velocity")
     if name.endswith("_rad_per_s"):
         return Channel(name, "rad/s", "velocity")
+    # Acceleration channels carry their own units: ``axle1_y_acc_m_per_s2`` would otherwise fall
+    # through to no rule at all and abort the read of a file the writer had just produced.
+    if name.endswith("_acc_m_per_s2"):
+        return Channel(name, "m/s^2", "acceleration")
+    if name.endswith("_acc_rad_per_s2"):
+        return Channel(name, "rad/s^2", "acceleration")
     if name.endswith("_nm"):
         return Channel(name, "N*m", "moment")
     if name.endswith(_FORCES):
@@ -182,8 +188,20 @@ def write_history(path: str | Path, table: HistoryTable) -> Path:
     return target
 
 
+_ACCELERATION_SUFFIX = {"x_m": "x_acc_m_per_s2", "y_m": "y_acc_m_per_s2",
+                        "z_m": "z_acc_m_per_s2", "roll_rad": "roll_acc_rad_per_s2",
+                        "pitch_rad": "pitch_acc_rad_per_s2", "yaw_rad": "yaw_acc_rad_per_s2"}
+
+
 def channel_names(kind: Kind | None = None) -> tuple[str, ...]:
-    """The registry of channel names this build can emit (by kind)."""
+    """The registry of channel names this build can emit (by kind).
+
+    The body layout listed here is the four-axle five-coordinate one (``axle1``…``axle4``,
+    ``bogie1``…``bogie2``, ``carbody``) plus its accelerations — the path every frozen oracle run
+    takes.  A node-table vehicle (``"layout": "v2-node"``) additionally emits the longitudinal
+    coordinate and, with axle boxes, ``axle<k>_box_<left|right>_*``; :func:`classify` accepts all of
+    them, so a reader may take its channel list from the file's own header instead of this table.
+    """
 
     sides = ("left", "right")
     names: list[str] = ["time_s"]
@@ -200,6 +218,11 @@ def channel_names(kind: Kind | None = None) -> tuple[str, ...]:
                       f"bogie{bogie}_yaw_rad"])
     names.extend(["carbody_y_m", "carbody_z_m", "carbody_roll_rad",
                   "carbody_pitch_rad", "carbody_yaw_rad"])
+    for name in tuple(names):
+        for suffix, acceleration in _ACCELERATION_SUFFIX.items():
+            if name.endswith("_" + suffix):
+                names.append(f"{name[: -len(suffix)]}{acceleration}")
+                break
     for axle in range(1, 5):
         for side in sides:
             names.extend([f"axle{axle}_{side}_normal_n", f"axle{axle}_{side}_fx_n",

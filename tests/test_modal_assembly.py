@@ -21,7 +21,9 @@ import pytest
 from velch.io.history import classify, read_history
 from velch.jacobian import JacobianAssembler
 from velch.vehicle import load_vehicle_case
-from velch.vehicle_solver import VehicleDynamics, save_vehicle_result, simulate_vehicle
+from velch.vehicle_solver import (VehicleDynamics, _settle_modal_coordinates,
+                                  _static_vertical_equilibrium, save_vehicle_result,
+                                  simulate_vehicle)
 from velch.wheel_modes import (ModalAssembly, ModalBlock, modal_channel_names,
                                thesis_crh380a_modes)
 
@@ -61,6 +63,26 @@ def _rigid_twin(tmp_path: Path, duration_s: float) -> Path:
     _absolute_paths({key: raw[key] for key in ("wheels", "rail_templates")})
     raw["run"]["duration_s"] = duration_s
     target = tmp_path / "case_rigid_twin.json"
+    target.write_text(json.dumps(raw, indent=2), encoding="utf-8")
+    return target
+
+
+FE_MODES = Path(__file__).resolve().parents[1] / "vehicles" / "modes" / "CRH3C_wheelset_fe.json"
+
+
+def _case_with_fe_modes(tmp_path: Path, axles=(1,), duration_s: float | None = None) -> Path:
+    """The example case with the *measured* mode shapes attached.
+
+    The frequency-only ``table-2-3`` set has no shapes, so it cannot project a contact force at
+    all; anything that has to move the modes must load the finite-element set.
+    """
+
+    raw = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+    _absolute_paths({key: raw[key] for key in ("wheels", "rail_templates")})
+    if duration_s is not None:
+        raw["run"]["duration_s"] = duration_s
+    raw["flexible_wheelset"] = {"source": "file", "file": str(FE_MODES), "axles": list(axles)}
+    target = tmp_path / "case_fe_modes.json"
     target.write_text(json.dumps(raw, indent=2), encoding="utf-8")
     return target
 
@@ -236,3 +258,50 @@ def test_the_written_history_carries_and_reads_back_the_modal_columns(tmp_path: 
     assert classify("axle1_mode1_q").kind == "state"
     modal = [name for name in table.ordering if name.endswith("_q")]
     assert len(modal) == len(thesis_crh380a_modes().modes)
+
+
+def test_the_settled_tread_carries_the_contact_force_with_no_modal_residual(tmp_path: Path) -> None:
+    """A flexible wheelset must not start with a flat, undeflected tread.
+
+    Starting at q = 0 leaves the tread unloaded, so the first tenths of a second are the wheel
+    settling at its own 76.8 Hz — and a 0.05 s window is entirely inside that.  The settle is a
+    fixed point of K q = Phi^T f(q); after it the modal force at t = 0 vanishes while the modal
+    coordinates are demonstrably not zero (a zero would also have a zero force, and prove nothing).
+    """
+
+    case = load_vehicle_case(_case_with_fe_modes(tmp_path, axles=(1,), duration_s=0.002))
+    dynamics = VehicleDynamics(case)
+    try:
+        q = np.array(case.initial_q, dtype=float)
+        v = np.array(case.initial_v, dtype=float)
+        modal = dynamics.modal
+        assert modal is not None
+        # The raw initial state has no contact yet (the car has not been let down onto the rail),
+        # so the settle only sees a force after the vertical equilibrium.  That is also the order
+        # the solver runs them in, and settling against no contact would prove nothing.
+        q, _residual = _static_vertical_equilibrium(case, dynamics, q, v)
+        before = np.max(np.abs(dynamics.evaluate(0.0, q, v)[0][modal.offset:]))
+        settled = _settle_modal_coordinates(dynamics, q, v)
+        after = np.max(np.abs(dynamics.evaluate(0.0, settled, v)[0][modal.offset:]))
+        displacement = np.max(np.abs(settled[modal.offset:]))
+    finally:
+        dynamics.close()
+    assert displacement > 0.0, "the settle must move the modal coordinates"
+    assert before > 0.0, "an unloaded tread must show a modal residual, else the test is vacuous"
+    assert after < 1e-3 * before, f"modal residual {after:.3e} N of {before:.3e} N"
+    # The tread has to be pressed *into* the rail: upward displacement of the wheel surface under
+    # an upward contact force is positive z, and the solver's own sign convention puts the contact
+    # below the wheel centre.
+    assert np.all(np.isfinite(settled))
+
+
+def test_a_rigid_case_has_nothing_to_settle(tmp_path: Path) -> None:
+    case = load_vehicle_case(_rigid_twin(tmp_path, duration_s=0.002))
+    dynamics = VehicleDynamics(case)
+    try:
+        q = np.array(case.initial_q, dtype=float)
+        v = np.array(case.initial_v, dtype=float)
+        assert dynamics.modal is None
+        assert np.array_equal(_settle_modal_coordinates(dynamics, q, v), q)
+    finally:
+        dynamics.close()

@@ -296,7 +296,8 @@ class VehicleDynamics:
                 # The same normal force, seen by the mode shapes: without this projection the
                 # modal coordinates would be driven by nothing at all.
                 coupling = self.contact_coupling
-                if coupling is not None and geometry is not None:
+                if (coupling is not None and geometry is not None
+                        and coupling.has(rail.axle_index)):
                     side = -1 if "left" in str(rail.template_id) else 1
                     ring = coupling.rings[side]
                     force[coupling.block(rail.axle_index)] += coupling.generalised(
@@ -381,7 +382,7 @@ class VehicleDynamics:
         """
 
         coupling = self.contact_coupling
-        if coupling is None:
+        if coupling is None or not coupling.has(rail.axle_index):
             return wheel.profile
         side = -1 if "left" in str(rail.template_id) else 1
         ring = coupling.rings[side]
@@ -408,7 +409,7 @@ class VehicleDynamics:
         """
 
         coupling = self.contact_coupling
-        if coupling is None:
+        if coupling is None or not coupling.has(rail.axle_index):
             return geometry
         side = -1 if "left" in str(rail.template_id) else 1
         ring = coupling.rings[side]
@@ -734,6 +735,37 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     return q, error_n
 
 
+def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,
+                              rounds: int = 12) -> np.ndarray:
+    """Put the modal coordinates where the static contact force holds them.
+
+    A flexible wheelset started at ``q = 0`` is a wheel whose tread has not yet been pressed in
+    by the load.  The first milliseconds are then the wheel settling onto the rail at its own
+    lowest elastic frequency (76.8 Hz for the CRH3C set), and a 0.05 s window is *entirely*
+    inside that transient: the forces read there belong to the initialisation, not to the
+    turnout.  That is what made a rigid/flexible comparison report 87 %.
+
+    The static state is the fixed point of ``K q = Phi^T f(q)``.  ``evaluate`` already returns
+    ``force[modal] = Q(q) - K q`` at zero velocity, so ``K^-1 Q = q + K^-1 force[modal]`` and one
+    pass is a fixed-point iteration whose contraction is the tread compliance times the contact
+    stiffness (about 0.5 for this wheelset).  Twelve passes leave the residual near 2e-4, and the
+    caller alternates them with the vertical equilibrium so wheel height and tread deflection are
+    consistent with each other rather than each solved against the other's stale value.
+    """
+    modal = dynamics.modal
+    if modal is None:
+        return q
+    settled = np.array(q, dtype=float)
+    stiffness = modal.stiffness()
+    for _round in range(rounds):
+        force, _contacts = dynamics.evaluate(0.0, settled, v)
+        step = np.linalg.solve(stiffness, force[modal.offset:])
+        settled[modal.offset:] += step
+        if float(np.max(np.abs(step))) < 1e-9:
+            break
+    return settled
+
+
 def simulate_vehicle(case: VehicleCase, contact_workers: int = 1) -> VehicleResult:
     dynamics = VehicleDynamics(case, contact_workers=contact_workers)
     try:
@@ -835,6 +867,13 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     static_residual_n = None
     if case.equilibrate_vertical:
         q, static_residual_n = _static_vertical_equilibrium(case, dynamics, q, v)
+        # A flexible wheelset has a second static unknown: how far the tread is pressed in.
+        # Solving only the heights leaves the tread flat and the load unbalanced, and the
+        # integrator then spends the first tenths of a second settling — inside every short
+        # window.  Two outer rounds are enough: the inner fixed point converges to ~2e-4.
+        for _round in range(2):
+            q = _settle_modal_coordinates(dynamics, q, v)
+            q, static_residual_n = _static_vertical_equilibrium(case, dynamics, q, v)
     initial = np.concatenate((q, v))
     count = int(math.ceil(run.duration_s / run.output_step_s))
     times = np.linspace(0, run.duration_s, count + 1)

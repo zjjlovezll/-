@@ -229,6 +229,11 @@ class ModalContact:
     def n_modes(self) -> int:
         return next(iter(self.rings.values())).n_modes
 
+    def has(self, axle: int) -> bool:
+        """Whether this axle was declared flexible; a rigid axle has no block to project into."""
+
+        return axle in self.offsets
+
     def generalised(self, axle: int, side: int, point, force) -> np.ndarray:
         """Modal force on ``axle`` from ``force`` applied at ``point`` on wheel ``side``."""
         ring = self.rings.get(side)

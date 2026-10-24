@@ -1542,6 +1542,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [S5_INVERSION_2026-10-23.md](S5_INVERSION_2026-10-23.md) | S5 第一轮：按波长反演是**非唯一**的（本工况），并且能给出非唯一的量 |
 | [S5_LINEARITY_2026-10-24.md](S5_LINEARITY_2026-10-24.md) | S5b 结论：线性可加性在任何测试幅值下都不成立——分带定量反演在本设计中不可达 |
 | [S6_LIFTED_NEGATIVE_2026-10-24.md](S6_LIFTED_NEGATIVE_2026-10-24.md) | S6a：提升特征（Koopman 式）没有帮助 —— 但这次实验本身也不足以判决 |
+| [S6_MULTILEVEL_2026-10-24.md](S6_MULTILEVEL_2026-10-24.md) | S6b：波长 × 测点，信息量表（第一次尝试，含三条重要限制） |
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |

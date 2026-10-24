@@ -24,6 +24,7 @@ from .solver import SimulationFailure
 from .topology import Topology, topology_for
 from .track_models import TrackKernel
 from .vehicle import VehicleCase
+from .modal_coupling import ModalContact, TreadRing
 from .wheel_modes import ModalAssembly, ModalBlock, modal_channel_names
 
 
@@ -119,6 +120,10 @@ class VehicleDynamics:
         self.modal = self._build_modal_block()
         if self.modal is not None:
             self.mass = np.concatenate((self.mass, self.modal.mass()))
+        # Projection of a contact force onto the mode shapes.  Without it the modal block only
+        # pushes back on itself and every modal coordinate stays at zero, which is what the
+        # first flexible run measured.  Built from the same mode sets the blocks were.
+        self.contact_coupling: ModalContact | None = self._build_modal_contact()
         self.wheels = {wheel.id: wheel for wheel in case.wheels}
         self.connectors = self._build_connectors()
         # Assemble the strip-contact gradients (dN/dq, d(lever)/dq) only while the
@@ -168,6 +173,32 @@ class VehicleDynamics:
                                      spin_rad_s=speed / mode_set.radius_m))
             offset += len(mode_set.modes)
         return ModalAssembly(tuple(blocks))
+
+    def _build_modal_contact(self) -> ModalContact | None:
+        """One tread ring per wheel side, plus the axle → block offset map.
+
+        Every axle shares the same mode set in practice, so the two rings are built once from
+        the first axle's shapes.  The offsets are per axle because each axle owns its own block.
+        """
+
+        modal = self.modal
+        if modal is None:
+            return None
+        blocks = list(modal.blocks)
+        if not blocks:
+            return None
+        first = blocks[0].modes
+        if not first.has_shapes:
+            # A frequency-only set (thesis table 2-3) cannot route a force anywhere; the modal
+            # block still runs, it simply has no excitation.  Say so instead of raising, so an
+            # empty-shape run stays reproducible.
+            return None
+        rings = {side: TreadRing.from_modes(first, side) for side in (-1, 1)}
+        offsets = {}
+        for block in blocks:
+            axle = int(str(block.prefix).replace("axle", "")) - 1
+            offsets[axle] = block.offset
+        return ModalContact(rings=rings, offsets=offsets)
 
     def _build_connectors(self) -> tuple[Connector, ...]:
         """Turn the topology's link specs into connectors, one row each."""
@@ -262,6 +293,17 @@ class VehicleDynamics:
                 force[spin_index] += response.wheel_spin_moment_nm
                 if geometry and yaw_index is not None:
                     force[yaw_index] -= geometry.lever_y_m * response.longitudinal_force_n
+                # The same normal force, seen by the mode shapes: without this projection the
+                # modal coordinates would be driven by nothing at all.
+                coupling = self.contact_coupling
+                if coupling is not None and geometry is not None:
+                    side = -1 if "left" in str(rail.template_id) else 1
+                    ring = coupling.rings[side]
+                    force[coupling.block(rail.axle_index)] += coupling.generalised(
+                        rail.axle_index, side,
+                        ring.bottom_point(geometry.penetration_m),
+                        (0.0, response.wheel_force_y_n, response.wheel_force_z_n),
+                    )
                 reaction = self.track.contact_reaction(rail_index, x,
                                                        response.wheel_force_y_n,
                                                        response.wheel_force_z_n)

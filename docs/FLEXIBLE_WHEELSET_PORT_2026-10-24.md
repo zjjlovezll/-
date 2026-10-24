@@ -506,3 +506,82 @@ f = −( K q + C v ),   K = diag(ω²) + Ω²·(G·G),   C = diag(2ζω) + 2Ω·
 - §11 的模态块现在**还没有力和它耦合**：`force[start:]` 只由模态块自己的弹簧阻尼产生，车体、一系、**接触力都没有经过 Φᵀ 映射**，所以振型装上了也激不起来。这是 S8-2。
 - 接触点仍在**未变形的**踏面上找（`contact_search.py`），S8-3 才用振型算变形踏面。
 - 阻尼比仍是论文的按节径取值（ND0 1e-3 / ND1 1e-2 / ND≥2 1e-4），没有做模态阻尼实测。
+
+## 13. S8-2：让接触力真的推得动振型（2026-10-24 深夜）
+
+§12 交出了振型，但 §11 的模态块仍然只和自己耦合：`force[模态]` 只由 `K q + C v` 产生，**车体、一系、接触力一项都没经过 Φᵀ**。所以第一版柔性算例跑出来 `max |q| = 0.000e+00`——不是数值稳，是根本没有输入。
+
+这一节补上这条通路。
+
+### 13.1 新模块 `src/velch/modal_coupling.py`
+
+```python
+TreadRing(side, nodes, shapes, radius_m, sigma_m=0.04)
+    .from_modes(modes, side)      # 按 y 的符号取一片车轮，形状不足直接拒绝
+    .centre                       # 胎面环中心（量出来的，不是假设）
+    .plane_y_m                    # 车轮横向位置（中位数）
+    .bottom_point(penetration_m)  # 轮心正下方的胎面点
+    .weights(point)               # 高斯核，归一化到和为 1
+    .generalised_force(point, f)  # Q_i = Σ_a w_a φ_i(a)·f
+    .displacement(point, q)       # d = Σ_a w_a Σ_i φ_i(a) q_i（同一套权重）
+ModalContact(rings={side: ring}, offsets={axle: offset})
+    .generalised(axle, side, point, f) / .block(axle) -> slice
+```
+
+三条性质是**当成判据写的**，不是当注释写的：
+
+1. **权重和为 1**：整体平移的振型必须把力原样传回去（力不能被投影无中生有或吃掉）；
+2. **同一个权重既算力也算位移**：所以虚功恒等式 `Q·q == f·d(x)` 对任意 `q` 成立 —— 用两套权重会悄悄破坏能量守恒，而**峰值力看不出来**；
+3. **投影对力线性**：`Q(f₁+f₂) = Q(f1)+Q(f2)`，零力给零。
+
+### 13.2 接线点
+
+在 `vehicle_solver.evaluate()` 的每个接触斑里，紧跟刚体那几行之后：
+
+```python
+side = -1 if "left" in str(rail.template_id) else 1
+ring = coupling.rings[side]
+force[coupling.block(rail.axle_index)] += coupling.generalised(
+    rail.axle_index, side, ring.bottom_point(geometry.penetration_m),
+    (0.0, response.wheel_force_y_n, response.wheel_force_z_n))
+```
+
+侧向符号用的是本仓库既有约定（`wheels[].lateral_offset_m` 里 L = −0.75，CAD 轮平面在 y = ±0.7359 m），不是猜。
+
+### 13.3 抓到一个会让结果错 1000 倍的单位错
+
+`TreadRing.centre` 之所以存在，是因为**振型存在 CAD 装配坐标系里，原点不是轮对中心**：这辆车的轮环中心在 x ≈ −1.2476 m。第一版把接触点放在 `x = 0`，核函数就落到 1.25 m 之外——`weights` 仍然归一化、`generalised_force` 仍然返回非零，一切"看起来正常"。测试里钉住"接触点必须跟着环中心走"，才把这个洞堵上。
+
+更要紧的一条：**Abaqus 用 mm 和 t，求解器用 m 和 kg**。odb 的位移是 mm，Abaqus 的质量归一化是 `Σ m_t·u_mm² = 1`；同一批数字换到 SI 只剩 `Σ m_kg·u² = 1e-3`。所以出货时必须乘 `1/√1000`（mm→m 除 1000、恢复单位模态质量乘 √1000）。修之前实测 **max|φ| = 3.561**、5 ms 内胎面模态位移 **0.17 m**（！），而因为接触仍在未变形踏面上找（S8-3），**力、门、状态全都正常**——这正是最难发现的一类错。修正后 **max|φ| = 0.1126**（≈ 1/√(318 kg) 的量级），同一算例：
+
+| 量 | 修前 | 修后 |
+|---|---|---|
+| max \|φ\| | 3.561 | **0.1126** |
+| max \|q_模态\| | 1.124e-01 | **3.555e-03** |
+| 5 ms 内胎面模态位移 | 1.7e-01 m | **2.49e-04 m**（0.25 mm，静侵入 65 µm 的量级） |
+| 状态 | `numerically_checked` | `numerically_checked`，7 门全过 |
+
+ratio 31.5 ≈ √1000，与推导一致；这说明修的是**归一化**，不是"把数调小"。
+
+### 13.4 测试（`tests/test_modal_coupling.py`，11 项）
+
+| 测试 | 钉住什么 |
+|---|---|
+| 每侧拿到自己那片车轮 | `plane_y_m` 符号、每环 300–450 节点、33 阶 |
+| 接触点在轮心正下方 | `bottom_point` 跟随 `centre`，z = centre_z − R + δ |
+| 权重是单位分解 | 和为 1、非负、质心在 2σ 内 |
+| 刚体平移把力原样传回 | 三个平动振型 → `Q == f`（1e-12） |
+| 虚功对任意 q 闭合 | `Q·q == f·d(x)`（1e-10） |
+| 投影对力线性 | 叠加律与零力 |
+| 无振型要给出路 | 报错文案含 "without mode shapes" |
+| 块切片与偏移一致 | `slice(59, 92)`，越界报错 |
+| **振型按 m/kg 归一** | `0.02 < max|φ| < 0.5`（单位错的守卫） |
+| **接触力传得到模态坐标** | `evaluate()` 返回的模态段非零 |
+| 刚性算例没有耦合 | `modal is None`、59 维 |
+
+### 13.5 还没做的（S8-3 与之后）
+
+- **接触仍在未变形踏面上搜索**：`contact_search.py` 不知道 Φ q，所以模态位移再大也不改侵入量、不改接触点、不改力。这是下一步，也是"柔性轮对能改多少力"这个问题真正的答案所在（论文：Ip1 87.92 → 84.74 kN、轴箱加速度 65.3 → 120.4 m/s²）。
+- **只投影了法向与横向力**：纵向力（`longitudinal_force_n`）还没进模态；它走的是 yaw 那一行。
+- **一系/重力没有经过 Φᵀ**：悬挂力仍施加在轮对的 5 个刚体坐标上。严格做法是把轴座上的力也按振型投影，需要轴座处的振型（现在只出了胎面环）。
+- **阻尼比仍是论文的按节径取值**，不是实测模态阻尼。

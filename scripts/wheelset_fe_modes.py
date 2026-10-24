@@ -1,4 +1,4 @@
-﻿"""Turn the Abaqus tread dump into a `velch-wheel-modes/1` set.
+"""Turn the Abaqus tread dump into a `velch-wheel-modes/1` set.
 
 Nodal diameters are measured from the shapes, not assumed: the radial component around the
 tread ring is Fourier analysed and the dominant azimuthal order is the nodal diameter.  An
@@ -12,6 +12,7 @@ force with the shape.
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -147,6 +148,17 @@ def main() -> int:
         shapes = shapes[keep_index]
         for number, item in enumerate(modes):
             item["index"] = number + 1
+
+    # Abaqus solved in mm and tonnes: the odb displacement is in mm, and its mass
+    # normalisation is sum(m_t * u_mm^2) = 1.  This solver works in metres and kilograms,
+    # where the same numbers give sum(m_kg * u^2) = 1e-3, so the shapes are not unit-mass.
+    # Converting mm -> m divides by 1000 and restoring unit modal mass multiplies by
+    # sqrt(1000): a net factor of 1/sqrt(1000).  Without it the modal force is 31.6x too
+    # large, the modal coordinate 31.6x too large, and the implied tread displacement 1000x
+    # too large -- and because the contact is still searched on the undeformed tread (S8-3),
+    # nothing complains.  Measured before the fix: max |phi| = 3.56 and 0.17 m of tread
+    # travel for a 65 um penetration.
+    shapes = shapes * (1.0 / math.sqrt(1000.0))
 
     payload = {
         "format": FORMAT,

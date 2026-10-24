@@ -1442,7 +1442,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 
 - `.tmp/gen_docs_index.py` 在 `
 <!-- DOCS:ALL:BEGIN -->
-## 完整文档清单（由 `.tmp/gen_docs_index.py` 生成，测试会检查是否过期）
+## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
 | 文件 | 首行标题 |
 |---|---|
@@ -1544,6 +1544,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [S6_LIFTED_NEGATIVE_2026-10-24.md](S6_LIFTED_NEGATIVE_2026-10-24.md) | S6a：提升特征（Koopman 式）没有帮助 —— 但这次实验本身也不足以判决 |
 | [S6_MULTICHANNEL_2026-10-24.md](S6_MULTICHANNEL_2026-10-24.md) | S6c：三个测点一起看 —— 多一个传感器买到的是什么 |
 | [S6_MULTILEVEL_2026-10-24.md](S6_MULTILEVEL_2026-10-24.md) | S6b：波长 × 测点，信息量表（第一次尝试，含三条重要限制） |
+| [S7_OBSERVATION_DESIGN_2026-10-24.md](S7_OBSERVATION_DESIGN_2026-10-24.md) | S7：该装哪一个通道——按"新增方向"而不是按"条件数下降"判 |
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |
@@ -1579,85 +1580,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 **书写顺序**追加的，不是 semver 顺序。排序在这个位置没有意义，已替换为"当前版本必须有说明"。
 `pytest` **539 passed, 1 skipped**。
 
-<!-- DOCS:ALL:BEGIN -->
-## 完整文档清单（由 `.tmp/gen_docs_index.py` 生成，测试会检查是否过期）
 
-| 文件 | 首行标题 |
-|---|---|
-| [A1_STRIP_WINDOW_2026-10-22.md](A1_STRIP_WINDOW_2026-10-22.md) | A1：条带接触窗（bounded strip patch） |
-| [A2_C_DELTA_DEGENERACY_2026-10-22.md](A2_C_DELTA_DEGENERACY_2026-10-22.md) | A2 C–δ 简并排查（2026-10-22） |
-| [A3_MULTIPATCH_2026-10-22.md](A3_MULTIPATCH_2026-10-22.md) | A3 同步多斑 + 局部弹性分配 —— 实测：**前提不成立，局部分配已经存在** |
-| [AGENT_TOOL_LAYER_2026-10-22.md](AGENT_TOOL_LAYER_2026-10-22.md) | Velch AI 调用层设计（Agent Tool Layer，2026-10-22） |
-| [AI_INTERFACE_ARCHITECTURE_2026-10-22.md](AI_INTERFACE_ARCHITECTURE_2026-10-22.md) | Velch 软件分层与 AI 接口架构（设计草案） |
-| [ARCHITECTURE_2026-10-21.md](ARCHITECTURE_2026-10-21.md) | Velch 架构收口与 Simpack 2021x 对标（2026-10-21） |
-| [ASSESSMENT_2026-10-20.md](ASSESSMENT_2026-10-20.md) | 标准评价指标（assess）：把仿真输出变成可判读的结论 |
-| [B2_EVENT_INTEGRATION_2026-10-22.md](B2_EVENT_INTEGRATION_2026-10-22.md) | B2 事件化积分 / 峰值分辨率（2026-10-22） |
-| [B3_TABLE_AMORTIZATION_2026-10-22.md](B3_TABLE_AMORTIZATION_2026-10-22.md) | B3 接触表按反演批次摊销（2026-10-22） |
-| [B4_DESCRIPTOR_2026-10-22.md](B4_DESCRIPTOR_2026-10-22.md) | B4 接触状态描述子降维 —— 实测**负结果** |
-| [B5_JACOBIAN_EVENTS_2026-10-22.md](B5_JACOBIAN_EVENTS_2026-10-22.md) | B5 雅可比作事件检测（2026-10-22） |
-| [bench_toolchain_design.md](bench_toolchain_design.md) | Velch 性能基准与剖析工具链（v1 最小可用设计） |
-| [BUGS.md](BUGS.md) | 缺陷账本（BUGS） |
-| [CAPABILITY_INVENTORY_2026-10-20.md](CAPABILITY_INVENTORY_2026-10-20.md) | 能力清单：现在的 Velch 到底准备好了什么（2026-10-20） |
-| [COMPUTE_BUDGET_2026-10-19.md](COMPUTE_BUDGET_2026-10-19.md) | Velch 计算效率：与 Simpack 的同工况对比、热点归因与提速路线 |
-| [CONTACT_GEOMETRY_ERROR_BOUND_2026-10-21.md](CONTACT_GEOMETRY_ERROR_BOUND_2026-10-21.md) | 接触几何误差界：样条解析 vs 密网格 2026-10-21 |
-| [CONTACT_GEOMETRY_ERROR_BOUND_REAL_2026-10-21.md](CONTACT_GEOMETRY_ERROR_BOUND_REAL_2026-10-21.md) | 接触几何误差界（真实断面）2026-10-21 |
-| [CONTACT_GEOMETRY_SEGMENTED_2026-10-21.md](CONTACT_GEOMETRY_SEGMENTED_2026-10-21.md) | 分段样条 vs 密网格（真实断面）2026-10-21 |
-| [CONTACT_MAP_2026-10-21.md](CONTACT_MAP_2026-10-21.md) | 接触图（contact map）：把每步几何搜索降级为插值 |
-| [CONTACT_MAP_AMORTIZATION_2026-10-21.md](CONTACT_MAP_AMORTIZATION_2026-10-21.md) | 接触图：摊销不可能，接线前必须先算清这笔账 |
-| [CONTACT_NATIVE_INTEGRATION_2026-10-19.md](CONTACT_NATIVE_INTEGRATION_2026-10-19.md) | CONTACT 原生接触求解接入记录（2026-10-19） |
-| [CONTACT_POLICY_ARCHITECTURE_2026-10-20.md](CONTACT_POLICY_ARCHITECTURE_2026-10-20.md) | 接触策略层：可插拔接口、首轮 A/B 结果与创新路线（2026-10-20） |
-| [CONTACT_REFERENCE_THREE_WAY_2026-10-21.md](CONTACT_REFERENCE_THREE_WAY_2026-10-21.md) | 三方对拍：解析真值 / 45 µm 网格 / 分段样条 2026-10-21 |
-| [CONTACT_SEARCH_LOCAL_2026-10-19.md](CONTACT_SEARCH_LOCAL_2026-10-19.md) | 轮轨接触搜索：型面表化 + 局部连续搜索（2026-10-19） |
-| [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
-| [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
-| [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
-| [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
-| [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
-| [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
-| [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
-| [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
-| [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
-| [MEASURED_VALIDATION_2026-10-21.md](MEASURED_VALIDATION_2026-10-21.md) | 实测数据接入验证（2026-10-21） |
-| [OBSERVATION_LAYER_2026-10-20.md](OBSERVATION_LAYER_2026-10-20.md) | 观测量层：仿真对仿真 + 实测对模型（2026-10-20） |
-| [ONBOARDING_2026-10-21.md](ONBOARDING_2026-10-21.md) | 新增车体 / 新增道岔的接入指南 |
-| [OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md](OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md) | 开源轮轨接触算法调查（2026-10-19） |
-| [PACKAGING_2026-10-22.md](PACKAGING_2026-10-22.md) | 打包与安装包（Windows） |
-| [PARALLEL_AND_SIMPACK_RWP.md](PARALLEL_AND_SIMPACK_RWP.md) | 多核并行、Simpack RWP 机制与 CONTACT 接入 |
-| [RACK_CASE_DATA_CONTRACT_2026-10-21.md](RACK_CASE_DATA_CONTRACT_2026-10-21.md) | 齿轨过岔算例：数据契约（2026-10-21） |
-| [RAIL_CANT_2026-10-20.md](RAIL_CANT_2026-10-20.md) | 轨底坡 1:40：把"整体倾斜"换成"绕轨顶中心旋转" |
-| [RELEASE_NOTES_0.4.1.md](RELEASE_NOTES_0.4.1.md) | Velch 0.4.1 · 发布说明（2026-10-22） |
-| [RELEASE_NOTES_0.4.10.md](RELEASE_NOTES_0.4.10.md) | Velch 0.4.10 发布说明（2026-10-23） |
-| [RELEASE_NOTES_0.4.11.md](RELEASE_NOTES_0.4.11.md) | Velch 0.4.11 发布说明（2026-10-23） |
-| [RELEASE_NOTES_0.4.2.md](RELEASE_NOTES_0.4.2.md) | Velch 0.4.2（2026-10-22 夜间） |
-| [RELEASE_NOTES_0.4.3.md](RELEASE_NOTES_0.4.3.md) | Velch 0.4.3 发布说明（2026-10-22 夜） |
-| [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
-| [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
-| [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
-| [RESIDUAL_SMOOTHNESS_2026-10-21.md](RESIDUAL_SMOOTHNESS_2026-10-21.md) | 残差曲面光滑性：反演的准入条件 |
-| [ROADMAP_BEYOND_SIMPACK.md](ROADMAP_BEYOND_SIMPACK.md) | Velch 路线图：借鉴 Simpack 并超越它（2026-10-20 起） |
-| [S1_CHECKPOINT_2026-10-20.md](S1_CHECKPOINT_2026-10-20.md) | S1 检查点：解析接触几何（2026-10-20） |
-| [S1C_GEOMETRY_POLICY_2026-10-20.md](S1C_GEOMETRY_POLICY_2026-10-20.md) | S1-c：接触点几何策略（`geometry_policy`）——实现、A/B、以及为什么它是空结果 |
-| [S1D_STRIP_CONTACT_2026-10-20.md](S1D_STRIP_CONTACT_2026-10-20.md) | S1-d：分布接触（条带积分）——实现与 A/B |
-| [S2_HANDOFF_2026-10-21.md](S2_HANDOFF_2026-10-21.md) | S2 工作交接：隐式积分（BDF）为什么跑不动，以及两条待走的路 |
-| [S2_IMPLICIT_2026-10-21.md](S2_IMPLICIT_2026-10-21.md) | S2 隐式积分第一轮：BDF + 稀疏模板（2026-10-21 夜间） |
-| [S2_IMPLICIT_DONE_2026-10-22.md](S2_IMPLICIT_DONE_2026-10-22.md) | S2 完成：隐式积分跑通，整程 8.4× 提速且物理不变 |
-| [S2_REMAINING_PATHS_2026-10-21.md](S2_REMAINING_PATHS_2026-10-21.md) | S2 剩余两条路：施工规格与口径校正 |
-| [S3_SAMPLE_FLEET_2026-10-21.md](S3_SAMPLE_FLEET_2026-10-21.md) | ﻿# S3 样本批量：theta 敏感度第一测（2026-10-21） |
-| [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
-| [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
-| [SIMPACK_COMPARE_2026-10-23.md](SIMPACK_COMPARE_2026-10-23.md) | Simpack 与 Velch 的定量对照（前轮对，23.5–138.5 m） |
-| [SIMPACK_IMPORT_2026-10-22.md](SIMPACK_IMPORT_2026-10-22.md) | 从 Simpack 模型算一个算例（2026-10-22） |
-| [SOFTWARE_ARCHITECTURE_V0_4.md](SOFTWARE_ARCHITECTURE_V0_4.md) | Velch 0.4 软件架构与模型边界 |
-| [SPECTRUM_SOURCE_2026-10-21.md](SPECTRUM_SOURCE_2026-10-21.md) | 153.85 Hz 是什么：速度标定实验 |
-| [SPEED_2026-10-20.md](SPEED_2026-10-20.md) | 提速：先量再改（2026-10-20） |
-| [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |
-| [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |
-| [STAGE_B_SURROGATE_2026-10-21.md](STAGE_B_SURROGATE_2026-10-21.md) | B 阶段：可微代理与保险丝 2026-10-21 |
-| [UI_CHINESE_LABELS_2026-10-22.md](UI_CHINESE_LABELS_2026-10-22.md) | 界面中文命名规则（Velch UI） |
-| [UI_READABILITY_2026-10-22.md](UI_READABILITY_2026-10-22.md) | 界面可读性：字号缩放与不截断 |
-| [UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md](UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md) | 统一口径复核 + 代码体检（2026-10-22） |
-| [VEHICLE_V2_DESIGN_AND_EVIDENCE.md](VEHICLE_V2_DESIGN_AND_EVIDENCE.md) | Velch v0.2：车辆—轮对—道岔轨道耦合的证据与实现 |
-<!-- DOCS:ALL:END -->
 
 ## 第 50 轮：把"物理数值不变"从一句承诺变成一道门
 
@@ -2274,4 +2197,49 @@ HistoryError: cannot classify history channel 'axle0_y_acc_m_per_s2'
   加速度行与状态列逐项相等；唯一的例外只能是 `_spin_rad`（无轨道输入的簧下自由转动）；
   轴箱轴号与轮对一致。
 - 全仓 `pytest` **729 passed, 1 skipped**（`--basetemp F:\velch_tmp\pytest`）。
+
+## 第 74 轮：观测设计——该装哪个通道，以及两个在出结论之前就作废的判据
+
+S7 要回答的问题不是"能不能把矩阵变小"，而是**"这个通道看见的东西，别的通道看不见吗"**。
+这一轮的一半产出是方法学：原设计在**产生任何结论之前**就有两处结构性错误，都在数据出来前
+撤回了——
+
+1. **判据"加入后条件数下降 ≥30 %"恒成立**：给矩阵添一行不可能让任何奇异值变小
+   （`AᵀA ⪯ AᵀA + bbᵀ`），所以条件数对**每一个**候选都会下降，包括完全重复的行。判据作废，
+   条件数列只保留作与 S6d 的衔接，并标注为非证据。
+2. **两频带的设计不可能回答这个问题**：两带 = 每通道 4 个实数，七条基线行已经张满 ℝ⁴，
+   于是任何新行的新息**恒等于 0**。改成六带（0.2–12.8 m，12 个实数）后基线只张到 4 维，
+   才有空间让新行"新"。两带那一版跑出来三个候选的 novelty 全是 `0.000`，若照它写结论，
+   会得出"什么都不值得装"的假结论。
+
+最终判据（先定后用）：**novelty** = 新行与已有行张成子空间夹角的正弦（增行必然改善条件数，
+但"指到新方向"不是必然）；辅以**数值秩**与**相对幅值**。
+
+实测（刚轨、直线、仅垂向不平顺，三个种子 20261024/7/11 结论完全一致）：
+
+| 候选 | 秩 | novelty | 相对幅值 | 判定 |
+|---|---|---|---|---|
+| 轴箱横向 `_y_acc` | 4 → 5 | **0.374** | 2.9 % | **加了一个可用方向** |
+| 轴箱纵向 `_x_acc` | 4 → 5 | 0.229 | 0.2 % | 只加了一层薄方向，基本是重复 |
+| 轴箱点头 `_pitch_acc` | 4 → 4 | 0.000 | 0.000 | 这一工况根本没激励它 |
+
+**基线七条垂向通道只张到 12 维里的 4 维**——这就是 S6d 那句"多测点买不到信息"的定量形态：
+左右轴箱在对称工况下逐位相同，车体四角在低频上近似共线。这也修正了 S6d 的表述：
+"七通道条件数 14.9–30.8"应读作**"七通道里只有 4 个独立方向"**。
+
+限制写在文档里而不是事后解释：单工况、刚性轨、仅垂向激励（点头的"静默"只属于这个激励）、
+0.31 的门槛是先定的、novelty 是几何量**不是信噪比**——S5 的结论（常数 H 不存在、
+标定误差 65 %）一字未改。
+
+顺带修掉两个文档设施缺陷（都是"检查没覆盖到"的同一种病）：
+
+- `CHANGELOG_DOCS.md` 里存在**两个**生成的文档清单块，而测试只认第一个（第二个是上一轮遗留的
+  73 行陈旧副本）；更糟的是块头点名的生成脚本 `.tmp/gen_docs_index.py` 早已不存在，
+  所以清单只能手改。现在生成器落在 [scripts/gen_docs_index.py](../scripts/gen_docs_index.py)
+  （带 `--check`），并会**删掉任何后续重复块**，重跑不会再次累积。
+- 重生成后清单 **122 篇**，`tests/test_docs_index.py` 5 项全绿。
+
+证据：[S7_OBSERVATION_DESIGN_2026-10-24.md](S7_OBSERVATION_DESIGN_2026-10-24.md)、
+[scripts/s7_observation_design.py](../scripts/s7_observation_design.py)（三个种子首跑约 4 min，
+之后读缓存约 5 s）。
 

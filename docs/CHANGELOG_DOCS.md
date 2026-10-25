@@ -1702,6 +1702,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [RELEASE_NOTES_0.4.31.md](RELEASE_NOTES_0.4.31.md) | Velch 0.4.31 发布说明 |
 | [RELEASE_NOTES_0.4.32.md](RELEASE_NOTES_0.4.32.md) | Velch 0.4.32 发布说明 |
 | [RELEASE_NOTES_0.4.33.md](RELEASE_NOTES_0.4.33.md) | Velch 0.4.33 发布说明 |
+| [RELEASE_NOTES_0.4.34.md](RELEASE_NOTES_0.4.34.md) | Velch 0.4.34 发布说明 |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
@@ -2887,6 +2888,30 @@ x 自由的车体是一个**自由体**，任何不平衡的纵向力都让它�
 
 新增 `scripts/s9j_radius_longitudinal.py`（3 次运行约 67 s 可复算，判据写在模块 docstring 里：
 x 增益在 ±10 % 内随深度成正比、x/z 保在 2e-3…4e-3）。
+
+## 第 97 轮：长波重测——标定 1.9 %、闭环 0.66 %，两条门槛都过
+
+审查意见 D1 指出 `s9_inversion.py` 没有站位表守卫：`SPEED = 97.2222`、`DURATION_S = 2.0`、`x_start = 13.5` 的行程到 **217.9 m**，而这个算例的钢轨站位只到 **150 m**——`s9i/out_target_plus` 在 **t = 1.3015 s** 永久失去接触、`axle1_z_m = −2.474 m`，分析窗口里 **31 %** 是自由落体。所以上一轮报的"长波 3.8 % / 闭环 1.20 %"是无效记录上的数。
+
+这一轮把两件事修掉再重跑：
+
+1. `flexible_base()` 把末站位**克隆到 400 m**（算例是等截面直线，克隆是延长几何而不是编造几何），并在仍然不够时直接 `SystemExit: run leaves the rail station table: reach …`；
+2. `--columns` 重测四个探针列，`columns.json` 里带上 `bands / amplitude / speed / duration`，`load_columns()` 校验这四项（D11 的缓存指纹问题）；
+3. 顺带修掉 B027（轴箱缺转动约束，13.094 Hz 四重根 ζ = 0），见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`。
+
+重跑结果（12 次运行、9 737 s，全部 `numerically_checked`）：
+
+| 变体 | 条件数 | 标定 | 逐带 | 反演 (mm) | 闭环 |
+|---|---|---|---|---|---|
+| **V** | 1.37 | **1.9 %** | +0.1 % / −2.5 % | 0.08305 / 0.10043 | **0.66 %** |
+| D | 1.16 | 2.6 % | −2.0 % / −2.9 % | 0.08132 / 0.10003 | — |
+| V+D | 1.25 | 2.5 % | −1.5 % / −2.9 % | 0.08177 / 0.09999 | — |
+
+真值 0.0830 / 0.1030 mm。H 的对角（V）：20 m 探针 **957.80**、40 m 探针 **234.01** (m/s²)/m；D：1.1314 / 1.0388 m/m。
+
+两点必须一起看：**H 的量级比无效记录那一次大了一倍多**（583.69 → 957.80），主要来自记录合法化——自由落体把差分响应压低了一半；而 **D 通道在长波上第一次可用**（2.6 %），与 S7e 的 0.79/0.63 m/m 传递比一致，但 V+D 并不比 V 更好，说明两条观测在长波上高度相关。
+
+证据落在 `docs/BAND_CAPABILITY_2026-10-26.md` 第 8 节与 `F:\velch_tmp\s9i\inversion.json`。
 
 ## 第 96 轮：350 km/h 的短波深度误差从 +23.2 % 降到 +4.9 %——同一处装配缺陷
 

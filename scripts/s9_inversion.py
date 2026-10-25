@@ -60,7 +60,45 @@ def flexible_base() -> dict:
     base["run"]["duration_s"] = DURATION_S
     base["case_id"] = "s9i_flexible"
     base["flexible_wheelset"] = {"source": "file", "file": str(MODES), "axles": [1, 2, 3, 4]}
+
+    # Reviewer D1: the rail templates end at 150 m while this run needs 217.9 m, so the
+    # last second of the record was free fall and the differential was not a measurement.
+    reach = float(base["run"]["x_start_m"]) + SPEED * DURATION_S + 10.0
+    for template in base["rail_templates"]:
+        stations = template["stations"]
+        last = max(float(station["s_m"]) for station in stations)
+        if last < reach:
+            clone = dict(max(stations, key=lambda station: float(station["s_m"])))
+            clone["s_m"] = 400.0
+            clone["id"] = f"{clone.get('id', 'station')}_extended"
+            template["stations"] = sorted(stations + [clone], key=lambda station: float(station["s_m"]))
+    for template in base["rail_templates"]:
+        last = max(float(station["s_m"]) for station in template["stations"])
+        if last < reach:
+            raise SystemExit(
+                f"run leaves the rail station table: reach {reach:.1f} m > last station {last:.1f} m")
     return base
+
+
+def build_columns(base: dict, length: float) -> dict[str, dict[str, np.ndarray]]:
+    """Measure each probe column: one differential pair per band, divided by its amplitude."""
+    columns: dict[str, dict[str, np.ndarray]] = {}
+    for band in BANDS:
+        values = protocol.differential(f"col{band:.0f}", {band: AMPLITUDE_M}, 0.0, base, length)
+        columns[str(band)] = {label: np.asarray(value, complex) / AMPLITUDE_M
+                              for label, value in values.items()}
+        print(f"  band {band:4.0f} m column done", flush=True)
+    payload = {
+        "bands": list(BANDS),
+        "amplitude": AMPLITUDE_M,
+        "speed": SPEED,
+        "duration": DURATION_S,
+        "columns": {key: {label: [[value.real, value.imag] for value in values]
+                          for label, values in block.items()}
+                    for key, block in columns.items()},
+    }
+    (WORK / "columns.json").write_text(json.dumps(payload), encoding="utf-8")
+    return columns
 
 
 def load_columns() -> dict[str, dict[str, np.ndarray]]:
@@ -76,7 +114,8 @@ def load_columns() -> dict[str, dict[str, np.ndarray]]:
     if not cache.exists():
         raise SystemExit(f"no column cache at {cache}: run scripts/s9_inversion.py's column step")
     payload = json.loads(cache.read_text(encoding="utf-8"))
-    if payload.get("bands") != list(BANDS) or payload.get("amplitude") != AMPLITUDE_M:
+    if (payload.get("bands") != list(BANDS) or payload.get("amplitude") != AMPLITUDE_M
+            or payload.get("speed") != SPEED or payload.get("duration") != DURATION_S):
         raise SystemExit(f"{cache} is from another protocol (bands {payload.get('bands')}, "
                          f"amplitude {payload.get('amplitude')})")
     return {key: {label: np.array([complex(real, imaginary) for real, imaginary in values])
@@ -97,7 +136,10 @@ def main() -> int:
           + f"; {DURATION_S} s = {DURATION_S * SPEED:.0f} m of travel", flush=True)
 
     started = time.perf_counter()
-    columns = load_columns()
+    if "--columns" in sys.argv or not (WORK / "columns.json").exists():
+        columns = build_columns(base, length)
+    else:
+        columns = load_columns()
     for band in BANDS:
         for label, spec in protocol.CHANNELS.items():
             unit = "m/s^2" if "acc" in spec[0][0] else "m"

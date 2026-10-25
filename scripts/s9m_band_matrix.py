@@ -101,7 +101,11 @@ def main() -> int:
         response, seconds, status = s9l.run_pair(track, f"p{index:02d}")
         if status != "numerically_checked":
             raise SystemExit(f"probe {key} did not converge: {status}")
-        matrix[key] = [float(response[label]) / PROBE_AMPLITUDE_M for label in labels]
+        # Reviewer D5: the probe's *peak* is PROBE_AMPLITUDE_M, so the gain per unit
+        # input rms is this row times sqrt(2).  Stating it this way keeps every later
+        # comparison (which regresses on band rms) on one convention.
+        input_rms = PROBE_AMPLITUDE_M / math.sqrt(2.0)
+        matrix[key] = [float(response[label]) / input_rms for label in labels]
         state["labels"] = labels
         state["probe_amplitude_m"] = PROBE_AMPLITUDE_M
         state["duration_s"] = DURATION_S

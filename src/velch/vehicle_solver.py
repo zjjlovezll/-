@@ -316,7 +316,7 @@ class VehicleDynamics:
                 # The longitudinal tangential force used to be dropped on the floor: with x
                 # prescribed there was nowhere to put it.  A layout that solves x has to carry
                 # it, or the axle-box longitudinal channel can never be anything but zero.
-                if "x" in wheel_axes:
+                if "x" in wheel_axes and self.case.run.longitudinal_force:
                     force[wheel_axes["x"]] += response.longitudinal_force_n
                 force[roll_index] += response.wheel_roll_moment_nm
                 force[spin_index] += response.wheel_spin_moment_nm

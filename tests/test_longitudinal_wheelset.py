@@ -20,6 +20,7 @@ from velch.vehicle_solver import VehicleDynamics, _acceleration_name, _column_na
 
 REPO = Path(__file__).resolve().parents[1]
 EXAMPLE = REPO / "examples" / "vehicle_v2" / "case.json"
+MODEL = REPO / "vehicles" / "CRH380A_M_axlebox_x.json"
 LONGITUDINAL = "CRH380A_M_axlebox_x"
 
 
@@ -121,3 +122,45 @@ def test_a_layout_without_the_coordinate_is_untouched(tmp_path):
     q = np.array(case.initial_q, dtype=float)
     before = dynamics.station_m(case.rails[0], 0.0, q)
     assert dynamics.station_m(case.rails[0], 0.0, q + 0.7) == pytest.approx(before, abs=1e-15)
+
+
+def test_the_longitudinal_force_is_off_by_default():
+    """The term makes the channel non-zero, and it also enters yaw through a lever arm.
+
+    So it is a switch, defaulting to off: an ordinary vertical run must not be walked onto the
+    flange by a force that exists only because somebody wanted to measure the x channel.
+    """
+
+    from velch.model import RunSettings
+
+    field = RunSettings.__dataclass_fields__["longitudinal_force"]
+    assert field.default is False
+
+
+def test_the_train_element_holds_the_carbody_against_the_ground(tmp_path):
+    """A grounded spring is a one-entry link: the vehicle is not a free body in x.
+
+    Reached through a case that references the model, because only the case loader resolves the
+    ``$vehicle...`` references into the parameter object the topology needs.
+    """
+
+    from velch.vehicle import load_vehicle_case
+    from velch.topology import topology_for
+
+    raw = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+    _absolute(raw, EXAMPLE.parent)
+    raw.pop("vehicle", None)
+    raw.pop("topology", None)
+    raw["vehicle_ref"] = "CRH380A_M_axlebox_x"
+    raw["run"]["duration_s"] = 0.002
+    path = tmp_path / "case_boundary.json"
+    path.write_text(json.dumps(raw), encoding="utf-8")
+    case = load_vehicle_case(path)
+    topology = topology_for(case)
+    grounded = [spec for spec in topology.link_specs if spec.name == "train_x"]
+    assert len(grounded) == 1
+    entries = grounded[0].entries
+    assert len(entries) == 1                       # one body, no second anchor
+    assert entries[0][1] == pytest.approx(1.0)     # acting on that body's own x row
+    assert grounded[0].stiffness == pytest.approx(1.0e9)
+    assert grounded[0].damping == pytest.approx(1.0e6)

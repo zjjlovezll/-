@@ -2473,6 +2473,26 @@
             0.0
           ]
         }
+      },
+      {
+        "kind": "spring_damper",
+        "name": "train_x",
+        "from": {
+          "body": "carbody",
+          "point": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "stiffness": 1000000000.0,
+        "damping": 1000000.0,
+        "note": "The rest of the train.  With x free the vehicle is a free body in the longitudinal direction: any unbalanced creep force accelerates it and the run drifts until a wheel climbs the flange.  This grounded spring-damper holds the mean longitudinal position at the prescribed speed, so only relative motion is integrated."
       }
     ]
   },

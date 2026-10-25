@@ -52,6 +52,9 @@ def build(tmp: pathlib.Path, flexible: bool, speed_m_s: float) -> pathlib.Path:
         "method": "BDF", "jacobian": "analytic", "rtol": 1e-4, "atol": 1e-8,
         "x_start_m": X_START_M, "duration_s": DURATION_S,
         "output_step_s": OUTPUT_STEP_S, "max_solver_step_s": SOLVER_STEP_S,
+        # The whole point of the x layout here: let the longitudinal tangential force reach the
+        # state, so the axle-box x channel can see the rolling radius change.
+        "longitudinal_force": True,
     })
     # Phase pi/2 puts the polygon at zero radius offset when the clock starts.  With phase 0 the
     # static equilibrium is solved against a wheel that is 30 um small everywhere, and it falls

@@ -145,6 +145,12 @@ class RunSettings:
     contact_seed_scope: str = "body"
     jacobian: str | None = None
     refine_peak: bool = False
+    #: Apply the longitudinal tangential force to a wheelset that solves ``x``.  Off by default:
+    #: with x free the vehicle is a free body, and the unbalanced longitudinal force also enters
+    #: the yaw row through its lever arm, which walks the contact across the profile until
+    #: ``maximum_abs_contact_slope`` trips.  Turn it on only for a case whose longitudinal
+    #: behaviour is the thing being measured (the wheel-polygon runs).
+    longitudinal_force: bool = False
 
     def __post_init__(self) -> None:
         if self.method not in {"DOP853", "Radau", "BDF"}:

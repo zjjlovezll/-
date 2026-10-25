@@ -1661,6 +1661,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
+| [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |
 | [MEASURED_VALIDATION_2026-10-21.md](MEASURED_VALIDATION_2026-10-21.md) | 实测数据接入验证（2026-10-21） |
 | [NONLINEAR_ELEMENTS_2026-10-23.md](NONLINEAR_ELEMENTS_2026-10-23.md) | 非线性力元 |
 | [OBSERVATION_LAYER_2026-10-20.md](OBSERVATION_LAYER_2026-10-20.md) | 观测量层：仿真对仿真 + 实测对模型（2026-10-20） |
@@ -2758,3 +2759,36 @@ S9-3 的加速度谱（Hann、去均值、单边幅值）：直线窗柔性版 3
 
 全仓 `pytest` **792 passed, 1 skipped**；文档 `FLEXIBLE_WHEELSET_PORT_2026-10-24.md` 新增 §16。
 
+---
+
+## 第 89 轮：给轮对加纵向自由度，让轴箱纵向通道第一次有物理来源（S9-7）
+
+S9-6 之后 `axle1_box_left_x_acc_m_per_s2` 的谱峰是 0.000 m/s² —— 因为轮对**没有纵向坐标**，
+`x` 由走行速度给定。本轮把它变成可解坐标，并量它到底看到什么。
+
+| 位置 | 改动 |
+|---|---|
+| `src/velch/vehicle_solver.py` | `self._wheel_axes` 按名字解析下标（取代八处 `wh + k`）；`station_m(rail, t, q)` 成为"轮子在轨道哪里"的**唯一**实现，接触评估与作用-反力门共用 |
+| 同上 | `x` 里程含 `q[x]`；`travel = v0 + v[x]` 进蠕滑率；列名 **`axle1_dx_m`**（`axle<k>_x_m` 已是绝对里程，不可重用）；`_acceleration_name("axle1_dx_m") = "axle1_dx_acc_m_per_s2"` |
+| `vehicles/CRH380A_M_axlebox_x.json` | 新车型：15 刚体 / **90 坐标** / 76 元件，8 根 `bearing_a{1..4}{L,R}_x`（1e8 N/m） |
+| `tests/test_longitudinal_wheelset.py` | 6 项：坐标存在且 `x` 在 `y` 前、`dx_m` 不与里程列冲突且无重复表头、加速度名往返、`station_m` 随 `q[x]` 平移且随 `t` 前进、静止时该行力为零而位移后不为零、无纵向坐标的布局逐位不受影响 |
+| `scripts/s9g_longitudinal.py` | 新脚本：50 mm 波长的垂向或横向波磨，80 km/h，20 kHz |
+
+实测（`numerically_checked`，谱峰精确落在 444.4 Hz）：
+
+| 激励 | x 增益 | z 增益 | y 增益 (m/s²)/m |
+|---|---|---|---|
+| 垂向 30 µm | **0.04** | **26 455** | 4 009 |
+| 横向 30 µm | **936** | 597 | 382 |
+
+机理：垂向不平顺在恒定滚动半径下不改变蠕滑率，故 `F_x = f11·ν` 不变 —— **垂向波磨对纵向通道
+物理盲**（0.04 是 z 的 1.5e-6）；横向不平顺把接触点沿型面横移、滚动半径变，纵向蠕滑力被激励，
+且是三个通道里最强的。于是两个短波通道互补：**深度看垂向，轨向/多边形看纵向**。
+
+冻结基线：`test_oracle_frozen` 3 passed；86 坐标车型的垂向增益 26 459 vs 90 坐标 26 455（差 0.02 %）。
+
+还欠：解析雅可比没有 ∂/∂x（inexact Newton 省略）；没有多边形/偏心算例；86 与 90 两种车型只在
+这一个工况上比过。另记一笔**无效测量**：先用 `channels: ["lateral"]` 配一个只填垂向列的 `.tre`，
+两次结果逐位相同 —— "量到一个看起来像零的零"，脚本已改为按被测分量自写 `.tre`。
+
+文档：`docs/LONGITUDINAL_WHEELSET_2026-10-25.md`。

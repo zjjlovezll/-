@@ -45,6 +45,18 @@
       "status": "unvalidated_against_measurement_or_Simpack",
       "file": "CRH380A_M_axlebox.json",
       "path": "CRH380A_M_axlebox.json"
+    },
+    {
+      "id": "CRH380A_M_axlebox_x",
+      "name": "CRH380A 动车（M 车，轴箱体 + 轮对纵向自由度）",
+      "kind": "engineering",
+      "axle_count": 4,
+      "state_dimension": 90,
+      "mass_total_kg": 48654.0,
+      "travel_speed_m_s": 97.22222222222221,
+      "status": "unvalidated_against_measurement_or_Simpack",
+      "file": "CRH380A_M_axlebox_x.json",
+      "path": "CRH380A_M_axlebox_x.json"
     }
   ]
 }

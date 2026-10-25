@@ -124,6 +124,12 @@ class VehicleDynamics:
         # pushes back on itself and every modal coordinate stays at zero, which is what the
         # first flexible run measured.  Built from the same mode sets the blocks were.
         self.contact_coupling: ModalContact | None = self._build_modal_contact()
+        #: axle -> {coordinate: state index}.  Resolved by name, because a layout may put ``x``
+        #: in front of ``y`` and every ``wh + k`` written by hand then reads the wrong number.
+        self._wheel_axes = {
+            body.axle: {axis: self.topology.require(body.id, axis) for axis in body.dof}
+            for body in self.topology.wheelsets()
+        }
         self.wheels = {wheel.id: wheel for wheel in case.wheels}
         self.connectors = self._build_connectors()
         # Assemble the strip-contact gradients (dN/dq, d(lever)/dq) only while the
@@ -147,6 +153,23 @@ class VehicleDynamics:
         self._support = case.support_compliance
         self.BODY_SWITCH_MARGIN_M: float = 2.0e-5
         self.BODY_SWITCH_RELEASE_M: float = 5.0e-5
+
+    def station_m(self, rail, t_s: float, q: np.ndarray) -> float:
+        """Station of a wheel's contact patch at time ``t_s``.
+
+        One implementation, because the patch evaluation and the action-reaction gate must agree
+        on where the steel is: a layout that solves the wheelset's longitudinal coordinate moves
+        the patch by that coordinate, and a second copy of this formula would silently compare a
+        force at one station with a reaction at another.
+        """
+
+        cfg = self.case.vehicle
+        x = (self.case.run.x_start_m + cfg.travel_speed_m_s * t_s
+             + cfg.axle_offsets_m[rail.axle_index])
+        axis = self._wheel_axes[rail.axle_index].get("x")
+        if axis is not None:
+            x = x + float(q[axis])
+        return x
 
     @property
     def dimension(self) -> int:
@@ -439,8 +462,10 @@ class VehicleDynamics:
          seeds, half_width) = job
         cfg = self.case.vehicle
         wh = self.topology.offset(self.topology.wheelset_id(rail.axle_index))
+        axes = self._wheel_axes[rail.axle_index]
         wheel = self.wheels[rail.wheel_id]
-        x = self.case.run.x_start_m + cfg.travel_speed_m_s * t_s + cfg.axle_offsets_m[rail.axle_index]
+        x = self.station_m(rail, t_s, q)
+        travel = cfg.travel_speed_m_s + (float(v[axes["x"]]) if "x" in axes else 0.0)
         path = self.case.path
         # The case's path is expressed in the rail reference frame, so its *offset* is absorbed by the
         # rail placement and only its slope matters here: the route's curvature turns the wheel against
@@ -464,8 +489,8 @@ class VehicleDynamics:
                 seed_y = seeds.get("__rail__")
             geometry = find_graph_contact(
                 profile, sample, wheel_y_m=float(q[wh]),
-                wheel_z_m=cfg.wheel_center_height_m + float(q[wh + 1]),
-                wheel_roll_rad=float(q[wh + 2]),
+                wheel_z_m=cfg.wheel_center_height_m + float(q[axes["z"]]),
+                wheel_roll_rad=float(q[axes["roll"]]),
                 wheel_lateral_offset_m=wheel.lateral_offset_m + lateral_extra,
                 rail_y_m=rail_y, rail_z_m=rail_z,
                 search_half_width_m=half_width,
@@ -520,13 +545,13 @@ class VehicleDynamics:
             support = self._support
             response = evaluate_contact(
                 geometry, self.case.contact,
-                wheel_v_y_m_s=float(v[wh]) + lateral_rate,
-                wheel_v_z_m_s=float(v[wh + 1]),
-                wheel_roll_rate_rad_s=float(v[wh + 2]),
-                wheel_spin_rate_rad_s=float(v[wh + 3]),
+                wheel_v_y_m_s=float(v[axes["y"]]) + lateral_rate,
+                wheel_v_z_m_s=float(v[axes["z"]]),
+                wheel_roll_rate_rad_s=float(v[axes["roll"]]),
+                wheel_spin_rate_rad_s=float(v[axes["spin"]]),
                 rail_v_y_m_s=rail_vy, rail_v_z_m_s=rail_vz,
-                travel_speed_m_s=cfg.travel_speed_m_s,
-                creep_attack_velocity_m_s=float(cfg.travel_speed_m_s * q[wh + 4]),
+                travel_speed_m_s=travel,
+                creep_attack_velocity_m_s=float(travel * q[axes["yaw"]]),
                 support_compliance_m_per_n=(support.at(x) if support is not None else None),
             )
             body_results.append((body.id, geometry, response))
@@ -910,8 +935,9 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     # The loop below already calls evaluate() on every accepted state for the gates; that call
     # *is* the right-hand side, so acceleration is force/mass with no finite difference.
     acceleration_channels = _acceleration_channels(dynamics)
-    acceleration_names = tuple(f"{_column_prefix(body)}_{_ACCELERATION_SUFFIX_BY_AXIS[axis]}"
-                               for _index, body, axis in acceleration_channels)
+    acceleration_names = tuple(
+        _acceleration_name(f"{_column_prefix(body)}_{_state_suffix(body, axis)}")
+        for _index, body, axis in acceleration_channels)
     acceleration_rows: list[list[float]] = []
     for t, position, velocity in zip(times, positions, velocities):
         force, contacts = dynamics.evaluate(float(t), position, velocity)
@@ -952,7 +978,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
             assert case.modal_track is not None
             for rail_index, rail in enumerate(case.rails):
                 response = contacts[rail.id]
-                x = run.x_start_m + cfg.travel_speed_m_s * float(t) + cfg.axle_offsets_m[rail.axle_index]
+                x = dynamics.station_m(rail, float(t), position)
                 py, pz, _, _ = case.modal_track.shapes[rail.template_id].sample(x)
                 rail_force = dynamics.track.contact_reaction(rail_index, x,
                     response.wheel_force_y_n, response.wheel_force_z_n)
@@ -1045,6 +1071,20 @@ _COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",
                   "pitch": "pitch_rad", "yaw": "yaw_rad", "spin": "spin_rad"}
 
 
+def _state_suffix(body, axis: str) -> str:
+    """State column suffix, disambiguated where the schema already owns the name.
+
+    The writer emits four leading ``axle<k>_x_m`` columns holding the *absolute* station of each
+    axle.  A layout that also solves the wheelset's longitudinal coordinate would therefore label
+    two different quantities with one name — a duplicate header, and every reader after the first
+    collision silently pairs a displacement with a mileage.  The perturbation is ``dx`` instead.
+    """
+
+    if axis == "x" and body.kind == "wheelset":
+        return "dx_m"
+    return _COLUMN_SUFFIX[axis]
+
+
 def _column_prefix(body) -> str:
     """History-column prefix for a body, numbered the way the rest of the schema numbers it.
 
@@ -1080,7 +1120,7 @@ def _column_names(case: VehicleCase):
     for body in sorted(topology.bodies, key=lambda item: topology.offset(item.id)):
         prefix = _column_prefix(body)
         for axis in body.dof:
-            yield f"{prefix}_{_COLUMN_SUFFIX[axis]}"
+            yield f"{prefix}_{_state_suffix(body, axis)}"
 
 
 #: Coordinate → acceleration column suffix.  ``x`` is here because node-table layouts solve the
@@ -1092,13 +1132,21 @@ _ACCELERATION_SUFFIX_BY_AXIS = {"x": "x_acc_m_per_s2", "y": "y_acc_m_per_s2",
                                 "yaw": "yaw_acc_rad_per_s2"}
 
 _AXIS_BY_COLUMN_SUFFIX = {suffix: axis for axis, suffix in _COLUMN_SUFFIX.items()}
+_AXIS_BY_COLUMN_SUFFIX["dx_m"] = "x"
+#: state suffix -> acceleration suffix, kept as a pair of strings so ``dx_m`` keeps its ``d``:
+#: deriving the acceleration name from the axis alone turns a perturbation into an absolute
+#: quantity, and ``axle1_x_acc_m_per_s2`` would then read as the acceleration of the mileage.
+_ACCELERATION_BY_COLUMN_SUFFIX = {suffix: _ACCELERATION_SUFFIX_BY_AXIS[axis]
+                                  for suffix, axis in _AXIS_BY_COLUMN_SUFFIX.items()
+                                  if axis in _ACCELERATED_AXES}   # spin has no channel
+_ACCELERATION_BY_COLUMN_SUFFIX["dx_m"] = "dx_acc_m_per_s2"
 
 
 def _acceleration_name(name: str) -> str | None:
     """Column name for the acceleration that belongs to a state column, or None."""
     for suffix, axis in _AXIS_BY_COLUMN_SUFFIX.items():
         if axis in _ACCELERATED_AXES and name.endswith("_" + suffix):
-            return f"{name[: -len(suffix)]}{_ACCELERATION_SUFFIX_BY_AXIS[axis]}"
+            return f"{name[: -len(suffix)]}{_ACCELERATION_BY_COLUMN_SUFFIX[suffix]}"
     return None
 
 

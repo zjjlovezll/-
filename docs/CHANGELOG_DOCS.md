@@ -1589,6 +1589,34 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 
 ---
 
+## 第 88 轮：把采样提到 20 kHz，短波从"不可定量"变成"一次除法约 10 %"（S9-6）
+
+S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 —— 972 Hz、一个周期只有 2.06 个样本，
+**无效**。本轮把 `output_step_s` 提到 5e-5（20 kHz）、`max_solver_step_s` 压到 1e-4（10 kHz 上限），
+在 80 km/h 上用真实 `.tre` 正弦波磨（深 30 µm）测 25 / 50 / 100 mm 三种波长：
+
+| 波长 | 激励 | 谱峰 | 增益 (m/s²)/m | 一次除法复原 | 误差 |
+|---|---|---|---|---|---|
+| 25 mm | 888.9 Hz | 888.8 | **26 761** | 32.9 µm | +9.7 % |
+| 50 mm | 444.4 Hz | 444.4 | **26 459** | 32.9 µm | +9.7 % |
+| 100 mm | 222.2 Hz | 222.2 | 36 618 | 45.0 µm | +50.0 % |
+
+**机理**：轴箱通过一系弹簧（1.176e6 N/m / 48.2 kg → f_n = 24.86 Hz）挂在轮对上，f_n 以上轴箱几乎不动，
+弹簧压缩量就是轨面幅值 `A`，所以 `a_box ≈ (2π f_n)² · A = 24 398 · A`，**与波长无关**。
+444 与 889 Hz 两档实测差 1.1 %，正是这个常数的验证；222 Hz（8.9 倍 f_n）还没进渐近区，所以偏 50 %。
+
+**因此短波反演退化为一次除法**：`A_rail ≈ |a_box| / 24 398`，25/50 mm 两档复原到 +9.7 %，
+那 9.7 % 是**可标定常数**（阻尼与轴箱-一系耦合），不是随波长变的传递函数。
+
+两条必须记下的边界：①**纵向通道是哑的**（`axle1_box_left_x_acc` 谱峰 0.000 m/s²），因为轮对没有纵向
+自由度，文献的"垂向+纵向双通道"在我们模型上暂时无法复现；②柔性档多出一个 208 Hz 环（ζ=1e-3，
+衰减 0.76 s），短波反演用刚性档更干净。
+
+本轮改动：新增 `docs/SHORTWAVE_INVERSION_2026-10-25.md`、`scripts/s9f_shortwave.py`、
+`scripts/s9f_wavelengths.py`；`docs/S4_BAND_TABLE_2026-10-23.md` 顶部加口径更正框。
+
+---
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -1702,6 +1730,7 @@ from it -- use --keep-profiles ... or supply a model whose two rails both carry 
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |
+| [SHORTWAVE_INVERSION_2026-10-25.md](SHORTWAVE_INVERSION_2026-10-25.md) | 短波反演：把采样提到 20 kHz 之后，结论反过来了 |
 | [SIMPACK_BOGIE_MINING_2026-10-23.md](SIMPACK_BOGIE_MINING_2026-10-23.md) | CRH380A 转向架子模型的深度挖掘（2026-10-23） |
 | [SIMPACK_CARBODY_MINING_2026-10-23.md](SIMPACK_CARBODY_MINING_2026-10-23.md) | 车体子模型：把 `CRH380A_M_Carbody.spck` 读成数字 |
 | [SIMPACK_COMPARE_2026-10-23.md](SIMPACK_COMPARE_2026-10-23.md) | Simpack 与 Velch 的定量对照（前轮对，23.5–138.5 m） |

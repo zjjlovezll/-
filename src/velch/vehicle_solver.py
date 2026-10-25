@@ -309,9 +309,15 @@ class VehicleDynamics:
             roll_index = self.topology.require(wheel_id, "roll")
             spin_index = self.topology.require(wheel_id, "spin")
             yaw_index = self.topology.index(wheel_id, "yaw")
+            wheel_axes = self._wheel_axes[rail.axle_index]
             for _body_id, geometry, response in body_results:
                 force[y_index] += response.wheel_force_y_n
                 force[z_index] += response.wheel_force_z_n
+                # The longitudinal tangential force used to be dropped on the floor: with x
+                # prescribed there was nowhere to put it.  A layout that solves x has to carry
+                # it, or the axle-box longitudinal channel can never be anything but zero.
+                if "x" in wheel_axes:
+                    force[wheel_axes["x"]] += response.longitudinal_force_n
                 force[roll_index] += response.wheel_roll_moment_nm
                 force[spin_index] += response.wheel_spin_moment_nm
                 if geometry and yaw_index is not None:
@@ -326,7 +332,8 @@ class VehicleDynamics:
                     force[coupling.block(rail.axle_index)] += coupling.generalised(
                         rail.axle_index, side,
                         ring.bottom_point(geometry.penetration_m),
-                        (0.0, response.wheel_force_y_n, response.wheel_force_z_n),
+                        (response.longitudinal_force_n,
+                         response.wheel_force_y_n, response.wheel_force_z_n),
                     )
                 reaction = self.track.contact_reaction(rail_index, x,
                                                        response.wheel_force_y_n,
@@ -418,6 +425,22 @@ class VehicleDynamics:
                 f"non-finite tread deformation at {rail.id}: max|dz|={np.max(np.abs(shift))!r} m")
         return replace(wheel.profile, z_m=np.asarray(wheel.profile.z_m, dtype=float) + shift)
 
+    def _out_of_round_shift(self, rail, q: np.ndarray) -> float:
+        """Radial deviation of this wheel at its current rotation angle, in metres.
+
+        The polygon is a property of the wheel, not of the track, so it survives a change of
+        nominal rolling radius.  Returned as the *radius* offset; the caller flips the sign for a
+        profile whose ``z`` points down.
+        """
+
+        polygon = getattr(self.case, "wheel_polygon", None)
+        if polygon is None:
+            return 0.0
+        axis = self._wheel_axes[rail.axle_index].get("spin")
+        if axis is None:
+            return 0.0
+        return float(polygon.radius_offset_m(float(q[axis])))
+
     def _tilted_geometry(self, geometry: ContactGeometry, rail, q: np.ndarray,
                          lateral_m: float) -> ContactGeometry:
         """Turn the contact normal by the slope of the deformed tread.
@@ -478,6 +501,11 @@ class VehicleDynamics:
         # S9-1: the steel moves, so the contact is searched on the deformed tread.  Computed once
         # per patch because the deformation depends on the axle and the side, not on the body.
         profile = self._deformed_profile(wheel, rail, q)
+        out_of_round = self._out_of_round_shift(rail, q)
+        if out_of_round:
+            # R(theta) = R0 + delta, and the profile's z is measured downwards (R = -z), so a
+            # larger radius is a lower column.
+            profile = replace(profile, z_m=np.asarray(profile.z_m, float) - out_of_round)
         side_sign = -1 if "left" in str(rail.template_id) else 1
         for body in bodies:
             if not body.active_at(x):

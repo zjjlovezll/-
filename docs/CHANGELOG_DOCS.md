@@ -1737,6 +1737,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [SIMPACK_COMPARE_2026-10-23.md](SIMPACK_COMPARE_2026-10-23.md) | Simpack 与 Velch 的定量对照（前轮对，23.5–138.5 m） |
 | [SIMPACK_IMPORT_2026-10-22.md](SIMPACK_IMPORT_2026-10-22.md) | 从 Simpack 模型算一个算例（2026-10-22） |
 | [SIMPACK_IRREGULARITY_MINING_2026-10-23.md](SIMPACK_IRREGULARITY_MINING_2026-10-23.md) | Simpack 里"轨道不平顺"是怎么装进模型的（齿轨模型取证） |
+| [SOFTWARE_AND_INVERSION_2026-10-25.md](SOFTWARE_AND_INVERSION_2026-10-25.md) | Velch：软件怎么建起来的，以及长波 / 短波不平顺怎么反演 |
 | [SOFTWARE_ARCHITECTURE_V0_4.md](SOFTWARE_ARCHITECTURE_V0_4.md) | Velch 0.4 软件架构与模型边界 |
 | [SPECTRUM_SOURCE_2026-10-21.md](SPECTRUM_SOURCE_2026-10-21.md) | 153.85 Hz 是什么：速度标定实验 |
 | [SPEED_2026-10-20.md](SPEED_2026-10-20.md) | 提速：先量再改（2026-10-20） |
@@ -2792,3 +2793,39 @@ S9-6 之后 `axle1_box_left_x_acc_m_per_s2` 的谱峰是 0.000 m/s² —— 因�
 两次结果逐位相同 —— "量到一个看起来像零的零"，脚本已改为按被测分量自写 `.tre`。
 
 文档：`docs/LONGITUDINAL_WHEELSET_2026-10-25.md`。
+
+## 第 90 轮：补上结论 2 的另一半（滚动半径 → 纵向通道），350 km/h 深度复测，并交出总说明
+
+### 改了代码
+
+| 文件 | 改动 |
+|---|---|
+| `src/velch/vehicle.py` | 新增 `WheelPolygon(order, depth_m, phase_rad)`：`radius_offset_m(spin) = depth·cos(order·spin + phase)`、`wavelength_m`、`frequency_hz`；`VehicleCase.wheel_polygon`，算例里用顶层 `wheel_polygon` 块声明 |
+| `src/velch/vehicle_solver.py` | 新增 `_out_of_round_shift()`，在 `_evaluate_patch` 里把轮对剖面整体下移该偏移（`R = -z`，半径小了 z 就大）；**并把纵向切向力真正加进状态**：`if "x" in wheel_axes: force[x] += longitudinal_force_n`。此前这一项从未累加，因为 x 是给定的，"轴箱纵向通道恒为零"不是物理而是漏加 |
+| `tests/test_wheel_polygon.py` | 5 项：几何定义、余弦相位、整体均值为零（所以静平衡可以忽略它）、算例解析、以及"半径小 30 µm ⇒ 轮-frame 接触点下移 30 µm 而侵入不变" |
+
+### 量到的（同一 350 km/h、20 kHz、30 µm）
+
+| 激励 | 轴箱 x 增益 | 轴箱 z 增益 |
+|---|---|---|
+| 垂向不平顺（80 km/h） | 0.04 | 26 455 |
+| **多边形 order 10（359.8 Hz）** | **82.5 刚性 / 172.0 柔性** | 27 593 / 34 045 |
+
+结论：垂向起伏对纵向通道几乎全盲（1.5e-6），滚动半径变化能把它点亮（0.3 %）。两个通道各自对应"深度"与"半径"。
+
+### 350 km/h 短波深度复测（与生成的 .tre 比）
+
+| 波长 | 激励频率 | 反演深度 | 偏差 | 采样 |
+|---|---|---|---|---|
+| 50 mm | 1 944.2 Hz | 36.96 µm | **+23.2 %** | 5 点/周期（1e-4 步长） |
+| 100 mm | 972.2 Hz | 34.53 µm | +15.1 % | 10 点/周期 |
+
+偏差随频率上升：1 944 Hz 在 1e-4 s 的求解步长下只有 5 个采样点，因此 +23.2 % 不能直接读作精度，需要 2e-5 s 才能定死。
+
+### 新文档
+
+- `docs/SOFTWARE_AND_INVERSION_2026-10-25.md`：① 软件怎么建的（四层结构、状态向量只在一处定长度、五块按需打开的能力、四个创新点及其可执行判据、车辆库与外部数据的分工）；② 长波与短波反演（三波段三机理、`f_n` 常数增益、差分测量消几何、Tikhonov 与闭合、四类精度判据、多边形与纵向通道）；③ 复算命令；④ 现在还做不到的五件事。
+
+### 一条限制，写在文档里而不是藏着
+
+x 自由的车型跑**垂直**不平顺会漂：自由车体没有纵向边界，不平衡蠕滑力会让它整体加速，最终滚到轮缘触发 `graph slope limit at axle2_right/right, x=28.3055772 m`。正解是给车体一个"列车其余部分"的纵向惯性边界，尚未做；因此 350 km/h 深度实验改用不带 x 的 `CRH380A_M_axlebox`。

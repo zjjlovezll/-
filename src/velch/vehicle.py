@@ -207,6 +207,44 @@ def _load_wheel_modes(spec: "dict | None", vehicle, base: Path,
 
 
 @dataclass(frozen=True)
+class WheelPolygon:
+    """Out-of-round wheel: a radial deviation that repeats every ``1/order`` of a revolution.
+
+    Written as ``R(theta) = R0 + depth * cos(order * theta + phase)``.  A polygon is the cleanest
+    way to excite two things at once: the tread radius changes (so the longitudinal creepage
+    changes, which is what the wheelset's longitudinal coordinate is for) and the contact surface
+    moves vertically (so the axle-box vertical channel sees it exactly like a corrugation of
+    wavelength ``2 pi R / order``).
+
+    The profile's ``z`` is measured downwards from the wheel centre (``R = -z``), so a larger
+    radius is a *lower* ``z``; the solver subtracts this shift for that reason.
+    """
+
+    order: int
+    depth_m: float
+    phase_rad: float = 0.0
+
+    def __post_init__(self) -> None:
+        if int(self.order) != self.order or self.order < 1:
+            raise ValueError(f"wheel polygon order must be a positive integer, got {self.order!r}")
+        if not self.depth_m > 0.0:
+            raise ValueError(f"wheel polygon depth must be positive, got {self.depth_m!r}")
+
+    def radius_offset_m(self, spin_rad: float) -> float:
+        """Radial deviation at a wheel rotation angle."""
+
+        return self.depth_m * math.cos(self.order * float(spin_rad) + self.phase_rad)
+
+    def wavelength_m(self, radius_m: float) -> float:
+        return 2.0 * math.pi * float(radius_m) / self.order
+
+    def frequency_hz(self, speed_m_s: float, radius_m: float) -> float:
+        """Passing frequency at a running speed: ``order * v / (2 pi R)``."""
+
+        return self.order * abs(float(speed_m_s)) / (2.0 * math.pi * float(radius_m))
+
+
+@dataclass(frozen=True)
 class VehicleCase:
     case_id: str
     purpose: str
@@ -232,6 +270,7 @@ class VehicleCase:
     irregularity: "dict | None" = None
     #: Flexible wheelsets, zero-based axle number → its modal set, or ``None`` for rigid wheels.
     wheel_modes: "dict[int, ModeSet] | None" = None
+    wheel_polygon: WheelPolygon | None = None
 
     def __post_init__(self) -> None:
         if not self.case_id or self.purpose not in {"synthetic", "engineering"} or not self.parameter_source:
@@ -425,6 +464,13 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     velocity = tuple(float(x) for x in state.get("v", default_v))
     support_spec = raw.get("support_compliance")
     compliance = SupportCompliance(**support_spec) if support_spec else None
+    polygon = None
+    if raw.get("wheel_polygon") is not None:
+        spec = raw["wheel_polygon"]
+        if not isinstance(spec, dict):
+            raise ValueError("'wheel_polygon' must be an object with order and depth_m")
+        polygon = WheelPolygon(int(spec["order"]), float(spec["depth_m"]),
+                               float(spec.get("phase_rad", 0.0)))
     return VehicleCase(raw["case_id"], raw["purpose"], raw["parameter_source"], vehicle,
                        wheels, tuple(rails), track_kind, modal_track, ContactParameters(**raw["contact"]),
                        RunSettings(**raw["run"]), q, velocity,
@@ -432,4 +478,5 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                        hashlib.sha256(raw_bytes).hexdigest(), assets, compliance,
                        layers, load_path(raw.get("path")),
                        dict(topology_block) if topology_block else None,
-                       irregularity=irregularity_record, wheel_modes=wheel_modes)
+                       irregularity=irregularity_record, wheel_modes=wheel_modes,
+                       wheel_polygon=polygon)

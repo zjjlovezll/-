@@ -136,7 +136,8 @@
     "carbody x freedom and carbody pitch/yaw coupling to the bogies are recorded here but not solved: the current layout has no longitudinal degree of freedom",
     "the anti-roll bar, traction rod, lateral damper, bump stop and axle-box bushings are recorded geometry and stiffness only - none of them is assembled into the solver yet",
     "carbody-mounted points on the left and right side are recorded as half-widths from the model's own subvariables; the Simpack model stores |y| per side, so sign conventions must be re-derived per element before assembly",
-    "轴箱体只插在垂向/横向载荷路径上：一系弹簧与转臂节点改为 轴箱↔构架，轮对↔轴箱取轴承刚体 1e9 N/m；一系点头约束仍留在 构架↔轮对，所以高频段与 5-DOF 车型必然不同"
+    "轴箱体只插在垂向/横向载荷路径上：一系弹簧与转臂节点改为 轴箱↔构架，轮对↔轴箱取轴承刚体 1e9 N/m；一系点头约束仍留在 构架↔轮对，所以高频段与 5-DOF 车型必然不同",
+    "?????Simpack ? joint.type = 2?????????????????????? + ?????????????????????? ? = 0 ???????? 13.09 Hz??????????box_yaw_* ? 2.0e6 N?m/rad?3.0e3 N?m?s/rad ????????????????? ?? ????????????????????????????"
   ],
   "geometry": {
     "frame": {
@@ -2250,6 +2251,198 @@
             -0.446
           ]
         }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_1L",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox1L"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_1R",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox1R"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_2L",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox2L"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_2R",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox2R"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_3L",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox3L"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_3R",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox3R"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_4L",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox4L"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_yaw_4R",
+        "axis": "yaw",
+        "stiffness": 2000000.0,
+        "damping": 3000.0,
+        "from": {
+          "body": "axlebox4R"
+        }
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_1L",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox1L"
+        },
+        "to": {
+          "body": "bogie1"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_1R",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox1R"
+        },
+        "to": {
+          "body": "bogie1"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_2L",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox2L"
+        },
+        "to": {
+          "body": "bogie1"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_2R",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox2R"
+        },
+        "to": {
+          "body": "bogie1"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_3L",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox3L"
+        },
+        "to": {
+          "body": "bogie2"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_3R",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox3R"
+        },
+        "to": {
+          "body": "bogie2"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_4L",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox4L"
+        },
+        "to": {
+          "body": "bogie2"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
+      },
+      {
+        "kind": "torsional",
+        "name": "box_roll_4R",
+        "axis": "roll",
+        "stiffness": 1400000.0,
+        "damping": 2000.0,
+        "from": {
+          "body": "axlebox4R"
+        },
+        "to": {
+          "body": "bogie2"
+        },
+        "note": "The rotating-arm joint.  Simpack attaches each axle box with joint.type = 2, whose rotational restraint about the lateral axis has no counterpart in a table of translational bushings.  Without it the box has a translation-plus-rotation combination that stretches no spring at all (k = 0, zeta = 0, 13.094 Hz), and a 9 m/s^2 undamped tone parks in every axle-box acceleration channel.  Equivalent stiffness from the arm bushing over its lever arm, k_y * b^2 = 5.49e6 * 0.25 = 1.37e6 N.m/rad."
       }
     ]
   },

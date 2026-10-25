@@ -171,10 +171,30 @@ def write_track(track, name: str) -> pathlib.Path:
 def build_case(tre: pathlib.Path, label: str) -> pathlib.Path:
     doc = json.loads(BASE.read_text(encoding="utf-8"))
     doc.pop("initial_state", None)
-    doc.pop("topology", None)
-    doc.pop("vehicle", None)
-    doc["vehicle_ref"] = VEHICLE
+    # Keep the case's own inline vehicle block and topology, and force the speed that both the
+    # generated track and ``acceleration_band_rms`` assume.
+    #
+    # Replacing the inline vehicle with ``vehicle_ref`` (the obvious-looking cleanup) silently
+    # took the reference model's speed, 97.22 m/s, and cost two experiments.  An 80 km/h track
+    # was driven at 350 km/h: the wheels turned at 226 rad/s instead of 51.7, every wavelength
+    # band was mapped with a speed 4.4x too low, and a 2 s run reached 224 m while the rail
+    # station table ends at 150 m -- from t = 1.1 s the geometry ran off the end of the table and
+    # the vehicle sat in a 13 Hz limit cycle.  Every band then looked "below the floor".
+    doc["vehicle"]["travel_speed_m_s"] = SPEED_KMH / 3.6
+    # The frozen inline topology was written before axle boxes were numbered from zero.
+    for body in doc.get("topology", {}).get("bodies", []) or []:
+        if body.get("kind") == "axlebox" and isinstance(body.get("axle"), int):
+            body["axle"] = body["axle"] - 1
     doc["case_id"] = f"s9k_{label}"
+    stations = [float(station["s_m"]) for template in doc["rail_templates"]
+                for station in template.get("stations") or []]
+    reach = X_START_M + doc["vehicle"]["travel_speed_m_s"] * DURATION_S + 10.0
+    if stations and reach > max(stations):
+        raise ValueError(
+            f"run would leave the rail station table: reach {reach:.1f} m > last station "
+            f"{max(stations):.1f} m (x_start {X_START_M:.1f} m, {DURATION_S:.2f} s at "
+            f"{doc['vehicle']['travel_speed_m_s']:.2f} m/s, 10 m of axle offsets)"
+        )
     doc["run"].update({
         "method": "BDF", "jacobian": "analytic", "rtol": 1e-4, "atol": 1e-8,
         "x_start_m": X_START_M, "duration_s": DURATION_S,

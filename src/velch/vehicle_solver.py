@@ -790,14 +790,15 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
 
     cfg = case.vehicle
     weight_n = cfg.gravity_m_s2 * sum(body.mass_kg for body in topology.bodies)
-    # Every wheel carries on exactly one rail, so the even share divides the weight by twice the
-    # number of wheelsets — not by ``len(case.rails)``.  A straight turnout case declares twelve
-    # rails (a stock and a switch rail on each side) while only eight patches are ever in contact;
-    # dividing by twelve put the *correct* solution within 2.8 % of the accept limit, so a slightly
-    # larger left/right asymmetry was thrown away as a "bad branch".  That is what O010 was really
-    # chasing: not a layout problem, a divisor that ignored how many wheels carry.
-    patches = max(2 * len(topology.wheelsets()), 1)
-    expected_n = weight_n / patches
+    # The even share belongs to a *wheel*, not to a declared rail.  A turnout case declares twelve
+    # rails (stock and switch rails on each side) and a diverging one declares more still, while the
+    # vehicle still has eight wheels — and a wheel sitting on two coincident rails splits its share
+    # between them.  Dividing the weight by ``len(case.rails)`` therefore set the accept limit only
+    # 2.8 % above the correct solution (B036); dividing it by the eight patches and then demanding
+    # that *every* declared rail carry load is the opposite mistake, which made every multi-rail
+    # case un-seatable (B038).  So: group the patches by wheel and judge the wheels.
+    wheels = max(len({_wheel_of(rail) for rail in case.rails}), 2 * len(topology.wheelsets()), 1)
+    expected_n = weight_n / wheels
 
     best: tuple[float, np.ndarray, float, list[float]] | None = None
     last_message = ""
@@ -825,31 +826,58 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         trial[indices] = solved.x
         _, contacts = dynamics.evaluate(0.0, trial, v)
         loads = [float(contacts[rail.id].normal_force_n) for rail in case.rails]
-        # Prefer the branch whose heaviest patch is closest to its even share: the
-        # hung-bogie branch doubles the front patches, so it scores worst here.
-        score = -max(loads)
+        per_wheel = _load_per_wheel(case.rails, loads)
+        # Prefer the branch whose wheels sit closest to their even share: the hung-bogie branch
+        # leaves one side carrying double, so it scores worst here.
+        score = -max(abs(value - expected_n) for value in per_wheel.values())
         if best is None or score > best[0]:
             best = (score, solved.x.copy(), error_n, loads)
-        if (max(loads) <= 1.25 * expected_n and min(loads) >= 1.0e3
-                and sum(1 for load in loads if load > 1.0e3) >= patches):
+        if (max(per_wheel.values()) <= 1.6 * expected_n
+                and min(per_wheel.values()) >= 0.5 * expected_n):
             break
 
     if best is None:
         raise SimulationFailure(
             f"vertical preload equilibrium failed: no seed converged; {last_message}")
     _, values, error_n, loads = best
-    carrying = sum(1 for load in loads if load > 1.0e3)
-    starved = min(loads) < 1.0e3 or carrying < patches
-    over_loaded = max(loads) > 1.6 * expected_n
+    per_wheel = _load_per_wheel(case.rails, loads)
+    starved = min(per_wheel.values()) < 0.5 * expected_n
+    over_loaded = max(per_wheel.values()) > 1.6 * expected_n
     if starved and over_loaded:
+        carrying = sum(1 for value in per_wheel.values() if value > 1.0e3)
         raise SimulationFailure(
             "vertical preload equilibrium failed: unbalanced branch - "
-            f"{carrying} of {patches} wheels carry load, the lightest patch carries "
-            f"{min(loads):.1f} N while the heaviest carries {max(loads):.1f} N "
-            f"(even share ~{expected_n:.0f} N per wheel); the vehicle is standing on one side, "
-            "not failing to spread load over the patches it has")
+            f"{carrying} of {len(per_wheel)} wheels carry load, the lightest wheel carries "
+            f"{min(per_wheel.values()):.1f} N while the heaviest carries "
+            f"{max(per_wheel.values()):.1f} N (even share ~{expected_n:.0f} N per wheel; "
+            f"heaviest single patch {max(loads):.1f} N over {len(loads)} rails); "
+            "the vehicle is standing on one side, not failing to spread load over its wheels")
     q[indices] = values
     return q, error_n
+
+
+def _wheel_of(rail: object) -> tuple[int, str]:
+    """Which wheel a rail patch belongs to: same axle and side means the same wheel.
+
+    A railway wheel can sit on two coincident rails (a stock and a switch rail at the same mileage
+    in a turnout, or a stock and a branch rail at the point of divergence), so the patches are
+    grouped by wheel before the load is compared with the even share.
+    """
+
+    axle = int(getattr(rail, "axle_index", 0))
+    text = f"{getattr(rail, 'id', '')} {getattr(rail, 'template_id', '')}".lower()
+    side = "right" if "right" in text else ("left" if "left" in text else str(getattr(rail, "template_id", "")))
+    return axle, side
+
+
+def _load_per_wheel(rails, loads) -> dict[tuple[int, str], float]:
+    """Sum the patch loads of each wheel."""
+
+    per_wheel: dict[tuple[int, str], float] = {}
+    for rail, load in zip(rails, loads):
+        key = _wheel_of(rail)
+        per_wheel[key] = per_wheel.get(key, 0.0) + float(load)
+    return per_wheel
 
 
 def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,

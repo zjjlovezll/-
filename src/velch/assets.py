@@ -141,15 +141,18 @@ def resolve_asset(ref: str, *, case_path: Path | None = None, kind: str = "asset
     if not relative:
         raise AssetRefError(text, kind, "nothing after the prefix", searched=roots)
 
+    prefixed = text.startswith((LIB, CASE, DATA))
     for root in roots:
         path = (root / relative).resolve()
-        # ``lib:../../elsewhere`` used to resolve happily: a prefixed reference is meant to
-        # stay inside the root it names, so a resolved path outside it is an error rather
-        # than a quiet escape.
-        try:
-            path.relative_to(Path(root).resolve())
-        except ValueError:
-            continue
+        # ``lib:../../elsewhere`` must not escape the root it names.  A bare relative name
+        # keeps its "relative to the case file" meaning, ``..`` included: the shipped demo
+        # reaches its sibling folder that way (``../vehicle_v2/wheel_lower.csv``), and
+        # applying the containment rule to it refused a legitimate reference.
+        if prefixed:
+            try:
+                path.relative_to(Path(root).resolve())
+            except ValueError:
+                continue
         if path.is_file():
             return ResolvedAsset(ref=text, kind=kind, path=path, root=root, portable=portable)
 

@@ -1617,6 +1617,39 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 
 ---
 
+## 第 110 轮：反演算法升级——用谐波阶梯恢复短波缺陷的**形状**，并修掉审查提出的两条回归
+
+本轮按用户的布置先做算法升级、后做反演，并按审查意见修掉 `portable_models` 与 `assets` 的两条确定性回归。
+
+**两条回归（审查发现，均已修并有测试）**
+
+| 编号 | 症状 | 修法 |
+|---|---|---|
+| 🔴 R1 | `packaging/portable_models.py` 去掉 `rmtree` 后 `assets_dir.mkdir(parents=True)` 缺 `exist_ok`，**任何重建**（含已发布的打包语料）都 `FileExistsError: [WinError 183] …'profiles'` | `mkdir(parents=True, exist_ok=True)`；重建现有包后 `verdict: ACCEPT · 0 处失败` |
+| 🔴 R2 | `src/velch/assets.py` 的"不得越界"检查也套在**裸相对路径**上，于是随包发布的 `examples/portable/case_flexible.json`（`../vehicle_v2/wheel_lower.csv`）无法解析 | 只对 `lib:`/`case:`/`data:` 前缀做越界检查；`tests/test_assets.py` 6 passed，示例算例加载出 **191 坐标** |
+
+**算法升级：`src/velch/inverse/harmonics.py`（新）**
+
+一次运行只给一个数（`a_box ≈ (2π f_n)²·A`）是短波反演的病根；真实缺陷非正弦，第 n 次谐波在加速度里产生自己的谱线，**一次运行给 N 个独立观测**。模块提供 `harmonic_amplitudes`（相干投影）、`calibrate_gains`（逐阶复增益）、`HarmonicModel`、`DepthProfile`、`invert_corrugation`（每阶两条方程 + 先验 → `mean ± σ`）、`coverage_across_orders`（BKF 的覆盖率判据）。
+
+与文献的分工写进模块 docstring：BKF（MSSP 209 (2024) 111097）给"显式后验 + 覆盖率"；双卡尔曼（Eng. Struct. 365 (2026) 123194）用 `n·f_sleeper` 谐波更新刚度，这里把谐波换成**缺陷自身周期**、更新**深度**，因此不依赖我们模型从未证实的轨枕周期激励。
+
+**实测（80 km/h、刚性轨道、轴箱车型、20 kHz、2 m 补片在 42.8–44.8 m）**
+
+| 阶次 | 真值 | 反演 | 偏差 | σ（仅噪声） | z |
+|---|---|---|---|---|---|
+| 1 | 30.00 µm | 30.56 µm | **+1.9 %** | 0.42 µm | 4.3 |
+| 2 | 9.00 µm | 13.46 µm | +49.6 % | 0.53 µm | 8.4 |
+
+四通道冗余后 16 条方程 / 4 个未知数：残差 rms **0.00037** m/s² **低于**底噪 0.00764 m/s² ⇒ 两谐波模型与测量自洽，但解有系统偏差。
+
+**三条读数**：① 形状拿到了（单幅值估计给不出二阶）；② 二阶 +49.6 % 是**接触斑对 25 mm 分量的额外滤波**，说明不同阶次的增益不能按"波长相同"互换——"没有常数算子"的第二处证据；③ σ 只含底噪，覆盖率不过，**不能**声称是总不确定度（残差低于底噪，把模型误差并入也不改数值），要可信 σ 必须用多组独立缺陷统计。另记：一级增益轴 1 为 18 046、轴 2 仅 2 395（差 7.5 倍），**增益逐轴**，实现必须按轴标定。
+
+**过程中修掉的三个自己的错**（都写进了脚本注释，避免重犯）：补片放在车轮走不到的 30–34 m（"加了激励但没车轮经过"，读到 0.003 m/s² 对底噪 0.005）；把模板 0 的站点字典套给两条轨（右轨被镜像，静平衡落到悬挂分支，120 kN/斑）；分析窗取整段而非过缝窗（激励早已结束）。
+
+**验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
+
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -1660,6 +1693,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [FORCE_ELEMENT_LIBRARY_2026-10-23.md](FORCE_ELEMENT_LIBRARY_2026-10-23.md) | 力学元件库 |
 | [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
 | [GOAL_STATUS_2026-10-23.md](GOAL_STATUS_2026-10-23.md) | 整体目标：完成度与差距 |
+| [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md) | 谐波阶梯反演：用一条缺陷的谐波序列恢复它的**形状**（2026-10-26） |
 | [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |

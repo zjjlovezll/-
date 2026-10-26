@@ -3,17 +3,17 @@
     {
       "case": "case_frog_N_strip05.json",
       "assets": 318,
-      "bytes": 111493
+      "bytes": 114409
     },
     {
       "case": "case_full12_cap05.json",
       "assets": 318,
-      "bytes": 111901
+      "bytes": 114817
     },
     {
       "case": "case_A_final_law.json",
       "assets": 2,
-      "bytes": 7064
+      "bytes": 7118
     }
   ],
   "assets": 298,

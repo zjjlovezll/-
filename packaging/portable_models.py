@@ -69,7 +69,7 @@ def build(target: Path = TARGET, names: tuple[str, ...] = PRESET) -> dict:
                 f"refusing to replace {target}: it is not empty and holds no {marker.name}. "
                 f"Pass --target pointing at a bundle directory, or empty it by hand.")
     assets_dir = target / "profiles"
-    assets_dir.mkdir(parents=True)
+    assets_dir.mkdir(parents=True, exist_ok=True)
 
     by_hash: dict[str, str] = {}
     rewritten: list[dict] = []

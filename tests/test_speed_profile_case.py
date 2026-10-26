@@ -77,3 +77,43 @@ def test_a_multi_leg_profile_is_carried_and_refused(tmp_path: Path) -> None:
     assert loaded.speed_schedule.duration_s == pytest.approx(0.015)
     with pytest.raises(SpeedScheduleError, match="not yet wired into the solver"):
         simulate_vehicle(loaded)
+
+
+def test_x_at_is_the_literal_it_replaces(tmp_path):
+    """``x(t)`` must equal ``x_start + v*t`` to the last bit, for both directions.
+
+    The whole point of routing mileage through the schedule is that a constant profile is a
+    pass-through.  If the helper rounded, reordered the product or added the start point first,
+    every geometry lookup would move by an ulp and the frozen baselines would drift for no
+    physical reason.
+    """
+
+    from velch.vehicle_solver import VehicleDynamics
+
+    for speed in (2.0, -2.0, 97.2222):
+        case = _derive(tmp_path, f"x_{speed:.4f}.json", travel=speed, profile=None)
+        loaded = load_vehicle_case(case)
+        dynamics = VehicleDynamics(loaded)
+        for t_s in (0.0, 1.0e-5, 0.0075, 0.015):
+            literal = loaded.run.x_start_m + loaded.vehicle.travel_speed_m_s * t_s
+            assert dynamics.x_at(t_s) == literal
+            assert dynamics.speed_at(t_s) == loaded.vehicle.travel_speed_m_s
+
+
+def test_the_force_path_reads_the_schedule_not_the_field(tmp_path):
+    """A constant profile wins over the field even when the two disagree.
+
+    ``travel_speed_m_s`` is 99 m/s in this case and the profile says 2 m/s, so the mileage has
+    to advance at 2 m/s.  Reading the field anywhere in the force path would make the two
+    numbers disagree and no gate would notice.
+    """
+
+    from velch.vehicle_solver import VehicleDynamics
+
+    case = _derive(tmp_path, "override.json", travel=99.0,
+                   profile={"constant": {"speed_m_s": 2.0}})
+    loaded = load_vehicle_case(case)
+    assert loaded.vehicle.travel_speed_m_s == pytest.approx(2.0)
+    dynamics = VehicleDynamics(loaded)
+    assert dynamics.speed_at(0.010) == pytest.approx(2.0)
+    assert dynamics.x_at(0.010) == pytest.approx(loaded.run.x_start_m + 0.02)

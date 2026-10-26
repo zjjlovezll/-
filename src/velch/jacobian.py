@@ -333,8 +333,7 @@ class JacobianAssembler:
         cfg = dynamics.case.vehicle
         law = self.law
         for rail_index, rail in enumerate(dynamics.case.rails):
-            x_m = (dynamics.case.run.x_start_m + cfg.travel_speed_m_s * t_s
-                   + cfg.axle_offsets_m[rail.axle_index])
+            x_m = dynamics.x_at(t_s) + cfg.axle_offsets_m[rail.axle_index]
             support_compliance = (self.support.at(x_m) if self.support is not None else None)
             wheel = self.dynamics.topology.offset(
             self.dynamics.topology.wheelset_id(rail.axle_index))

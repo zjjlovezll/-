@@ -3381,3 +3381,11 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 测试：`tests/test_speed_schedule.py` 11 项、`tests/test_speed_profile_case.py` 2 项（含逐字节等价，6.5 s）。
 
 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 新增第 5 节。
+
+## 第 117 轮：力路径改走速度调度，基线仍逐位不变
+
+`station_m`、`jacobian.py` 的第二份里程公式、蠕滑参考速度（3 处）、等效直线曲线的离心项，全部改成读 `dynamics.speed_at(t_s)` / `dynamics.x_at(t_s)`。新增 `speed_schedule` / `speed_at` / `x_at` 三个入口，常速剖面是纯直通（`_direction` 是 ±1.0，乘法只改符号位），所以 `freeze_baseline.py --check` 仍是 **UNCHANGED**（两个算例 sha256 与上一轮相同）。
+
+测试 +2：`x_at` 与 `x_start + v*t` 逐位相等（含负速度），以及「字段 99 m/s + 剖面 2 m/s → 里程按 2 m/s」——后者是防止力路径里再出现直接读字段的地方。
+
+文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 新增第 6 节（四个位置的原写法/现写法/为什么不能留两处）。

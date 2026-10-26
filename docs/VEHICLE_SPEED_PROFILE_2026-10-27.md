@@ -94,3 +94,29 @@ SpeedScheduleError: a multi-leg speed profile is parsed but not yet wired into t
 
 - `tests/test_speed_schedule.py` 11 项：把上一版的 8 项加上 3 项 `from_spec`（km/h 换算、两段混用两种单位与两种长度、5 条拒绝消息）。
 - `tests/test_speed_profile_case.py` 2 项：常速剖面覆盖旧速度且**逐字节相同**（约 6.5 s，跑两次 0.015 s 算例）；多段剖面被携带且被拒绝。
+
+## 6. 力路径改走调度（第 3 轮）：里程、蠕滑参考速度、离心项
+
+`speed_profile` 之前只是「解析得出来、常速能生效」，而力路径仍直接读 `cfg.travel_speed_m_s`。这一轮把三处换成调度：
+
+| 位置 | 原写法 | 现写法 | 为什么不能留两处 |
+|---|---|---|---|
+| `station_m`（`vehicle_solver.py:169`） | `x_start + v*t + offset` | `self.x_at(t_s) + offset` | 不平顺、型面、支撑柔度全按里程采样，两处算法一分叉就会把力与反力放到不同里程 |
+| `jacobian.py:336` | 同一公式的**第二份拷贝** | `dynamics.x_at(t_s)` | 解析雅可比与右端必须用同一个里程，否则差分对照会「通过」而实际是两套几何 |
+| 蠕滑参考（`:546`、`:552`、`:554`） | `cfg.travel_speed_m_s` | `self.speed_at(t_s)` | 变速度时滑移由实时速度乘出；用常数会把整段速度变化算成假滑移 |
+| 离心项（`:291`） | `abs(cfg.travel_speed_m_s)` | `abs(self.speed_at(t_s))` | 等效直线曲线的 `m v²/R` 随速度变，用常数等于一直按起点速度过弯 |
+
+三个新钩子都在 `VehicleDynamics` 上：
+
+```python
+self._schedule = case.speed_schedule or SpeedSchedule.constant(abs(v), duration_s=...)
+self._direction = 1.0 if v >= 0 else -1.0
+dynamics.speed_at(t_s)   # 有符号速度，常速时逐位等于 cfg.travel_speed_m_s
+dynamics.x_at(t_s)       # 有符号里程，常速时逐位等于 x_start + v*t
+```
+
+**逐位等价怎么保证**：`_direction` 是 ±1.0，`1.0 * (v*t)` 与 `-1.0 * (v*t)` 在 IEEE 下与 `v*t`（v 为负）完全相同，所以常速路径一个 ulp 都不动。实测：`scripts/freeze_baseline.py --check` → **VERDICT: UNCHANGED**（`straight_rigid` `06928c9db944796d` 3.6 s、`straight_flexible` `ab81290f5924c3a5` 132.1 s）。
+
+**还剩什么**：轮对自转仍是积分出来的状态，多段剖面因此仍被拒绝。第 4 轮要做的正是「让自转跟着速度」——否则 `slip_x` 会被 `saturate_creep_force` 的 `hypot` 吃成假纵向需求，这一点在拉通多段之前必须先关掉。
+
+测试：`tests/test_speed_profile_case.py` 新增 2 项——`x_at` 与字面量**逐位相等**（三种速度含负速度 × 四个时刻）、以及「算例字段说 99 m/s 而剖面说 2 m/s 时里程按 2 m/s 前进」。

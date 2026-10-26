@@ -25,7 +25,7 @@ from .topology import Topology, topology_for
 from .track_models import TrackKernel
 from .vehicle import VehicleCase
 from .modal_coupling import ModalContact, TreadRing
-from .speed import SpeedScheduleError
+from .speed import SpeedSchedule, SpeedScheduleError
 from .wheel_modes import ModalAssembly, ModalBlock, modal_channel_names
 
 
@@ -107,6 +107,13 @@ class VehicleDynamics:
                                          thread_name_prefix="velch-contact")
                       if self.contact_workers > 1 else None)
         cfg = case.vehicle
+        # One source for v(t) and x(t).  A constant profile returns exactly
+        # ``cfg.travel_speed_m_s``, so every expression below stays bit-identical to the
+        # literal it replaced; a varying profile is carried here and refused in
+        # ``simulate_vehicle`` until the wheel spin tracks the speed (audit A4).
+        self._schedule = getattr(case, "speed_schedule", None) or SpeedSchedule.constant(
+            abs(float(cfg.travel_speed_m_s)), duration_s=float(case.run.duration_s))
+        self._direction = 1.0 if float(cfg.travel_speed_m_s) >= 0.0 else -1.0
         # The topology decides the state vector: which bodies exist, what each carries, and
         # in which order.  With no node table it reproduces the frozen 35-slot layout.
         self.topology: Topology = topology_for(case)
@@ -156,6 +163,22 @@ class VehicleDynamics:
         self.BODY_SWITCH_MARGIN_M: float = 2.0e-5
         self.BODY_SWITCH_RELEASE_M: float = 5.0e-5
 
+    @property
+    def speed_schedule(self) -> SpeedSchedule:
+        """The travel speed as a function of time: the one source for ``v(t)`` and ``x(t)``."""
+
+        return self._schedule
+
+    def speed_at(self, t_s: float) -> float:
+        """Signed travel speed at ``t_s``, in m/s."""
+
+        return self._direction * self._schedule.v_at(t_s)
+
+    def x_at(self, t_s: float) -> float:
+        """Mileage of the vehicle reference point at ``t_s``, in m."""
+
+        return self.case.run.x_start_m + self._direction * self._schedule.x_at(t_s)
+
     def station_m(self, rail, t_s: float, q: np.ndarray) -> float:
         """Station of a wheel's contact patch at time ``t_s``.
 
@@ -166,8 +189,7 @@ class VehicleDynamics:
         """
 
         cfg = self.case.vehicle
-        x = (self.case.run.x_start_m + cfg.travel_speed_m_s * t_s
-             + cfg.axle_offsets_m[rail.axle_index])
+        x = self.x_at(t_s) + cfg.axle_offsets_m[rail.axle_index]
         axis = self._wheel_axes[rail.axle_index].get("x")
         if axis is not None:
             x = x + float(q[axis])
@@ -288,7 +310,7 @@ class VehicleDynamics:
         # `graph slope limit at axle1_left/left:main, x=41.2461871 m`).
         curve = getattr(self.case.run, "curve_radius_m", None)
         if curve:
-            speed = abs(float(cfg.travel_speed_m_s))
+            speed = abs(self.speed_at(t_s))
             cant = float(getattr(self.case.run, "curve_cant_m", 0.0) or 0.0)
             gauge = 2.0 * abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 1.5
             sin_theta = cant / gauge if gauge else 0.0
@@ -543,15 +565,15 @@ class VehicleDynamics:
         axes = self._wheel_axes[rail.axle_index]
         wheel = self.wheels[rail.wheel_id]
         x = self.station_m(rail, t_s, q)
-        travel = cfg.travel_speed_m_s + (float(v[axes["x"]]) if "x" in axes else 0.0)
+        travel = self.speed_at(t_s) + (float(v[axes["x"]]) if "x" in axes else 0.0)
         path = self.case.path
         # The case's path is expressed in the rail reference frame, so its *offset* is absorbed by the
         # rail placement and only its slope matters here: the route's curvature turns the wheel against
         # the rail, which is a lateral creepage.  Feed it as extra lateral surface velocity.
         lateral_extra = path.at(x) if path is not None else 0.0
-        lateral_rate = path.lateral_velocity_m_s(x, cfg.travel_speed_m_s) if path is not None else 0.0
+        lateral_rate = path.lateral_velocity_m_s(x, self.speed_at(t_s)) if path is not None else 0.0
         rail_y, rail_z, rail_vy, rail_vz = self.track.local_state(q, v, rail_index, x,
-                                                                  cfg.travel_speed_m_s)
+                                                                  self.speed_at(t_s))
         body_results = []
         # S9-1: the steel moves, so the contact is searched on the deformed tread.  Computed once
         # per patch because the deformation depends on the axle and the side, not on the body.

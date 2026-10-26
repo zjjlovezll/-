@@ -1,0 +1,45 @@
+{
+  "note": "sha256 of history.csv for short cases; same-build comparison only.  A different numpy/BLAS may reorder the same sums, so a cross-machine mismatch is information, not a verdict.  Durations are shortened to keep the check to seconds.",
+  "environment": {
+    "python": "3.12.7",
+    "numpy": "2.2.6",
+    "scipy": "1.18.1",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "cases": {
+    "straight_rigid": {
+      "coordinates": 0,
+      "duration_s": 0.02,
+      "seconds": 3.498,
+      "history_sha256": "06928c9db944796d7d159b730a49b6ba07e37d93233aaaad98eb28fc8de5d2e1",
+      "history_bytes": 167762,
+      "result_status": "numerically_checked",
+      "gates": {
+        "solver_completed": true,
+        "finite_states_and_forces": true,
+        "vertical_preload_residual": true,
+        "penetration_within_case_limit": true,
+        "friction_bound": true,
+        "no_edge_limited_active_contact": true,
+        "translational_action_reaction": true
+      }
+    },
+    "straight_flexible": {
+      "coordinates": 0,
+      "duration_s": 0.02,
+      "seconds": 130.352,
+      "history_sha256": "ab81290f5924c3a5ec2017949ed791e562f6b5135981ae3a6a76c52855a35fe9",
+      "history_bytes": 212771,
+      "result_status": "numerically_checked",
+      "gates": {
+        "solver_completed": true,
+        "finite_states_and_forces": true,
+        "vertical_preload_residual": true,
+        "penetration_within_case_limit": true,
+        "friction_bound": true,
+        "no_edge_limited_active_contact": true,
+        "translational_action_reaction": true
+      }
+    }
+  }
+}

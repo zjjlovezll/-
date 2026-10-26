@@ -1842,6 +1842,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [UI_READABILITY_2026-10-22.md](UI_READABILITY_2026-10-22.md) | 界面可读性：字号缩放与不截断 |
 | [UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md](UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md) | 统一口径复核 + 代码体检（2026-10-22） |
 | [VEHICLE_DATABASE_2026-10-23.md](VEHICLE_DATABASE_2026-10-23.md) | 车辆数据库（Stage 1）：一台车只有一个定义 |
+| [VEHICLE_SPEED_PROFILE_2026-10-27.md](VEHICLE_SPEED_PROFILE_2026-10-27.md) | 车辆速度剖面：先把基线冻住，再把「v」变成一个值 |
 | [VEHICLE_TOPOLOGY_2026-10-23.md](VEHICLE_TOPOLOGY_2026-10-23.md) | 车辆拓扑：从写死的 35 个坐标到节点表 |
 | [VEHICLE_V2_DESIGN_AND_EVIDENCE.md](VEHICLE_V2_DESIGN_AND_EVIDENCE.md) | Velch v0.2：车辆—轮对—道岔轨道耦合的证据与实现 |
 <!-- DOCS:ALL:END -->` 之间生成
@@ -3358,3 +3359,13 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
   通过。改为按车轮归组（`_wheel_of`/`_load_per_wheel`），判据按车轮合力；新增
   `tests/test_seat_per_wheel.py` 5 项；`test_oracle_frozen` 仍 59 680.577 N。
 - 下一步 S2：静平衡加横向/侧滚未知量（有曲率或超高时才启用），再重测上表；S3 再把 κ 放进蠕滑。
+
+## 第 115 轮：冻住时间历程基线，并把速度做成值对象
+
+审查的 A0/A1。`scripts/freeze_baseline.py` 新增：跑两个短算例，把 `history.csv` 的 sha256 写进 `docs/baselines/time_history.json`（`straight_rigid` 3.5 s / `06928c9db944796d`，`straight_flexible` 130.4 s / `ab81290f5924c3a5`，都 `numerically_checked`），`--check` 重跑比对、漂移退 2；JSON 里写明「同机同库」与「时长被缩短」两条限制。
+
+`src/velch/speed.py` 新增 `Leg` / `SpeedSchedule`：`v_at(t)`、`x_at(t)`、`duration_s`、`distance_m`、`speeds`、`is_constant`、`constant_speed_m_s`、`describe()`；常速走**闭式** `x_start + v t`（累加会让里程差 1 ulp，进而改变采样站位，这条是 A1 验收的要点）；`Leg` 必须恰好给时长或距离之一。`tests/test_speed_schedule.py` 8 项（含「段内严格线性」这条可精确验证的性质，替代会误报的一阶中点积分）。
+
+尚未接线（下一轮）：`RunSettings.speed_profile`、18 处 `travel_speed_m_s` 的替换、`jacobian.py:336` 的第二份里程公式、转速一致性控制器与第 8 门 `spin_tracking`。
+
+文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md`。

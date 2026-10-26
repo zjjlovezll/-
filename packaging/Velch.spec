@@ -29,7 +29,7 @@ datas += collect_data_files("matplotlib", include_py_files=False)
 # modal set ``vehicles/modes/CRH3C_wheelset_fe.json``.  ``velch.vehicle_db.vehicle_dir()`` looks
 # for it next to the frozen executable, so a build without this entry starts up fine and then
 # reports an empty library -- which reads as "the models are gone", not as "they were not packed".
-for extra in ("examples", "docs", "vehicles"):
+for extra in ("examples", "docs", "vehicles", "portable"):
     folder = ROOT / extra
     if folder.is_dir():
         datas.append((str(folder), extra))

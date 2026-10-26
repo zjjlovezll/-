@@ -102,6 +102,30 @@ def step_selftest(folder: Path, env: dict[str, str]) -> tuple[bool, str]:
     return ok, f"exit={result.returncode}"
 
 
+def step_bundled_corpus(folder: Path, env: dict[str, str], work: Path) -> tuple[bool, str]:
+    """The package carries a corpus slice; no ``VELCH_DATA_ROOT`` may be needed to see it."""
+
+    result = _run([str(_cli(folder)), "selfcheck"], env=env, cwd=folder)
+    text = result.stdout + result.stderr
+    line = next((row for row in text.splitlines() if "算例语料" in row), "")
+    if "[PASS]" not in line:
+        return False, f"selfcheck corpus line: {line.strip() or '(none)'}"
+    case = folder / "_internal" / "portable" / "validation" / "crh380a_m" / "case_frog_N_strip05.json"
+    if not case.is_file():
+        return False, f"missing bundled case {case}"
+    out = work / "out_bundled"
+    ran = _run([str(_cli(folder)), "run-vehicle", str(case), "--output", str(out), "--fast"],
+               env=env, cwd=folder)
+    manifest = out / "manifest.json"
+    if not manifest.is_file():
+        return False, f"no manifest (exit={ran.returncode}) {(ran.stderr or ran.stdout)[-300:]}"
+    payload = json.loads(manifest.read_text(encoding="utf-8-sig"))
+    summary = payload.get("summary", {})
+    gates = summary.get("gates", {})
+    ok = summary.get("result_status") == "numerically_checked" and all(gates.values())
+    return ok, f"{line.strip()[:40]} | status={summary.get('result_status')}"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default="dist_installer/Velch")
@@ -122,7 +146,8 @@ def main() -> int:
         shutil.copytree(source, first)
 
         for name, func in (("vehicles", lambda: step_vehicles(first, env)),
-                           ("selftest", lambda: step_selftest(first, env))):
+                           ("selftest", lambda: step_selftest(first, env)),
+                           ("bundled-corpus", lambda: step_bundled_corpus(first, env, work))):
             ok, detail = func()
             steps.append({"step": name, "ok": ok, "detail": detail})
 

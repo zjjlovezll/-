@@ -149,6 +149,31 @@ def _with_validation(root: Path) -> Path:
     return root
 
 
+BUNDLED_CORPUS = ("validation", "portable/validation", "_internal/portable/validation",
+                  "_internal/validation")
+
+
+def _bundled_corpus() -> Path | None:
+    """The model bundle shipped inside the package, if this build carries one.
+
+    ``portable_models.py`` exports a few cases plus their profiles into ``portable/validation``
+    and the spec packs that folder.  PyInstaller 6 puts it under ``_internal``, and a source
+    checkout has it at ``<repo>/portable/validation``, so both spellings are tried -- the same
+    two-place lesson as ``vehicles/`` and ``docs/``.
+    """
+
+    root = repository_root()
+    for relative in BUNDLED_CORPUS:
+        candidate = root / relative
+        if (candidate / "crh380a_m").is_dir():
+            return candidate
+        if (candidate / "case_" "frog").parent.is_dir() and list(candidate.glob("case_*.json")):
+            # a bundle laid out as <candidate>/crh380a_m is the normal case; this branch covers a
+            # flat export (cases directly in the folder) without inventing a new convention.
+            return candidate
+    return None
+
+
 def data_root() -> Path:
     """Directory that holds ``crh380a_m`` and the other validation sets."""
     override = os.environ.get("VELCH_DATA_ROOT")
@@ -157,6 +182,9 @@ def data_root() -> Path:
     marker = _root_from_marker()
     if marker is not None:
         return _with_validation(marker)
+    bundled = _bundled_corpus()
+    if bundled is not None:
+        return _with_validation(bundled)
     return repository_root() / "validation"
 
 

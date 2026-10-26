@@ -1706,6 +1706,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [RELEASE_NOTES_0.4.34.md](RELEASE_NOTES_0.4.34.md) | Velch 0.4.34 发布说明 |
 | [RELEASE_NOTES_0.4.35.md](RELEASE_NOTES_0.4.35.md) | Velch 0.4.35 发布说明 |
 | [RELEASE_NOTES_0.4.36.md](RELEASE_NOTES_0.4.36.md) | Velch 0.4.36 发布说明 |
+| [RELEASE_NOTES_0.4.37.md](RELEASE_NOTES_0.4.37.md) | Velch 0.4.37 发布说明 |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
@@ -2891,6 +2892,21 @@ x 自由的车体是一个**自由体**，任何不平衡的纵向力都让它�
 
 新增 `scripts/s9j_radius_longitudinal.py`（3 次运行约 67 s 可复算，判据写在模块 docstring 里：
 x 增益在 ±10 % 内随深度成正比、x/z 保在 2e-3…4e-3）。
+
+## 第 108 轮：把模型也装进包里，而不是只装程序
+
+上一版证明了"包里的随包柔性算例能跑"，但用户真正要的是**带着模型走**。这一轮把三个代表性算例
+连同它们引用的资产导出成可移植目录，并让 `data_root()` 能在包里找到它。
+
+| 变更 | 位置 | 判据 |
+|---|---|---|
+| 模型导出器 | 新增 `packaging/portable_models.py` | 内容哈希去重；改写成相对名；逐份 `load_vehicle_case` |
+| 随包语料发现 | `data_root._bundled_corpus()` + `BUNDLED_CORPUS` | 环境变量/标记文件优先，其次四个包内候选 |
+| 打包收集 | `packaging/Velch.spec` 加 `portable` | 解压后 `_internal/portable/validation/crh380a_m/` |
+| 干净机器第 3 步 | `packaging/clean_room_test.py::step_bundled_corpus` | `selfcheck` 报 3 个算例 + 辙叉算例跑通 |
+
+实测：298 个资产 / 12.1 MB；干净机器 **ACCEPT · 6 步 · 失败 0**；
+zip 98.5 MB（+3.4 MB，压缩比把 12.1 MB 的资产压到约三分之一）。
 
 ## 第 107 轮：换一台电脑能不能跑，现在有一条自动验收
 

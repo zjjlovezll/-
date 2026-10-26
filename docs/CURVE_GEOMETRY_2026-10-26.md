@@ -1,0 +1,72 @@
+# 曲线：先把"几何"和"力"分开（S1 实测）
+
+日期：2026-10-26。这是两位专家（审查工程师 A1–A10、架构师阶段 0–3）报告的落地第一步。
+
+## 1. 做了什么
+
+`run.curve_radius_m` 原来只做了一件事：在车体上加减一个横向体力 `m v²/R` 和一个重力分量
+`m g sinθ`，而**轨道的几何仍在原处**（术语：等效直线）。R = 350 m 时足迹长 10 m，远端与近端
+车轴横向差 `s²/(2R) ≈ 143 mm`，而轮轨游间只有约 15 mm，于是车轮只能靠轮缘硬拉着走，
+典型表现是 `graph slope limit at axle1_right/right:main, x=42.687753 m`。
+
+新增 `run.curve_geometry`（默认 `False`）：打开后把设计中心线作为**几何**交给轨道核，
+`y(s) = s²/(2R)`、`dy/ds = s/R`、超高按"外轨抬高半个轨距乘 sinθ"进入两轨高差。
+
+代码落点三处：
+
+| 文件 | 改动 |
+|---|---|
+| `src/velch/model.py` | `RunSettings.curve_geometry: bool = False`，注释写明关闭时既有算例逐位不变 |
+| `src/velch/vehicle_solver.py` | 新方法 `_curve_placement()` 返回 `(dy, dz, dy_ds)`；`TrackKernel(..., placement=...)` |
+| `src/velch/track_models.py` | `placement` 只进 `local_state`（几何），**不进** `internal_force`（弹性）——`local_compliant` 一根轨是一个集中质量，没有里程坐标 |
+
+`q` 仍然只装弹性位移，所以势能、内力和雅可比看到的量与原来完全一样；对齐量是叠加项。
+`tests/test_curve_alignment.py` 5 项把这条钉住：无 placement 时返回全零、只有半径而没有开关时
+仍是等效直线、`y`/`vy` 与解析式一致、超高使两轨高差正好等于 `curve_cant_m`、弹性位移加在对齐量之上。
+
+## 2. 实测：几何对齐单独用会更快地失败
+
+同一算例（`CRH380A_M_axlebox`、86 坐标、R = 350 m、h = 60 mm、100 km/h、0.05 s、解析雅可比 + BDF）：
+
+| 变体 | 结果 |
+|---|---|
+| 只有体力（等效直线） | ❌ `graph slope limit at axle1_right/right:main, x=42.687753 m` |
+| 几何对齐打开 | ❌ `vertical preload equilibrium failed: unbalanced branch - 2 of 8 wheels carry load, the lightest patch carries 0.0 N while the heaviest carries 264504.2 N` |
+
+第二行不是回归，而是**顺序被证实**：静平衡的未知量目前只有垂向坐标（审查报告 A1），
+车体既不能横移也不能偏航，于是无法同时满足前后轴各 143 mm 的反向偏移——八块接触斑里只剩两块着轨。
+换句话说：**几何对齐是必要条件，不是充分条件**；它必须与"静平衡里加横向/侧滚（以及必要的摇头）未知量"
+一起上，否则只是把失败提前。
+
+## 3. 由此得出的路线判断
+
+专家给的四个选项里，"把轨道按里程分段、各自平移"（`✓✓✗`）与我这次做的几何对齐等价，代价是
+12 根轨 × 50 m / 0.6 m ≈ 24 000 个坐标；架构师推荐的是**曲线随动坐标系**（`✓✓✓`）：车辆坐标本来就
+定义在随曲线旋转的局部系里，于是轨道在局部系里是直的，**不需要横向平移**，需要的只是
+曲率进入力与速度场：
+
+- 离心力的竖向分量 `m v² κ sinφ`（现在只加了横向）；
+- 纵向蠕滑里的 `(1 − κ y)`，以及左右两侧接触点 `Δv_x = ∓v κ b`（R = 1100 m、350 km/h 时约
+  ±0.066 m/s → 每侧 3.4–6.8 kN → 5–10 kN·m 摇头力矩）；
+- 超高必须同时进竖向几何与横向力，否则"加超高"在静平衡里是 no-op（A1 已用逐位相同证明）。
+
+所以本轮的结论是：`curve_geometry` 保留、**默认关闭**，作为"分段直轨"路线的对照实现；
+真正要落地的是 S2（静平衡加横向/侧滚未知量）与 S3（曲率进蠕滑与离心竖向分量）。
+在 S2/S3 完成之前，任何曲线算例都只能报"模型尚不能坐住曲线"，不能报反演精度。
+
+## 4. 复算
+
+```powershell
+cd F:\ai道岔状态反演辨识\Velch
+$env:PYTHONPATH="F:\ai道岔状态反演辨识\Velch\src"
+python -X utf8 -m pytest tests/test_curve_alignment.py -q --basetemp F:\velch_tmp\pytest_curve
+python -X utf8 F:\velch_tmp\s1_curve_geometry.py      # 上表两行，约 40 s
+```
+
+## 5. 边界
+
+- 只测了一个半径、一个超高、一个速度、刚性轨道；没有做半径扫描。
+- 几何对齐没有进入 `internal_force`，所以"轨道弹簧围绕移动后的平衡位置"这一层还没实现；
+  对 `local_compliant` 而言，一根轨只有一个垂向坐标，本来也没有里程分辨能力（ADR 待写）。
+- 本轮的曲线算例全部失败，因此没有产生任何精度结论；唯一被证明的是失败位置从"轮缘斜坡"
+  移到了"坐不住"。

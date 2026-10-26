@@ -112,7 +112,7 @@ class TrackKernel:
     """Map rail contact forces to track coordinates using conjugate shapes."""
 
     def __init__(self, kind: str, rails: Sequence[Any], modal: ModalTrack | None = None,
-                 layers: Sequence[Any] = (), offset: int = 35):
+                 layers: Sequence[Any] = (), offset: int = 35, placement=None):
         if kind not in {"rigid", "local_compliant", "two_layer", "layered", "modal"}:
             raise ValueError("track kind must be rigid, local_compliant, two_layer, layered or modal")
         if (kind == "layered") != bool(layers) and kind == "layered":
@@ -125,6 +125,17 @@ class TrackKernel:
         self.offset = int(offset)
         self.kind, self.rails, self.modal = kind, tuple(rails), modal
         self.layers = tuple(layers)
+        #: Where the design track centreline is, as a function of mileage: ``(dy, dz, dy_ds)``.
+        #: This is *geometry*, not elasticity: on a curve the rail's absolute position moves with
+        #: the alignment while ``q`` stays the elastic displacement about it.  ``None`` means the
+        #: design position is zero everywhere, which is what every case without an alignment gets
+        #: — so the frozen straight cases are bit-identical.
+        #:
+        #: It deliberately does NOT enter ``internal_force``: a ``local_compliant`` rail carries
+        #: one concentrated mass per rail and has no mileage coordinate, so there is no station at
+        #: which to evaluate a mileage-varying reference.  Expressing a curved support therefore
+        #: needs the rail discretised along the track (open item), not a reference offset here.
+        self.placement = placement
         if kind == "rigid":
             self.mass = np.empty(0)
             self.state_names: list[str] = []
@@ -175,6 +186,17 @@ class TrackKernel:
 
     def local_state(self, q: np.ndarray, v: np.ndarray, rail_index: int, x_m: float,
                     speed_m_s: float) -> tuple[float, float, float, float]:
+        dy, dz, dy_ds = (0.0, 0.0, 0.0) if self.placement is None else self.placement(
+            rail_index, float(x_m))
+        y, z, vy, vz = self._elastic_state(q, v, rail_index, x_m, speed_m_s)
+        # The design line moves with the mileage; ``q`` is measured from it, so the absolute
+        # position is the sum.  ``speed * dy_ds`` is the transverse velocity a wheel picks up from
+        # following the alignment (it is what makes the wheelset yaw, i.e. the curve's
+        # first-derivative term); leaving it out keeps the wheels parallel to the tangent.
+        return y + dy, z + dz, vy + speed_m_s * dy_ds, vz
+
+    def _elastic_state(self, q: np.ndarray, v: np.ndarray, rail_index: int, x_m: float,
+                       speed_m_s: float) -> tuple[float, float, float, float]:
         if self.kind == "rigid":
             return 0.0, 0.0, 0.0, 0.0
         if self.kind == "local_compliant":

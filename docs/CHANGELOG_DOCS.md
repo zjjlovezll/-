@@ -1715,6 +1715,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md) | 在连续的 PRR 文件里模拟波磨：表示、密度与两个坑 |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
+| [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
@@ -3319,3 +3320,16 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 
 下一步（同一目标"先把车修好，再做真实曲线"）：S1 轨道参考位移（`TrackKernel.local_state` 返回 `q + ref`、
 弹簧力用 `q − ref`，`ref ≡ 0` 时逐位不变），S3 曲线力与速度场（离心力的竖向分量、`(1 − κ y)` 进纵向蠕滑）。
+
+## 第 113 轮：把曲线的"几何"和"力"分开，并量出几何单独用不够
+
+- 新增 `run.curve_geometry`（默认关）：打开后轨道核拿到设计中心线 `y(s)=s^2/(2R)`、`dy/ds=s/R`，
+  超高进入两轨高差。`q` 仍只装弹性位移，势能/内力/雅可比不变。
+- 实测（R=350 m、h=60 mm、100 km/h、0.05 s、86 坐标、解析雅可比+BDF）：只有体力时
+  `graph slope limit at axle1_right/right:main, x=42.687753 m`；打开几何对齐后改成
+  `vertical preload equilibrium failed ... 2 of 8 wheels carry load ... 264504.2 N`。
+- 结论：几何对齐是必要条件、不是充分条件——静平衡目前只有垂向未知量（A1），车体不能横移/偏航，
+  满足不了前后轴各 143 mm 的反向偏移。`curve_geometry` 因此保留为"分段直轨"路线的对照实现、默认关闭；
+  要落地的是 S2（静平衡加横向/侧滚未知量）与 S3（曲率进蠕滑 `(1-κy)`/`Δv_x=∓vκb`、离心竖向分量）。
+- 新增 `tests/test_curve_alignment.py` 5 项（含超高两轨高差恰为 `curve_cant_m`、弹性位移叠加）；
+  新增 `docs/CURVE_GEOMETRY_2026-10-26.md`；全仓测试 866 passed / 1 skipped。

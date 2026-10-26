@@ -159,6 +159,13 @@ class RunSettings:
     curve_radius_m: float | None = None
     #: Cant (superelevation) in metres across the gauge; enters as ``m g sin(theta)`` inward.
     curve_cant_m: float = 0.0
+    #: Give the alignment to the contact geometry as well, not only to the body force: the rail's
+    #: absolute position then follows ``y(s) = (s - s0)^2 / (2R)`` and its transverse velocity picks
+    #: up ``v * dy/ds``.  Off by default so every existing (equivalent-straight) case keeps its
+    #: numbers bit for bit; turning it on for a curved case is what lets the wheelset yaw along the
+    #: curve instead of being dragged flange-first (measured: 1.17 m of missing yaw over the
+    #: footprint at R = 350 m).
+    curve_geometry: bool = False
 
     def __post_init__(self) -> None:
         if self.method not in {"DOP853", "Radau", "BDF"}:

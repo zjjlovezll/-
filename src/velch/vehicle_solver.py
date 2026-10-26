@@ -110,7 +110,8 @@ class VehicleDynamics:
         # in which order.  With no node table it reproduces the frozen 35-slot layout.
         self.topology: Topology = topology_for(case)
         self.track = TrackKernel(case.track_kind, case.rails, case.modal_track,
-                                 case.track_layers, offset=self.topology.body_dimension)
+                                 case.track_layers, offset=self.topology.body_dimension,
+                                 placement=self._curve_placement())
         self.mass = self.topology.mass_array(self.track.mass)
         # Flexible-wheelset modal coordinates go *after* the track block, never among the
         # bodies: their mass of 1.0 is a normalisation, and ``total_weight`` adds up
@@ -232,6 +233,42 @@ class VehicleDynamics:
                       spec.speed_jacobian(self.dimension))
             for spec in self.topology.link_specs
         )
+
+    def _curve_placement(self):
+        """Where the design centreline sits, as a function of mileage, for a curved case.
+
+        A constant-radius curve through ``x_start_m`` has ``y(s) = s^2 / (2R)`` with ``s`` measured
+        from the start of the run, so ``dy/ds = s / R``.  Handing that to the track kernel is what
+        lets the wheels yaw along the curve: at R = 350 m the footprint is 10 m long, so the far
+        axle is 1.17 m to the side of the near one, and a model that keeps the rails straight has
+        to drag it there through the flange.
+
+        Cant adds a rail-to-rail height difference: the outer rail rises by half the gauge times
+        ``sin(theta)``.  With the centre of the curve on the -y side, the outer rail is the right
+        one.  Returns ``None`` unless ``run.curve_geometry`` is set, so every existing case keeps
+        its design line at zero and its numbers bit for bit.
+        """
+
+        run = self.case.run
+        radius = getattr(run, "curve_radius_m", None)
+        if radius is None or not getattr(run, "curve_geometry", False):
+            return None
+        radius = float(radius)
+        if radius == 0.0:
+            raise SimulationFailure("curve_radius_m must not be zero")
+        start = float(run.x_start_m)
+        cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
+        half_gauge = (abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 0.75)
+        sin_theta = 0.0 if half_gauge == 0.0 else cant / (2.0 * half_gauge)
+        rise = half_gauge * sin_theta
+        rails = tuple(self.case.rails)
+
+        def placement(rail_index: int, x_m: float) -> tuple[float, float, float]:
+            s = x_m - start
+            outer = "right" in str(rails[rail_index].id).lower()
+            return s * s / (2.0 * radius), (rise if outer else -rise), s / radius
+
+        return placement
 
     def evaluate(self, t_s: float, q: np.ndarray, v: np.ndarray) -> tuple[np.ndarray, dict[str, ContactResponse]]:
         cfg = self.case.vehicle

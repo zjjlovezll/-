@@ -27,7 +27,7 @@ Scoring is fixed before the run and reported three ways:
     AUC        probability that a random window inside a section ranks above a random
                window outside -- scale free, no threshold to tune.
     hits       a section is detected when its peak index beats the 95th percentile of the
-               windows outside every section (5 % false-alarm rate by construction).
+               windows outside every section (5 % *per-section* false-alarm rate, calibrated on pseudo-sections of the same length).
     error_m    distance from that peak to the nearest edge of the section.
 
 Usage::
@@ -53,6 +53,7 @@ HOP_M = 5.0
 SHORTEST_M = 0.018
 LONGEST_M = 0.040
 FALSE_ALARM_PERCENT = 95.0
+SEARCH_M = 40.0
 SEGMENT = 1024
 
 SECTIONS = (
@@ -206,7 +207,52 @@ def auc(inside: np.ndarray, outside: np.ndarray) -> float:
     return float(total / (inside.size * outside.size))
 
 
-def score(results: list[Window], label: str) -> dict:
+def _pseudo_segment_maxima(
+    positions: np.ndarray, indices: np.ndarray, hop: float
+) -> np.ndarray:
+    """Max over pseudo-sections of the real lengths, placed only outside the real ones.
+
+    This is what makes the false-alarm rate a *segment* rate: a section is declared
+    detected when its peak beats the 95th percentile of what an equally long stretch of
+    ordinary track produces.  Using the single-window percentile here (the first version)
+    understated the effective rate by 1 - 0.95**n, i.e. 46-76 %.
+    """
+    lengths = np.array([stop - start for _name, start, stop in SECTIONS])
+    maxima = []
+    low = float(positions.min())
+    high = float(positions.max())
+    for length in lengths:
+        for begin in np.arange(low, high - length, hop):
+            stop = begin + length
+            if any(begin < edge_stop and stop > edge_start for _n, edge_start, edge_stop in SECTIONS):
+                continue
+            mask = (positions >= begin) & (positions <= stop)
+            if np.count_nonzero(mask) < 3:
+                continue
+            maxima.append(float(np.max(indices[mask])))
+    return np.array(maxima)
+
+
+def _local_maxima(positions: np.ndarray, indices: np.ndarray) -> np.ndarray:
+    """Indices of interior local maxima, so a peak is a feature rather than a threshold artefact."""
+    mask = np.zeros(len(indices), dtype=bool)
+    if len(indices) >= 3:
+        mask[1:-1] = (indices[1:-1] > indices[:-2]) & (indices[1:-1] >= indices[2:])
+    return np.flatnonzero(mask)
+
+
+def _binomial_tail(hits: int, trials: int, probability: float) -> float:
+    """P(X >= hits) under the null that every section is empty."""
+    if hits <= 0:
+        return 1.0
+    total = 0.0
+    for k in range(hits, trials + 1):
+        total += math.comb(trials, k) * probability**k * (1.0 - probability) ** (trials - k)
+    return min(total, 1.0)
+
+
+def score(results: list[Window], label: str, *, hop_m: float = HOP_M,
+          search_m: float = SEARCH_M) -> dict:
     positions = np.array([item.position_m for item in results])
     indices = np.array([item.index_db for item in results])
     inside = np.zeros(len(results), dtype=bool)
@@ -214,7 +260,18 @@ def score(results: list[Window], label: str) -> dict:
         inside |= (positions >= start) & (positions <= stop)
     if not np.any(inside) or np.all(inside):
         raise SystemExit("no usable windows inside or outside the sections")
-    threshold = float(np.percentile(indices[~inside], FALSE_ALARM_PERCENT))
+
+    pseudo = _pseudo_segment_maxima(positions, indices, hop_m)
+    if pseudo.size < 10:
+        raise SystemExit(f"only {pseudo.size} pseudo-sections: too short a record to calibrate")
+    threshold = float(np.percentile(pseudo, FALSE_ALARM_PERCENT))
+    far = 1.0 - FALSE_ALARM_PERCENT / 100.0
+
+    peaks = _local_maxima(positions, indices)
+    peaks = peaks[indices[peaks] > threshold]
+    peak_positions = positions[peaks]
+    peak_values = indices[peaks]
+    used = np.zeros(len(peaks), dtype=bool)
 
     rows = []
     detected = 0
@@ -225,18 +282,28 @@ def score(results: list[Window], label: str) -> dict:
                          "localisation_error_m": None, "detected": False})
             continue
         local = indices[mask]
-        peak = float(np.max(local))
-        peak_m = float(positions[mask][int(np.argmax(local))])
-        error = 0.0 if start <= peak_m <= stop else min(abs(peak_m - start), abs(peak_m - stop))
-        hit = peak > threshold
+        # a section is detected when a free standing peak lands on it or close to it;
+        # the error is measured from that peak, so it can be positive (and can be a miss)
+        candidates = np.flatnonzero(
+            (~used) & (peak_positions >= start - search_m) & (peak_positions <= stop + search_m)
+        )
+        hit = False
+        peak_m = float("nan")
+        error = None
+        if candidates.size:
+            best = candidates[int(np.argmax(peak_values[candidates]))]
+            used[best] = True
+            peak_m = float(peak_positions[best])
+            error = 0.0 if start <= peak_m <= stop else min(abs(peak_m - start), abs(peak_m - stop))
+            hit = True
         detected += int(hit)
         rows.append({
             "section": name,
             "start_km": start / 1e3,
             "stop_km": stop / 1e3,
-            "peak_db": peak,
+            "inside_max_db": float(np.max(local)),
             "mean_db": float(np.mean(local)),
-            "peak_km": peak_m / 1e3,
+            "peak_km": peak_m / 1e3 if hit else None,
             "localisation_error_m": error,
             "detected": bool(hit),
         })
@@ -245,7 +312,9 @@ def score(results: list[Window], label: str) -> dict:
         "channel": label,
         "windows": len(results),
         "inside_windows": int(inside.sum()),
+        "pseudo_sections": int(pseudo.size),
         "threshold_db": threshold,
+        "false_alarm_rate_per_section": far,
         "inside_median_db": float(np.median(indices[inside])),
         "outside_median_db": float(np.median(indices[~inside])),
         "inside_minus_outside_db": float(np.median(indices[inside]) - np.median(indices[~inside])),
@@ -253,6 +322,9 @@ def score(results: list[Window], label: str) -> dict:
         "sections_detected": detected,
         "sections_total": len(SECTIONS),
         "detection_rate": detected / len(SECTIONS),
+        "expected_hits_if_empty": len(SECTIONS) * far,
+        "null_probability": _binomial_tail(detected, len(SECTIONS), far),
+        "unassigned_peaks": int(np.count_nonzero(~used)),
         "rows": rows,
     }
 
@@ -260,21 +332,29 @@ def score(results: list[Window], label: str) -> dict:
 def report(summary: dict) -> None:
     print(f"\n=== {summary['channel']}: {summary['windows']} windows, "
           f"{summary['inside_windows']} inside the six sections")
-    print(f"threshold   {summary['threshold_db']:.2f} dB (95th percentile outside)")
+    print(f"threshold   {summary['threshold_db']:.2f} dB "
+          f"(95th percentile of {summary['pseudo_sections']} pseudo-sections)")
     print(f"medians     inside {summary['inside_median_db']:.2f} dB, "
           f"outside {summary['outside_median_db']:.2f} dB "
           f"(+{summary['inside_minus_outside_db']:.2f})")
     print(f"AUC         {summary['auc']:.3f}")
-    print(f"{'sec':4} {'km range':16} {'peak dB':>8} {'mean dB':>8} {'peak km':>8} {'err m':>7} {'hit':>4}")
+    print(f"{'sec':4} {'km range':16} {'max dB':>8} {'mean dB':>8} {'peak km':>8} "
+          f"{'err m':>7} {'hit':>4}")
     for row in summary["rows"]:
-        if row["peak_db"] is None:
+        if row["inside_max_db"] is None:
             print(f"{row['section']:4} {'-':16} {'-':>8} {'-':>8} {'-':>8} {'-':>7}    no")
             continue
+        peak_km = "-" if row["peak_km"] is None else f"{row['peak_km']:.3f}"
+        error = "-" if row["localisation_error_m"] is None else f"{row['localisation_error_m']:.1f}"
         print(f"{row['section']:4} {row['start_km']:.3f}-{row['stop_km']:.3f} "
-              f"{row['peak_db']:8.2f} {row['mean_db']:8.2f} {row['peak_km']:8.3f} "
-              f"{row['localisation_error_m']:7.1f} {'yes' if row['detected'] else 'no':>4}")
+              f"{row['inside_max_db']:8.2f} {row['mean_db']:8.2f} {peak_km:>8} "
+              f"{error:>7} {'yes' if row['detected'] else 'no':>4}")
     print(f"detection   {summary['sections_detected']}/{summary['sections_total']} "
-          f"({100 * summary['detection_rate']:.0f} %)")
+          f"({100 * summary['detection_rate']:.0f} %) at a "
+          f"{100 * summary['false_alarm_rate_per_section']:.0f} % per-section false-alarm rate")
+    print(f"null        {summary['expected_hits_if_empty']:.2f} expected hits if every section "
+          f"were empty, P(X >= {summary['sections_detected']}) = {summary['null_probability']:.3f}; "
+          f"{summary['unassigned_peaks']} unassigned peaks above threshold")
 
 
 def main() -> int:

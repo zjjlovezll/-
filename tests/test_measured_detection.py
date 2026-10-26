@@ -76,5 +76,65 @@ def test_score_flags_a_section_only_when_its_peak_clears_the_threshold() -> None
     summary = detection.score(windows, "synthetic")
     rows = {row["section"]: row for row in summary["rows"]}
     assert summary["sections_detected"] == len(detection.SECTIONS)
-    assert all(row["localisation_error_m"] == 0.0 for row in rows.values() if row["peak_db"])
+    assert all(
+        row["localisation_error_m"] == 0.0
+        for row in rows.values()
+        if row["inside_max_db"] is not None
+    )
+    assert summary["pseudo_sections"] > 10, "the threshold must come from pseudo-sections"
     assert summary["auc"] > 0.9
+
+
+def test_a_peak_just_past_a_section_end_is_found_with_a_non_zero_error() -> None:
+    """The old error was measured from a peak the mask had already constrained, so it could
+    only ever print 0 m.  Here five sections are loud inside and S6 is quiet inside but has a
+    bump 10 m past its end, which the calibrated threshold must still admit.
+
+    The calibration region has to stay quiet: six loud bumps sitting outside the sections
+    would raise the 95th percentile above them, which is the false-alarm control doing its
+    job rather than a bug.
+    """
+    sections = detection.SECTIONS
+    loud_sections = sections[:-1]
+    late_name, late_start, late_stop = sections[-1]
+    extra = (late_stop + 8.0, late_stop + 18.0)
+    windows = []
+    for index, position in enumerate(np.arange(3.800e3, 6.300e3, 5.0)):
+        position = float(position)
+        loud = any(start <= position <= stop for _name, start, stop in loud_sections)
+        late = extra[0] <= position <= extra[1]
+        windows.append(
+            detection.Window(
+                position_m=position,
+                speed_m_s=17.0,
+                index_db=30.0 if (loud or late) else 10.0 + 0.01 * (index % 5),
+                peak_hz=760.0,
+                rms=1.0,
+            )
+        )
+    summary = detection.score(windows, "one late peak")
+    rows = {row["section"]: row for row in summary["rows"]}
+    assert rows[late_name]["detected"], "the bump 10 m past the end is within the search radius"
+    assert rows[late_name]["localisation_error_m"] > 8.0
+    assert rows[late_name]["localisation_error_m"] <= detection.SEARCH_M + 1e-9
+    for name, _start, _stop in loud_sections:
+        assert rows[name]["detected"]
+        assert rows[name]["localisation_error_m"] == 0.0
+
+def test_an_empty_record_detects_nothing_at_the_calibrated_rate() -> None:
+    """With no loud section the calibrated threshold must leave (almost) no hits, which is
+    what the window-level threshold could not promise."""
+    windows = []
+    for index, position in enumerate(np.arange(3.800e3, 6.300e3, 5.0)):
+        windows.append(
+            detection.Window(
+                position_m=float(position),
+                speed_m_s=17.0,
+                index_db=10.0 + 0.01 * (index % 5),
+                peak_hz=760.0,
+                rms=1.0,
+            )
+        )
+    summary = detection.score(windows, "empty")
+    assert summary["sections_detected"] == 0
+    assert summary["null_probability"] > 0.5

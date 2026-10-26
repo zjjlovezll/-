@@ -59,3 +59,38 @@ python -X utf8 scripts/freeze_baseline.py            # 写基线
 python -X utf8 scripts/freeze_baseline.py --check    # 比对，漂移退 2
 python -m pytest tests/test_speed_schedule.py -q
 ```
+
+## 5. 接线（第 2 轮）：算例里的 `run.speed_profile` 已经生效
+
+### 5.1 接口
+
+```json
+"run": { "speed_profile": { "constant": { "speed_kmh": 80.0 } } }
+"run": { "speed_profile": { "legs": [
+    { "speed_kmh": 80.0, "duration_s": 2.0 },
+    { "speed_m_s": 30.0, "distance_m": 120.0 } ] } }
+```
+
+单位必须由**键名**给出（`speed_kmh` / `speed_m_s`），不给裸数字：同一个数字在两个人眼里一个是 m/s、一个是 km/h。长度同理二选一（`duration_s` / `distance_m`）。`RunSettings.speed_profile` 接收原始块，`load_vehicle_case` 用 `SpeedSchedule.from_spec` 解析，块本身记进算例字节，所以改速度剖面会改 `case_sha256`。
+
+### 5.2 常速剖面是**唯一事实源**
+
+`travel_speed_m_s = 99` 再加 `constant: {speed_m_s: 2.0}` 的算例，跑出来必须与「只有 `travel_speed_m_s = 2.0`、没有剖面」的算例**逐字节相同**。测试 `tests/test_speed_profile_case.py::test_a_constant_profile_overrides_the_travel_speed_it_replaces` 就是这条。
+
+第一版没通过，原因值得记：剖面是在函数**末尾**才覆盖 `travel_speed_m_s`，而**轮对初始自转在函数中段就按旧速度算好了**（`vehicle.travel_speed_m_s / nominal_wheel_radius_m`），于是两个算例的 `history.csv` 差在最后几位。改法是**在读取之后、任何使用之前**覆盖 `raw["vehicle"]["travel_speed_m_s"]`，并把 `case_sha256` 改成提前算好的「磁盘字节哈希」——否则它会去哈希一个已经被改过的视图。
+
+### 5.3 多段剖面：解析、随算例携带，然后**明确拒绝**
+
+`speed_schedule` 挂在 `VehicleCase` 上，但 `simulate_vehicle` 在非匀速时直接抛：
+
+```
+SpeedScheduleError: a multi-leg speed profile is parsed but not yet wired into the solver:
+2 legs: ... Use a constant profile, or add the spin-tracking gate first.
+```
+
+理由是审查 A4 指出的那条链：轮对自转由接触力积分，而蠕滑参考速度仍是单值；`v` 一变，两者不匹配会被 `saturate_creep_force` 的 `hypot` 吃成假纵向需求。所以顺序必须是「先把 12 处 `travel_speed_m_s` 换成 `schedule.v_at(t)`/`x_at(t)`，再加 `spin_tracking` 门，最后才允许非匀速」——**先把拒绝装上，而不是静默按第一段速度跑**。
+
+### 5.4 测试
+
+- `tests/test_speed_schedule.py` 11 项：把上一版的 8 项加上 3 项 `from_spec`（km/h 换算、两段混用两种单位与两种长度、5 条拒绝消息）。
+- `tests/test_speed_profile_case.py` 2 项：常速剖面覆盖旧速度且**逐字节相同**（约 6.5 s，跑两次 0.015 s 算例）；多段剖面被携带且被拒绝。

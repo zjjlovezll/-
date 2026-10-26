@@ -10,7 +10,7 @@ import hashlib
 import json
 import math
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +24,7 @@ from .assets import resolve_asset
 from .profiles import ProfileSeries, Station, load_profile
 from .support_compliance import SupportCompliance
 from .track_models import ModalTrack, load_modal_track
+from .speed import SpeedSchedule
 from .wheel_modes import ModeSet, load_modes, thesis_crh380a_modes
 
 
@@ -328,6 +329,8 @@ class VehicleCase:
     #: Flexible wheelsets, zero-based axle number → its modal set, or ``None`` for rigid wheels.
     wheel_modes: "dict[int, ModeSet] | None" = None
     wheel_polygon: WheelPolygon | None = None
+    #: Parsed `run.speed_profile`; a constant profile also sets `vehicle.travel_speed_m_s`.
+    speed_schedule: "SpeedSchedule | None" = None
 
     def __post_init__(self) -> None:
         if not self.case_id or self.purpose not in {"synthetic", "engineering"} or not self.parameter_source:
@@ -362,6 +365,17 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     target = Path(path).resolve(strict=True)
     raw_bytes = target.read_bytes()
     raw = json.loads(raw_bytes.decode("utf-8"))
+    # The speed profile has to be applied *before* anything reads the speed: the initial
+    # wheelset spin is derived from ``travel_speed_m_s`` further down, so a constant profile
+    # applied at the end of this function would leave the spin at the replaced value and the
+    # run would differ in the last bits despite claiming the same speed.
+    speed_schedule = None
+    if isinstance(raw.get("run"), dict) and raw["run"].get("speed_profile") is not None:
+        speed_schedule = SpeedSchedule.from_spec(raw["run"]["speed_profile"])
+        if speed_schedule.is_constant:
+            raw["vehicle"]["travel_speed_m_s"] = speed_schedule.constant_speed_m_s
+    # ``case_sha256`` must stay the hash of the file on disk, not of the view built above.
+    case_digest = hashlib.sha256(raw_bytes).hexdigest()
     if raw.get("schema_version") != "velch-vehicle-v2":
         raise ValueError("unsupported vehicle case schema")
     base = target.parent
@@ -541,4 +555,4 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                        layers, load_path(raw.get("path")),
                        dict(topology_block) if topology_block else None,
                        irregularity=irregularity_record, wheel_modes=wheel_modes,
-                       wheel_polygon=polygon)
+                       wheel_polygon=polygon, speed_schedule=speed_schedule)

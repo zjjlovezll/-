@@ -3369,3 +3369,15 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 尚未接线（下一轮）：`RunSettings.speed_profile`、18 处 `travel_speed_m_s` 的替换、`jacobian.py:336` 的第二份里程公式、转速一致性控制器与第 8 门 `spin_tracking`。
 
 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md`。
+
+## 第 116 轮：速度剖面接进算例，常速逐字节等价、多段先拒绝
+
+`RunSettings.speed_profile` + `VehicleCase.speed_schedule` 落地：`SpeedSchedule.from_spec` 解析 `{"constant": {"speed_kmh": 80}}` 或 `{"legs": [...]}`，单位由键名给出（不给裸数字），长度二选一。
+
+两处关键：
+- 常速剖面是**唯一事实源**：`travel_speed_m_s=99` + `constant: 2.0 m/s` 与「只有 2.0 m/s」的算例 `history.csv` **逐字节相同**。第一版失败在覆盖时机——剖面在函数末尾才生效，而轮对初始自转在函数中段已按旧速度算好；改成读取之后立即覆盖，并把 `case_sha256` 改为提前算的磁盘字节哈希。
+- 多段剖面**解析并随算例携带，但在 `simulate_vehicle` 明确拒绝**（消息写出段数与「先加 spin_tracking 门」），因为蠕滑参考速度还是单值，`v` 一变就会被 `saturate_creep_force` 的 `hypot` 吃成假纵向需求。
+
+测试：`tests/test_speed_schedule.py` 11 项、`tests/test_speed_profile_case.py` 2 项（含逐字节等价，6.5 s）。
+
+文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 新增第 5 节。

@@ -25,6 +25,7 @@ from .topology import Topology, topology_for
 from .track_models import TrackKernel
 from .vehicle import VehicleCase
 from .modal_coupling import ModalContact, TreadRing
+from .speed import SpeedScheduleError
 from .wheel_modes import ModalAssembly, ModalBlock, modal_channel_names
 
 
@@ -912,6 +913,18 @@ def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.nd
 
 
 def simulate_vehicle(case: VehicleCase, contact_workers: int = 1) -> VehicleResult:
+    schedule = getattr(case, "speed_schedule", None)
+    if schedule is not None and not schedule.is_constant:
+        # Refusing is the point.  Twelve sites still read a single `travel_speed_m_s` and the
+        # wheelset spin is integrated from the contact force, so a varying v would make the
+        # creep reference disagree with the spin and turn that disagreement into a fake
+        # longitudinal demand.  Wire the schedule through those sites *and* add the
+        # `spin_tracking` gate first; until then a multi-leg profile is refused rather than
+        # silently run at its first leg's speed.
+        raise SpeedScheduleError(
+            f"a multi-leg speed profile is parsed but not yet wired into the solver: "
+            f"{schedule.describe()}.  Use a constant profile, or add the spin-tracking gate first."
+        )
     dynamics = VehicleDynamics(case, contact_workers=contact_workers)
     try:
         return _integrate_vehicle(case, dynamics)

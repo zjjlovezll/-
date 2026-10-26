@@ -151,6 +151,13 @@ class RunSettings:
     #: ``maximum_abs_contact_slope`` trips.  Turn it on only for a case whose longitudinal
     #: behaviour is the thing being measured (the wheel-polygon runs).
     longitudinal_force: bool = False
+    #: How fast the vehicle is going, as a value rather than a single number.  Either
+    #: ``{"constant": {"speed_kmh": 80}}`` or ``{"legs": [{"speed_kmh": 80, "duration_s": 2}]}``.
+    #: A constant profile becomes ``vehicle.travel_speed_m_s`` and changes nothing; a
+    #: multi-leg profile is parsed and carried on the case, but the solver refuses it until
+    #: the wheelset spin tracks ``v/r`` -- without that, a varying ``v`` turns the creep
+    #: reference into a fake longitudinal demand.
+    speed_profile: dict | None = None
     #: Radius of a constant-radius curve, in metres, or ``None`` for a straight track.  The
     #: solver keeps the track straight and adds the curve as a lateral body force
     #: ``m v^2 / R`` (equivalent straight track).  Cant beyond ``curve_cant_m`` is not

@@ -116,3 +116,31 @@ def test_the_description_states_the_speeds_and_not_an_average() -> None:
     assert "2 legs" in text
     assert "20.000" in text and "40.000" in text
     assert "constant" in SpeedSchedule.constant(5.0).describe()
+
+def test_a_constant_spec_names_its_unit() -> None:
+    schedule = SpeedSchedule.from_spec({"constant": {"speed_kmh": 80.0}})
+    assert schedule.is_constant
+    assert schedule.constant_speed_m_s == pytest.approx(80.0 / 3.6)
+
+
+def test_legs_can_mix_the_two_units_and_the_two_lengths() -> None:
+    schedule = SpeedSchedule.from_spec({"legs": [
+        {"speed_kmh": 72.0, "duration_s": 1.0},
+        {"speed_m_s": 30.0, "distance_m": 60.0},
+    ]})
+    assert schedule.speeds[0] == pytest.approx(20.0)
+    assert schedule.duration_s == pytest.approx(1.0 + 2.0)
+    assert schedule.distance_m == pytest.approx(20.0 + 60.0)
+
+
+def test_the_spec_refuses_an_ambiguous_or_unknown_shape() -> None:
+    with pytest.raises(SpeedScheduleError, match="exactly one of 'constant' and 'legs'"):
+        SpeedSchedule.from_spec({})
+    with pytest.raises(SpeedScheduleError, match="exactly one of 'constant' and 'legs'"):
+        SpeedSchedule.from_spec({"constant": {"speed_kmh": 1.0}, "legs": []})
+    with pytest.raises(SpeedScheduleError, match="unknown speed_profile keys"):
+        SpeedSchedule.from_spec({"constant": {"speed_kmh": 1.0}, "extra": 1})
+    with pytest.raises(SpeedScheduleError, match="exactly one of 'speed_kmh' and 'speed_m_s'"):
+        SpeedSchedule.from_spec({"constant": {"speed_kmh": 1.0, "speed_m_s": 1.0}})
+    with pytest.raises(SpeedScheduleError, match="leg 0 has unknown keys"):
+        SpeedSchedule.from_spec({"legs": [{"speed_kmh": 1.0, "bogus": 1}]})

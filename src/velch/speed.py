@@ -26,6 +26,20 @@ class SpeedScheduleError(ValueError):
     """The schedule asked for cannot be built or evaluated."""
 
 
+def _speed_from(entry: dict, *, where: str = "constant") -> float:
+    """One speed, with its unit named by the key rather than assumed."""
+
+    has_kmh = "speed_kmh" in entry
+    has_ms = "speed_m_s" in entry
+    if has_kmh == has_ms:
+        raise SpeedScheduleError(
+            f"{where} needs exactly one of 'speed_kmh' and 'speed_m_s'; got "
+            f"speed_kmh={entry.get('speed_kmh')!r}, speed_m_s={entry.get('speed_m_s')!r}")
+    if has_kmh:
+        return float(entry["speed_kmh"]) / 3.6
+    return float(entry["speed_m_s"])
+
+
 @dataclass(frozen=True)
 class Leg:
     """One constant-speed stretch.
@@ -97,6 +111,52 @@ class SpeedSchedule:
 
     @classmethod
     def from_legs(cls, legs: list[Leg] | tuple[Leg, ...]) -> "SpeedSchedule":
+        return cls(legs=tuple(legs))
+
+    @classmethod
+    def from_spec(cls, spec: "dict") -> "SpeedSchedule":
+        """Read the ``run.speed_profile`` block.
+
+        Two shapes, both explicit about units, because a bare number would be read as m/s by
+        one author and km/h by the next::
+
+            {"constant": {"speed_kmh": 80.0}}
+            {"legs": [{"speed_kmh": 80.0, "duration_s": 2.0},
+                      {"speed_m_s": 30.0, "distance_m": 120.0}]}
+        """
+        if not isinstance(spec, dict):
+            raise SpeedScheduleError("'speed_profile' must be an object")
+        unknown = set(spec) - {"constant", "legs"}
+        if unknown:
+            raise SpeedScheduleError(
+                f"unknown speed_profile keys {sorted(unknown)}; use 'constant' or 'legs'")
+        if ("constant" in spec) == ("legs" in spec):
+            raise SpeedScheduleError("speed_profile needs exactly one of 'constant' and 'legs'")
+        if "constant" in spec:
+            entry = spec["constant"]
+            if not isinstance(entry, dict):
+                raise SpeedScheduleError("'constant' must be an object with a speed")
+            speed = _speed_from(entry)
+            duration = entry.get("duration_s")
+            return cls.constant(speed, duration_s=None if duration is None else float(duration))
+        legs_raw = spec["legs"]
+        if not isinstance(legs_raw, (list, tuple)) or not legs_raw:
+            raise SpeedScheduleError("'legs' must be a non-empty list")
+        legs = []
+        for index, entry in enumerate(legs_raw):
+            if not isinstance(entry, dict):
+                raise SpeedScheduleError(f"leg {index} must be an object")
+            speed = _speed_from(entry, where=f"leg {index}")
+            duration = entry.get("duration_s")
+            distance = entry.get("distance_m")
+            unknown_leg = set(entry) - {"speed_kmh", "speed_m_s", "duration_s", "distance_m"}
+            if unknown_leg:
+                raise SpeedScheduleError(f"leg {index} has unknown keys {sorted(unknown_leg)}")
+            legs.append(Leg(
+                speed_m_s=speed,
+                duration_s=None if duration is None else float(duration),
+                distance_m=None if distance is None else float(distance),
+            ))
         return cls(legs=tuple(legs))
 
     # ---- properties ---------------------------------------------------------------

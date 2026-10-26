@@ -1617,6 +1617,36 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 
 ---
 
+## 第 111 轮：在连续的 PRR 文件里怎么模拟波磨——把"多密才够"算出来
+
+上一轮把波磨写成"补片内每 2.5 mm 一个 PRR"，能算但没说清**为什么是 2.5 mm**，
+也没有告诉别人换个波长该怎么办。这一轮把它变成一条可反解的规则。
+
+**新增 `src/velch/corrugation.py`**：`Corrugation(period_m, depth_m, harmonics=…, phase_origin_m=…)`
+给出解析抬升 `at(s)`、峰-峰、第 n 阶波长与通过频率；`track(...)` 生成 `.tre`；
+`write_station_table(...)` 生成密集站位表（只重写 PRR 点块的两个数值列，单位/注释/样条头逐字节保留，
+`z_sign` 参数让 ±1 两种约定共用一份实现）；`station_mileages(...)` 强制表从 `0.0` 起、越过 `run_end_m`。
+密度规则由 `interpolation_gain(h, λ) = |sinc(πh/λ)|²` 与 `required_step_m(λ, tolerance=)` 给出，
+混叠上限由 `alias_free_step_m(λ, order)` 给出。
+
+**实测（`scripts/s9af_corrugation_density.py`，2 m 补片、10 µm 拟合网格）**：解析式与
+"真的采样后线性插值再拟合"一致到 **5e-7**；`h/λ = 1/4 / 1/8 / 1/10` 分别把基波削到
+**0.8106 / 0.9496 / 0.9675**，与波长无关。按 3 % 容差反解：25 mm → **2.40 mm**（2 m 补片 834 个文件）、
+50 mm → 4.80 mm（418）、100 mm → 9.61 mm（210）、200 mm → 19.21 mm（106）；高阶分量再除以阶次。
+因此"补片内 2.5 mm"对 50 mm 的单频是 1 % 级、对 25 mm 的二阶才是 3 % 级。
+
+**两处坑写进文档**：站位表不从 0 m 起会落到悬挂分支（`120307.1 N`/斑，O010 同族）；
+站位太稀**不报错，只把波磨变浅**——40 mm 间距写 25 mm 波形读回来约 0.4 倍深度。
+
+**与 `.tre` 的一致性**（`x_start = 30 m`，四个轴都扫过补片）：`zero` 0.19213 m/s²、
+`.tre` 0.87302、PRR 密集站位 0.87186 ⇒ 两条路差 **0.13 %**，远小于任何一档插值损失。
+
+新增 `tests/test_corrugation.py`（9 项：解析抬升、阶次波长/频率、`.tre` 与解析一致到 1e-15、
+插值增益与实测一致、`required_step_m` 反解、±1 两种 `z_sign`、站位表 0 起与越过前轴、
+补片外不动、9 条拒收信息），并修掉自己两处浮点边界（`floor(0.2/0.0025)` 少一站）。
+
+文档：[CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md)。
+
 ## 第 110 轮：反演算法升级——用谐波阶梯恢复短波缺陷的**形状**，并修掉审查提出的两条回归
 
 本轮按用户的布置先做算法升级、后做反演，并按审查意见修掉 `portable_models` 与 `assets` 的两条确定性回归。
@@ -1682,6 +1712,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CONTACT_POLICY_ARCHITECTURE_2026-10-20.md](CONTACT_POLICY_ARCHITECTURE_2026-10-20.md) | 接触策略层：可插拔接口、首轮 A/B 结果与创新路线（2026-10-20） |
 | [CONTACT_REFERENCE_THREE_WAY_2026-10-21.md](CONTACT_REFERENCE_THREE_WAY_2026-10-21.md) | 三方对拍：解析真值 / 45 µm 网格 / 分段样条 2026-10-21 |
 | [CONTACT_SEARCH_LOCAL_2026-10-19.md](CONTACT_SEARCH_LOCAL_2026-10-19.md) | 轮轨接触搜索：型面表化 + 局部连续搜索（2026-10-19） |
+| [CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md) | 在连续的 PRR 文件里模拟波磨：表示、密度与两个坑 |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |

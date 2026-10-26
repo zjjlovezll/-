@@ -251,7 +251,7 @@ def invert_corrugation(model: HarmonicModel, measured: dict[int, complex], *,
                        fundamental_hz: float,
                        period_m: float,
                        prior_mean: float = 0.0,
-                       floor_gain: float = 0.0,
+                       floor_gain: float | None = None,
                        labels: tuple[str, ...] | None = None) -> HarmonicInversion:
     """Solve for the depth harmonics from one measured response.
 
@@ -261,10 +261,16 @@ def invert_corrugation(model: HarmonicModel, measured: dict[int, complex], *,
     point: the rank deficiency that broke the band matrix came from asking one
     number per band; here every order is its own observable.
 
-    An order whose gain sits below ``floor_gain`` is left out of the operator rather
+    An order whose gain sits below the floor is left out of the operator rather
     than entered as a near-zero row: a row of almost zeros would drag the posterior
     towards "no depth at all" with a falsely small sigma, whereas leaving it out keeps
     that order at the prior and reports the honesty of it.
+
+    ``floor_gain`` defaults to ``1e-3`` of the largest gain.  A default of exactly zero
+    (the first version) meant that a gain of ``1e-12`` still produced a row, dividing the
+    response noise by it and pinning that harmonic to zero with a sigma of nanometres;
+    ``scripts/s9ac_harmonic_inversion.py`` had to pass ``0.02 * |gain_1|`` by hand to avoid
+    it, which is a workaround in the caller for a wrong default in here.
     """
 
     orders = model.orders
@@ -274,7 +280,11 @@ def invert_corrugation(model: HarmonicModel, measured: dict[int, complex], *,
         raise HarmonicError(f"fundamental frequency must be positive; got {fundamental_hz!r}")
     if not math.isfinite(period_m) or period_m <= 0.0:
         raise HarmonicError(f"period must be positive; got {period_m!r}")
-    silent = set(model.silent_orders(floor_gain)) if floor_gain > 0.0 else set()
+    largest = max(abs(gain) for gain in model.gains.values())
+    effective_floor = floor_gain if floor_gain is not None else 1.0e-3 * largest
+    if not math.isfinite(effective_floor) or effective_floor < 0.0:
+        raise HarmonicError(f"floor gain must be finite and non-negative; got {effective_floor!r}")
+    silent = set(model.silent_orders(effective_floor)) if effective_floor > 0.0 else set()
     # An order with no measurement is *unobserved*, not measured as zero: entering a row
     # of zeros would pin that depth harmonic to zero with a falsely small sigma, which is
     # the difference between "we saw nothing there" and "there is nothing there".

@@ -229,3 +229,21 @@ def test_refusals_name_the_problem() -> None:
         harmonic_amplitudes(np.arange(0.0, 0.001, 1e-4), np.zeros(10), 9000.0, (1,))
     with pytest.raises(HarmonicError, match="1-based"):
         harmonic_amplitudes(np.arange(0.0, 0.01, 1e-4), np.zeros(100), 100.0, (0,))
+
+def test_the_default_floor_keeps_a_negligible_gain_out_of_the_operator() -> None:
+    """A gain of 1e-12 must not produce a row: dividing the response noise by it pins that
+    harmonic to zero with a sigma of nanometres.  The default floor is relative to the
+    largest gain, so callers no longer have to pass one by hand."""
+
+    model = HarmonicModel(
+        gains={1: GAIN_MAGNITUDE, 2: 1.0e-12},
+        reference_depth_m=30e-6,
+    )
+    measured = model.predict({1: 30e-6 + 0.0j, 2: 12e-6 + 0.0j})
+    inverted = invert_corrugation(
+        model, measured, measurement_sigma=1e-3, prior_sigma=80e-6,
+        fundamental_hz=FUNDAMENTAL_HZ, period_m=PERIOD_M,
+    )
+    assert inverted.depth().coefficients[1] == pytest.approx(30e-6, rel=1e-6)
+    assert inverted.depth().coefficients[2] == pytest.approx(0.0 + 0.0j)
+    assert inverted.amplitude_sigma()[2] == pytest.approx(80e-6 * math.sqrt(2.0), rel=0.05)

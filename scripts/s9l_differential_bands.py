@@ -84,7 +84,51 @@ def run_pair(track, label: str) -> tuple[dict[str, float], float, str]:
         rate = 1.0 / float(np.mean(np.diff(np.asarray(history.data[names.index("time_s")], dtype=float))))
     difference = 0.5 * (series["plus"] - series["minus"])
     print(f"{label}: {2 * DURATION_S:.1f} s of simulation in {seconds:.0f} s -> {statuses}")
-    return s9k.acceleration_band_rms(difference, rate), seconds, statuses[0]
+    for tag, status in zip(("plus", "minus"), statuses):
+        if status != "numerically_checked":
+            raise SystemExit(
+                f"{label}/{tag} finished as {status!r}, not numerically_checked; the pair is"
+                " unusable.  Returning statuses[0] is how a failed -A run passed silently."
+            )
+    return s9k.acceleration_band_rms(difference, rate), seconds, ",".join(statuses)
+
+
+
+def run_against(first, second, label: str):
+    """Run two concrete tracks and return the band rms of their half-difference.
+
+    `run_pair` can only express the +A / -A pair.  The control needs +A against a track with
+    no excitation at all: +0 against -0 is the same file twice, so it is zero by construction
+    and cannot show what differencing fails to cancel.
+    """
+    series = {}
+    statuses = []
+    seconds = 0.0
+    for tag, track in (("first", first), ("second", second)):
+        tre = s9k.write_track(track, f"{label}_{tag}")
+        case = s9k.build_case(tre, f"{label}_{tag}")
+        doc = json.loads(case.read_text(encoding="utf-8"))
+        doc["run"]["duration_s"] = DURATION_S
+        case.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
+        loaded = load_vehicle_case(case)
+        started = time.perf_counter()
+        result = simulate_vehicle(loaded)
+        seconds += time.perf_counter() - started
+        out = WORK / f"out_{label}_{tag}"
+        out.mkdir(parents=True, exist_ok=True)
+        history_path, manifest = save_vehicle_result(loaded, result, out)
+        status = json.loads(pathlib.Path(manifest).read_text(encoding="utf-8"))["summary"]["result_status"]
+        statuses.append(status)
+        history = read_history(pathlib.Path(history_path))
+        names = list(history.ordering)
+        series[tag] = np.asarray(history.data[names.index(s9k.CHANNEL)], dtype=float)
+        rate = 1.0 / float(np.mean(np.diff(np.asarray(history.data[names.index("time_s")], dtype=float))))
+    for tag, status in zip(("first", "second"), statuses):
+        if status != "numerically_checked":
+            raise SystemExit(f"{label}/{tag} finished as {status!r}, not numerically_checked")
+    difference = 0.5 * (series["first"] - series["second"])
+    print(f"{label}: {2 * DURATION_S:.1f} s of simulation in {seconds:.0f} s -> {statuses}")
+    return s9k.acceleration_band_rms(difference, rate), seconds, ",".join(statuses)
 
 
 def main() -> int:
@@ -96,17 +140,15 @@ def main() -> int:
     test, seconds_test, _ = run_pair(test_track, "test")
 
     control_track = s9k.flat_track(seed=s9k.SEED_CALIBRATION)
-    control, seconds_control, _ = run_pair(
-        type(control_track)(
-            s_m=np.asarray(control_track.s_m, dtype=float),
-            lateral_m=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
-            vertical_m=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
-            roll_rad=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
-            gauge_m=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
-            source="generated: zero (control)",
-        ),
-        "control",
+    zero_track = type(control_track)(
+        s_m=np.asarray(control_track.s_m, dtype=float),
+        lateral_m=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
+        vertical_m=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
+        roll_rad=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
+        gauge_m=np.zeros_like(np.asarray(control_track.vertical_m, dtype=float)),
+        source="generated: no excitation (control)",
     )
+    control, seconds_control, _ = run_against(control_track, zero_track, "control")
 
     truth_calibration = s9k.profile_band_rms(calibration_track)
     truth_test = s9k.profile_band_rms(test_track)

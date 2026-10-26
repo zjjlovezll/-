@@ -1672,6 +1672,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [PACKAGING_2026-10-22.md](PACKAGING_2026-10-22.md) | 打包与安装包（Windows） |
 | [PARALLEL_AND_SIMPACK_RWP.md](PARALLEL_AND_SIMPACK_RWP.md) | 多核并行、Simpack RWP 机制与 CONTACT 接入 |
 | [PHYSICS_INVARIANTS.md](PHYSICS_INVARIANTS.md) | 物理不变量复算门 |
+| [PORTABLE_PACKAGE_DESIGN_2026-10-26.md](PORTABLE_PACKAGE_DESIGN_2026-10-26.md) | 设计方案：把安装包拷到干净机器就能跑模型（含 33 阶柔性轮对） |
 | [RACK_CASE_DATA_CONTRACT_2026-10-21.md](RACK_CASE_DATA_CONTRACT_2026-10-21.md) | 齿轨过岔算例：数据契约（2026-10-21） |
 | [RAIL_CANT_2026-10-20.md](RAIL_CANT_2026-10-20.md) | 轨底坡 1:40：把"整体倾斜"换成"绕轨顶中心旋转" |
 | [RANDOM_SPECTRUM_INVERSION_2026-10-25.md](RANDOM_SPECTRUM_INVERSION_2026-10-25.md) | 随机谱 → 加速度 → 反演随机谱：三次实测与它们各自的结论 |
@@ -1704,6 +1705,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [RELEASE_NOTES_0.4.33.md](RELEASE_NOTES_0.4.33.md) | Velch 0.4.33 发布说明 |
 | [RELEASE_NOTES_0.4.34.md](RELEASE_NOTES_0.4.34.md) | Velch 0.4.34 发布说明 |
 | [RELEASE_NOTES_0.4.35.md](RELEASE_NOTES_0.4.35.md) | Velch 0.4.35 发布说明 |
+| [RELEASE_NOTES_0.4.36.md](RELEASE_NOTES_0.4.36.md) | Velch 0.4.36 发布说明 |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
@@ -2889,6 +2891,25 @@ x 自由的车体是一个**自由体**，任何不平衡的纵向力都让它�
 
 新增 `scripts/s9j_radius_longitudinal.py`（3 次运行约 67 s 可复算，判据写在模块 docstring 里：
 x 增益在 ±10 % 内随深度成正比、x/z 保在 2e-3…4e-3）。
+
+## 第 107 轮：换一台电脑能不能跑，现在有一条自动验收
+
+审查发现的关键事实不是"少补一个路径"，而是**三套根各说各话**：算例资产只认"相对算例文件"、
+车辆库认"仓库/安装目录/_internal"、语料认环境变量与标记文件。于是出现"包能开、算例能跑、
+柔性轮对跑不起来"的半可用状态。
+
+| 变更 | 位置 | 为什么 |
+|---|---|---|
+| 资产解析一层 | 新增 `src/velch/assets.py` | 四种写法一个入口；`lib:` 复用 `vehicle_db.vehicle_dir()`，不新造第二个根 |
+| 四处引用点改走它 | `vehicle.py`（型面 / `.tre` / `modal_file` / `flexible_wheelset.file`） | `base = case.parent` 这个隐含假设从此只在一处 |
+| 随包柔性算例 | `examples/portable/case_flexible.json` | 唯一能被"干净机器"验证的柔性轮对入口 |
+| 干净机器验收 | 新增 `packaging/clean_room_test.py` | 白名单环境 + 重命名路径 + 逐字节相同，才是"拷过去能跑" |
+| 模态轨道切片 | `track_models.py` 的三处 `q[self.offset:]` | 柔性轮对模态块落在轨道块之后，切片会越界 |
+| 语料根两种写法 | `data_root._with_validation()` + 提示词 + 示例 marker | 提示词让人填上一层，而程序要的是含 `crh380a_m` 的那层 |
+
+证据：`packaging/clean_room_test.py` → ACCEPT · 5 步（5 车型 / selftest / 明文路径跑通 /
+中文含空格路径跑通 / `history.csv` 逐字节相同）；`pytest` 819 passed；
+`examples/portable/case_flexible.json` 实跑 `numerically_checked`、七门 7/7。
 
 ## 第 106 轮：车辆库真的进包了，而且是从 `_internal` 里找出来的
 

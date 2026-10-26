@@ -131,14 +131,32 @@ def _root_from_marker() -> Path | None:
     return candidate.resolve()
 
 
+def _with_validation(root: Path) -> Path:
+    """Accept both spellings of the corpus root.
+
+    ``case_dir()`` is ``data_root()/"crh380a_m"``, so the canonical root is the one that
+    *contains* ``crh380a_m`` -- i.e. ``.../validation``.  People (and the old hint text) write
+    the parent, ``.../velch_data``, which then made the program look for
+    ``velch_data/crh380a_m`` and report an empty corpus even though the data was right there.
+    Rather than argue with a correct-looking path, both spellings are resolved to the same
+    place: if the direct child is absent but ``validation/crh380a_m`` exists, step in.
+    """
+
+    direct = root / "crh380a_m"
+    nested = root / "validation" / "crh380a_m"
+    if not direct.is_dir() and nested.is_dir():
+        return root / "validation"
+    return root
+
+
 def data_root() -> Path:
     """Directory that holds ``crh380a_m`` and the other validation sets."""
     override = os.environ.get("VELCH_DATA_ROOT")
     if override:
-        return Path(override).expanduser().resolve()
+        return _with_validation(Path(override).expanduser().resolve())
     marker = _root_from_marker()
     if marker is not None:
-        return marker
+        return _with_validation(marker)
     return repository_root() / "validation"
 
 
@@ -156,9 +174,9 @@ def hint() -> str:
         f"  1. 环境变量 VELCH_DATA_ROOT（当前：{os.environ.get('VELCH_DATA_ROOT') or '未设置'}）\n"
         f"  2. 标记文件，依次尝试：{seen}\n"
         f"  3. 安装目录下的 validation/：{repository_root() / 'validation'}\n"
-        "解决办法：把语料所在目录写进标记文件，例如\n"
-        f'  {where}  内容  {{"data_root": "F:/velch_data"}}\n'
-        "（该目录下应有 validation\\crh380a_m\\case_*.json）。"
+        "解决办法：把**含 crh380a_m 的那一层**写进标记文件（写成它的上一层也认），例如\n"
+        f'  {where}  内容  {{"data_root": "F:/velch_data/validation"}}\n'
+        "（该目录下应有 crh380a_m\\case_*.json；写成 F:/velch_data 也会自动加一层 validation）。"
     )
 
 

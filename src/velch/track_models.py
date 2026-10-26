@@ -189,7 +189,11 @@ class TrackKernel:
         assert self.modal is not None
         rail = self.rails[rail_index]
         py, pz, dpy, dpz = self.modal.shapes[rail.template_id].sample(x_m)
-        eta, etadot = q[self.offset:], v[self.offset:]
+        # ``offset:`` used to be the tail of the vector; a flexible wheelset appends its
+        # modal coordinates *after* the track block, so the slice has to stop at the end of
+        # the track's own span or ``py @ eta`` multiplies a 33-vector by a 165-vector.
+        end = self.offset + self.dimension
+        eta, etadot = q[self.offset:end], v[self.offset:end]
         return (float(py @ eta), float(pz @ eta),
                 float(py @ etadot + speed_m_s * (dpy @ eta)),
                 float(pz @ etadot + speed_m_s * (dpz @ eta)))
@@ -240,7 +244,9 @@ class TrackKernel:
                         ballast_c * v[base + 2 + axis])
             return result
         assert self.modal is not None
-        return -self.modal.stiffness_n_m * q[self.offset:] - self.modal.damping_n_s_m * v[self.offset:]
+        end = self.offset + self.dimension
+        return (-self.modal.stiffness_n_m * q[self.offset:end]
+                - self.modal.damping_n_s_m * v[self.offset:end])
 
     def contact_reaction(self, rail_index: int, x_m: float, fy_n: float, fz_n: float) -> np.ndarray:
         """Return generalized rail force opposing the wheel's y/z force."""
@@ -293,7 +299,8 @@ class TrackKernel:
             return float(total)
         if self.kind == "modal":
             assert self.modal is not None
-            return float(0.5 * np.dot(self.modal.stiffness_n_m, q[self.offset:] ** 2))
+            end = self.offset + self.dimension
+            return float(0.5 * np.dot(self.modal.stiffness_n_m, q[self.offset:end] ** 2))
         return 0.0
 
     def support_reaction(self, q: np.ndarray, v: np.ndarray,

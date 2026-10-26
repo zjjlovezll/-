@@ -17,6 +17,7 @@ from .contact import ContactParameters
 from .model import LinearSupport, RunSettings, TrackLayer, Wheel
 from .paths import PathTrack, load_path
 from .topology import legacy_topology, remap_state, topology_of
+from .assets import resolve_asset
 from .profiles import ProfileSeries, Station, load_profile
 from .support_compliance import SupportCompliance
 from .track_models import ModalTrack, load_modal_track
@@ -171,7 +172,7 @@ def _modal_size(modes: "dict[int, ModeSet] | None") -> int:
     return sum(len(item.modes) for item in modes.values()) if modes else 0
 
 
-def _load_wheel_modes(spec: "dict | None", vehicle, base: Path,
+def _load_wheel_modes(spec: "dict | None", vehicle, case_path: Path,
                       assets: dict[str, str]) -> "dict[int, ModeSet] | None":
     """Parse the ``flexible_wheelset`` block: which wheelsets, and where their modes come from.
 
@@ -189,9 +190,12 @@ def _load_wheel_modes(spec: "dict | None", vehicle, base: Path,
     elif source == "file":
         if "file" not in spec:
             raise ValueError("flexible_wheelset with source 'file' needs a 'file' entry")
-        path = (base / spec["file"]).resolve(strict=True)
+        # ``lib:`` reaches the mode set that ships inside the package; a plain name is still
+        # relative to the case file, so existing documents keep working unchanged.
+        resolved = resolve_asset(spec["file"], case_path=case_path, kind="wheel mode set")
+        path = resolved.path
         modes = load_modes(path)
-        assets[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
+        assets[str(path)] = resolved.sha256
     else:
         raise ValueError(f"unknown flexible_wheelset source {source!r}: use 'table-2-3' or 'file'")
     axles = spec.get("axles", [1, 2, 3, 4])
@@ -311,7 +315,7 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     assets: dict[str, str] = {}
 
     def profile(spec: dict[str, Any], surface: str):
-        source = (base / spec["file"]).resolve(strict=True)
+        source = resolve_asset(spec["file"], case_path=target, kind="profile").path
         units = spec.get("units")
         if units not in {"m", "mm"} or spec["format"] == "prr" and units != "m":
             raise ValueError("profile units must be m or mm; PRR must be m")
@@ -400,8 +404,10 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     if irregularity_spec:
         from .irregularity import describe_application, read_tre, scaled_track, shift_rails
 
-        tre_path = (base / irregularity_spec["tre"]).resolve(strict=True)
-        assets[str(tre_path)] = hashlib.sha256(tre_path.read_bytes()).hexdigest()
+        tre_asset = resolve_asset(irregularity_spec["tre"], case_path=target,
+                                  kind="irregularity record")
+        tre_path = tre_asset.path
+        assets[str(tre_path)] = tre_asset.sha256
         raw_track = read_tre(tre_path)
         channels = tuple(irregularity_spec.get("channels") or
                          ("lateral", "vertical", "roll", "gauge"))
@@ -423,9 +429,11 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     layers = tuple(TrackLayer(**layer) for layer in track_spec.get("layers", []))
     modal_track = None
     if track_kind == "modal":
-        modal_path = (base / track_spec["modal_file"]).resolve(strict=True)
+        modal_asset = resolve_asset(track_spec["modal_file"], case_path=target,
+                                    kind="modal track file")
+        modal_path = modal_asset.path
         modal_track = load_modal_track(modal_path, [template["id"] for template in raw["rail_templates"]])
-        assets[str(modal_path)] = hashlib.sha256(modal_path.read_bytes()).hexdigest()
+        assets[str(modal_path)] = modal_asset.sha256
     # The vehicle block size comes from the topology: the legacy 5-DOF layout gives the
     # frozen 35, a node table gives whatever its bodies declare.
     # A case may carry its own topology; otherwise it inherits the one its vehicle reference
@@ -435,7 +443,7 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     topology = topology_of(topology_block, vehicle)
     # A flexible wheelset adds modal coordinates *after* the track block; a rigid one adds none,
     # which is why every existing case keeps its exact state size and results.
-    wheel_modes = _load_wheel_modes(raw.get("flexible_wheelset"), vehicle, base, assets)
+    wheel_modes = _load_wheel_modes(raw.get("flexible_wheelset"), vehicle, target, assets)
     modal_size = _modal_size(wheel_modes)
     tracks = _track_size(track_kind, rails, layers, modal_track)
     n = topology.body_dimension + tracks + modal_size

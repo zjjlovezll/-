@@ -107,7 +107,7 @@ def build() -> Path:
 def decorate(folder: Path, version: str) -> None:
     (folder / "启动 Velch.cmd").write_text(LAUNCHER_CMDLET, encoding="utf-8", newline="\r\n")
     (folder / "安装说明.txt").write_text(README.format(version=version), encoding="utf-8", newline="\r\n")
-    template = {"data_root": "F:/velch_data"}
+    template = {"data_root": "F:/velch_data/validation"}
     (folder / ".velch-data.example.json").write_text(
         json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
 

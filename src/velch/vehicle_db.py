@@ -103,7 +103,14 @@ class VehicleModel:
 
 
 def _root() -> Path:
-    """车辆库位置：``VELCH_VEHICLE_DIR`` → 仓库 ``vehicles/`` → 安装目录 ``vehicles/``。"""
+    """车辆库位置：``VELCH_VEHICLE_DIR`` → 仓库 ``vehicles/`` → 安装目录 ``vehicles/``。
+
+    In a PyInstaller 6 onedir bundle the ``datas`` entries land inside ``_internal``, not
+    next to the executable, so the install folder has to be asked twice.  Checking only
+    ``<install>/vehicles`` made a packaged build report an empty library -- which reads as
+    "the models are gone" rather than "they were packed one directory deeper".  The docs
+    payload hit exactly this and ``velch.selfcheck.docs_roots()`` already tries both.
+    """
     override = os.environ.get("VELCH_VEHICLE_DIR")
     if override:
         return Path(override).expanduser().resolve()
@@ -116,9 +123,10 @@ def _root() -> Path:
         from .data_root import frozen_install_root, is_frozen
 
         if is_frozen():
-            frozen = frozen_install_root() / "vehicles"
-            if frozen.is_dir():
-                return frozen
+            install = frozen_install_root()
+            for frozen in (install / "vehicles", install / "_internal" / "vehicles"):
+                if frozen.is_dir():
+                    return frozen
     except Exception:  # pragma: no cover - 只在异常环境下走
         pass
     return candidate

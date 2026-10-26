@@ -1703,6 +1703,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [RELEASE_NOTES_0.4.32.md](RELEASE_NOTES_0.4.32.md) | Velch 0.4.32 发布说明 |
 | [RELEASE_NOTES_0.4.33.md](RELEASE_NOTES_0.4.33.md) | Velch 0.4.33 发布说明 |
 | [RELEASE_NOTES_0.4.34.md](RELEASE_NOTES_0.4.34.md) | Velch 0.4.34 发布说明 |
+| [RELEASE_NOTES_0.4.35.md](RELEASE_NOTES_0.4.35.md) | Velch 0.4.35 发布说明 |
 | [RELEASE_NOTES_0.4.4.md](RELEASE_NOTES_0.4.4.md) | Velch 0.4.4 发布说明（2026-10-23 凌晨） |
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
@@ -2888,6 +2889,22 @@ x 自由的车体是一个**自由体**，任何不平衡的纵向力都让它�
 
 新增 `scripts/s9j_radius_longitudinal.py`（3 次运行约 67 s 可复算，判据写在模块 docstring 里：
 x 增益在 ±10 % 内随深度成正比、x/z 保在 2e-3…4e-3）。
+
+## 第 106 轮：车辆库真的进包了，而且是从 `_internal` 里找出来的
+
+两处缺陷，都是"看起来像没做、其实是没接上"：
+
+| 缺陷 | 症状 | 处置 |
+|---|---|---|
+| 模型没打包 | `packaging/Velch.spec` 只收集 `examples/` 与 `docs/`，打包版 `vehicle list` 是空的 | 收集列表加 `vehicles/`（5 台车 + `index.json` + `modes/CRH3C_wheelset_fe.json` 1.85 MB） |
+| 打包了也找不到 | PyInstaller 6 把 `datas` 放进 `_internal/`，而 `vehicle_db._root()` 只查 `<安装目录>/vehicles` | 两个位置都查，与 `selfcheck.docs_roots()` 同一套做法；`VELCH_VEHICLE_DIR` 仍优先 |
+
+证据：
+- `tests/test_vehicle_ship.py`（新，4 项）——两种安装布局各一条、环境变量优先一条、模态集确实在库里一条；
+- 冻结版 `velch-cli.exe vehicle list` → `车辆库：…\_internal\vehicles`，5 台车（35 / 38 / 38 / 86 / 90 自由度）；
+- `vehicle validate CRH380A_M_axlebox` → `合法（字段、正负、左右对称、自由度剖面、出处齐全）`；
+- `packaging/smoke_test.py --readonly-acl` → ACCEPT · 8 步 · 失败 0 · 跳过 0；
+- 全仓 `pytest` 813 passed, 1 skipped；`physics_invariants.py` → UNCHANGED；包 zip 95.1 MB。
 
 ## 第 105 轮：按带拆开，判据应当按带写
 

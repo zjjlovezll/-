@@ -25,7 +25,11 @@ SRC = ROOT / "src"
 
 datas = []
 datas += collect_data_files("matplotlib", include_py_files=False)
-for extra in ("examples", "docs"):
+# ``vehicles`` carries the vehicle library (five CRH380A variants) and the flexible-wheelset
+# modal set ``vehicles/modes/CRH3C_wheelset_fe.json``.  ``velch.vehicle_db.vehicle_dir()`` looks
+# for it next to the frozen executable, so a build without this entry starts up fine and then
+# reports an empty library -- which reads as "the models are gone", not as "they were not packed".
+for extra in ("examples", "docs", "vehicles"):
     folder = ROOT / extra
     if folder.is_dir():
         datas.append((str(folder), extra))

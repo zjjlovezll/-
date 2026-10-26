@@ -151,6 +151,14 @@ class RunSettings:
     #: ``maximum_abs_contact_slope`` trips.  Turn it on only for a case whose longitudinal
     #: behaviour is the thing being measured (the wheel-polygon runs).
     longitudinal_force: bool = False
+    #: Radius of a constant-radius curve, in metres, or ``None`` for a straight track.  The
+    #: solver keeps the track straight and adds the curve as a lateral body force
+    #: ``m v^2 / R`` (equivalent straight track).  Cant beyond ``curve_cant_m`` is not
+    #: modelled, and the static seat solves vertical coordinates only, so a canted case
+    #: seats on one side — keep ``curve_cant_m`` small or zero.
+    curve_radius_m: float | None = None
+    #: Cant (superelevation) in metres across the gauge; enters as ``m g sin(theta)`` inward.
+    curve_cant_m: float = 0.0
 
     def __post_init__(self) -> None:
         if self.method not in {"DOP853", "Radau", "BDF"}:
@@ -169,6 +177,11 @@ class RunSettings:
             _finite(name, getattr(self, name), positive=True)
         if self.contact_search_half_width_m is not None:
             _finite("contact_search_half_width_m", self.contact_search_half_width_m, positive=True)
+        if self.curve_radius_m is not None:
+            _finite("curve_radius_m", self.curve_radius_m, positive=True)
+        _finite("curve_cant_m", self.curve_cant_m)
+        if abs(self.curve_cant_m) > 0.20:
+            raise ValueError("curve_cant_m looks like a cant in millimetres; pass metres (0.06 for 60 mm)")
         if not isinstance(self.body_hysteresis, bool):
             raise ValueError("body_hysteresis must be a boolean")
         if self.contact_seed_scope not in ("body", "rail", "rail_hold"):

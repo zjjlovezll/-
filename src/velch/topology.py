@@ -587,6 +587,17 @@ def remap_state(values, source: "Topology", target: "Topology") -> list[float]:
     "no seed converged".  Coordinates the target does not share with the source start at zero.
     """
 
+    supplied = [float(x) for x in values]
+    if len(supplied) != source.body_dimension:
+        # Silence here is expensive.  Slicing a whole-state vector with this function drops the
+        # track block, and the leftover is exactly one contact patch per rail (59 662 N at the
+        # static seat) — which reads as a physical imbalance instead of as a truncated vector.
+        # That fingerprint cost a whole night of misattribution (O010).
+        raise TopologyError(
+            f"remap_state takes the {source.body_dimension} body coordinates of the source "
+            f"layout, but received {len(supplied)} values; call migrate_initial_state() for a "
+            "whole state vector (body + track + modal)")
+
     out = [0.0] * target.body_dimension
     for body in target.bodies:
         source_body = next((b for b in source.bodies if b.id == body.id), None)
@@ -595,5 +606,35 @@ def remap_state(values, source: "Topology", target: "Topology") -> list[float]:
         for axis in body.dof:
             if axis not in source_body.dof:
                 continue          # a coordinate the source never had (the new x) starts at zero
-            out[target.require(body.id, axis)] = float(values[source.require(body.id, axis)])
+            out[target.require(body.id, axis)] = supplied[source.require(body.id, axis)]
     return out
+
+
+def migrate_initial_state(supplied, source: "Topology", target: "Topology", *,
+                          tracks: int, modal_size: int = 0) -> list[float]:
+    """Carry a *whole* state vector onto another layout: body by name, then track, then modal.
+
+    ``remap_state`` deliberately handles only the body block; every caller that migrates a full
+    ``initial_state.q`` has to stitch the other blocks back on itself, and getting that wrong
+    silently zeroes a block.  This function is that stitch, in one place:
+
+    * body coordinates are matched by (body id, axis), so a layout that gains an ``x`` keeps the
+      balanced heights of the old one and starts the new coordinate at zero;
+    * the track block is copied verbatim (the track layout does not depend on the vehicle);
+    * modal coordinates are appended as zeros — a flexible wheelset that was rigid has no
+      deflection to inherit.
+    """
+
+    values = [float(x) for x in supplied]
+    full = source.body_dimension + tracks
+    if len(values) == full:
+        track_values = values[source.body_dimension:]
+    elif len(values) == source.body_dimension:
+        track_values = [0.0] * tracks
+    else:
+        raise TopologyError(
+            f"initial_state has {len(values)} values; the source layout takes "
+            f"{source.body_dimension} body ({full} with its {tracks} track coordinates)")
+    return (remap_state(values[:source.body_dimension], source, target)
+            + track_values
+            + [0.0] * modal_size)

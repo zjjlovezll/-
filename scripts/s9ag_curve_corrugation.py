@@ -75,9 +75,14 @@ def crossing_window() -> tuple[float, float]:
 
 
 def lateral_offset(s_m: float) -> float:
-    """Linear alignment: zero up to the front axle, then s^2 / (2R) into the curve."""
-    reach = max(0.0, s_m - CURVE_START_M)
-    return reach * reach / (2.0 * RADIUS_M)
+    """The station table stays straight; the curve enters as a body force.
+
+    A laterally offset station table is not a curve in this solver: the wheels are
+    dragged sideways until the flange meets the rail and the contact-slope guard
+    fires (measured: ``graph slope limit at axle1_left/left:main, x=41.2461871 m``).
+    ``run.curve_radius_m`` gives the equivalent straight track instead.
+    """
+    return 0.0
 
 
 def mixture(seed: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -148,6 +153,8 @@ def build_case(level_pp_m: float, wavelengths, phases, weights, target: Path) ->
     raw["run"]["duration_s"] = DURATION_S
     raw["run"]["output_step_s"] = OUTPUT_STEP_S
     raw["run"]["max_solver_step_s"] = SOLVER_STEP_S
+    raw["run"]["curve_radius_m"] = RADIUS_M
+    raw["run"]["curve_cant_m"] = CANT_M
 
     directory = WORK / "profiles"
     directory.mkdir(parents=True, exist_ok=True)
@@ -192,18 +199,28 @@ def run(case: Path, label: str) -> Path:
     result = simulate_vehicle(loaded)
     elapsed = time.perf_counter() - started
     out = WORK / f"out_{label}"
+    if (out / "history.csv").exists():
+        print(f"  {label}: cached from an earlier run")
+        return out
     out.mkdir(parents=True, exist_ok=True)
     save_vehicle_result(loaded, result, out)
-    print(f"  {label}: {elapsed:.1f} s, {result.status}")
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    print(f"  {label}: {elapsed:.1f} s, {manifest['summary']['result_status']}")
     return out
 
 
 def history_rows(out: Path, names: list[str]) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    from velch.io.history import read_history
+    import csv
 
-    table = read_history(out / "history.csv")
-    time = np.asarray(table.column("time_s"), dtype=float)
-    return time, {name: np.asarray(table.column(name), dtype=float) for name in names}
+    with (out / "history.csv").open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.reader(handle)
+        header = next(reader)
+        rows = list(reader)
+    index = {name: position for position, name in enumerate(header)}
+    time = np.array([float(row[index["time_s"]]) for row in rows])
+    values = {name: np.array([float(row[index[name]]) for row in rows])
+              for name in names if name in index}
+    return time, values
 
 
 def project(time: np.ndarray, values: np.ndarray, frequency: float,
@@ -276,8 +293,10 @@ def main() -> int:
         print(f"  {label}: duty {done:.3f}, peaks {peak_left/1e3:.1f} / {peak_right/1e3:.1f} kN, "
               + " |a| " + ", ".join(f"{abs(value):.4f}" for value in
                                     measurements[label]["axle1_box_left_z_acc_m_per_s2"]))
-    summary["measurements"] = {label: {channel: value.tolist() for channel, value in per.items()}
-                               for label, per in measurements.items()}
+    summary["measurements"] = {
+        label: {channel: [[value.real, value.imag] for value in values]
+                for channel, values in per.items()}
+        for label, per in measurements.items()}
 
     print()
     print("inversion: complex gain per component from the smallest level, then predict the rest")
@@ -296,7 +315,9 @@ def main() -> int:
               + "recovered " + ", ".join(f"{abs(value)*2e6:7.1f}" for value in recovered)
               + " um  complex error " + f"{error*100:6.1f} %")
     summary["inversion"] = [{"label": label, "level_pp_m": level, "truth_peak_m": truth.tolist(),
-                             "recovered_peak_m": recovered.tolist(), "complex_error": error}
+                             "recovered_peak_re_im": [[value.real, value.imag]
+                                                      for value in recovered],
+                             "complex_error": error}
                             for label, level, truth, recovered, error in table]
     (WORK / "curve_corrugation.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")

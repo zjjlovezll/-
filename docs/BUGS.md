@@ -34,6 +34,9 @@
 | B023 | 断面差量的横向位置错了：在固定 `y = 0.753 m` 取轨顶，而模板包络是 `[−0.790, −0.717] m`、冠部在 `−0.7896 m`，该点落在**轨顶侧面**上、比冠部高 +29.86 mm → 报出的"下沉 5.18/11.24 mm"其实是冠部横向漂移 × 侧面坡度 | 改成量**冠部**（逐站 `argmin(z)` 的高度与横向位置）；冠部高度差实测 0.000–0.155 mm、冠部横移最多 103 mm；阈值降级为 `CROWN_WARN_MM = 0.5` **只报告不拒绝** | `tests/test_simpack_crown.py::test_the_crown_is_the_lowest_point_not_a_fixed_offset` + `docs/SIMPACK_IMPORT` 第五节更正 | 本轮 |
 | B026 | 自己写出的 `history.csv` 自己读不回来：`classify()` 没有 `_acc_m_per_s2` / `_acc_rad_per_s2` 规则，`read_history` 在第一列加速度上就抛 `HistoryError: cannot classify history channel 'axle0_y_acc_m_per_s2'`，③ 时程屏、`assess`、任何按类型取通道的读数路径全部失败。723 项测试没拦住，因为既有算例都是加加速度通道**之前**生成的 | `Kind` 增 `"acceleration"`；两条后缀规则（`m/s^2`、`rad/s^2`）；`channel_names()` 补上加速度名（由状态名推导，并写清节点表还会额外发 `_x_` 与 `axle<k>_box_*`）。同时把**编号**从 0 基改回 1 基：`_column_prefix` 对轮对/构架 `+1`、轴箱体 `axle` 在车辆文件里统一成 0 基（`topology` 现校验"轴箱所在的轴必须是某根轮对的轴"），否则同一根轴上的状态列是 `axle0_y_m` 而接触列是 `axle1_left_normal_n`，按名配对永远差一位 | `tests/test_history_naming.py` 6 项（新跑一个算例并把整张表读回来、断言表头无 `axle0`/`bogie0`、加速度行与状态列逐项对齐、轴箱轴号与轮对一致） | 本轮 |
 | B027 | ??????????? **13.094 Hz?? = 0?????**?????????????????`bearing_a*_z` 1e8?`primary_*_z` 1.176e6?????????? `(??.z ? ??.roll) ? (??.z ? ??.roll)` ?????????"?????????????"????**???????????**????????? 9.181 m/s? ?6 s ??? 98.9 %????????????????? 1?2 ?????13.33 Hz ? 80 km/h = 1.667 m???? 1.6?3.2 m ??? ?29 dB ?? 0.8?1.6 m ?? | ?????????????? `box_roll_{axle}{L,R}`?`axis: roll`??? ? ???????k = **1.4e6** N?m/rad = `k_y?b?` = 5.49e6?0.25?c = 2.0e3??????????**??????? 76 ??????**??? `vehicles/*.json` ? `case_straight_axlebox.json` ??????????????12.5?13.7 Hz ?? ? **0.0000 ? 0.0042**?`s9o decay` 10?17 Hz ?? **9.181 ? 0.020 m/s??? 0.0 %?**??????? 1.0000 | `tests/test_axlebox_rotational_restraint.py` 4 ???"???????? ? < 1e-3"??????+ `docs/AXLEBOX_RESTRAINT_2026-10-26.md` | ?? |
+| B035 | `remap_state` 只搬车辆块：被喂进整条状态向量时把轨道块整段截掉，返回长度只有 `target.body_dimension` → 每根轨的垂向行恰好残留一个接触斑静载（59 662 N），读起来像"车压在一侧"而不是"向量被截断" | 加长度守卫（长度 ≠ 源车辆块就抛 `TopologyError` 并指向 `migrate_initial_state`）；新增 `migrate_initial_state(supplied, source, target, *, tracks, modal_size=0)`，一处完成"车辆块按名 + 轨道块原样 + 模态块置零"；`vehicle.py` 改调它 | `tests/test_initial_state_migration.py` 5 项 | 本轮 |
+| B036 | 静平衡分支判据把 `weight_n / len(case.rails)` 当每斑均摊值。直线道岔算例声明 12 根轨、只有 8 个接触斑 → 上限 `1.6×` 只比正确解高 **2.8 %**（67 391 vs 69 333 N），左右不对称再大 3 % 就把正确解判成坏分支；失败文案还把这说成"垂向自由度不能均摊八个斑" | 均摊值改成 `weight_n / (2 × 轮对数)`；判据要求"承载斑数 = 轮数"；提前 break 的窗口收到 1.25×、硬拒绝仍为 1.6×；文案改为"N 个轮子里有几个承载" | `F:\velch_tmp\probe_o010_seat.py`（51/54/102 坐标三布局全部 OK）+ `tests/test_oracle_frozen.py` 11 项 | 本轮 |
+| B037 | 机械能门只累加车体 + 构架 + 轮对的重力势，而力循环对**所有**有 `z` 的刚体施重 → 86/90 布局的能量门漏掉 8 × 48.2 kg | 改成与力循环同一次遍历：`for body in topology.bodies if "z" in body.dof` | `tests/test_modal_assembly.py` 的能量恒等式 + 全仓 | 本轮 |
 
 ## 已知未修（不是"忘了"，是权衡）
 
@@ -113,4 +116,16 @@
 `detail.both_sides_possible == false` 与 `detail.other_side_stations == 2`。
 真要导入两侧，需要一个两条轨都带断面表的模型（或人工补左轨断面表）。
 
-| O010 | 节点表车型在柔性轨道（`local_compliant`）上静平衡失败 | 同一 1.2 s 算例，内联 35 坐标通过、节点表 38/86 坐标均失败（`no seed converged` / 4× even share）；与轴箱无关 | open |
+| O010 | 节点表车型在柔性轨道（`local_compliant`）上静平衡失败 | 同一 1.2 s 算例，内联 35 坐标通过、节点表 38/86 坐标均失败（`no seed converged` / 4× even share）；与轴箱无关 | **closed（2026-10-26，归因更正）** |
+
+**O010 的归因更正是本轮最贵的一课**：它不是「节点表车型」的问题。五项受控对照（内联 35 / node 38 /
+内联参数+node 拓扑 / 内联布局+node 参数 / axlebox 86）**五组全部收敛**，残差 6.9e-09…2.8e-08 N。
+真正的两个机制是：
+
+- **B035**（本轮修）`remap_state` 只搬**车辆块**，被喂进整条状态向量时把轨道块整段截掉 —— 每根轨的垂向行
+  恰好残留一个接触斑的静载（59 662 N），读起来像「车压在一侧」，而不是「向量被截断」。
+- **B036**（本轮修）静平衡分支判据用 `weight_n / len(case.rails)` 当均摊值。直线道岔算例声明 12 根轨
+  但只有 8 个接触斑，于是上限只比正确解高 **2.8 %** —— 左右不对称再大 3 % 就把正确解判成坏分支。
+- 修完 B028（`track_models` 竖向行走错槽）之后，竖向轨道行才真正有刚度，这也是 38/86 能收敛的前提。
+
+复现命令（三条都输出 `OK`，坐标数 51 / 54 / 102）：`python -X utf8 F:\velch_tmp\probe_o010_seat.py`。

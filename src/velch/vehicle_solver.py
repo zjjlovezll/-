@@ -243,6 +243,23 @@ class VehicleDynamics:
         for body in self.topology.bodies:
             if "z" in body.dof:
                 force[self.topology.require(body.id, "z")] -= body.mass_kg * cfg.gravity_m_s2
+        # Curve, as the equivalent straight track: a constant-radius curve is, in the
+        # vehicle's own frame, a lateral body force ``m v^2 / R`` plus a gravity component
+        # ``m g sin(theta)`` along the cant.  Without this term a curved station table just
+        # drags the wheels onto the flange until the contact-slope guard fires (measured:
+        # `graph slope limit at axle1_left/left:main, x=41.2461871 m`).
+        curve = getattr(self.case.run, "curve_radius_m", None)
+        if curve:
+            speed = abs(float(cfg.travel_speed_m_s))
+            cant = float(getattr(self.case.run, "curve_cant_m", 0.0) or 0.0)
+            gauge = 2.0 * abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 1.5
+            sin_theta = cant / gauge if gauge else 0.0
+            for body in self.topology.bodies:
+                if "y" not in body.dof:
+                    continue
+                # Outward is +y; the cant component points inward, so the two subtract.
+                lateral = body.mass_kg * (speed * speed / curve - cfg.gravity_m_s2 * sin_theta)
+                force[self.topology.require(body.id, "y")] += lateral
         for connector in self.connectors:
             force += connector.force(q, v)
         # The track block is no longer the tail of the vector once modal coordinates exist, so
@@ -660,12 +677,12 @@ class VehicleDynamics:
         cfg = self.case.vehicle
         energy = 0.5 * float(np.dot(self.mass, v * v))
         topology = self.topology
-        energy += cfg.gravity_m_s2 * (
-            cfg.carbody.mass_kg * q[topology.require(topology.carbody().id, "z")] +
-            sum(cfg.bogie.mass_kg * q[topology.require(body.id, "z")]
-                for body in topology.bogies()) +
-            sum(body.mass_kg * q[topology.require(body.id, "z")]
-                for body in topology.wheelsets()))
+        # Same traversal as the force loop: every body that has a vertical coordinate is lifted by
+        # gravity, axle boxes included.  Summing only carbody + bogies + wheelsets left the eight
+        # boxes (8 x 48.2 kg) out of the energy check while they were in the force balance.
+        energy += cfg.gravity_m_s2 * sum(
+            body.mass_kg * q[topology.require(body.id, "z")]
+            for body in topology.bodies if "z" in body.dof)
         energy += sum(link.potential(q) for link in self.connectors)
         energy += self.track.potential_j(q)
         if self.modal is not None:
@@ -736,7 +753,14 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
 
     cfg = case.vehicle
     weight_n = cfg.gravity_m_s2 * sum(body.mass_kg for body in topology.bodies)
-    expected_n = weight_n / max(len(case.rails), 1)
+    # Every wheel carries on exactly one rail, so the even share divides the weight by twice the
+    # number of wheelsets — not by ``len(case.rails)``.  A straight turnout case declares twelve
+    # rails (a stock and a switch rail on each side) while only eight patches are ever in contact;
+    # dividing by twelve put the *correct* solution within 2.8 % of the accept limit, so a slightly
+    # larger left/right asymmetry was thrown away as a "bad branch".  That is what O010 was really
+    # chasing: not a layout problem, a divisor that ignored how many wheels carry.
+    patches = max(2 * len(topology.wheelsets()), 1)
+    expected_n = weight_n / patches
 
     best: tuple[float, np.ndarray, float, list[float]] | None = None
     last_message = ""
@@ -769,21 +793,24 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         score = -max(loads)
         if best is None or score > best[0]:
             best = (score, solved.x.copy(), error_n, loads)
-        if max(loads) <= 1.6 * expected_n and min(loads) >= 1.0e3:
+        if (max(loads) <= 1.25 * expected_n and min(loads) >= 1.0e3
+                and sum(1 for load in loads if load > 1.0e3) >= patches):
             break
 
     if best is None:
         raise SimulationFailure(
             f"vertical preload equilibrium failed: no seed converged; {last_message}")
     _, values, error_n, loads = best
-    starved = min(loads) < 1.0e3
+    carrying = sum(1 for load in loads if load > 1.0e3)
+    starved = min(loads) < 1.0e3 or carrying < patches
     over_loaded = max(loads) > 1.6 * expected_n
     if starved and over_loaded:
         raise SimulationFailure(
-            "vertical preload equilibrium failed: unbalanced branch - the lightest "
-            f"contact patch carries only {min(loads):.1f} N while the heaviest carries "
-            f"{max(loads):.1f} N (even share ~{expected_n:.0f} N); the vertical "
-            "degrees of freedom cannot seat eight patches evenly")
+            "vertical preload equilibrium failed: unbalanced branch - "
+            f"{carrying} of {patches} wheels carry load, the lightest patch carries "
+            f"{min(loads):.1f} N while the heaviest carries {max(loads):.1f} N "
+            f"(even share ~{expected_n:.0f} N per wheel); the vehicle is standing on one side, "
+            "not failing to spread load over the patches it has")
     q[indices] = values
     return q, error_n
 
@@ -960,6 +987,17 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     # Every body that has mass, not "four wheelsets + two bogies + car": with axle boxes the old
     # expression left 8 x 48.2 kg out and the action/reaction sum read permanently low by 3.8 kN.
     total_weight = sum(body.mass_kg for body in dynamics.topology.bodies) * cfg.gravity_m_s2
+    # The curve enters the right-hand side as an external lateral force, so the lateral
+    # action/reaction sum is short by exactly this much unless it is counted here too.
+    curve_lateral_n = 0.0
+    curve_radius = getattr(run, "curve_radius_m", None)
+    if curve_radius:
+        speed = abs(float(cfg.travel_speed_m_s))
+        cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
+        gauge = 2.0 * abs(float(case.wheels[0].lateral_offset_m)) if case.wheels else 1.5
+        sin_theta = cant / gauge if gauge else 0.0
+        curve_lateral_n = sum(body.mass_kg for body in dynamics.topology.bodies if "y" in body.dof) \
+            * (speed * speed / curve_radius - cfg.gravity_m_s2 * sin_theta)
     # The loop below already calls evaluate() on every accepted state for the gates; that call
     # *is* the right-hand side, so acceleration is force/mass with no finite difference.
     acceleration_channels = _acceleration_channels(dynamics)
@@ -1000,7 +1038,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                  for rail in case.rails])
             assert reaction is not None
             max_translation_balance_error_n = max(max_translation_balance_error_n,
-                abs(sum(force[y_indices]) + reaction[0]),
+                abs(sum(force[y_indices]) - curve_lateral_n + reaction[0]),
                 abs(sum(force[z_indices]) + reaction[1] + total_weight))
         else:
             assert case.modal_track is not None

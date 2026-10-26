@@ -19,7 +19,7 @@ import numpy as np
 from .contact import ContactParameters
 from .model import LinearSupport, RunSettings, TrackLayer, Wheel
 from .paths import PathTrack, load_path
-from .topology import legacy_topology, remap_state, topology_of
+from .topology import legacy_topology, migrate_initial_state, topology_of
 from .assets import resolve_asset
 from .profiles import ProfileSeries, Station, load_profile
 from .support_compliance import SupportCompliance
@@ -199,6 +199,24 @@ def _track_size(track_kind: str, rails, layers, modal_track: "ModalTrack | None"
     if track_kind == "layered":
         return 2 * (1 + len(layers)) * len(rails)
     return modal_track.mode_count if modal_track else 0
+
+
+def vehicle_parameters(block: dict[str, Any]) -> VehicleParameters:
+    """Build the parameter object from a ``vehicle`` block (inline or from a vehicle file).
+
+    One implementation, because two callers (a case that inlines the block and a case that points at
+    a vehicle file) must not be able to interpret the same fields differently.
+    """
+
+    return VehicleParameters(
+        RigidBody(**block["carbody"]), RigidBody(**block["bogie"]),
+        WheelsetBody(**block["wheelset"]),
+        SuspensionStage(**block["primary"]), SuspensionStage(**block["secondary"]),
+        **{key: block[key] for key in ("bogie_half_spacing_m", "wheelbase_m",
+                                       "wheel_center_height_m", "nominal_wheel_radius_m",
+                                       "travel_speed_m_s", "gravity_m_s2",
+                                       "drive_torque_per_wheelset_nm")},
+    )
 
 
 def _modal_size(modes: "dict[int, ModeSet] | None") -> int:
@@ -394,13 +412,7 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
         v = model.block
         # 把车辆文件也记进 assets：它是这台车唯一的定义，改了就必须让 manifest 校验失败。
         assets[str(model.path)] = hashlib.sha256(model.path.read_bytes()).hexdigest()
-    vehicle = VehicleParameters(
-        RigidBody(**v["carbody"]), RigidBody(**v["bogie"]), WheelsetBody(**v["wheelset"]),
-        SuspensionStage(**v["primary"]), SuspensionStage(**v["secondary"]),
-        **{key: v[key] for key in ("bogie_half_spacing_m", "wheelbase_m", "wheel_center_height_m",
-                                "nominal_wheel_radius_m", "travel_speed_m_s", "gravity_m_s2",
-                                "drive_torque_per_wheelset_nm")},
-    )
+    vehicle = vehicle_parameters(v)
     wheels = tuple(Wheel(item["id"], float(item["lateral_offset_m"]),
                          profile(item["profile"], "wheel_lower")) for item in raw["wheels"])
     rails = []
@@ -499,9 +511,8 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
         legacy = legacy_topology(vehicle)
         track_extra = len(supplied) - legacy.body_dimension
         if track_extra == tracks:
-            supplied = remap_state(supplied[:legacy.body_dimension], legacy, topology) \
-                + [float(x) for x in supplied[legacy.body_dimension:]] \
-                + [0.0] * modal_size
+            supplied = migrate_initial_state(supplied, legacy, topology,
+                                             tracks=tracks, modal_size=modal_size)
         else:
             raise ValueError(f"initial_state.q has {len(supplied)} values; the layout needs {n} "
                              f"({topology.body_dimension} body + {tracks} track "

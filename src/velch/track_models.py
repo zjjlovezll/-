@@ -204,8 +204,13 @@ class TrackKernel:
         if self.kind == "local_compliant":
             result = np.empty(self.dimension)
             for i, rail in enumerate(self.rails):
+                # Both axes read at ``self.offset``.  The vertical row used to be hard-coded
+                # to 36, which is right only for the 35-coordinate inline vehicle: on a
+                # node-table case (38 or 86 coordinates) it silently returned zero vertical
+                # support, zero potential and zero power while the lateral row stayed
+                # correct -- a wrong answer with no error anywhere.
                 result[2 * i] = -rail.support.k_y_n_m * q[self.offset + 2 * i] - rail.support.c_y_n_s_m * v[self.offset + 2 * i]
-                result[2 * i + 1] = -rail.support.k_z_n_m * q[36 + 2 * i] - rail.support.c_z_n_s_m * v[36 + 2 * i]
+                result[2 * i + 1] = -rail.support.k_z_n_m * q[self.offset + 2 * i + 1] - rail.support.c_z_n_s_m * v[self.offset + 2 * i + 1]
             return result
         if self.kind == "layered":
             result = np.zeros(self.dimension)
@@ -270,7 +275,7 @@ class TrackKernel:
     def potential_j(self, q: np.ndarray) -> float:
         if self.kind == "local_compliant":
             return float(sum(0.5 * (rail.support.k_y_n_m * q[self.offset + 2 * i] ** 2 +
-                                    rail.support.k_z_n_m * q[36 + 2 * i] ** 2)
+                                    rail.support.k_z_n_m * q[self.offset + 2 * i + 1] ** 2)
                              for i, rail in enumerate(self.rails)))
         if self.kind == "layered":
             total = 0.0
@@ -310,7 +315,7 @@ class TrackKernel:
         if self.kind == "local_compliant":
             return (sum(rail.support.k_y_n_m * q[self.offset + 2 * i] + rail.support.c_y_n_s_m * v[self.offset + 2 * i]
                         for i, rail in enumerate(self.rails)),
-                    sum(rail.support.k_z_n_m * q[36 + 2 * i] + rail.support.c_z_n_s_m * v[36 + 2 * i]
+                    sum(rail.support.k_z_n_m * q[self.offset + 2 * i + 1] + rail.support.c_z_n_s_m * v[self.offset + 2 * i + 1]
                         for i, rail in enumerate(self.rails)))
         if self.kind == "layered":
             # The ground only carries what the bottom-most spring passes on.

@@ -9,9 +9,12 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 from .contact import ContactParameters
 from .model import LinearSupport, RunSettings, TrackLayer, Wheel
@@ -152,6 +155,38 @@ class VehicleRail:
     @property
     def contact_bodies(self) -> tuple[RailBody, ...]:
         return self.bodies or (RailBody(self.id, self.profiles),)
+
+
+def _irregularity_reach(vehicle, run_raw: dict, track) -> dict:
+    """Does any axle actually pass over the stretch this record excites?
+
+    The offset is applied to the sampled surface, so a case whose profiles carry it
+    correctly still produces a run identical to no-irregularity if the wheels never reach
+    the band.  That failure is completely silent -- it cost a full debugging round -- and
+    the whole check is one interval intersection.
+    """
+
+    speed = float(vehicle.travel_speed_m_s)
+    start = float(run_raw.get("x_start_m", 0.0))
+    duration = float(run_raw.get("duration_s", 0.0))
+    direction = 1.0 if speed >= 0.0 else -1.0
+    mileages = np.asarray(track.s_m, dtype=float)
+    active = ((np.abs(np.asarray(track.vertical_m)) > 0.0)
+              | (np.abs(np.asarray(track.lateral_m)) > 0.0)
+              | (np.abs(np.asarray(track.roll_rad)) > 0.0)
+              | (np.abs(np.asarray(track.gauge_m)) > 0.0))
+    spans = []
+    for offset in vehicle.axle_offsets_m:
+        lo = start + offset
+        hi = lo + direction * abs(speed) * duration
+        spans.append([min(lo, hi), max(lo, hi)])
+    if not active.any():
+        return {"axles_m": [[round(lo, 3), round(hi, 3)] for lo, hi in spans], "overlaps": False}
+    band = (float(mileages[active].min()), float(mileages[active].max()))
+    overlaps = any(lo <= band[1] and band[0] <= hi for lo, hi in spans)
+    return {"axles_m": [[round(lo, 3), round(hi, 3)] for lo, hi in spans],
+            "band_m": [round(band[0], 3), round(band[1], 3)],
+            "overlaps": overlaps}
 
 
 def _track_size(track_kind: str, rails, layers, modal_track: "ModalTrack | None") -> int:
@@ -422,6 +457,14 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
         irregularity_record = describe_application(
             raw_track, start_m=start_m, end_m=end_m, fade_m=fade_m, scale=scale, channels=channels)
         irregularity_record["sha256"] = assets[str(tre_path)]
+        reach = _irregularity_reach(vehicle, raw.get("run", {}), windowed)
+        irregularity_record["reach"] = reach
+        if not reach["overlaps"]:
+            warnings.warn(
+                f"irregularity {Path(tre_path).name} is applied but no axle passes over it: "
+                f"axle spans {reach['axles_m']} m, excited band {reach.get('band_m')} m. "
+                f"This run is identical to one with no irregularity.",
+                RuntimeWarning, stacklevel=2)
     track_spec = raw.get("track_dynamics", {"kind": "local_compliant"})
     track_kind = track_spec["kind"]
     if track_kind not in {"rigid", "local_compliant", "two_layer", "layered", "modal"}:

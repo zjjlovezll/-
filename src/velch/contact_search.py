@@ -56,7 +56,12 @@ def _contact_on_span(
         # (and could collide after a garbage collection).
         cache_key = ((surface_key, rail_sample.lower_s_m, rail_sample.upper_s_m,
                  float(rail_z[0]), float(rail_z[rail_z.size // 2]),
-                 float(rail_z[-1]))
+                 float(rail_z[-1]),
+                 # The grid is built from ``rail_y`` as well: without a lateral fingerprint
+                 # the cache swallowed lateral, gauge and roll irregularity (the default
+                 # channel set), because those move the surface sideways, not vertically.
+                 float(rail_y[0]), float(rail_y[rail_y.size // 2]),
+                 float(rail_y[-1]))
                      if surface_key is not None else None)
         cached = _rail_grid_cache.get(cache_key) if cache_key is not None else None
         if cached is None:
@@ -582,7 +587,9 @@ def find_strip_contact(
         # remains per call.
         key = ((surface_key, rail_sample.lower_s_m, rail_sample.upper_s_m,
                  float(rail_z[0]), float(rail_z[rail_z.size // 2]),
-                 float(rail_z[-1]))
+                 float(rail_z[-1]),
+                 float(rail_y[0]), float(rail_y[rail_y.size // 2]),
+                 float(rail_y[-1]))
                if surface_key is not None else None)
         cached = _rail_grid_cache.get(key) if key is not None else None
         if cached is None:

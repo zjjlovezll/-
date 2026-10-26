@@ -70,7 +70,13 @@ class Dynamics:
             pos = 4 + 2 * index
             force[pos] = -rail.support.k_y_n_m * q[pos] - rail.support.c_y_n_s_m * v[pos]
             force[pos + 1] = -rail.support.k_z_n_m * q[pos + 1] - rail.support.c_z_n_s_m * v[pos + 1]
-            sample = rail.profiles.sample(x_m, direction)
+            # Sample the surface the same way the v2 solver does: the running surface of
+            # the body that carries it, not ``rail.profiles``.  ``shift_rails`` wraps
+            # ``rail.bodies[*].series`` with the .tre offset, so going through the bare
+            # ``profiles`` here made every irregularity silently inert on this path.
+            bodies = getattr(rail, "contact_bodies", None) or getattr(rail, "bodies", None)
+            series = bodies[0] if bodies else rail.profiles
+            sample = series.sample(x_m, direction)
             geometry = find_graph_contact(
                 self.wheels[rail.wheel_id].profile, sample,
                 wheel_y_m=float(q[0]), wheel_z_m=float(q[1]), wheel_roll_rad=float(q[2]),

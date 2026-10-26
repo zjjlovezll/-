@@ -59,8 +59,15 @@ def build(target: Path = TARGET, names: tuple[str, ...] = PRESET) -> dict:
     source = _corpus()
     if not source.is_dir():
         raise SystemExit(f"no corpus at {source}: set VELCH_DATA_ROOT or write the marker file")
+    marker = target / "BUNDLE.json"
     if target.exists():
-        shutil.rmtree(target)
+        # ``--target`` is a command-line argument, and this line deletes whatever it points
+        # at.  Only replace a directory that is recognisably ours: a mistyped target must
+        # not take the corpus with it, and nothing here is in version control.
+        if not marker.is_file() and any(target.iterdir()):
+            raise SystemExit(
+                f"refusing to replace {target}: it is not empty and holds no {marker.name}. "
+                f"Pass --target pointing at a bundle directory, or empty it by hand.")
     assets_dir = target / "profiles"
     assets_dir.mkdir(parents=True)
 

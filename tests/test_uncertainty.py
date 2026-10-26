@@ -109,8 +109,11 @@ def test_non_negative_folding_zeroes_the_impossible_bands():
                           labels=("ok", "negative"))
     folded = fold_non_negative(posterior)
     assert folded.mean.tolist() == [2.0, 0.0]
-    assert folded.sigma[1] == pytest.approx(0.3, rel=1e-12)
+    # A folded half-normal keeps (1 - 2/pi) of its variance, not all of it: the clamped
+    # coordinate is one-sided, so reporting the old sigma would claim certainty.
+    assert folded.sigma[1] == pytest.approx(0.3 * math.sqrt(1.0 - 2.0 / math.pi), rel=1e-12)
     assert folded.mean[0] == pytest.approx(2.0)
+    assert folded.sigma[0] == pytest.approx(0.2, rel=1e-12)
 
 
 def test_sigma_from_floor_converts_a_response_into_metres():

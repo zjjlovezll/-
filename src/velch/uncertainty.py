@@ -203,5 +203,10 @@ def fold_non_negative(posterior: Posterior) -> Posterior:
     mean = np.where(posterior.mean < 0.0, 0.0, posterior.mean)
     covariance = posterior.covariance.copy()
     for index in np.flatnonzero(posterior.mean < 0.0):
-        covariance[index, index] = math.sqrt(covariance[index, index]) ** 2
+        # A half-normal draw folded onto zero has variance (1 - 2/pi) * sigma^2, not
+        # sigma^2.  This line used to read ``sqrt(x) ** 2``, which is the identity: the
+        # clamped coordinate kept its old sigma and then reported a perfectly certain
+        # zero (mean 0 with sigma unchanged), which is the opposite of the intent.
+        sigma = math.sqrt(max(float(covariance[index, index]), 0.0))
+        covariance[index, index] = (1.0 - 2.0 / math.pi) * sigma * sigma
     return Posterior(mean=mean, covariance=covariance, labels=posterior.labels)

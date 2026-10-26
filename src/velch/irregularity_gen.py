@@ -98,7 +98,7 @@ def generate(
     *,
     spectrum_name: str = "german_low",
     length_m: float = 200.0,
-    step_m: float = 0.05,
+    step_m: float = MIN_WAVELENGTH_M / 2.0,
     shortest_m: float = MIN_WAVELENGTH_M,
     longest_m: float = 25.0,
     seed: int = 20261024,
@@ -138,12 +138,14 @@ def generate(
     amplitude[band] = (count / 2.0) * np.sqrt(2.0 * density[band] * d_omega)
 
     rng = np.random.default_rng(seed)
-    phase = rng.uniform(0.0, 2.0 * math.pi, size=omega.size)
-    field = np.fft.irfft(amplitude * np.exp(1j * phase), n=count)
-
     values = {name: np.zeros(count) for name in valid}
     for name in channels:
-        values[name] = field.copy() if name == "vertical" else field.copy()
+        # Each channel gets its own random phase.  This loop used to assign ``field.copy()``
+        # on both branches of a ternary, so asking for lateral and vertical returned two
+        # perfectly correlated tracks (corr = 1.0): physically wrong, and it silently
+        # amplified every roll/vertical cross response.
+        phase = rng.uniform(0.0, 2.0 * math.pi, size=omega.size)
+        values[name] = np.fft.irfft(amplitude * np.exp(1j * phase), n=count)
     return IrregularityTrack(
         s_m=s_m,
         lateral_m=values["lateral"],

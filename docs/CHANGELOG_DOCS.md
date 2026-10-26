@@ -1629,6 +1629,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [AI_INTERFACE_ARCHITECTURE_2026-10-22.md](AI_INTERFACE_ARCHITECTURE_2026-10-22.md) | Velch 软件分层与 AI 接口架构（设计草案） |
 | [ARCHITECTURE_2026-10-21.md](ARCHITECTURE_2026-10-21.md) | Velch 架构收口与 Simpack 2021x 对标（2026-10-21） |
 | [ASSESSMENT_2026-10-20.md](ASSESSMENT_2026-10-20.md) | 标准评价指标（assess）：把仿真输出变成可判读的结论 |
+| [AUDIT_FIXES_2026-10-26.md](AUDIT_FIXES_2026-10-26.md) | 2026-10-26 只读审查的七个缺陷与修法 |
 | [AXLEBOX_RESTRAINT_2026-10-26.md](AXLEBOX_RESTRAINT_2026-10-26.md) | 轴箱的转动约束：13.094 Hz 无阻尼模态从哪里来，怎么去掉 |
 | [B2_EVENT_INTEGRATION_2026-10-22.md](B2_EVENT_INTEGRATION_2026-10-22.md) | B2 事件化积分 / 峰值分辨率（2026-10-22） |
 | [B3_TABLE_AMORTIZATION_2026-10-22.md](B3_TABLE_AMORTIZATION_2026-10-22.md) | B3 接触表按反演批次摊销（2026-10-22） |
@@ -2994,6 +2995,41 @@ zip 98.5 MB（+3.4 MB，压缩比把 12.1 MB 的资产压到约三分之一）�
 3. 1.6–3.2 m 标定后反而更差（+0.93 → −2.60 dB），因为它的常数是从 3.90 与 5.12 µm 的散点上取的，属"用噪声拟合噪声"，所以这一带只报分辨率底、不做标定。
 
 证据：`docs/BAND_CAPABILITY_2026-10-26.md` 第 14 节、`F:\velch_tmp\s9u\bias_calibration.json`、`scripts/s9x_bias_calibration.py`。
+
+## 第 109 轮：只读审查的七个缺陷——两处静默错数、一处 .tre 假警报
+
+代码审查工程师做了一轮只读审查（HEAD `a9f43c8`），报 13 条，其中 7 条落实为修复。全部细节见
+`docs/AUDIT_FIXES_2026-10-26.md`。
+
+**先纠正我自己的误判**：我报的"`.tre` 完全不生效"不是缺陷。施加链路完好（`ShiftedSeries`
+在 40.5125 m 处给 +30.0 µm），真正原因是**几何错配**——`x_start=38 m` 时四轴扫过 28.0–33.6 与
+45.5–53.6 m，而波磨带在 40–41 m，没有任何车轮走到它。改 `x_start=30` 立刻出现
+`max|ΔF| = 7.56e4 N`。为防再犯，装配完 `irregularity` 后做一次里程区间求交，空交时发
+`RuntimeWarning` 并在记录里写 `reach`（四轴区间、激励带、`overlaps`）。
+
+**两处静默错数**：
+
+- **B028** `src/velch/track_models.py` 三处把竖向轨道坐标写死成 `36 + 2*i`
+  （`internal_force` / `potential_j` / `support_reaction`）。只有 35 坐标的内联车型才对；
+  节点表（38 / 86 坐标）下竖向支撑、位能、功率**全部为零**，横向仍正确，所以不崩、只算错。
+  现在一律 `self.offset + 2*i (+1)`；`offset=35` 时逐位不变。
+  它之所以一直没被看见，是因为 **O010 先一步挡住了**（节点表在柔性轨道上静平衡本就不收敛）；
+  O010 一修好，它就会立刻变成静默错数。
+- **B031** `src/velch/uncertainty.py` `fold_non_negative` 里的 `sqrt(x)**2` 是恒等式，
+  被截断分量的方差一点没折 → 报告成"均值 0、σ 不变"，即**确定等于 0**。改成半正态
+  `(1 − 2/π)·σ²`。
+
+**其余五条**：B029 v1 路径 `solver.py:73` 取未包装的 `rail.profiles` → `.tre` 静默失效；
+B030 接触几何 LRU 键缺横向指纹 → lateral/gauge/roll 通道被吞；
+B032 `portable_models.build()` 无防护 `rmtree`（`--target` 手误可删掉语料）；
+B033 生成器把同一份场赋给每个通道（横/竖 corr = 1.0）；B034 `generate()` 默认
+`step = shortest` 自相矛盾、无参调用必抛。
+
+另：`assets.py` 的 `lib:`/`case:`/`data:` 前缀补了包含性校验，`lib:../..` 不再越出数据根。
+
+**验证**：`tests/test_audit_fixes.py`（9 项）+ `tests/test_uncertainty.py`（10 项）全绿；
+全仓 **838 passed, 1 skipped in 117.21s**。冻结基线未动（唯一被冻结基线走到的分支是
+`offset=35`，与旧常量逐位相同）。
 
 ## 第 102 轮：收尾——带平均算子、三种子、D4 有界，以及 200 km/h 的价码
 

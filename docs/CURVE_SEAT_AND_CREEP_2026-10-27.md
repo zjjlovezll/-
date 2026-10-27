@@ -245,3 +245,45 @@ def placement(rail_index, x_m):
 pytest tests/test_curve_seat.py tests/test_speed_profile_case.py -q    11 passed, 1 xfailed
 scripts/freeze_baseline.py --check                                     VERDICT: UNCHANGED
 ```
+
+## 13. 超高在几何路线上改为**明确拒绝**；而"几何一致"仍然在第一步退出（原因收窄了一格）
+
+### 13.1 拒绝而不是假装
+
+`_curve_placement` 的超高原来只做 `dz = ±rise`（整根轨**平移**，型面不转）。上一轮已证明这会让车轮
+与"平移未转"的轨面在轮缘根部相遇。与其发布一个接触表示不了的高差，现在直接拒绝：
+
+```
+SimulationFailure: curve_cant_m needs the rail surface to be tilted, which this geometry route does
+not do yet (the rail is only raised, not rotated). Use curve_geometry = false, where the cant enters
+as a lateral force, or set curve_cant_m = 0.
+```
+
+理由写在代码里：**拒绝优于"看起来像物理"的龙门失败**。可交付口径仍然是体力路线
+（`curve_geometry = false` + 平衡超高），R=1100/107 mm/100 km/h 实测 8/8、1.000–1.001×。
+
+### 13.2 但超高并不是唯一原因——三组对照把它排除了
+
+`cant = 0`（没有高差、没有滚转）下，几何路线仍然在第一步退出。把放置拆成两半分别测：
+
+| 放置 | 结果 |
+|---|---|
+| 只加横向偏移 `y = s²/2R` | `graph slope limit at axle1_left, x=70 m` |
+| 只加航向 `yaw = atan(s/R)` | `graph slope limit at axle3_left, x=52.5 m` |
+| 两者都加（现行） | `graph slope limit at axle1_right, x=70 m` |
+
+三个都失败，所以**"缺轨侧旋转"不是唯一缺口**：只要把车相对一张**直**轨表挪动（无论挪横向还是挪航向），
+座椅就会把轮子拖到轮缘；而 `curve_geometry = true` 同时挪轨道时**也**失败，说明轨道那一侧的放置
+要么没有真正进入接触，要么进入的量与车轮侧不是同一个量。
+
+下一轮要做的不是继续猜，而是量：在 `evaluate` 里打印**同一个轴位**上
+`local_state(...)` 返回的 `y`、`placement(index, x_m)[0]` 与接触搜索实际使用的 `rail_y_m`，
+三者必须满足 `rail_y_m == local_state_y`。这一条一旦对上，几何路线要么跑通、要么失败点会移动到
+别的地方——无论哪种都比现在这种"三组都失败"的现状信息量大。
+
+### 13.3 验证
+
+```
+pytest tests/test_curve_seat.py -q      8 passed, 1 xfailed
+scripts/freeze_baseline.py --check      VERDICT: UNCHANGED
+```

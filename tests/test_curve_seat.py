@@ -23,7 +23,12 @@ import numpy as np
 import pytest
 
 from velch.vehicle import load_vehicle_case
-from velch.vehicle_solver import VehicleDynamics, _load_per_wheel, simulate_vehicle
+from velch.vehicle_solver import (
+    SimulationFailure,
+    VehicleDynamics,
+    _load_per_wheel,
+    simulate_vehicle,
+)
 
 pytestmark = pytest.mark.corpus
 
@@ -172,7 +177,9 @@ def test_curve_geometry_places_the_vehicle_on_the_line_it_moves_the_track_onto(t
 
     from velch.vehicle_solver import VehicleDynamics, _body_offset_m, _place_on_alignment
 
-    path = _case(tmp_path, "placed", radius=1100.0, cant=0.107, speed_kmh=100.0,
+    # cant = 0: the level difference a rail cannot yet be tilted for is refused elsewhere, and
+    # placement itself is about the curve's line, not about cant.
+    path = _case(tmp_path, "placed", radius=1100.0, cant=0.0, speed_kmh=100.0,
                  duration_s=0.005, geometry=True)
     case = load_vehicle_case(path)
     dynamics = VehicleDynamics(case, contact_workers=1)
@@ -215,3 +222,22 @@ def test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it(
                  duration_s=0.005, geometry=True)
     result = simulate_vehicle(load_vehicle_case(path))
     assert result.summary["result_status"] == "numerically_checked"
+
+def test_cant_on_the_geometry_route_is_refused(tmp_path):
+    """A rail that is raised but not rotated cannot carry cant, so the run must say so."""
+
+    from velch import data_root
+
+    raw = json.loads((data_root.case_dir() / "case_A_final_law.json").read_text(encoding="utf-8"))
+    raw["run"].update({"curve_radius_m": 1100.0, "curve_cant_m": 0.107, "curve_geometry": True,
+                       "duration_s": 0.01, "output_step_s": 0.01, "x_start_m": 60.0})
+    raw.pop("initial_state", None)
+    path = tmp_path / "cant_on_geometry.json"
+    path.write_text(json.dumps(raw, indent=1), encoding="utf-8")
+
+    case = load_vehicle_case(path)
+    with pytest.raises(SimulationFailure) as error:
+        simulate_vehicle(case)
+    message = str(error.value)
+    assert "needs the rail surface to be tilted" in message
+    assert "curve_geometry = false" in message

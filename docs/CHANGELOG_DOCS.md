@@ -3399,6 +3399,13 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
 
+## 第 126 轮：几何路线上的超高改为明确拒绝；三组对照把"缺轨侧旋转"从唯一原因降为之一
+
+- `_curve_placement` 遇到 `|curve_cant_m| > 0` 直接抛 `SimulationFailure`，消息指出轨面未旋转并给出两条出路（改用体力路线，或令 `cant = 0`）。理由：与其让一个接触表示不了的高差伪装成龙门失败，不如显式拒绝。
+- `cant = 0` 下三组对照：只加横向偏移 → `x=70 m` 失败；只加航向 → `x=52.5 m` 失败；两者都加 → `x=70 m` 失败。因此"缺轨侧旋转"不是唯一缺口。
+- 下一步是量而不是猜：在 `evaluate` 内对同一轴位打印 `local_state` 的 `y`、`placement(index, x_m)[0]`、接触搜索实际用的 `rail_y_m`，验证三者一致。
+- 验证：`tests/test_curve_seat.py` 8 passed / 1 xfailed；冻结基线 UNCHANGED。
+
 ## 第 125 轮：放置逐轴一致（上轮猜测错），超高被做成台阶而非倾斜
 
 - 逐轴对比证明放置没错：轨道 dy 与车轮 dy 在 +10/+7.5/−7.5/−10 m 四个里程**完全相等**（45.455 / 25.568 mm），因为放置本来就是 `(rail_index, x_m)` 与按刚体各自里程算的。

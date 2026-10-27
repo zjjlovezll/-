@@ -300,9 +300,20 @@ class VehicleDynamics:
             raise SimulationFailure("curve_radius_m must not be zero")
         start = float(run.x_start_m)
         cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
-        half_gauge = (abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 0.75)
-        sin_theta = 0.0 if half_gauge == 0.0 else cant / (2.0 * half_gauge)
-        rise = half_gauge * sin_theta
+        if abs(cant) > 0.0:
+            # Cant here is only a rail *level* difference (``dz = +-rise``): the rail profile is
+            # translated, never tilted.  A wheel that meets a translated-but-level rail on a curve
+            # ends up on its flange root and the contact-slope guard stops the run at the first
+            # step (measured: R = 1100 m, 107 mm, x = 70 m; and it fails with either roll sign).
+            # Rather than publish a level difference the contact cannot represent, refuse it and
+            # point at the route that does work.  Refusing also keeps this from silently becoming
+            # a gate failure that looks like physics.
+            raise SimulationFailure(
+                "curve_cant_m needs the rail surface to be tilted, which this geometry route does "
+                "not do yet (the rail is only raised, not rotated). Use curve_geometry = false, "
+                "where the cant enters as a lateral force, or set curve_cant_m = 0."
+            )
+        rise = 0.0
         rails = tuple(self.case.rails)
 
         def placement(rail_index: int, x_m: float) -> tuple[float, float, float]:

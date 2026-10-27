@@ -19,7 +19,7 @@ import pytest
 
 from velch.model import load_case
 from velch.vehicle import load_vehicle_case
-from velch.vehicle_solver import VehicleDynamics
+from velch.vehicle_solver import SimulationFailure, VehicleDynamics
 
 CASE = pathlib.Path(__file__).resolve().parents[1] / "examples" / "vehicle_v2" / "case.json"
 RADIUS = 350.0
@@ -99,21 +99,36 @@ def test_curve_geometry_moves_the_rail_and_its_transverse_velocity(tmp_path):
         assert gauge > 1.0
 
 
-def test_cant_raises_the_outer_rail_by_half_the_gauge(tmp_path):
-    cant = 0.06
-    dynamics = _dynamics(_with_run(tmp_path, "cant", curve_radius_m=RADIUS,
-                                   curve_cant_m=cant, curve_geometry=True))
+def test_cant_on_the_geometry_route_is_refused_with_the_way_out(tmp_path):
+    """A raised-but-not-rotated rail cannot carry cant, so the run says so and names both routes.
+
+    This used to assert the rail level difference ``dz = +-rise``.  That difference is exactly what
+    put the wheel on its flange root at the first step (measured: R = 1100 m, 107 mm, x = 70 m, and
+    it failed with either vehicle-roll sign), so the difference is now refused instead of published,
+    and cant is carried by the route that does represent it: ``curve_geometry = false``, where it
+    enters as a lateral force.
+    """
+
+    # The refusal happens when the dynamics are built, because that is when the placement closures
+    # are made: a case that asks for cant on the geometry route never becomes a runnable model.
+    with pytest.raises(SimulationFailure) as error:
+        _dynamics(_with_run(tmp_path, "cant", curve_radius_m=RADIUS,
+                            curve_cant_m=0.06, curve_geometry=True))
+    message = str(error.value)
+    assert "needs the rail surface to be tilted" in message
+    assert "curve_geometry = false" in message
+
+
+def test_cant_without_the_geometry_route_still_flows_through_the_force(tmp_path):
+    """The force route keeps cant: no rail is moved, so there is nothing to refuse."""
+
+    dynamics = _dynamics(_with_run(tmp_path, "cant_force", curve_radius_m=RADIUS,
+                                   curve_cant_m=0.06, curve_geometry=False))
     q, v = _state(dynamics)
-    rails = dynamics.case.rails
-    right = next(i for i, rail in enumerate(rails) if "right" in str(rail.id).lower())
-    left = next(i for i, rail in enumerate(rails) if "left" in str(rail.id).lower())
-    half_gauge = abs(float(dynamics.case.wheels[0].lateral_offset_m))
-    expected = half_gauge * (cant / (2.0 * half_gauge))
-    _, right_z, _, _ = dynamics.track.local_state(q, v, right, X_START, SPEED)
-    _, left_z, _, _ = dynamics.track.local_state(q, v, left, X_START, SPEED)
-    assert right_z == pytest.approx(expected, rel=1e-12)
-    assert left_z == pytest.approx(-expected, rel=1e-12)
-    assert right_z - left_z == pytest.approx(cant, rel=1e-12), "the difference *is* the cant"
+    for index in range(len(dynamics.case.rails)):
+        y, z, _, _ = dynamics.track.local_state(q, v, index, X_START, SPEED)
+        assert y == 0.0
+        assert z == 0.0
 
 
 def test_the_elastic_displacement_is_added_on_top_of_the_alignment(tmp_path):

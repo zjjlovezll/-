@@ -124,3 +124,70 @@ slip_x = travel + ω·lever_z − κ·travel·lever_y
 
 `tests/test_curve_seat.py` 现在 7 passed + **1 strict xfail**：`test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it`
 把上面这张表钉成"已知阻塞"。strict 的含义是——一旦接触搜索能处理滚转后的包络，这个 xfail 会**变红**，逼着把它改成正式验收。
+
+## 11. 滚转车轮的下包络（挡住了所有"几何一致"的曲线），以及一个物理上不成立的验收例子
+
+### 11.1 挡住路的那一行
+
+`contact.py` 把车轮型面从轮系坐标搬到轨道坐标时做的是
+
+```
+wheel_y = wheel_y_m + c * local_y - s * local_z      # c = cos(roll), s = sin(roll)
+```
+
+然后要求 `wheel_y` 严格递增，否则抛 `wheel roll made the lower envelope non-monotonic in lateral y`。
+滚转把轮子的**高度**混进了横向坐标，于是判据是 `|s · dz/dy| < c`，即 `|dz/dy| < 1/tan(roll)`：
+踏面斜率远小于这个值（没问题），但**轮缘的斜率是几十**（轮缘背面还倒扣），一旦 `roll` 真的等于
+超高角（0.107 m 超高 → 4.08°，`1/tan = 14`），轮缘那一段就把曲线折回自己身上，直接抛错。
+
+这就是为什么**所有**"几何一致"的曲线（轨道搬到 `y(s)` 上、车辆也放上去）在第一步就退出，
+而"只用体力"的曲线（轨道不动）反而能跑——后者不需要滚转轮子。
+
+修法：`_single_valued_envelope()`——按 `y` 排序，同一 `y` 只保留**最低**的那个点。
+"在这个横向位置上，轮子有多高"本来就该取下分支。`roll = 0` 时输入已递增，函数原样返回，
+因此**逐位不变**（`freeze_baseline --check` → UNCHANGED）。
+
+### 11.2 两个半场可以分开问了
+
+`run.curve_placement`（默认 `None` = 跟随 `curve_geometry`）把"车辆摆在设计线上"与"轨道搬到
+设计线上"拆开，用来分别测量。加上 11.1 的修法后实测：
+
+| 算例（几何一致：轨道+车辆都上曲线） | 结果 |
+|---|---|
+| R=1100, h=107 mm, 100 km/h（平衡超高） | `graph slope limit at axle1_right/right:main, x=70 m` |
+| R=1100, h=107 mm, 160 km/h（欠超高） | `graph slope limit at axle4_right/right:main, x=50 m` |
+| R=350, h=150 mm, 66.7 km/h（平衡超高） | `graph slope limit at axle4_right/right:main, x=50 m` |
+
+包络错误消失，失败点移动到**|s| 最大的那两根轴**（x = 60±10 = 50 / 70 m）。这是一个新的一阶
+判据：轨道按某一里程被搬了 `s²/(2R)`（45 mm），车轮按另一里程被放了 `s²/(2R)`，两者不同步 →
+相对横移 45 mm → 贴到轮缘。下一步就是让**每个接触体在自己的里程上取放置**（`local_state` 的
+`placement` 参数已经在，只是现在传的是整车同一个值）。
+
+### 11.3 一个物理上不成立的验收例子（口径更正）
+
+目标第 4 项的例子是"R = 350 m、100 km/h、8/8 轮着地、每轮 ∈[0.5,1.6]×均分"。按平衡超高
+
+```
+h_th = 1.5 v² / (g R) = 1.5 · 27.78² / (9.81 · 350) = 0.337 m
+```
+
+**0.337 m 的超高不存在**：模型自己在 `model.py:203` 就拒绝 `|cant| > 0.20 m`（判定为"这是毫米"），
+而实际线路最大超高约 **0.15 m**。也就是说 R=350 m 在 100 km/h 下定然是**欠超高**工况，轮载必然
+不均，"每轮 1.00×"不是它该有的验收。
+
+按 0.15 m 反解设计速度：`v = sqrt(h g R / 1.5) = 18.53 m/s = 66.7 km/h`。所以这一项的**物理一致写法**是：
+
+| 算例 | 半径 | 超高 | 速度 | 期望 |
+|---|---|---|---|---|
+| 平衡 | 350 m | 150 mm | **66.7 km/h** | 8/8 着地、每轮 ≈1.00× |
+| 欠超高 | 350 m | 150 mm | 100 km/h | 8/8 着地、ΔP/P 由限值门判定 |
+| 平衡 | 1100 m | 107 mm | 100 km/h | 8/8 着地、每轮 1.00×（已实测 1.000–1.001） |
+
+不改目标文字，但后续一律按这张表实测，并在报告里说明"R=350@100 km/h 的平衡超高不可实现"。
+
+### 11.4 验证
+
+```
+pytest tests -q --basetemp F:\velch_tmp\pytest      905 passed, 1 skipped, 1 xfailed
+scripts/freeze_baseline.py --check                   VERDICT: UNCHANGED
+```

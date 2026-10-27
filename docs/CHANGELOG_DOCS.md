@@ -3399,6 +3399,14 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
 
+## 第 124 轮：滚转车轮下包络改单值，曲线失败点前移；R=350@100 km/h 的验收在物理上不成立
+
+- **修一个真正的闸门**：`contact.py` 的 `wheel_y = wheel_y_m + c·local_y − s·local_z` 要求严格递增，判据等价于 `|dz/dy| < 1/tan(roll)`；轮缘斜率几十，超高角 4.08° 时 `1/tan = 14`，于是**所有几何一致的曲线**（轨道+车辆都上曲线）在第一步抛 `wheel roll made the lower envelope non-monotonic in lateral y`。新增 `_single_valued_envelope()`：按 y 排序、同一 y 取最低点；`roll = 0` 时原样返回，故逐位不变（baseline UNCHANGED）。
+- **拆开两个半场**：`run.curve_placement`（默认 None = 跟随 `curve_geometry`），可单独测量"车辆放上设计线"。
+- 实测三个几何一致算例：包络错误消失，失败点移到 |s| 最大的两根轴（x = 50 / 70 m）——轨道按某里程搬了 45 mm、车轮按另一里程放了 45 mm，不同步即贴轮缘。下一步：每个接触体在自己的里程上取放置。
+- **口径更正**：R=350 m @ 100 km/h 的平衡超高是 `h_th = 1.5·27.78²/(9.81·350) = 0.337 m`，超过模型自带的 0.20 m 上限、也超过实际线路 0.15 m 的最大超高 → 该工况必然是欠超高，不能要求"每轮 1.00×"。物理一致的写法是 **66.7 km/h @ 150 mm**（平衡）与 **100 km/h @ 150 mm**（欠超高，由限值门判定）。
+- 验证：905 passed / 1 skipped / 1 xfailed；冻结基线 UNCHANGED。
+
 ## 第 123 轮：车辆按几何摆上曲线（S4 第一半），解析几何路线被接触搜索挡住
 
 - 新增 `_place_on_alignment()` / `_body_offset_m()`：每个刚体按自己里程加 `y = s²/(2R)` 与 `yaw = atan(s/R)`；35 坐标布局没有 `x` 时由 `axle_offsets_m` 推里程（轮对取轴偏移、构架取两轴中点、车体取中心）。

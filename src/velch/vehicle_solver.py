@@ -786,6 +786,19 @@ class VehicleDynamics:
         return float(energy)
 
 
+def _placement_enabled(run) -> bool:
+    """Whether the vehicle is moved onto the alignment.
+
+    ``run.curve_placement`` wins when it is set; otherwise the placement follows
+    ``run.curve_geometry``, which is what every case did before the two were separable.
+    """
+
+    explicit = getattr(run, "curve_placement", None)
+    if explicit is not None:
+        return bool(explicit)
+    return bool(getattr(run, "curve_geometry", False))
+
+
 def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
                         q: np.ndarray) -> np.ndarray:
     """Put the vehicle where the curved design line is, before the seat solves anything.
@@ -802,7 +815,7 @@ def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
     """
 
     radius = getattr(case.run, "curve_radius_m", None)
-    if radius is None or not getattr(case.run, "curve_geometry", False):
+    if radius is None or not _placement_enabled(case.run):
         return q
     radius = float(radius)
     if radius == 0.0:

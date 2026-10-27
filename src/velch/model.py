@@ -180,6 +180,12 @@ class RunSettings:
     #: footprint at R = 350 m).
     curve_geometry: bool = False
 
+    #: Whether the vehicle is moved onto the alignment (per-body ``y`` from its own mileage, yaw
+    #: from ``s / R``).  ``None`` follows :attr:`curve_geometry`, so nothing that exists changes;
+    #: ``True`` with ``curve_geometry`` off puts the wheelset at an angle of attack on a straight
+    #: rail table — the steering half of a curve without the geometry half.
+    curve_placement: bool | None = None
+
     def __post_init__(self) -> None:
         if self.method not in {"DOP853", "Radau", "BDF"}:
             raise ValueError("supported methods are DOP853, Radau and BDF")

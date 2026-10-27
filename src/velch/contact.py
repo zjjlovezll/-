@@ -45,6 +45,25 @@ __all__ = [
 ]
 
 
+def _single_valued_envelope(wheel_y: np.ndarray, wheel_z: np.ndarray):
+    """Return the wheel envelope as a strictly increasing function of lateral position.
+
+    A rolled wheel maps its own height into ``y`` (``-sin(roll) * z``), so a steep stretch of the
+    profile — the flange, typically — folds the curve over itself.  The contact search only needs
+    "at this lateral position, how high is the wheel", which is the lower of the folded branches, so
+    sort by ``y`` and keep the lowest point per distinct ``y``.  With roll = 0 the input is already
+    increasing and this returns it unchanged.
+    """
+
+    if wheel_y.size < 2 or bool(np.all(wheel_y[1:] > wheel_y[:-1])):
+        return wheel_y, wheel_z
+    order = np.argsort(wheel_y, kind="stable")
+    ys = wheel_y[order]
+    zs = wheel_z[order]
+    starts = np.flatnonzero(np.r_[True, ys[1:] != ys[:-1]])
+    return ys[starts], np.minimum.reduceat(zs, starts)
+
+
 def find_graph_contact(
     wheel_profile: GraphProfile,
     rail_sample: ProfileSample,
@@ -102,8 +121,7 @@ def find_graph_contact(
     c, s = math.cos(wheel_roll_rad), math.sin(wheel_roll_rad)
     wheel_y = wheel_y_m + c * local_y - s * local_z
     wheel_z = wheel_z_m + s * local_y + c * local_z
-    if not bool(np.all(wheel_y[1:] > wheel_y[:-1])):
-        raise ValueError("wheel roll made the lower envelope non-monotonic in lateral y")
+    wheel_y, wheel_z = _single_valued_envelope(wheel_y, wheel_z)
     rail_y = rail_y_m + rail_sample.profile.y_m
     rail_z = rail_z_m + rail_sample.profile.z_m
     if geometry_policy not in GEOMETRY_POLICIES:
@@ -341,8 +359,7 @@ def find_graph_contacts(
     c, s = math.cos(wheel_roll_rad), math.sin(wheel_roll_rad)
     wheel_y = wheel_y_m + c * local_y - s * local_z
     wheel_z = wheel_z_m + s * local_y + c * local_z
-    if not bool(np.all(wheel_y[1:] > wheel_y[:-1])):
-        raise ValueError("wheel roll made the lower envelope non-monotonic in lateral y")
+    wheel_y, wheel_z = _single_valued_envelope(wheel_y, wheel_z)
     rail_y = rail_y_m + rail_sample.profile.y_m
     rail_z = rail_z_m + rail_sample.profile.z_m
     lower, upper = max(wheel_y[0], rail_y[0]), min(wheel_y[-1], rail_y[-1])

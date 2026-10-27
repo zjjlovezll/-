@@ -96,6 +96,10 @@ class VehicleResult:
 #: ``max_step=1e-4`` (20 steps per constant) and fast enough that the slip is gone long
 #: before the creep law can saturate on it.
 SPIN_TIME_CONSTANT_S = 2.0e-3
+# Residual the seat returns when a least-squares trial point would trip a contact guard.
+# The residual is `force / 1e5` and the acceptance test is `max |residual| * 1e5 <= 0.1` N,
+# so 1.0 is a 1e8 N barrier: far above any real residual, and unmistakably rejected.
+_SEAT_BARRIER_RESIDUAL = 1.0
 
 
 class VehicleDynamics:
@@ -126,6 +130,9 @@ class VehicleDynamics:
         # law.  It is off for a constant profile so that path stays bit-identical.
         self.spin_control = bool(getattr(case.run, "spin_control", False)
                                  or not self._schedule.is_constant)
+        # How often the static search bounced off a contact guard.  Reported so a seat that
+        # only converges at the barrier is visible instead of merely plausible.
+        self.seat_barrier_hits = 0
         # 1/R of the equivalent-straight curve, signed the way the lateral force is: zero for
         # every straight case, so the curvature term in the creep slip is inert and the archived
         # numbers cannot move.  This is the term that lets a wheelset steer: the two contact
@@ -966,7 +973,21 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         def residual(values: np.ndarray, base: np.ndarray = base) -> np.ndarray:
             trial = base.copy()
             trial[indices] = values
-            force, _ = dynamics.evaluate(0.0, trial, v)
+            try:
+                force, _ = dynamics.evaluate(0.0, trial, v)
+            except SimulationFailure:
+                # The contact guards (slope, penetration, edge) are diagnostics for a *run*: they
+                # exist so a trajectory cannot continue off the rail.  A least-squares trial point
+                # is not a trajectory — the search legitimately probes states that would be fatal
+                # to integrate, and letting the guard escape kills the seat with a message that
+                # describes the probe rather than the model.  Measured on a curved case: the seat
+                # raised ``graph slope limit at axle1_left/left:main, x=70 m`` from inside this
+                # loop while the reference state matched the rail to 5 um.  Turn the guard into a
+                # barrier here: the step is rejected, the guard keeps its value for real time
+                # stepping, and the hit count is reported so a seat that only converges by
+                # bouncing off the barrier cannot pass unnoticed.
+                dynamics.seat_barrier_hits += 1
+                return np.full(len(indices), _SEAT_BARRIER_RESIDUAL)
             return force[indices] / 1e5
 
         # Least squares, not a square root(): seven vertical coordinates carry eight patches, so

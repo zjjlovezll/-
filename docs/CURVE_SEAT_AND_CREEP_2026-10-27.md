@@ -287,3 +287,50 @@ as a lateral force, or set curve_cant_m = 0.
 pytest tests/test_curve_seat.py -q      8 passed, 1 xfailed
 scripts/freeze_baseline.py --check      VERDICT: UNCHANGED
 ```
+
+## 14. A guard inside the static search, and why a geometric curve cannot be seated
+
+### 14.1 三个量的对照：放置是对的
+
+R = 1100 m、`x_start = 60 m`、内联 35 坐标、`curve_geometry = true`、无超高。放置后的状态与轨道中心线逐轴比较：
+
+| 轴 | 车轮 `y` (mm) | `yaw` (rad) | 轨道 `y` @ 本轴里程 | 差值 |
+|---|---|---|---|---|
+| 1 | +45.455 | +0.009091 | +45.455 | **0** (≈5 µm 量级) |
+| 2 | +25.568 | +0.006818 | +25.568 | 0 |
+| 3 | +25.568 | −0.006818 | +25.568 | 0 |
+| 4 | +45.455 | −0.009091 | +45.455 | 0 |
+
+`45.455 mm = 10²/(2·1100)`、`25.568 mm = 7.5²/(2·1100)`，`yaw = s/R` —— 车辆与轨道**同时**按同一段圆弧放置，左右轨的横向偏移相同（`gauge_rail = 0`）。所以"放置没进接触"这个怀疑被否掉：**放置是对的**。
+
+### 14.2 失败点在静平衡内部
+
+同一算例的失败不是"第一步"，而是**静平衡的残差函数里**：
+
+```
+graph slope limit at axle1_left/left:main, x=70 m      ← 从 least_squares 的 residual 里抛出
+```
+
+`x = 70 m = x_start 60 + 前轴 10 m`，是搜索中的一个**试算点**，不是轨迹点。把同一配置在 `x_start = 40/50/60/70`、`duration = 2/10 ms` 上各试一次，结论一致：**每次坐实过程中守卫被触发 148–150 次**。
+
+### 14.3 修法：守卫变成"拒绝这一步"，而不是"杀掉整件事"
+
+`_static_vertical_equilibrium` 的 `residual()` 现在捕获 `SimulationFailure`，返回 `_SEAT_BARRIER_RESIDUAL = 1.0`（残差以 `force/1e5` 计、验收阈 `0.1 N`，所以这等价于 1e8 N 的势垒），并把次数记进 `VehicleDynamics.seat_barrier_hits`。
+
+- **没有放宽任何一个容差**：`maximum_abs_contact_slope`、`maximum_penetration_m`、接触搜索窗全部原值；
+- 守卫在**时间推进**里仍然是致命错误（`tests/test_curve_seat.py` 里 `test_the_slope_guard...` 之外，另有一条把轮对推离 200 mm 的用例）；
+- 计数器让"靠势垒才收敛的坐实"能被看见，而不是只显得可信。
+
+### 14.4 由此得到的物理结论
+
+修好守卫之后，**几何一致曲线（R = 1100 m、无超高、100 km/h）仍然坐不住**：
+
+```
+vertical preload equilibrium failed: no seed converged; `gtol` termination condition is satisfied
+```
+
+原因是链式而非数值：几何路线**必须**把轨面按超高滚转才能承担横向力，而这条路线目前**显式拒绝超高**（§13）；没有平衡超高，R = 1100 m/100 km/h 需要的 0.107 m 超高无法提供，方程本身无解。也就是说：
+
+> 曲线几何路线的下一个必需件是**轨面滚转（S5）**，不是放宽容差、也不是再调放置。
+
+同一半径下体力路线（`curve_geometry = false` + 0.107 m 平衡超高）在 §7 已实测 `numerically_checked`、8 轮各 1.00×均分 —— 两条路线的分工因此明确：**横向力走体力路线可交付，几何一致要走滚转路线**。

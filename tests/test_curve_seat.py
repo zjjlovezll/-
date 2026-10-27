@@ -26,6 +26,8 @@ from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import (
     SimulationFailure,
     VehicleDynamics,
+    _place_on_alignment,
+    _static_vertical_equilibrium,
     _load_per_wheel,
     simulate_vehicle,
 )
@@ -128,12 +130,56 @@ def test_a_balanced_curve_seats_eight_wheels_and_runs(tmp_path):
         assert 0.5 * even <= value <= 1.6 * even
 
 
-def test_an_unbalanced_curve_still_trips_the_slope_guard(tmp_path):
-    from velch.solver import SimulationFailure
+def test_a_contact_guard_inside_the_seat_rejects_the_step_instead_of_escaping(tmp_path):
+    """The guard fires during the static search, and it must not escape from it.
+
+    Measured: R = 1100 m, no cant, 100 km/h, ``curve_geometry = true``, slope guard tightened to
+    0.20 — the least-squares search probes states that are fatal to integrate, and the guard fires
+    ~149 times per seat.  Before the barrier it escaped as
+    ``graph slope limit at axle1_left/left:main, x=70 m``, which described the probe rather than the
+    model; now the step is rejected, the count is reported, and the seat reports the honest
+    ``vertical preload equilibrium failed``.  The guard keeps its value for time stepping.
+    """
+
+    path = _case(tmp_path, "barrier", radius=1100.0, cant=0.0, speed_kmh=100.0, geometry=True)
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw["run"]["maximum_abs_contact_slope"] = 0.20
+    path.write_text(json.dumps(raw, indent=1, ensure_ascii=False), encoding="utf-8")
+
+    dynamics = VehicleDynamics(load_vehicle_case(path), contact_workers=1)
+    # The seat raises, so it is called directly: the point is the counter left behind.
+    q = _place_on_alignment(dynamics.case, dynamics,
+                            np.array(dynamics.case.initial_q, dtype=float))
+    v = np.array(dynamics.case.initial_v, dtype=float)
+    with pytest.raises(SimulationFailure, match="vertical preload equilibrium failed"):
+        _static_vertical_equilibrium(dynamics.case, dynamics, q, v)
+    assert dynamics.seat_barrier_hits > 0, "the guard never fired, so this test proves nothing"
+
+
+def test_an_unbalanced_curve_cannot_be_seated_at_all(tmp_path):
+    """R = 1100 m with no cant at 100 km/h: the theoretical cant is 0.107 m, so there is no balance.
+
+    The failure now lands in the static search (``vertical preload equilibrium failed``) instead of
+    escaping as ``graph slope limit at ... x=70 m``.  Both describe the same physics — a
+    straight-railed model drags the wheel onto its flange — but the seat message is the true one,
+    and the guard, which used to be what got reported, belongs to the trajectory.  That it is still
+    armed there is pinned by ``test_a_contact_guard_inside_the_seat_rejects_the_step_instead_of_escaping``
+    (``seat_barrier_hits > 0``: the guard does fire, and the search rejects the step).
+    """
 
     path = _case(tmp_path, "unbalanced", radius=1100.0, cant=0.0, speed_kmh=100.0)
-    with pytest.raises(SimulationFailure, match="graph slope limit"):
+    with pytest.raises(SimulationFailure, match="vertical preload equilibrium failed"):
         simulate_vehicle(load_vehicle_case(path))
+
+
+def _seat(dynamics: VehicleDynamics):
+    """The state the solver starts from: placed, then seated vertically."""
+
+    q = _place_on_alignment(dynamics.case, dynamics,
+                            np.array(dynamics.case.initial_q, dtype=float))
+    v = np.array(dynamics.case.initial_v, dtype=float)
+    q, _ = _static_vertical_equilibrium(dynamics.case, dynamics, q, v)
+    return q, v
 
 
 def test_the_curved_seat_does_not_answer_the_yaw_question(tmp_path):

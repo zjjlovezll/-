@@ -3464,3 +3464,17 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 新脚本 `scripts/s11_mileage_closure.py`：80/60/40 km/h 三段、0.05 s、101 帧 → 里程列与解析距离**闭合 0.000e+00**（阈值 0.2 %），`spin_tracking` 相对滑移 **1.02e-4**，`numerically_checked`。
 - 口径记录：梯形积分在 101 帧上只得 0.85833 m（−0.32 %），因为帧不落在腿上；参考值只能取解析距离。
 - 测试 `tests/test_mileage_closure.py` 1 项。
+
+## 第 127 轮：静平衡里的接触守卫改为"拒绝这一步"，并量清几何曲线为什么坐不住
+
+- `src/velch/vehicle_solver.py`：`_static_vertical_equilibrium` 的 `residual()` 捕获 `SimulationFailure`
+  并返回 `_SEAT_BARRIER_RESIDUAL = 1.0`（≈1e8 N 势垒），新增 `VehicleDynamics.seat_barrier_hits`。
+  此前一个**试算点**触发 `graph slope limit` 就会从 `least_squares` 里逃出来，报错描述的是试算点而非模型。
+- 实测（R=1100、无超高、100 km/h、`curve_geometry=true`）：`x_start` 40/50/60/70 m、两种时长，
+  **每次坐实触发 148–150 次**；修复后报出真话 `vertical preload equilibrium failed`（`gtol`）。
+- 三个量的对照（§14.1）：车轮 `y`/`yaw` 与轨道 `y` 逐轴一致（45.455 / 25.568 mm，`yaw = s/R`），
+  左右轨横向偏移相同 —— 放置不是失败点。
+- 结论（§14.4）：几何一致曲线仍坐不住，因为该路线显式拒绝超高（第 126 轮），
+  而 R=1100/100 km/h 需要 0.107 m 平衡超高；下一步是**轨面滚转**，不是放宽容差。
+- 测试：`tests/test_curve_seat.py` 新增势垒用例（`seat_barrier_hits > 0`）与"不平衡曲线坐不住"用例；
+  `tests/test_curve_alignment.py` 的超高用例改为断言拒绝与体力路线保真。`15 passed, 1 xfailed`。

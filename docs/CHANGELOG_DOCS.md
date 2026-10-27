@@ -1816,6 +1816,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CURVE_PATH_RATE_DEFECT_2026-10-28.md](CURVE_PATH_RATE_DEFECT_2026-10-28.md) | 曲股工况为什么跑不过 81 m：路线的横向速率被当成了横向蠕滑 |
 | [CURVE_QUASISTATIC_SEAT_2026-10-28.md](CURVE_QUASISTATIC_SEAT_2026-10-28.md) | 曲股能不能"坐"出一个静态平衡？——滚动静平衡实验（否定结论） |
 | [CURVE_RAIL_GEOMETRY_2026-10-28.md](CURVE_RAIL_GEOMETRY_2026-10-28.md) | 曲股右轨的站位表不是一条一致的轨道几何（B041） |
+| [CURVE_ROUTE_COMPARISON_2026-10-28.md](CURVE_ROUTE_COMPARISON_2026-10-28.md) | 曲线两条路线各自的缺口（2026-10-28） |
 | [CURVE_SEAT_AND_CREEP_2026-10-27.md](CURVE_SEAT_AND_CREEP_2026-10-27.md) | 曲线：先把静平衡问对，再把曲率放进蠕滑 |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
@@ -4415,3 +4416,33 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
 - 新增 [`docs/CURVE_RAIL_GEOMETRY_2026-10-28.md`](CURVE_RAIL_GEOMETRY_2026-10-28.md)、
   `scripts/s30_fix_diverging_gauge.py`、`scripts/s30b_seat_after_gauge.py`、
   `scripts/s30c_crown_heights.py`、`scripts/s30d_seat_diagnose.py`、`scripts/s30e_guard_geometry.py`。
+
+## 第 185 轮：对称轨道上的曲线静平衡是精确的，几何路线却没有向心力的来源
+
+- B041 的第四次重建（右 = 左 + 1.5065 m，即冠距口径的正确符号）仍然失败：第一帧
+  `axle1_right 1 879 207.6 N = 31.498×`、`axle2_right 758 137.1 N = 12.707×`、`axle4_right` 无接触、
+  `sum N = 3 021 912.8 N = 6.331×` 重量，`slip_lat` 全为 +0.00000（B040 生效）。所以修右轨这条路
+  走不通：**右侧断面本身沿里程在变**，它不是一条轨。
+- 换路：`case_A_final_law`（刚性、左右同源、轨距正好 1.493 m）+ `curve_radius_m = 1100` +
+  `curve_geometry` + `align_to_track`，80 km/h，从 30 m 起，35 坐标。脚本
+  [`scripts/s31_curve_smoke.py`](../scripts/s31_curve_smoke.py)。
+- **坐实精确**：静平衡残差 **1.109e-07 N**，八轮 **0.988–1.013×** 均分、侵入全部 **65.47 µm**、
+  `|n_y/n_z| = 0.025`、合计 **1.000× 整车重**，左右逐位镜像。0.02 s 运行 `numerically_checked`、
+  **门 7/7**、最大侵入 73.27 µm、八斑峰值 62.0–69.9 kN。**曲线静平衡在对称轨道上可解**——
+  上一轮"曲股坐不住"的读数属于 B041 的数据缺陷，不是曲线物理。
+- **但跑不过 1 m**：0.30 s 失败 `graph slope limit at axle1_left/left:main, x=41.04259 m`（`x` 含
+  +10 m 轴偏移 ⇒ 行程 1.04 m、t ≈ 0.047 s）。用 `scripts/s31c_yaw_attack.py` 把对齐后的 `yaw`
+  清零（接触几何是 (y,z) 条带搜索、不读 yaw）重跑 → `x=40.7585517 m`（0.76 m），**更早失败**，
+  所以漂移不是第 182 轮登记的偏航双重含义驱动的；该口径问题降级为"仍未定"，不是曲线阻塞点。
+- **真因**：向心力 `m v²/R` 只加在力路线上（`if curve_radius and not _placement_enabled(run)`），
+  几何路线把车摆到弧线上却**不给任何法向力**，车按惯性走直线、轨按弧线弯走，相对横移按
+  `s/R = 9.09 mrad`（9 mm/m）长大，最后只能压在轮缘上。R = 1100 m、80 km/h 需要 **21 842.4 N**。
+  而反过来，力路线**不能**把曲率放进蠕滑：`curvature_1_per_m` 的开关注释记录着
+  `flags on but placement off` 时 **4 of 8 wheels、128 901 N = 2×** 的实测——静平衡的未知量里没有能
+  平衡 `∓v κ b` 摇头力矩的自由度（只有 z；y/roll/yaw 都试过，零速下 rank-deficient，cond 3.76e12）。
+- 结论：**两条路线各缺一半**，随动坐标系需要的不是"再把曲率打开"，而是让静平衡能吸收这个力矩。
+  波磨反演协议 [`scripts/s31b_curve_corrugation.py`](../scripts/s31b_curve_corrugation.py) 已按判据写死
+  （单侧内轨、四个对数分层波长、峰峰归一化、0 / 0.1 / 0.3 mm、最小档标定去预测大档、
+  "零档响应的 6 倍以上才算被激励"、"0.3 mm 复原峰峰 ±2 dB"），但它必须先有一个能跑满 0.34 s 的曲线算例。
+- 新增 [`docs/CURVE_ROUTE_COMPARISON_2026-10-28.md`](CURVE_ROUTE_COMPARISON_2026-10-28.md)、
+  `scripts/s31_curve_smoke.py`、`scripts/s31b_curve_corrugation.py`、`scripts/s31c_yaw_attack.py`。

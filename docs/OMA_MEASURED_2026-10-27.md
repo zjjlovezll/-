@@ -111,3 +111,42 @@ frequency domain decomposition）：在共振处谱矩阵秩一，于是第一�
 仍是 `not_evaluated`。
 
 复算：`python -X utf8 scripts\s22_fdd_measured.py`，产物 `F:\velch_tmp\fdd\fdd_sections.json`。
+
+## 9. 速度分离实验：这份记录**只有一个稳态速度**，所以判据做不了
+
+上一节把判据定成“换速度看频率是否平移”。这一节真去做了，结论是**这份记录做不到**——不是方法不行，是数据只有一种稳态。
+
+速度直方图（整程 145 s）：
+
+| 速度区间（km/h） | 时长 |
+|---|---|
+| 1–30（起步） | 各 3 s 左右，共约 18 s |
+| 30–70（加速段） | 各 3–6 s，共约 25 s |
+| **70–75** | **25.2 s** |
+| **75–80** | **60.7 s** |
+| 80–85 | 6.8 s |
+| 85–90 | 0.2 s |
+
+按 10 km/h 分箱后，**30–45、45–55、55–65、65–75 四个箱全部被判为“加速段”**（箱内速度标准差 2.27–4.63 km/h，超过 2.0 的门槛），只剩 **75–85 km/h 一个稳态箱（67.5 s）**：
+
+```
+bin 30-45 km/h: rejected as a ramp (speed std 4.63 km/h > 2.0)
+bin 45-55 km/h: rejected as a ramp (speed std 2.99 km/h > 2.0)
+bin 55-65 km/h: rejected as a ramp (speed std 2.75 km/h > 2.0)
+bin 65-75 km/h: rejected as a ramp (speed std 2.27 km/h > 2.0)
+only 1 speed bin(s) carry enough signal; two are needed to separate vehicle modes from track periodicity
+```
+
+判读：**没有第二个稳态速度，就没有“频率是否随速度平移”的对照**。前面第 8 节里那两组重复脊（57–60、88–92 Hz）因此只能停在“可重复、未归属”，不能写成车辆模态，也不能写成轨道周期性——两者在这份数据里**信息上不可分**。
+
+顺带修掉一个我自己的判别式错误：原判据 `abs(slope) < 0.15 · order_slope · mean_speed`，在 57 Hz、65 km/h 时门槛是 **8.8 Hz/km/h**，等于把所有峰都判成“频率锁定”。正确形式是比较 `slope` 与 `order_slope = f/v`（波长锁定峰满足 `f = v/λ`，斜率恰为 `f/v`；频率锁定峰斜率为 0），现在用 `abs(slope) < 0.3 · order_slope`。
+
+### 因此对数据的要求（这一条现在有实测依据）
+
+要继续 OMA 标定，需要满足其一：
+
+1. **同一区段的第二个稳态速度**（例如 40 km/h 与 75 km/h 各一趟）——判据：车辆模态频率不变、枕木谐波随速度平移；
+2. 或**同一速度下的另一趟记录**（只用于检验检测的重复性，不能用于分离）；
+3. 都没有时，如实登记「该数据集不支持 OMA 标定」，标定只能继续走 L2/L3 的**按速度比消掉轨面谱**那条路。
+
+复算：`python -X utf8 scripts\s23_speed_separation.py`（当前会以非零码退出并打印上面那行原因，这是**预期行为**：它拒绝在一个稳态速度上做两个速度的实验）。

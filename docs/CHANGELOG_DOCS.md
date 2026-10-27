@@ -3612,3 +3612,14 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
   `curve_geometry` 变成「车横移 45.5 mm、轨面不动」这种自相矛盾的配置。
 - 因此“曲线跑不了”这一结论只对这个配置成立。下一轮的正确改法是**在加载时拒绝该组合**，并让两者共享同一框架，
   而不是继续调收敛。`docs/CURVE_APPROACH_DECISIONS_2026-10-27.md` 新增第七节。
+
+## 第 138 轮：车辆侧与轨面侧同进同出，`curve_geometry` 不再能单独移动车辆
+
+- `src/velch/vehicle.py`：`surface = bool(run_block.get("curve_rail_surface")) or bool(run_block.get("curve_geometry"))`，
+  于是 `curve_geometry` 一定同时把轨面套上 `CurveSeries`。理由写进注释：车按 s²/2R 移 45.5 mm 而轨面不动，
+  第 23 轮实测第一次求值给出 161 289 / 936 715 / 971 169 / 174 810 kN（一侧）与 0（另一侧），那是荒谬穿透而非载荷。
+- 新增 `tests/test_curve_series.py::test_curve_geometry_alone_now_curves_the_rail_as_well` 钉住这条耦合
+  （顺带给该文件补 `import json`）。
+- 曲线相关测试 **19 passed / 1 xfailed**；冻结物理与直线基线未动。
+- 仍未解决：同进同出之后 R=1100/cant=0.107 的几何路由依然坐不住（第 19 轮量到 150 690 kN），
+  所以下一步是让两者共享同一坐标框架，而不是继续调收敛。

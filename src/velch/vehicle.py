@@ -512,7 +512,12 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     # shifts in one frame would cancel, so profile.y_m and the vehicle position are not in the same
     # frame (docs/CURVE_SEAT_AND_CREEP_2026-10-27.md §23).  A turnout does not need this path at all:
     # its station table is already curved, and `align_to_track` places the vehicle on it.
-    if radius and run_block.get("curve_geometry") and run_block.get("curve_rail_surface"):
+    # ``curve_geometry`` means "put both sides on the curve".  Moving the vehicle by s^2/(2R) while
+    # leaving the rail straight is not a weaker approximation, it is a contradiction: the first
+    # evaluate then reads 161 289 / 936 715 / 971 169 / 174 810 kN on one rail and zeros on the
+    # other (round 23), i.e. an absurd penetration rather than a load.  So the two move together.
+    surface = bool(run_block.get("curve_rail_surface")) or bool(run_block.get("curve_geometry"))
+    if radius and surface:
         from .irregularity import CurveSeries
 
         origin = float(run_block.get("x_start_m") or 0.0)

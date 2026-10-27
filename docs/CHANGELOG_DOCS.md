@@ -3579,3 +3579,16 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 下一步二选一：(a) 曲率全放车辆侧（横移+偏航+`v·κ` 与 `(1−κy)` 进蠕滑），(b) 先把 `profile.y_m` 的坐标系变成显式约定再谈轨面横移。两者都先量后改。
 
 证据：`src/velch/model.py`（新字段）、`src/velch/vehicle.py`（opt-in 门）、`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §24。
+
+## 第 135 轮：把实测检出率按段级校准重算——50 % 而不是 83 %
+
+- `scripts/s10_measured_corrugation.py` 的 `score()` 早已改成段级口径（`_pseudo_segment_maxima` 铺 1585 个等长伪段，
+  阈值取它们的 95 百分位，再给二项零假设），但**从未用新口径重跑过一次**，所以文档里仍是旧的 5/6。
+- 本轮重跑 `F:\ai道岔状态反演辨识\75kmh数据\Run_75kmh_E1toE2.mat`：声音通道阈值 13.73 dB、
+  段内 12.80 / 段外 6.42（+6.38）、AUC 0.880、**3/6（50 %）**；振动通道同样 **3/6**；
+  零假设下期望 0.30 次、**P(X≥3)=0.002**、9 个未归属超阈峰。
+- 判读：信号真实（p=0.002）但**远低于 95 % 目标**；旧 5/6 作废，因为它把窗口级阈值配到段内最大值上
+  （有效段级虚警 46–76 %）。`docs/MEASURED_VALIDATION_2026-10-26.md` 新增第 7 节记录这次重算与四条判读。
+- 顺带核对：`scripts/s9l_differential_bands.py:87-93` 与 `src/velch/inverse/harmonics.py:248-287` 的两处口径缺陷
+  **已经在代码里修好**（前者要求 ±A 两半都 `numerically_checked`，后者把 `floor_gain` 默认成 `1e-3·max|g|`），
+  所以目标第 2 项现在只剩「s10 用新口径重跑并落数」，本轮已完成。

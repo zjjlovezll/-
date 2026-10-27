@@ -35,19 +35,30 @@ def project(time_s: np.ndarray, signal: np.ndarray, frequency_hz: float) -> floa
     return float(np.hypot(coefficients[0], coefficients[1]))
 
 
-def model_gain(work: Path, *, duration_s: float) -> dict:
+def model_gain(work: Path, *, duration_s: float, speed_kmh: float | None = None,
+               patch_start_m: float | None = None, periods: float | None = None) -> dict:
+    """Gain of the axle-box channel for a corrugation at ``WAVELENGTH_M`` and ``DEPTH_M``.
+
+    The three overrides exist so a speed table can be built: with the defaults this is exactly the
+    single-point measurement the record calibration used, and with them the same physics is asked at other
+    speeds and other patch lengths without duplicating the routine.
+    """
     from velch.vehicle import load_vehicle_case
     from velch.vehicle_solver import simulate_vehicle
     from velch.corrugation import Corrugation
     from velch.irregularity import write_tre
 
-    speed = SPEED_KMH / 3.6
+    speed_value = float(SPEED_KMH if speed_kmh is None else speed_kmh)
+    speed = speed_value / 3.6
     frequency = speed / WAVELENGTH_M
+    start_m = 30.0 if patch_start_m is None else float(patch_start_m)
+    period_count = 790.0 if periods is None else float(periods)
     work.mkdir(parents=True, exist_ok=True)
     # The .tre s-axis is absolute mileage, and the case starts at 30 m, so the patch has to cover
     # every axle footprint.  A 0 m patch is silently unreachable -- the loader warns about exactly
     # that ("no axle passes over it"), which is how this was caught.
-    track = Corrugation(WAVELENGTH_M, DEPTH_M).track(start_m=30.0, periods=790.0, step_m=WAVELENGTH_M / 20.0)
+    track = Corrugation(WAVELENGTH_M, DEPTH_M).track(start_m=start_m, periods=period_count,
+                                                    step_m=WAVELENGTH_M / 20.0)
     tre = work / "corrugation.tre"
     write_tre(tre, track)
 
@@ -56,12 +67,15 @@ def model_gain(work: Path, *, duration_s: float) -> dict:
     raw.pop("initial_state", None)
     raw["vehicle"]["travel_speed_m_s"] = speed
     raw["run"].update({
+        # The run start and the patch start are different things: the rail table begins at 30 m and
+        # the patch has to sit where a wheel will actually reach it.  Tying them together made every
+        # wheel start up to 10 m *past* the patch, which read as a gain 180x too small.
         "x_start_m": 30.0, "duration_s": duration_s, "output_step_s": 1.0 / 8000.0,
         "max_solver_step_s": 1.0 / 16000.0, "curve_radius_m": None,
     })
     raw["irregularity"] = {
         "tre": str(tre), "channels": ["vertical"], "scale": 1.0,
-        "start_m": 30.0, "end_m": float(track.s_m[-1]), "fade_m": 0.0,
+        "start_m": start_m, "end_m": float(track.s_m[-1]), "fade_m": 0.0,
     }
     for body in raw.get("topology", {}).get("bodies", []):
         if body.get("kind") == "axlebox":
@@ -80,7 +94,7 @@ def model_gain(work: Path, *, duration_s: float) -> dict:
     time_s = np.asarray(result.times_s)
     amplitude = project(time_s, accelerations, frequency)
     return {
-        "speed_kmh": SPEED_KMH,
+        "speed_kmh": speed_value,
         "wavelength_mm": WAVELENGTH_M * 1000.0,
         "frequency_hz": frequency,
         "probe_depth_um": DEPTH_M * 1e6,

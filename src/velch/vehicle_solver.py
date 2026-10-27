@@ -1383,9 +1383,14 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     total_weight = sum(body.mass_kg for body in dynamics.topology.bodies) * cfg.gravity_m_s2
     # The curve enters the right-hand side as an external lateral force, so the lateral
     # action/reaction sum is short by exactly this much unless it is counted here too.
+    #
+    # ...but only on the route that actually applies it.  On the geometry route the vehicle is
+    # placed on the arc and ``evaluate`` adds no lateral force, so adding m v^2/R to the balance
+    # here made a curved run fail this gate by exactly 34.2 kN while every force was accounted for
+    # (measured, R = 1100 m at 100 km/h: the only failing gate out of seven).
     curve_lateral_n = 0.0
     curve_radius = getattr(run, "curve_radius_m", None)
-    if curve_radius:
+    if curve_radius and not _placement_enabled(run):
         speed = abs(float(cfg.travel_speed_m_s))
         cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
         gauge = 2.0 * abs(float(case.wheels[0].lateral_offset_m)) if case.wheels else 1.5

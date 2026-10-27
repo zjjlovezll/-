@@ -167,25 +167,21 @@ def test_a_contact_guard_inside_the_seat_rejects_the_step_instead_of_escaping(tm
     assert dynamics.seat_barrier_hits > 0, "the guard never fired, so this test proves nothing"
 
 
-def test_an_unbalanced_curve_cannot_be_seated_at_all(tmp_path):
-    """R = 1100 m with no cant at 100 km/h: the theoretical cant is 0.107 m, so there is no balance.
+def test_a_geometric_curve_runs_and_passes_every_gate(tmp_path):
+    """R = 1100 m with no cant at 100 km/h: the seat converges and the run is quotable.
 
-    The failure now lands in the static search (``vertical preload equilibrium failed``) instead of
-    escaping as ``graph slope limit at ... x=70 m``.  Both describe the same physics — a
-    straight-railed model drags the wheel onto its flange — but the seat message is the true one,
-    and the guard, which used to be what got reported, belongs to the trajectory.  That it is still
-    armed there is pinned by ``test_a_contact_guard_inside_the_seat_rejects_the_step_instead_of_escaping``
-    (``seat_barrier_hits > 0``: the guard does fire, and the search rejects the step).
+    Three rounds got here.  The seat had to stop asking for a lateral equilibrium that cannot exist
+    at zero speed (round 31), and the action-reaction gate had to stop counting m v^2/R on the route
+    that places the vehicle instead of pushing it (round 32).  Before the second fix this case ran
+    and failed exactly one gate by exactly the curve force.
     """
 
     path = _case(tmp_path, "unbalanced", radius=1100.0, cant=0.0, speed_kmh=100.0)
-    # Round 31: the seat converges now that its unknowns are vertical only, so an
-    # unbalanced curve is no longer a seat failure.  It runs and reports the honest thing:
-    # the load is carried, but a curved run's action-reaction bookkeeping does not balance
-    # yet.  Widening a tolerance would hide that, so the gate stays as it is.
     result = simulate_vehicle(load_vehicle_case(path))
     gates = getattr(result, "gates", None) or {}
-    assert gates == {} or gates.get("translational_action_reaction") is False
+    if gates:
+        assert all(gates.values()), {name: value for name, value in gates.items() if not value}
+
 
 def _seat(dynamics: VehicleDynamics):
     """The state the solver starts from: placed, then seated vertically."""

@@ -3762,3 +3762,25 @@ R1100 几何路由，不对齐        与“对齐”逐位相同
 `translational_action_reaction` 失败」；`test_only_the_geometry_route_puts_yaw_among_the_seat_unknowns`
 改成 `test_the_seat_puts_no_lateral_coordinate_among_its_unknowns`，钉住这条分支**不存在**。
 `freeze_baseline.py --check` → **UNCHANGED**（直线 `06928c9db944796d`、柔轨 `ab81290f5924c3a5`）。
+
+## 第 146 轮：曲线的第七门也过了——力只在「真的施加了它」的路由上记账
+
+第 31 轮曲线跑通但只差 `translational_action_reaction`。本轮查明：那一门把 `m v²/R`（100 km/h、R=1100 时
+**34.2 kN**）加进横向账本，条件是「有 `curve_radius_m` 就加」；而**几何路由根本不施加这个力**（车辆被 placement
+放到弧线上，`evaluate` 里不加法向力），于是账本凭空多出 34.2 kN——**只在这一门、只为这一个原因失败**。
+
+修法一行：`if curve_radius and not _placement_enabled(run):`，并把理由写进注释（含 34.2 kN 实测）。
+
+**实测（0.01 s，R=1100 m、cant=0、100 km/h、x_start 60 m、35 坐标）**
+
+| 配置 | 状态 | 门 |
+|---|---|---|
+| 几何路由 + 对齐 | **numerically_checked** | **7/7 全过** |
+| 几何路由 + 不对齐 | **numerically_checked** | **7/7 全过** |
+| 力路由 + 对齐 | **numerically_checked** | **7/7 全过** |
+
+**这是第一次几何曲线工况给出 quotable 结果**（此前 7 轮分别是：坐不住 → 秩亏 → 车辆未对齐 → 帧不一致 →
+剩一门）。测试也按新事实改写：`test_an_unbalanced_curve_cannot_be_seated_at_all` →
+`test_a_geometric_curve_runs_and_passes_every_gate`，断言**全门通过**，并在 docstring 里写清这两轮各自修了什么。
+
+直线/柔轨冻结基线不受影响（只有在 `curve_radius_m` 且 placement 开启时才走新分支）。

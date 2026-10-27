@@ -1831,6 +1831,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
 | [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |
+| [MEASURED_MULTIPASS_2026-10-28.md](MEASURED_MULTIPASS_2026-10-28.md) | 四次过车 × 六个区段：单次 3–4/6，融合 6/6 |
 | [MEASURED_VALIDATION_2026-10-21.md](MEASURED_VALIDATION_2026-10-21.md) | 实测数据接入验证（2026-10-21） |
 | [MEASURED_VALIDATION_2026-10-26.md](MEASURED_VALIDATION_2026-10-26.md) | 实测数据第一次验证：26 mm 波磨，声学 5/6、轴箱 3/6 |
 | [MEASUREMENT_CAPABILITY_2026-10-27.md](MEASUREMENT_CAPABILITY_2026-10-27.md) | 实测侧能力声明（2026-10-27） |
@@ -4273,3 +4274,14 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   L0/L1/**L2**/L3 passed、L4 skipped、L5 failed（3/6）；`measurement_validation_status` 仍为 `detection_only`。
 - 重新生成并入库 `reports/inversion_measured_2026-10-28/`（`verdict.json`、`bands.csv`、`windows.csv`、
   `speed_table.json` 四件已刷新）；`docs/INVERSION_VERDICT_2026-10-28.md` 增 §2b（四速度表）并改 L2 行与「缺什么」表。
+
+## 第 177 轮：四次过车 × 六个区段 —— 单次 3–4/6，融合 6/6（声通道）
+
+- 对四份记录各跑一次检测（伪区段校准、段级虚警 5 %），把「漏的是哪一段」摊开：
+  - **声通道**：单次 3/6、4/6、3/6、3/6，**融合 6/6**，**S4 四次全中**；
+  - **振动通道**：单次 2–3/6，**融合 4/6**，**S2 与 S6 四次全漏**（最好一档 19.6 / 25.2 dB 仍低于各自阈值）。
+- 命中的速度组合不随方向聚集（S1 于 50/60 km/h、S3 于 40/75、S5 只于 75）→ **漏检不是方向问题**。
+- L5 的 6/6 现在有两种口径且必须分开写：**单次未达成**；**多过车融合已达成**（声通道）。定位误差 0 m
+  仍是因为没有断面真值可核。
+- 新增 `docs/MEASURED_MULTIPASS_2026-10-28.md` 与
+  `reports/inversion_measured_2026-10-28/multipass_sections.json`。

@@ -505,6 +505,29 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
         from .irregularity import roll_rails
         angle = _math.asin(max(-1.0, min(1.0, cant_m / gauge_m)))
         rails = roll_rails(rails, angle)
+    radius = run_block.get("curve_radius_m")
+    if radius and run_block.get("curve_geometry"):
+        from .irregularity import CurveSeries
+
+        origin = float(run_block.get("x_start_m") or 0.0)
+        cant = float(run_block.get("curve_cant_m") or 0.0)
+        half_gauge = abs(float(wheels[0].lateral_offset_m)) if wheels else 0.7465
+        curved = []
+        for rail in rails:
+            side = 1 if "right" in str(getattr(rail, "id", "")).lower() else -1
+            source_bodies = (getattr(rail, "bodies", None)
+                             or getattr(rail, "contact_bodies", None) or ())
+            # Only the right rail was wrapped the first time: the left rail exposes its
+            # series through ``contact_bodies``, so the loop silently skipped it and the run
+            # widened the gauge by up to 0.18 m -- exactly the single-side lateral import that
+            # O008 refused on the Simpack route.
+            bodies = [
+                replace(body, series=CurveSeries(body.series, float(radius), origin, side, cant,
+                                                 half_gauge))
+                for body in source_bodies
+            ]
+            curved.append(replace(rail, bodies=tuple(bodies)) if bodies else rail)
+        rails = tuple(curved)
     track_spec = raw.get("track_dynamics", {"kind": "local_compliant"})
     track_kind = track_spec["kind"]
     if track_kind not in {"rigid", "local_compliant", "two_layer", "layered", "modal"}:

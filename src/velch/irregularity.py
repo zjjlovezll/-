@@ -19,7 +19,7 @@ Two file shapes exist in the wild and only one of them is text:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -435,6 +435,53 @@ class ShiftedSeries:
             source=f"{base.profile.source}+irregularity",
         )
         return replace(base, profile=profile, dz_ds=base.dz_ds + slope)
+
+
+@dataclass(frozen=True)
+class CurveSeries:
+    """A rail series shifted onto a circular alignment ``y(s) = s^2/(2R)``.
+
+    The rigid track kernel samples profiles by mileage and has no placement hook of its own, so a
+    geometric curve on a 35-coordinate case moved the *vehicle* onto the arc while the rails stayed
+    straight.  Measured: the wheels ended 45.5 mm beside their rails and the contact rows carried
+    **1.95 MN**, which no seat can resolve.  Publishing the alignment here puts it where every
+    consumer already looks -- the sampled profile -- so rigid, floating and modal tracks all see
+    the same curved rail.
+
+    ``cant_m`` raises the outer rail by half the gauge times ``sin(phi)``; the surface rotation is
+    ``RolledSeries``' job, applied outside this wrapper.
+    """
+
+    inner: object
+    radius_m: float
+    origin_m: float
+    side: int = 1
+    cant_m: float = 0.0
+    half_gauge_m: float = 0.7465
+
+    def covers(self, s_m: float) -> bool:
+        return bool(self.inner.covers(s_m))
+
+    def sample(self, s_m: float, direction: int = 1):
+        base = self.inner.sample(s_m, direction)
+        offset = float(s_m) - float(self.origin_m)
+        lateral = offset * offset / (2.0 * float(self.radius_m))
+        angle = 0.0
+        if self.cant_m:
+            angle = math.asin(max(-1.0, min(1.0, float(self.cant_m) / (2.0 * self.half_gauge_m))))
+        rise = 0.5 * 2.0 * self.half_gauge_m * math.sin(angle) if angle else 0.0
+        shift = rise if self.side > 0 else -rise
+        profile = replace(
+            base.profile,
+            y_m=base.profile.y_m + lateral,
+            z_m=base.profile.z_m + shift,
+            source=f"{base.profile.source}+curve",
+        )
+        # ``dz_ds`` is the *vertical* slope of the sampled surface; a lateral shift of the same
+        # surface does not tilt it.  Adding the plan slope here rotated the rail by up to 1 degree
+        # and left a residual the seat could not remove (measured: every speed from 10 to 100 km/h
+        # failed with `gtol termination condition is satisfied`).
+        return replace(base, profile=profile)
 
 
 @dataclass(frozen=True)

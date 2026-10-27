@@ -497,3 +497,34 @@ python -X utf8 F:\velch_tmp\roll_probe.py
 python -X utf8 F:\velch_tmp\seat_rows.py
 python -X utf8 -m pytest tests/test_curve_seat.py -q
 ```
+
+## 19. 曲线作为轨面自身的属性（`CurveSeries`）
+
+### 19.1 为什么必须放在采样层
+
+刚性轨道核没有 placement 钩子：`_curve_placement` 的位移只在柔性轨的 `local_state` 里生效，而 35 坐标算例走的是「按里程采样型面」这条路径。于是几何路由把**车辆**放到了弧线上、**钢轨仍笔直**——实测车轮偏离轨面 **45.5 mm**（= 10²/2200），接触行承受 **1.95 MN**，任何静平衡都解不开。
+
+`CurveSeries(inner, radius_m, origin_m, side, cant_m, half_gauge_m)` 把 `y(s) = s²/(2R)` 发到采样层，因此刚性、柔性、模态三种轨道看到同一条弯曲轨面。`dz_ds` **保持不变**：它是轨面的竖向斜率，横向平移不倾转轨面；第一版把它写成 `base.dz_ds + offset/R`，等于把轨面额外转了最多 1°，十四个种子全部停在 `gtol termination condition is satisfied`。
+
+### 19.2 实测（R = 1100 m，x_start = 60 m，内联 35 坐标）
+
+| s | 轨面横向位移 | 轨面高度变化 |
+|---|---|---|
+| 61 m | +0.455 mm | 0.000 |
+| 70 m | +45.455 mm | 0.000 |
+| 80 m | +181.818 mm | 0.000 |
+
+与车辆一侧的 `_place_on_alignment` 逐轴对照：`wheelset1/4 y = +45.455 mm`（s = 10 m）、`wheelset2/3 y = +25.568 mm`（s = 7.5 m）、`yaw = ±0.009091 / ±0.006818`。八根轨全部包上（`bodies` 与 `contact_bodies` 两种暴露方式都已处理；只包一侧会把轨距拉宽 0.18 m，正是 O008 在 Simpack 路线上拒绝过的单侧横向导入）。
+
+### 19.3 仍未闭合的一条（本轮如实记录）
+
+几何一致之后，静平衡**仍然**停在非零残差：`vertical preload equilibrium failed: no seed converged; gtol termination condition is satisfied`，且 10 / 30 / 60 / 100 km/h 四档速度**全部相同**——所以它既不是离心力大小问题，也不是速度问题。在放置态上直接求值，最大的力出现在 `wheelset1.z = 1.46e8 N`、`wheelset1.roll = −9.5e7 N`，即深度穿透量级，说明**接触搜索在弯曲轨面上找到的不是正常接触斑**。
+
+下一步要查的就是这一处：车轮与轨面按同一条弧线放置后，`contact_search` 的横向搜索窗是否仍以「直线轨道」为前提（它以车轮 y 为中心取样，而弯曲轨面的 y 已随里程平移）。在这一点闭合之前，几何曲线**不宣称可用**，力路由（`curve_geometry = false`）仍是唯一能跑的曲线。
+
+### 19.4 复算
+
+```powershell
+$env:PYTHONPATH="F:\ai道岔状态反演辨识\Velch\src"
+python -X utf8 -m pytest tests/test_curve_series.py -q
+```

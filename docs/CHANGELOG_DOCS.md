@@ -3944,3 +3944,9 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 按 §152 的两种修法各试一次：只留轨面旋转 → 右轨 `rail_z` **+49.976 mm**、侵入 24.953 mm；只留带符号 level difference → **+50.645 mm**、侵入 26.095 mm。两者都把 §152 的 +104.008 mm 消掉，证明重复是唯一被消掉的东西。
 - 两种修法下车的状态相同：**4/8 轮着地**、左轨四根无接触、右轨各压 25–26 mm。结论：左右抬升与车轮 roll 不是同一约定（一侧相加一侧相减），需要同时打印两轨 `rail_z_m` 与四轮 `wheel_z_m` 才能定符号。
 - 两处改动均未提交（`git checkout` 复原）；新增探测 `scripts/s12k_cant_single_owner.py`；cant 在几何路由仍不可引用。
+
+## 第 154 轮：轨面两侧已经正确，差在车轮变换里的半个 b·sinφ
+
+- 新探测 `scripts/s12l_both_rails.py` 同时打印两条轨的 `max z_m` 与四个轮心的 `y/z/roll`：左轨 **−53.721 mm**、右轨 **+54.799 mm**（差 108.520 = 2×54.26，与 `b·sinφ = 53.5` 吻合），四轮 `z = 0`、`roll = +0.071729`。
+- 结论：轨面超高这半边已经正确（`RolledSeries` 以轨道中心为轴），placement 的 level difference 确实不该再加；剩余的 26 mm 是车轮变换里 `z` 抬升只拿到一半，下一轮用 `_absolute_arrays` 的 `wheel_z.min()` 与解析值对照定位。
+- cant 在几何路由仍不可引用；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §154 记录表与下一步。

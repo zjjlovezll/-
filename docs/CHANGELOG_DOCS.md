@@ -1827,6 +1827,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |
+| [INVERSION_VERDICT_2026-10-28.md](INVERSION_VERDICT_2026-10-28.md) | 实测反演的判定页（L0–L5） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
 | [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |
@@ -4244,3 +4245,18 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
 
 这样下一次有人（包括我）直接调这个函数去测曲线，会拿到明确的报错而不是一个看起来像"软件缺陷"的数字。
 测试加在 `tests/test_curve_seat.py`：直调必须抛这条；走 `_seat` 必须正常。
+
+## 第 175 轮：实测反演的判定页与机读产物（L0–L5）
+
+- 跑通 `scripts/s24_verdict.py`（此前只有模块与脚本，从未在实测数据上执行），产出
+  `reports/inversion_measured_2026-10-28/` 六件：`verdict.json`、`bands.csv`、`windows.csv`、
+  `speed_table.json`、`operator.json`、`order_tracking.json`。
+- 判定：**L0 passed**（579 740 样本 / 2 通道 / 4 kHz / 3 798–6 303 m / 稳态 1 档 67.5 s）、
+  **L1 passed**（双通道滞后 2.25 ms，判据 25 ms）、**L2 failed**（该记录只有一个稳态速度，
+  按速度的标定表只在 70.8 km/h 建过）、**L3 passed（有限）**（算子 2.743e+04 (m/s²)/m；
+  峰可重复但幅值无可比真值）、**L4 skipped**（地板与覆盖率只在合成记录上验过）、
+  **L5 failed**（3/6 段，判据 6/6；段级虚警 5 %，二项 p = 0.0022）。
+- `measurement_validation_status = detection_only`、`physics_validation_status` 不变；并列出四项
+  「不能声称」的话与四条缺什么（按代价排序），其中「40/50/60/75 四份记录只有 75 那份建了表」是 L2 的
+  真实缺口，不是数据不存在。
+- 新增 `docs/INVERSION_VERDICT_2026-10-28.md`（结论两行、逐层表、四项不能声称、缺什么、与 95 % 的关系）。

@@ -97,37 +97,3 @@ def test_a_roll_and_a_curve_compose_without_changing_the_radius():
     sampled = curved.sample(80.0)
     # The rotation moves a point at y = 0.75 m by about 54 mm, and the arc adds its own 182 mm.
     assert float(sampled.profile.y_m[0]) - base == pytest.approx(20.0 * 20.0 / 2200.0, abs=1e-9)
-
-@pytest.mark.corpus
-def test_curve_geometry_alone_now_curves_the_rail_as_well(tmp_path):
-    """Moving the vehicle without moving the rail is a contradiction, not an approximation.
-
-    Round 23 measured the first evaluate of exactly that combination: 161 289 / 936 715 /
-    971 169 / 174 810 kN on one rail and zeros on the other, i.e. an absurd penetration.
-    So ``curve_geometry`` turns the rail surface on too, and this test pins that.
-    """
-
-    from velch import data_root
-    from velch.irregularity import CurveSeries
-    from velch.vehicle import load_vehicle_case
-
-    raw = json.loads((data_root.case_dir() / "case_A_final_law.json").read_text(encoding="utf-8"))
-    raw["run"].update(
-        {
-            "curve_radius_m": 1100.0,
-            "curve_geometry": True,
-            "duration_s": 0.01,
-            "output_step_s": 0.01,
-            "x_start_m": 60.0,
-        }
-    )
-    raw["run"].pop("curve_rail_surface", None)
-    raw.pop("initial_state", None)
-    path = tmp_path / "geometry_only.json"
-    path.write_text(json.dumps(raw, indent=1), encoding="utf-8")
-
-    case = load_vehicle_case(path)
-    series = [body.series for rail in case.rails for body in getattr(rail, "bodies", ())]
-    assert series, "the case must carry rail bodies"
-    assert all(isinstance(item, CurveSeries) for item in series)
-

@@ -512,33 +512,13 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     # shifts in one frame would cancel, so profile.y_m and the vehicle position are not in the same
     # frame (docs/CURVE_SEAT_AND_CREEP_2026-10-27.md §23).  A turnout does not need this path at all:
     # its station table is already curved, and `align_to_track` places the vehicle on it.
-    # ``curve_geometry`` means "put both sides on the curve".  Moving the vehicle by s^2/(2R) while
-    # leaving the rail straight is not a weaker approximation, it is a contradiction: the first
-    # evaluate then reads 161 289 / 936 715 / 971 169 / 174 810 kN on one rail and zeros on the
-    # other (round 23), i.e. an absurd penetration rather than a load.  So the two move together.
-    surface = bool(run_block.get("curve_rail_surface")) or bool(run_block.get("curve_geometry"))
-    if radius and surface:
-        from .irregularity import CurveSeries
-
-        origin = float(run_block.get("x_start_m") or 0.0)
-        cant = float(run_block.get("curve_cant_m") or 0.0)
-        half_gauge = abs(float(wheels[0].lateral_offset_m)) if wheels else 0.7465
-        curved = []
-        for rail in rails:
-            side = 1 if "right" in str(getattr(rail, "id", "")).lower() else -1
-            source_bodies = (getattr(rail, "bodies", None)
-                             or getattr(rail, "contact_bodies", None) or ())
-            # Only the right rail was wrapped the first time: the left rail exposes its
-            # series through ``contact_bodies``, so the loop silently skipped it and the run
-            # widened the gauge by up to 0.18 m -- exactly the single-side lateral import that
-            # O008 refused on the Simpack route.
-            bodies = [
-                replace(body, series=CurveSeries(body.series, float(radius), origin, side, cant,
-                                                 half_gauge))
-                for body in source_bodies
-            ]
-            curved.append(replace(rail, bodies=tuple(bodies)) if bodies else rail)
-        rails = tuple(curved)
+    # ``curve_geometry`` moves the track through TrackKernel's own placement hook: ``local_state``
+    # returns ``rail_y_m = s^2/(2R)`` for every rail, and the profile keeps carrying the rail's side
+    # offset (+/- 0.753).  Round 25 measured that adding a second shift on the sampled surface
+    # double-counts it: crown = rail_y_m + (profile.y_m + 45.455 mm) read -0.669296 m where the
+    # straight crown is -0.753337, and the wheel sat 32-79 mm beside it.  With the surface untouched
+    # and only the vehicle aligned, wheel minus crown is the straight case's 6.8 mm.  So the rail
+    # side lives in exactly one place: the kernel.
     track_spec = raw.get("track_dynamics", {"kind": "local_compliant"})
     track_kind = track_spec["kind"]
     if track_kind not in {"rigid", "local_compliant", "two_layer", "layered", "modal"}:

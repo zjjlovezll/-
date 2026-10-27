@@ -3968,3 +3968,9 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - `src/velch/vehicle.py` 的 cant 分支由 `roll_rails` 改为抛出带数字的 `ValueError`：`R sin(phi) = 30.8 mm`（φ = +0.07167 rad、1.493 m 轨距）说明滚轨面无法同时满足 `z·sinφ = 5 mm` 的轨顶横移。
 - `tests/test_curve_seat.py`：旧测试替换为 `test_cant_on_the_geometry_route_is_refused_because_of_the_wheel_transform`（断言新文案）；顺带修掉按行号截断误删三条 R=350 测试的事故，`def test_` 计数 13。
 - 全套 **920 passed / 1 skipped / 1 xfailed**；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §157。
+
+## 第 158 轮：水平差 + 重力分量 + roll 入未知量，试过并回退，但定位到下一步
+
+- 试了架构评审给的正解三件：轨面只做水平差（`RaisedSeries`）、重力在倾斜系分解（`sin 0.071606 / cos 0.997433`）、cant 非零时 roll 进静平衡未知量。
+- 读数：cant=0 回归 `1.071e-07 N` / 8 斑 / 58.7–60.6 kN 不受影响；cant=0.107 只做水平差 → **4/8 轮着地**；再加 roll → `no seed converged; gtol`；手抬 z 到 `wheel_center_height_m` 且 roll ±0.0717 时，已升到 **+53.50 mm** 的左轨上接触仍是 **0.000 mm / 0.00 kN**、`max|force| 2.023e+06 N`。
+- 判定：抬升没有到达接触几何（`RaisedSeries` 生效于 `series.sample`，`_absolute_arrays` 看到的仍是未抬基准）。三处改动已 `git checkout` 回退，仓库保持几何路由超高的**显式拒绝**。

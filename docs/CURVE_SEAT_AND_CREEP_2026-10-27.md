@@ -781,3 +781,21 @@ with the track plane, which is not implemented; use curve_geometry = false ...
 ### 还剩什么
 
 超高要真能用，需要**车架随坡面倾斜**：`gravity` 在倾斜坐标系里分解（`−m g sinθ` 进 y、`−m g cosθ` 进 z），轨面用纯平移的 level difference，轮与轨的相对几何不动。这是下一轮的主体工作，不是符号问题。
+
+## 158. 试着按「水平差 + 重力分量 + roll 入未知量」做超高，三个读数定位到下一步
+
+上一轮把几何路由的超高改成拒绝，这一轮按架构评审给的正解试了一次：轨面只做**水平差**（不旋转）、重力在倾斜坐标系里分解（`sinφ = 0.071606`、`cosφ = 0.997433`）、cant 非零时把 **roll** 加进静平衡未知量。三条读数：
+
+| 配置 | 结果 |
+|---|---|
+| cant = 0（回归） | `residual 1.071e-07 N`，8 个接触斑，载荷 58.7 / 59.0 / 60.4 / 60.6 kN 两侧对称 —— **未被这次改动影响** |
+| cant = 0.107，只加水平差 + 重力分量（roll 不在未知量） | **4 / 8 轮着地**，最轻 0.0 N —— 这正是「两条轨不等高、而轮对水平」的必然结果，与第 31 轮把 roll 移出未知量时的推理一致 |
+| cant = 0.107，再加 roll 进未知量 | `no seed converged; gtol` —— 停在残差平台 |
+
+再补一个关键读数：把四个轴抬到 `wheel_center_height_m`、roll 手设为 ±0.0717，左轨（已升到 **+53.50 mm**）上的四个接触斑**still 0.000 mm 侵入、0.00 kN**，`max|force| 2.023e+06 N` 仍是整车自重没有支撑。也就是说：**抬起来的轨面没有被接触搜索看到**——`RaisedSeries` 生效于 `series.sample`，而 `body_contacts` 那次求值里的轨高仍是未抬的基准（轮带 0 侵入说明两侧几何根本没有相交）。
+
+### 结论与下一步
+
+水平差这条路是对的（cant=0 逐位不变、4/8 → roll 一进就换一种失败），但**抬升没有到达接触几何**这一点必须先修：`RaisedSeries` 需要像 `RolledSeries` 一样被 `_absolute_arrays` 的调用方看到（`rail_sample.profile.z_m`），而不是只在 `series.sample` 里生效一次。下一步先写一个最小探针：同一 placed 状态打印 `rail_sample.profile.z_m.max()` 与 `rail_z_m` 实参，确认是「抬升没进这个字段」还是「进了但接触的 y 窗口不重叠」。
+
+三处改动（`RaisedSeries`/`raise_rails`、`_cant_gravity` 重力分量、roll 入未知量）**已 `git checkout` 回退**，仓库保持上一轮的拒绝状态——半个接好的超高比明确拒绝更危险。

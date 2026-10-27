@@ -3544,3 +3544,13 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 下一轮的靶点因此具体化：`contact_grid._build_rail_grid` 用 `rail_sample.profile.y_m` 建横向轴，而 `CurveSeries` 正是把该 `y_m` 横移了 45 mm；全局改成绝对 `rail_y` 会打坏直线冻结基线（已否证），修正必须限定在“被横移过的序列”上。
 
 证据：`scripts/s12_curved_seat_residual.py`；`tests/test_curve_seat.py` 的 yaw 分支守卫；`tests/test_curve_seat.py` + `test_curve_alignment.py` + `test_curve_series.py` **18 passed, 1 xfailed**；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §21。
+
+## 第 132 轮：三个探针排掉三个候选，把曲线失败推进到「第一次接触求值就错」
+
+- `scripts/s12b_grid_frame.py`：网格假设作废——本算例走条带路径，`_build_rail_grid` 一次都没被调用（附「必须改 `contact_search` 上的绑定」这个坑）。
+- `scripts/s12c_gauge_centre.py`：60/70/80 m 的轨距中心 +0 / +0.045455 / +0.181818 m，与 `CurveSeries` 横移后的左轨均值逐位对应；对齐把 `wheelset1/4` 放到 +0.045455 m、`wheelset2/3` +0.025568 m。几何与对齐都对。
+- `scripts/s12d_z_only_seat.py`：只解四个轮对 z 时，**对齐状态的第一次 `evaluate` 就是左轨 150 690 kN、右轨 0**；随后载荷单调下降，说明起点差约 12 mm（按 65 µm ↔ 59.7 kN 的 Hertz 反推）。所以不是静平衡搜索的问题，是第一次接触求值就已经把左轨压进去、右轨根本没找到接触。
+
+下一轮：在同一状态上只取一对轨，打印条带切片的 `rail_y` 区间、轮面 y 区间与最深切片。
+
+证据：三个探针脚本；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §22。

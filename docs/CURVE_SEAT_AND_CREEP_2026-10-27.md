@@ -529,6 +529,32 @@ $env:PYTHONPATH="F:\ai道岔状态反演辨识\Velch\src"
 python -X utf8 -m pytest tests/test_curve_series.py -q
 ```
 
+## 22. 第一个 `evaluate` 就已经是 150 MN：不是静平衡搜不到，是接触一开始就错
+
+第 21 轮把失败定位到「右轨没有接触斑」。这一轮用三个探针把三个候选原因逐个排掉，并把它再往前推了一步。
+
+**探针 1（`scripts/s12b_grid_frame.py`）——网格假设死掉了。** 想检查 `_build_rail_grid` 的横轴（相对 `profile.y_m`）与 `np.interp` 的 `rail_y`（绝对 `rail_y_m + profile.y_m`，见 `contact_search.py:202`）是否不同框架。实测**直线与曲线算例里这个函数一次都没被调用**：本算例走 `strip_integral` + `normal_policy` 的条带路径，网格只服务 `grid`/`cached_grid` 的点搜索。第一次探针还踩了一个坑——`contact_search` 用 `from .contact_grid import _build_rail_grid` 绑定了名字，只改源模块的属性看不到，必须改 `contact_search._build_rail_grid`。
+
+**探针 2（`scripts/s12c_gauge_centre.py`）——几何与对齐都是对的。**
+
+| 里程 | 轨距中心（`_gauge_centre`） | 左轨平均 `y_m`（`CurveSeries` 之后） | 切线 |
+|---|---|---|---|
+| 60 m | +0.000000 m | −0.753337 | +4.5e-04 |
+| 70 m | **+0.045455 m** | −0.707882 | +9.5e-03 |
+| 80 m | **+0.181818 m** | −0.571518 | +1.9e-02 |
+
+对齐后 `wheelset1/4 y = +0.045455`、`wheelset2/3 = +0.025568`，与各自里程的轨距中心一致。所以「车没跟着弯」这个怀疑也不成立。
+
+**探针 3（`scripts/s12d_z_only_seat.py`）——决定性。** 保持 y/yaw/roll 在对齐值，只对四个轮对的 z 做阻尼牛顿步（假设接触刚度 `share/65 µm = 9.18e8 N/m`）：
+
+```
+step 0（对齐状态，未经任何求解）:  left [150690.0  68528.7  56088.0  136585.1] kN   right [0 0 0 0]
+```
+
+**第一次 `evaluate` 就是 150 690 kN（左轨）+ 0（右轨）**，随后 z 被逐步抬起、载荷单调下降（150 690 → 56 543 kN），说明力对 z 的符号是对的、但**起点差了约 12 mm**（按 Hertz 从 65 µm/59.7 kN 反推），而且右轨从第一步起就没有斑。
+
+因此三件事同时成立：几何对齐正确、静平衡搜索不是原因、第一个接触求值就已经把左轨压进去约 12 mm 而右轨完全没找到接触。下一轮的靶点随之收窄到**一次接触求值内部**：在同一状态上只取一对轨（`axle1_left` / `axle1_right`），打印条带切片的 `rail_y` 区间、轮面 y 区间与最深切片，看右轨的条带是否根本没与轮面相交（若是，则是 `CurveSeries` 之后左右轨的相对几何被破坏；若相交却算不出力，则问题在条带积分本身）。
+
 ## 21. 曲线静平衡的残差探针：右轨根本没被找到
 
 `scripts/s12_curved_seat_residual.py` 记录静平衡里每一次 `evaluate`，打印最后一帧的最大残差行、接触斑数量、每个斑的法向力与侵入量。R = 1100 m、cant 0、80 km/h、x_start 60 m、内联 35 坐标：

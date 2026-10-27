@@ -988,8 +988,24 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         getattr(case.run, "curve_geometry", False)) or bool(getattr(case.run, "align_to_track", False))
     indices = [topology.require(body.id, "z") for body in topology.bodies if "z" in body.dof]
     if curved:
+        # yaw is not optional.  A wheelset steers on a curve only because its two contact points
+        # run on different rolling radii, and that difference enters through the yaw moment: freezing
+        # yaw leaves the wheelset parallel to the rails, so the equilibrium it can reach is flange
+        # contact.  Measured on R = 1100 m at 80 km/h with y and roll free but yaw fixed: three left
+        # patches only, 5.55-5.76 mm penetration, 13.6-13.8 MN per patch, no seed converged.
+        # yaw only where the rails themselves are curved.  A force-route curve keeps a straight rail
+        # and puts the curve in the force, so its balanced seat is already eight equal wheels
+        # (measured 59 652-59 708 N against a 59 662 N share) and yaw adds an unknown nothing pulls
+        # on.  A geometry-route curve needs yaw: a wheelset steers through the rolling-radius
+        # difference between its two contacts, and that difference reaches the state as a yaw
+        # moment.  Measured on R = 1100 m at 80 km/h, y and roll free but yaw fixed: three left
+        # patches only, 5.5-5.8 mm penetration, 13.6-13.8 MN, no seed converged.  Adding yaw alone
+        # did not seat it either (§21), so this is a necessary condition, not a sufficient one.
+        arc = bool(getattr(case.run, "curve_geometry", False)) or bool(
+            getattr(case.run, "align_to_track", False))
+        axes = ("y", "yaw", "roll") if arc else ("y", "roll")
         indices += [topology.require(body.id, axis) for body in topology.bodies
-                    for axis in ("y", "roll") if axis in body.dof]
+                    for axis in axes if axis in body.dof]
     if case.track_kind == "local_compliant":
         indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]
     elif case.track_kind == "two_layer":

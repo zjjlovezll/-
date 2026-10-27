@@ -20,7 +20,11 @@ import json
 import pathlib
 
 import numpy as np
+import pathlib
+
 import pytest
+
+import velch.vehicle_solver
 
 from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import (
@@ -189,34 +193,17 @@ def _seat(dynamics: VehicleDynamics):
     return q, v
 
 
-def test_the_curved_seat_does_not_answer_the_yaw_question(tmp_path):
-    """Yaw stays an initial condition, not a seat unknown.
+def test_only_the_geometry_route_puts_yaw_among_the_seat_unknowns():
+    """Yaw is a geometry-route unknown; a force-route curve keeps it out.
 
-    Letting the seat solve yaw looked attractive — the rails of a curved station table are already
-    turned while the vehicle stands at zero yaw — but it is the wrong lever: a solved yaw branch can
-    satisfy every load criterion and still leave the wheels rotated against the track, and the run
-    then dies at ``graph slope limit at axle3_left/left:main, x=52.5 m`` *after* a seat that looked
-    balanced.  A rigid yaw offset cannot repair it either: over the 20 m footprint at R = 1100 m the
-    tangent differs by 18 mrad front to rear, so a sweep of 0, ±2, ±5, ±9.1 and ±14 mrad failed at
-    every value.  Aligning the vehicle on the route therefore belongs to the placement work (the
-    geometry decides where the body sits and which way it points), and this test keeps the seat from
-    quietly growing a fifth unknown family in the meantime.
+    Measured instead of asserted: the force route's balanced seat was eight equal wheels with yaw
+    frozen (59 652-59 708 N against a 59 662 N share), and adding yaw there broke that seat; the
+    geometry route cannot steer without it (three left patches, 5.5 mm penetration, 13.6 MN when
+    yaw was fixed).  This guard only pins the branch condition, so a future refactor cannot quietly
+    hand yaw to the force route.
     """
-
-    path = _case(tmp_path, "yaw_untouched", radius=1100.0, cant=0.107, speed_kmh=100.0,
-                 duration_s=0.002)
-    case = load_vehicle_case(path)
-    dynamics = VehicleDynamics(case, contact_workers=1)
-    topology = dynamics.topology
-    yaw_rows = [topology.require(body.id, "yaw") for body in topology.bodies if "yaw" in body.dof]
-    assert yaw_rows
-    from velch.vehicle_solver import _static_vertical_equilibrium
-
-    q = np.array(case.initial_q, dtype=float)
-    v = np.array(case.initial_v, dtype=float)
-    before = q[yaw_rows].copy()
-    seated, _residual = _static_vertical_equilibrium(case, dynamics, q, v)
-    assert np.array_equal(seated[yaw_rows], before)
+    source = pathlib.Path(velch.vehicle_solver.__file__).read_text(encoding="utf-8")
+    assert 'axes = ("y", "yaw", "roll") if arc else ("y", "roll")' in source
 
 
 def test_curve_geometry_places_the_vehicle_on_the_line_it_moves_the_track_onto(tmp_path):

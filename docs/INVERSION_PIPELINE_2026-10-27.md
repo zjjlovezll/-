@@ -90,3 +90,54 @@ python -X utf8 scripts\s13_admission.py
 
 **对 L3 的直接影响**：按判据「禁跨速度外推」，L3 只能在这一档速度内建带算子；其余三档要么补文件，
 要么明确写成未验证。
+
+## 7. L5 验收层：唯一允许写 `measurement_validation_status` 的地方
+
+`scripts/s15_acceptance.py` 读 L0/L1（`verdict.json`）、L2（`speed_table.json`）、检测（`detection.json`），
+按目标的判据**自己下结论**，并写出「可以引用什么 / 不能引用什么 / 归因到数据还是物理」。
+
+判据（目标第 1 项）：**6 个预注册区段检出 ≥6/6，段级虚警 ≤5 %，定位误差 0 m**。
+
+### 7.1 实测判决
+
+```
+PASS  L0-admission
+PASS  L1-registration
+PASS  L2-calibration
+FAIL  L3-operator      no same-speed model band operator exists yet: the stored BLMA operator is at
+                       80 km/h while the record averages 70.8 km/h, and the criterion forbids
+                       extrapolating between speeds
+FAIL  L4-uncertainty   skipped: L3 has no operator to carry a covariance
+FAIL  L5-acceptance    detection reached 3/6 (50%), short of 6/6
+measurement_validation_status: not_met
+```
+
+两个通道都 **3/6（50 %）**，段级虚警 **5.0 %**（1585 个伪区段标定出的阈值 24.2 dB / 声 13.7 dB）：
+
+| 通道 | 检出区段 | AUC | inside−outside | 零假设 |
+|---|---|---|---|---|
+| 轴箱振动 | S4 / S5（+1 个未归属峰） | 0.741 | **+3.79 dB** | 期望 0.30 个，P(X≥3)=0.002 |
+| 车内声 | S2 / S3 / S4（+9 个未归属峰） | 0.880 | **+6.38 dB** | 期望 0.30 个，P(X≥3)=0.002 |
+
+**能说的**：区段级可分性真实存在（两个通道的零假设概率都是 0.002，即「碰巧」的概率 2‰），
+声通道的对比度 +6.38 dB、AUC 0.880 与论文的量级一致。
+**不能说的**：95 % 检出率（实测 50 %）、任何幅值/剖面恢复、任何跨速度标定。
+
+### 7.2 归因（这一步比数字重要）
+
+- **数据侧**：只有一档速度；两个轴箱通道**共位**（L1 已证）；这份数据集**没有不平顺剖面真值**，
+  所以「反演的幅值对不对」在这里无法判定。
+- **物理侧**：超过 `f_n = 24.86 Hz` 后轴箱响应是 `(2π f_n)²·A`，**对波长不敏感**；区段比对的对比度
+  很大一部分来自**区段边缘**（进入/离开波磨段）而不是波磨本身。这解释了「能检出、不能定量」。
+- **未做的一层**：L3 需要**同一速度**的模型带算子；现有 BLMA 算子是 80 km/h 合成工况，与 70.8 km/h
+  实测不合规。补齐它是一次同速度重测（约 20 分钟），那之后 L4 的不确定度才有载体。
+
+### 7.3 复算
+
+```powershell
+python -X utf8 scripts\s13_admission.py        # L0/L1
+python -X utf8 scripts\s14_speed_table.py      # L2 实测表
+python -X utf8 scripts\s10_measured_corrugation.py --json F:\velch_tmp\verdict\detection.json
+python -X utf8 scripts\s15_acceptance.py       # L5 合成判决
+# measurement_validation_status: not_met
+```

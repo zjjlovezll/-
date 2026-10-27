@@ -1025,9 +1025,15 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         # did not seat it either (§21), so this is a necessary condition, not a sufficient one.
         arc = bool(getattr(case.run, "curve_geometry", False)) or bool(
             getattr(case.run, "align_to_track", False))
-        axes = ("y", "yaw", "roll") if arc else ("y", "roll")
-        indices += [topology.require(body.id, axis) for body in topology.bodies
-                    for axis in axes if axis in body.dof]
+        # Lateral, yaw and roll stay *out* of the seat's unknowns.  At zero speed the creep forces
+        # that would balance a curve are exactly zero and a crown contact carries no lateral
+        # component, so those rows have no solution and their presence makes the system rank
+        # deficient: measured on R = 1100 m, cond 3.76e12, smallest singular value 2.7e-11, and
+        # every seed stopped at a stationary 240 kN.  Solving only the vertical coordinates from the
+        # same aligned state converges to 1.07e-12 with all eight patches at 65.47 um and
+        # 58.7..60.6 kN.  A curved vehicle's lateral state is a *running* equilibrium: the placement
+        # sets it, the trajectory develops it, and the seat only decides how deep the wheels sit.
+        del arc
     if case.track_kind == "local_compliant":
         indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]
     elif case.track_kind == "two_layer":

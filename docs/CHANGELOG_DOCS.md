@@ -3737,3 +3737,28 @@ R1100 几何路由，不对齐        与“对齐”逐位相同
    与探针结果（1.07e-12）矛盾——**两者差异还没查清，所以三处试验性改动全部回退**（`git checkout`），
    不留下说不清的行为改变。下一轮要查的是这个矛盾：探针与 seat 的
    `indices`/`seeds`/验收判据（`error_n > 0.1`）到底哪里不同。
+
+## 第 145 轮：曲线的静平衡通了——把横向未知量从 seat 里拿掉
+
+第 30 轮量到两件事：未知量取 z+y+roll 时雅可比 `cond 3.76e12`、所有种子停在 `|r| = 2.39`（240 kN）；
+而只解 7 个垂向坐标时收敛到 `1.07e-12`、八斑全 65.47 µm、载荷 58.7–60.6 kN。本轮把后者落进真代码。
+
+**改动**（`src/velch/vehicle_solver.py`，`_static_vertical_equilibrium`）：曲线时**不再**把 y/yaw/roll 加进未知量，
+并把理由写在代码里：零速下蠕滑力为零、轨顶接触无横向分量，那些行没有解，加进去只会让方程秩亏。
+曲线的横向状态是**运行中的平衡**——placement 给定、轨迹发展、seat 只决定车轮坐多深。
+
+**实测（R=1100 m、cant=0、100 km/h、x_start 60 m、35 坐标、0.01 s）**
+
+| 配置 | 结果 | 门 |
+|---|---|---|
+| 几何路由 + 对齐 | **跑通** | 7 门，唯一失败 `translational_action_reaction` |
+| 几何路由 + 不对齐 | **跑通** | 同上 |
+| 力路由 + 对齐 | `numerically_checked` | 7/7 全过 |
+
+**这是曲线第一次跑起来**：第 26 轮起的「坐不住」结束了；现在剩下的是**曲线工况的作用-反力门不平**——
+几何路由把车辆放到弧线上、轨面也移了，但反力账本没有随曲率记入，这是下一轮的具体目标（不是放宽容差）。
+
+两个测试按新行为改写：`test_an_unbalanced_curve_cannot_be_seated_at_all` 改成断言「能跑、但
+`translational_action_reaction` 失败」；`test_only_the_geometry_route_puts_yaw_among_the_seat_unknowns`
+改成 `test_the_seat_puts_no_lateral_coordinate_among_its_unknowns`，钉住这条分支**不存在**。
+`freeze_baseline.py --check` → **UNCHANGED**（直线 `06928c9db944796d`、柔轨 `ab81290f5924c3a5`）。

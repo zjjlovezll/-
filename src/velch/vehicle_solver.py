@@ -1126,6 +1126,16 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     # has a curve, so every straight case keeps today's equations bit for bit.
     curved = bool(getattr(case.run, "curve_radius_m", None)) or bool(
         getattr(case.run, "curve_geometry", False)) or bool(getattr(case.run, "align_to_track", False))
+    if getattr(dynamics, "placement_enabled", False) and getattr(dynamics.track, "placement", None) is not None:
+        # A curve is entered, never stood on: with the placement on, the rails are rotated onto the arc
+        # while the vehicle still sits on the straight line, and the seat settles on one side.  Measured:
+        # 4 of 8 wheels carrying load, heaviest 127 821.9 N against a 59 662 N share (R = 1100 m,
+        # 100 km/h).  ``_seat`` switches the placement off for exactly this reason.
+        raise SimulationFailure(
+            "the vertical seat cannot run with the curve placement on: the rails would be on the arc "
+            "while the vehicle is on the straight line, and the seat settles on one side (measured 4 "
+            "of 8 wheels, 127 821.9 N against a 59 662 N share). Call _seat(), which switches the "
+            "placement off around the solve")
     indices = [topology.require(body.id, "z") for body in topology.bodies if "z" in body.dof]
     if curved:
         # yaw is not optional.  A wheelset steers on a curve only because its two contact points

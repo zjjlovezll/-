@@ -160,8 +160,13 @@ def test_a_contact_guard_inside_the_seat_rejects_the_step_instead_of_escaping(tm
     # Whether the seat converges or not, the guard must never escape as its own message: that was
     # the defect this test exists for.  Since the curve body force stopped being double-counted on
     # the geometry route, a no-cant curve now seats here, so convergence is an allowed outcome.
+    from velch.vehicle_solver import _seat
+
     try:
-        _static_vertical_equilibrium(dynamics.case, dynamics, q, v)
+        # Through _seat: the bare function now refuses to run against curved rails, because the seat
+        # only makes sense on the equivalent straight track and that switch is what puts the rails
+        # back on the straight line inside the solve.
+        _seat(dynamics.case, dynamics, q, v)
     except SimulationFailure as error:
         assert "vertical preload equilibrium failed" in str(error)
     assert dynamics.seat_barrier_hits > 0, "the guard never fired, so this test proves nothing"
@@ -292,3 +297,22 @@ def test_cant_on_the_geometry_route_is_refused_because_of_the_wheel_transform(tm
     message = str(error.value)
     assert "R sin(phi) = 30.8 mm" in message
     assert "vehicle frame tilted" in message
+
+
+def test_the_seat_refuses_to_run_against_curved_rails(tmp_path):
+    """The seat solves the straight-track problem; against the arc it settles on one side."""
+
+    from velch.vehicle_solver import _static_vertical_equilibrium
+
+    path = _case(tmp_path, "curved_rows", radius=1100.0, cant=0.0, speed_kmh=100.0,
+                 duration_s=0.005, geometry=True)
+    case = load_vehicle_case(path)
+    dynamics = VehicleDynamics(case, contact_workers=1)
+    q = np.asarray(case.initial_q, dtype=float)
+    v = np.zeros(dynamics.dimension)
+
+    assert dynamics.placement_enabled and dynamics.track.placement is not None
+    with pytest.raises(SimulationFailure) as error:
+        _static_vertical_equilibrium(case, dynamics, q, v)
+    assert "cannot run with the curve placement on" in str(error.value)
+    assert "Call _seat()" in str(error.value)

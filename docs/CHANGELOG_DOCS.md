@@ -4206,3 +4206,41 @@ B039（第 172 轮）落地后，回测同一条几何曲线在不同起点上�
 
 这一条不改变 B039 的结论——切线位置本身已由 5 项测试与三个变体证明；它只说明"起点离弧顶远到一定程度"
 时还有第二个问题，而第 172 轮的三个变体起点都在 30 m（离弧顶 20.6 m 以内）。
+
+## 第 174 轮：撤回第 173 轮那条"未决"——原因是我自己的探针绕过了 `_seat`
+
+第 173 轮记下"同一条 R=1100 m 曲线，起点 30 m 能坐、60 m 不能"，并把它列为未决。这一轮查清了，
+**它不是软件的问题，是探针的问题**。
+
+### 174.1 实际发生的事
+
+`scripts/s72_curve_creep_terms.py` 直接调了 `_static_vertical_equilibrium(...)`（模块函数），而没有走
+`_seat(...)`。`_seat` 的关键动作正是**在求解期间把曲线 placement 关掉**（`dynamics.placement_enabled = False`
++ `dynamics.track.placement = None`），因为零速下弯轨没有横向平衡（第 31 轮：cond 3.76e12、最小奇异值 2.7e-11、
+每个种子残差 2.39 = 240 kN）。绕过它，等于让静平衡去解一条"钢轨在弧上、车辆在直线上"的系统——
+结果就是那个指纹：**4/8 轮着地、最重 127 821.9 N（均分 59 662 N）**，与第 17、22 轮用弯轨求解时一模一样。
+
+### 174.2 这一轮的实测（`F:\velch_tmp\round73_seat_frame.py`）
+
+记录 `_seat` **内部**每一次 `evaluate` 调用看到的帧：
+
+| 起点 | 结果 | 首次调用处的轨面帧 |
+|---|---|---|
+| 30 m | 静平衡残差 **1.11e-07 N** | `x_start 30`、里程 40.00、`rail y +0.000000`、`vy +0.000000`、`placement off`、`enabled False`、`ProfileSeries` |
+| 60 m | 静平衡残差 **4.18e-08 N** | `x_start 60`、里程 70.00、`rail y +0.000000`、`vy +0.000000`、`placement off`、`enabled False`、`ProfileSeries` |
+
+两处都是**直轨帧**，两次都坐得住。所以"起点 60 m 坐不住"这件事**不存在**；第 173 轮那张表里的
+`127 821.9 N` 是我的探针造成的。
+
+### 174.3 顺手把这个错误变成不可再犯
+
+`_static_vertical_equilibrium` 现在在入口处**拒绝**在 placement 打开时运行：
+
+```
+the vertical seat cannot run with the curve placement on: the rails would be on the arc while the
+vehicle is on the straight line, and the seat settles on one side (measured 4 of 8 wheels,
+127 821.9 N against a 59 662 N share). Call _seat(), which switches the placement off around the solve
+```
+
+这样下一次有人（包括我）直接调这个函数去测曲线，会拿到明确的报错而不是一个看起来像"软件缺陷"的数字。
+测试加在 `tests/test_curve_seat.py`：直调必须抛这条；走 `_seat` 必须正常。

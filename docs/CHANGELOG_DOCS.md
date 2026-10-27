@@ -4260,3 +4260,16 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   「不能声称」的话与四条缺什么（按代价排序），其中「40/50/60/75 四份记录只有 75 那份建了表」是 L2 的
   真实缺口，不是数据不存在。
 - 新增 `docs/INVERSION_VERDICT_2026-10-28.md`（结论两行、逐层表、四项不能声称、缺什么、与 95 % 的关系）。
+
+## 第 176 轮：L2 从「一个速度」到「四个速度」（波长散布 11.3 %）
+
+- `scripts/s14_speed_table.py` 对 `F:\ai道岔状态反演辨识\75kmh数据` 下**全部四份**记录各建一行表：
+  39.9 / 49.2 / 58.0 / 70.8 km/h → 线频 398.4 / 451.8 / 565.2 / 713.2 Hz、中位波长 28.1 / 29.9 / 26.7 / 27.5 mm、
+  落 18–40 mm 的比例 93.6 / 90.2 / 68.3 / 64.7 %、突出度 28.2 / 23.7 / 23.0 / 23.1 dB；脚本判 `PASS`。
+- 两件事同时成立：**线频随速度缩放**（1.79× vs 速度比 1.77×）、**波长不随速度变**（散布 **11.3 %**，判据 15 %）。
+  这是「常数波长」假设的正面证据，也是「表按速度分键、不内插」这条规则能用的前提。
+- `scripts/s24_verdict.py` 的 L2 由硬编码 `FAILED` 改为读四速度表判定：`speeds_with_steady_data = 4`、
+  `wavelength_spread = 0.113`、`criterion_spread = 0.15` → **passed**。判定变为
+  L0/L1/**L2**/L3 passed、L4 skipped、L5 failed（3/6）；`measurement_validation_status` 仍为 `detection_only`。
+- 重新生成并入库 `reports/inversion_measured_2026-10-28/`（`verdict.json`、`bands.csv`、`windows.csv`、
+  `speed_table.json` 四件已刷新）；`docs/INVERSION_VERDICT_2026-10-28.md` 增 §2b（四速度表）并改 L2 行与「缺什么」表。

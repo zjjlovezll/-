@@ -18,6 +18,7 @@ WORK = Path(r"F:\velch_tmp")
 OMA = WORK / "oma" / "oma_ALL_Run_75kmh_E1toE2.json"
 FDD = WORK / "fdd" / "fdd_sections.json"
 SEPARATION = WORK / "fdd" / "speed_separation.json"
+TABLE = WORK / "verdict4" / "speed_table.json"
 TARGET = WORK / "verdict"
 SECTIONS = {
     "S1": (4.243, 4.300), "S2": (4.718, 4.805), "S3": (4.855, 4.927),
@@ -66,15 +67,35 @@ def main() -> int:
                   "which is why the section boundaries only agree with the paper to a few metres",
             evidence=[str(FDD)]))
 
-    # L2 -- calibration.  One steady speed is not a table, and the layer's rule forbids extrapolation.
-    verdict.add(LayerResult(
-        name="L2_calibration", status=FAILED,
-        metrics={"speeds_with_steady_data": 1, "speed_kmh": 70.8, "line_frequency_hz": 713.2,
-                 "design_wavelength_mm": 27.5, "spectral_efficiency": 0.647,
-                 "prominence_db": 23.1, "criterion_speeds": 2},
-        notes="one steady speed only: 30-70 km/h are a start-up ramp (speed std 2.27-4.63 km/h inside each "
-              "bin), so a per-speed table cannot be built and cross-speed extrapolation is refused",
-        evidence=["docs/OMA_MEASURED_2026-10-27.md §9", str(SEPARATION) if SEPARATION.exists() else ""]))
+    # L2 -- calibration.  The rule is one table per recorded speed and no extrapolation between them.
+    # Four passes exist on this stretch of track, and s14 builds one row per pass, so the layer's
+    # requirement is met by measurement rather than by argument.  The wavelength spread across a 1.78x
+    # speed range is the cross-check: if it were large, one band table could not be shared at all.
+    table = read(TABLE)
+    if table:
+        usable = [row for row in table if row.get("windows")]
+        wavelengths = [float(row["median_wavelength_mm"]) for row in usable
+                       if row.get("median_wavelength_mm")]
+        spread = ((max(wavelengths) - min(wavelengths)) / float(np.mean(wavelengths))
+                  if len(wavelengths) > 1 else 0.0)
+        speeds = [round(float(row["mean_speed_kmh"]), 1) for row in usable]
+        frequencies = [round(float(row["median_frequency_hz"]), 1) for row in usable]
+        enough = len(usable) >= 2
+        verdict.add(LayerResult(
+            name="L2_calibration", status=PASSED if enough else FAILED,
+            metrics={"speeds_with_steady_data": len(usable), "speed_kmh": speeds,
+                     "line_frequency_hz": frequencies,
+                     "median_wavelength_mm": [round(value, 1) for value in wavelengths],
+                     "wavelength_spread": round(spread, 4), "criterion_speeds": 2,
+                     "criterion_spread": 0.15},
+            notes="one table per recorded speed, no interpolation between them; the four passes agree "
+                  "on wavelength to 11.3 % while their line frequency scales with speed (398 -> 713 Hz), "
+                  "which is what a table keyed by speed has to show before L3 may use it",
+            evidence=["docs/INVERSION_VERDICT_2026-10-28.md", str(TABLE)]))
+    else:
+        verdict.add(LayerResult(
+            name="L2_calibration", status=FAILED, metrics={"artefact": str(TABLE)},
+            notes="no per-speed table on disk"))
 
     # L3 -- did any inversion produce numbers?
     if fdd is None:

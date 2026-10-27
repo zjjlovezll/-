@@ -3956,3 +3956,9 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 新探测 `scripts/s12m_wheel_tilt_arrays.py`：左右跨各调 `_absolute_arrays`，两轮都恰好比「轮心 − R ± b·sinφ」低 **22.982 mm**（= 轮缘），两轮踏面差 **107.000 mm**，两轨顶差 **108.520 mm**，只剩 **1.52 mm**。
 - 结论：`local_y·sin(theta)` 项完全正确，§154 的 26 mm 不是高度失配，而是**接触落在轮缘根**（`wheel_z.min()` 在轮缘上）。
 - 下一轮：打印 `find_strip_contact` 的 `wheel_y` 区间与 `lever_y`，判定是否落在踏面；若是轮缘根，按踏面带宽限定候选，不动高度。
+
+## 第 156 轮：轨顶内缘 35 mm 的接触，来自轨与轮绕不同点旋转的 31 mm
+
+- 新探测 `scripts/s12n_contact_band.py`：四轴抬到 `wheel_center_height_m` 后只量搜索选中位置，左轨 `lever_y −714.322 mm`（轨带 −785.4…−713.2 的内缘），右轨 `+787.344 mm`（轨带 +713.2…+785.4），即接触比轨顶中心**内移约 35 mm**。
+- 算式给出量级：轨绕轨道中心转 → 轨顶横向只动 `z·sinθ ≈ 5 mm`；轮绕轴心转 → 踏面接触点横向动 `R·sinθ = 30.8 mm`；差 **≈31 mm**。
+- 下一轮：`RolledSeries` 改为绕自身轨顶旋转，轨顶横向不动、只改法向倾角；验收 `lever_y` 距轨带中心 ≤10 mm 且 cant=0 逐位不变。

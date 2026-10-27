@@ -4300,3 +4300,17 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
 - 测试里两个坑：`LayerResult` 拒绝"通过但没有数字"和"失败但不说原因"，所以构造判决对象必须带 metrics/notes；
   把示例算例复制到临时目录会丢失型面的相对根（`AssetRefError: cannot resolve profile 'wheel_lower.csv'`），
   必须把 `.csv/.txt/.prr` 引用改写成绝对路径。
+
+## 第 179 轮：曲率项不能写成 `(1−κy)` 因子——那是把同一个量算两遍
+
+- 试过把纵向蠕滑写成 `slip_x = (1 − κ·lever_y)·(v + ω·lever_z) − κ·v·lever_y`，理由看起来是"轨在横向
+  y 处弧长按 `(1−κy)` 缩短"。推导一行就否掉：**外侧接触点与内侧的弧长差本身就是 `Δv = κ v b`**，而
+  这一项已经以 `−κ·v·lever_y` 的形式在表达式里；再乘一个因子等于把同一个量加第二遍。零自转时两种写法的
+  差值恰好是 `−κ v b`，即**翻倍**。
+- 因此 `src/velch/contact.py` 保持原式，新增
+  `tests/test_curve_seat.py::test_the_arc_length_factor_would_double_count_the_curvature_term`
+  把这件事钉住：实测 `curved − straight` 等于 `−κ v b`（rel 1e-12），并显式断言它**不等于**它的两倍——
+  将来谁再"补"这个因子，测试立刻红。
+- 验证：`tests/test_curve_seat.py` + `tests/test_curve_alignment.py` **14 passed / 1 xfailed**；
+  `scripts/freeze_baseline.py --check` → **UNCHANGED**（`straight_rigid 06928c9db944796d`、
+  `straight_flexible ab81290f5924c3a5`）。

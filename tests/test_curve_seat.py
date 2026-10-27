@@ -316,3 +316,37 @@ def test_the_seat_refuses_to_run_against_curved_rails(tmp_path):
         _static_vertical_equilibrium(case, dynamics, q, v)
     assert "cannot run with the curve placement on" in str(error.value)
     assert "Call _seat()" in str(error.value)
+
+def test_the_arc_length_factor_would_double_count_the_curvature_term():
+    """Why the creep keeps ``-kappa v b`` instead of a ``(1 - kappa y)`` factor on the transport.
+
+    The arc-length difference of the two contact points *is* ``Delta v = kappa v b``; scaling the
+    longitudinal transport by ``(1 - kappa y)`` therefore adds the same quantity a second time.  With
+    zero spin the two forms differ by exactly ``-kappa v b`` again, i.e. the factor form doubles it.
+    """
+
+    from velch.contact import evaluate_contact
+    from velch.vehicle import load_vehicle_case as load
+
+    case = load(_base_path())
+    law = case.contact
+    dynamics = VehicleDynamics(case, contact_workers=1)
+    q = np.zeros(dynamics.dimension)
+    v = np.zeros(dynamics.dimension)
+    for body in dynamics.topology.wheelsets():
+        q[dynamics.topology.require(body.id, "z")] = -1.0e-3
+    _, contacts = dynamics.evaluate(0.0, q, v)
+    geometry = next(item.geometry for item in contacts.values() if item.geometry is not None)
+
+    def slip(curvature: float) -> float:
+        return evaluate_contact(
+            geometry, law, wheel_v_y_m_s=0.0, wheel_v_z_m_s=0.0, wheel_roll_rate_rad_s=0.0,
+            wheel_spin_rate_rad_s=0.0, rail_v_y_m_s=0.0, rail_v_z_m_s=0.0,
+            travel_speed_m_s=27.7778, curvature_1_per_m=curvature).slip_x_m_s
+
+    straight = slip(0.0)
+    curved = slip(1.0 / 400.0)
+    counted_once = -27.7778 * geometry.lever_y_m / 400.0
+    assert curved - straight == pytest.approx(counted_once, rel=1e-12, abs=1e-15)
+    # The factor form would give 2x this; the assertion above is what forbids reintroducing it.
+    assert curved - straight != pytest.approx(2.0 * counted_once, rel=1e-9)

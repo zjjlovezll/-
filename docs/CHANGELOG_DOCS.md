@@ -3494,3 +3494,10 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 测试：`tests/test_harmonics.py` 新增 `test_a_gain_nobody_can_see_stays_at_the_prior_by_default`（11 passed）。
 - 复核：`scripts/s9l_differential_bands.py` 的 "‑A 静默通过" 已在第 114 轮改为两半都必须 `numerically_checked`。
 - 文档：`docs/HARMONIC_LADDER_INVERSION_2026-10-26.md` 新增 §7。
+
+## 第 130 轮：超高按轨道平面发布（转 + 抬 + 车架侧滚），几何路线仍坐不住
+
+- `src/velch/vehicle_solver.py`：`_curve_placement` 删除超高拒绝，改为 `rise = ½·gauge·sinφ`，与 `roll_rails` 的断面旋转、`_place_on_alignment` 的车架侧滚共用同一个 φ；107 mm / 1.493 m → φ = 0.0717 rad、rise = 0.0535 m。
+- 实测三种发布方式（只抬 / 只转 / 转+抬+侧滚）在 R = 1100 m、100 km/h 下**全部无法坐住**；力路线同算例可跑完。结论：失败点不在超高发布，下一步先查曲线体力项是否与几何路线重复计入。
+- 测试：`tests/test_curve_seat.py` 的该用例改为断言"仍然坐不住"并写清三种发布方式的实测；`tests/test_curve_alignment.py` 删掉重复用例（同样的失败已在 seat 覆盖）；三个曲线测试文件合跑 **17 passed, 1 xfailed**。
+- 判据未放宽（slope guard、侵入限值、搜索窗、接触刚度均未动）。

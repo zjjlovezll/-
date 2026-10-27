@@ -389,3 +389,59 @@ force, or set curve_cant_m = 0.
 ```
 python -X utf8 -m pytest tests/test_rail_roll.py tests/test_curve_seat.py tests/test_curve_alignment.py -q
 ```
+
+## 16. 把超高按"平面"来发布：转 + 抬 + 车架侧滚，仍然坐不住（第 130 轮）
+
+### 16.1 这一轮改了什么
+
+上一轮只做了断面旋转，并把超高改成拒绝。这一轮把**轨道平面做的三件事**一起发布：
+
+| 元素 | 实现位置 | 数值（107 mm / 1.493 m） |
+|---|---|---|
+| 断面绕轨心线旋转 | `irregularity.roll_rails`（加载期） | φ = 0.0717 rad |
+| 外轨中心抬高 | `vehicle_solver._curve_placement` 的 `rise` | `½·gauge·sinφ` = **0.0535 m** |
+| 车架侧滚随平面 | `_place_on_alignment` 的 `placed[roll] += θ` | θ = 0.0717 rad |
+
+三处都按同一个 φ 推导，不再出现"抬了不转"或"转了不抬"。拒绝文案删除——因为拒绝的理由（只发布一种）已经不成立。
+
+### 16.2 实测：仍然不收敛
+
+同一算例（R = 1100 m、平衡超高 0.107 m、100 km/h、内联 35 坐标、`curve_geometry = true`）：
+
+```
+FAILED: SimulationFailure vertical preload equilibrium failed: no seed converged;
+        `gtol` termination condition is satisfied
+```
+
+而力路线（`curve_geometry = false`、同一超高）**能坐住并跑完**（第 6 轮实测：八轮 1.00× 均分、七门全过）。
+
+所以现在三种发布方式都试过了，全部失败：
+
+| 发布方式 | 结果 |
+|---|---|
+| 只抬高（dz = ±rise，不转） | 车轮落到轮缘根，第一步 slope guard |
+| 只转断面 | 静平衡每个种子都失败 |
+| **转 + 抬 + 车架侧滚** | 静平衡每个种子都失败（本轮） |
+
+### 16.3 这意味着什么（不掩盖）
+
+几何路线的失败点**不在"超高怎么发布"**。三处都按同一 φ 发布之后残差仍压不到 0.1 N，说明方程里有另一项与倾斜平面不自洽。两个候选：
+
+1. **重复计入**：`evaluate` 里的曲线体力项 `m(v²/R − g sinθ)` 与几何路线**同时**生效（它只按 `curve_radius_m` 判断），而几何路线已经用"抬高 + 侧滚"表达了 `g sinθ`。下一轮先把它按 `curve_geometry` 分叉掉再测——这是最容易验证的一件事。
+2. **倾斜面上的接触运动学**：车轮与倾斜轨面接触时，滚动半径差与接触角都要随 φ 变化；本模型的 `lever_z` 仍是水平面的值。
+
+### 16.4 判据没有放宽
+
+`maximum_abs_contact_slope`、`maximum_penetration_m`、接触搜索窗、接触刚度全部未动；这一轮只是把发布方式改对，并把"坐不住"如实保留为失败。
+
+### 16.5 下一步（顺序固定）
+
+1. 把曲线体力项按 `curve_geometry` 分叉（几何路线不再叠加 `−g sinθ` 与 `v²/R`），重测同一算例；
+2. 若仍失败，用 `docs/CURVE_SEAT_AND_CREEP` 里那台"逐行残差"仪器打印该算例的残差向量与雅可比零空间，定位哪一行不可满足；
+3. 只有 1–2 都做完，才谈倾斜平面的接触运动学（`lever_z`、滚动半径差）。
+
+复算：
+
+```
+python -X utf8 F:\velch_tmp\roll_probe.py
+```

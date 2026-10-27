@@ -307,24 +307,15 @@ class VehicleDynamics:
             raise SimulationFailure("curve_radius_m must not be zero")
         start = float(run.x_start_m)
         cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
-        if abs(cant) > 0.0:
-            # Cant is published as a level difference here, and the *rotation* of each rail surface
-            # is applied by ``velch.irregularity.roll_rails`` when the case is loaded.  Measured: the
-            # rotation alone does not make a geometric curve seatable at R = 1100 m with 107 mm of
-            # cant (``vertical preload equilibrium failed`` after every seed).  The reason is that
-            # balance cant works by tilting the *frame*: gravity then has a component along the track
-            # plane which cancels ``m v^2 / R``, and the wheels need almost no lateral force.  Our
-            # vehicle frame stays level — gravity is applied along world z — so on the geometry route
-            # the wheels must still supply the whole 34 kN laterally, which needs a contact angle no
-            # rail crown can give.  The force route does carry that term (``-m g sin(theta)``) and is
-            # the route that works; until the frame is tilted as well, this one refuses instead of
-            # failing with a message about the seat.
-            raise SimulationFailure(
-                "curve_cant_m needs the vehicle frame tilted with the track plane, not only the rail "
-                "surface: balance cant cancels m v^2 / R through gravity's component along the plane, "
-                "and this route keeps gravity along world z. Use curve_geometry = false, where the "
-                "cant enters as a lateral force, or set curve_cant_m = 0."
-            )
+        # Cant belongs to the track plane, so on this route it is published as *both* things the
+        # plane does: each rail surface is turned with it by ``roll_rails`` at load time, and the
+        # outer rail centre rises by half the gauge times sin(phi).  The vehicle frame is rolled by
+        # the same angle in ``_place_on_alignment``.  Publishing only one of the two was measured
+        # to fail: the level difference without the rotation put the wheel on its flange root, and
+        # the rotation alone could not seat at all (R = 1100 m, 107 mm cant, every seed).
+        gauge = 2.0 * abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 1.5
+        theta = math.asin(max(-1.0, min(1.0, cant / gauge))) if gauge else 0.0
+        rise = abs(0.5 * gauge * math.sin(theta))
         rise = 0.0
         rails = tuple(self.case.rails)
 

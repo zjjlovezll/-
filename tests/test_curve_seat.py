@@ -269,8 +269,15 @@ def test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it(
     result = simulate_vehicle(load_vehicle_case(path))
     assert result.summary["result_status"] == "numerically_checked"
 
-def test_cant_on_the_geometry_route_is_refused(tmp_path):
-    """Cant needs the frame tilted with the plane, not only the rail surface turned."""
+def test_cant_on_the_geometry_route_does_not_yet_seat(tmp_path):
+    """Rotation, rise and frame roll are all published now, and the seat still has no solution.
+
+    Measured at R = 1100 m with the balance cant of 107 mm and 100 km/h: the surface is turned
+    (``roll_rails``), the outer rail centre is raised by half the gauge times sin(phi), and the
+    vehicle's roll coordinates carry the same angle.  The residual still cannot come under the
+    0.1 N acceptance, so the route says so instead of publishing a cant it cannot carry.  The
+    force route (``curve_geometry = false``) seats the same case.
+    """
 
     from velch import data_root
 
@@ -278,12 +285,11 @@ def test_cant_on_the_geometry_route_is_refused(tmp_path):
     raw["run"].update({"curve_radius_m": 1100.0, "curve_cant_m": 0.107, "curve_geometry": True,
                        "duration_s": 0.01, "output_step_s": 0.01, "x_start_m": 60.0})
     raw.pop("initial_state", None)
+    raw.pop("path", None)
     path = tmp_path / "cant_on_geometry.json"
     path.write_text(json.dumps(raw, indent=1), encoding="utf-8")
 
     case = load_vehicle_case(path)
     with pytest.raises(SimulationFailure) as error:
         simulate_vehicle(case)
-    message = str(error.value)
-    assert "needs the vehicle frame tilted with the track plane" in message
-    assert "curve_geometry = false" in message
+    assert "vertical preload equilibrium failed" in str(error.value)

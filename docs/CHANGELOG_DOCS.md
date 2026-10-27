@@ -1810,6 +1810,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md) | 在连续的 PRR 文件里模拟波磨：表示、密度与两个坑 |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
+| [CURVE_ALIGNMENT_VELOCITY_2026-10-28.md](CURVE_ALIGNMENT_VELOCITY_2026-10-28.md) | 曲线：把路线自己的横向速度装回去，以及为什么几何路由仍然拿不住这条曲线 |
 | [CURVE_APPROACH_DECISIONS_2026-10-27.md](CURVE_APPROACH_DECISIONS_2026-10-27.md) | 曲线走进哪一侧：四条被实测否掉的路，和一条还没被否的 |
 | [CURVE_CANT_DECISION_2026-10-27.md](CURVE_CANT_DECISION_2026-10-27.md) | ADR：几何路由上的超高，为什么仍然拒绝 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
@@ -4446,3 +4447,35 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   "零档响应的 6 倍以上才算被激励"、"0.3 mm 复原峰峰 ±2 dB"），但它必须先有一个能跑满 0.34 s 的曲线算例。
 - 新增 [`docs/CURVE_ROUTE_COMPARISON_2026-10-28.md`](CURVE_ROUTE_COMPARISON_2026-10-28.md)、
   `scripts/s31_curve_smoke.py`、`scripts/s31b_curve_corrugation.py`、`scripts/s31c_yaw_attack.py`。
+
+## 第 186 轮：曲率进蠕滑不再按路线门控、轮对 yaw 进座、对齐补上速度（B042/B043）
+
+- 目标第 1/120 轮（goal 第 4 项主线）。四处改动，每一处都带实测依据：
+  1. `curvature_1_per_m` 不再按 `placement_enabled` 门控——曲率是**轨道**属性（一根轴的两接触点走不同弧长，
+     `±vκb`），门控它等于让两条路由各拥有随动坐标系的一半；
+  2. 曲线时把轮对 `yaw` 加进 `_static_vertical_equilibrium` 的未知量（`y`/roll 仍不进：零态轨顶接触无横向
+     分量 → cond 3.76e12、σ_min 2.7e-11、种子停在 240 kN；`yaw` 的行由蠕滑律 `travel*yaw` 提供刚度，
+     不秩亏）；
+  3. **B042**：`_align_to_track_frame` 不再把设计线切线写进 `yaw`，写 **0** —— 状态 `yaw` 被蠕滑律读作
+     **攻角**（`creep_attack_velocity_m_s = travel * q[yaw]`），写切线等于注入 `travel*arctan(slope)`：
+     30 m 处 0.352 m/s、81.6 m 处 0.6707 m/s；
+  4. **B043**：新增 `_align_velocity_to_track`，在 `_integrate_vehicle` 里紧跟对齐之后调用，给每个刚体装上
+     设计线自己的横向速度，取自 `local_state` 的第三返回值（解析 `speed*dy_ds`）。第一版用 `_gauge_centre`
+     的 1 m 差分斜率，得 0.2121 m/s 而轨面真值 0.2020 m/s（二次曲线上前向差分滞后半米，+5 %），
+     这股外向蠕滑此后一直在还账。
+- **力路由得到最干净的曲线座**（`case_A_final_law` + R=1100、无摆置、80 km/h、0.02 s、35 坐标）：
+  残差 **4.179e-08 N**，八斑全部 **59 680.6 N = 1.000×**（即冻结静载门那个数，误差 0），
+  `slip_lat +0.0000`，合计 1.000× 整车重；运行 `numerically_checked`、**7/7**、峰值 59 748–59 916 N。
+- **几何路由仍然拿不住**，但失败点从 1.04 m 挪到 **1.20 m**（`x=41.1989149 m`，t ≈ 0.054 s）。失败瞬间状态：
+  前轴轨面已横移 **57.4 mm** 而车轮只到 **47.8 mm**（落后 9.6 mm），触发接触 slope **1.0423**、
+  侵入 **413 µm**（轮缘压轨顶）。
+- **把账算清**：踏面在 65.47 µm 侵入下 `n_y/n_z = ±0.0250` ⇒ 每斑 1.49 kN、八斑 **11.9 kN**，而 R=1100/80 km/h
+  需要 **21 842.4 N**，缺口 **9.9 kN**。补它必须爬到斜率 ≈ 0.2，爬到 1.0 就是轮缘——这就是 guard 在 1.04 退出的
+  物理含义。**无超高时轨顶接触撑不住这条曲线**，不是容差问题；也解释了为什么站表里本来就是弯的 18 号道岔
+  （曲线是静态几何、没有 `rail_vy`）能 7/7，而人为摆出来的同半径曲线跑不到 0.06 s。
+- 新增 [`docs/CURVE_ALIGNMENT_VELOCITY_2026-10-28.md`](CURVE_ALIGNMENT_VELOCITY_2026-10-28.md)、
+  `scripts/s31d_curve_guard.py`、`tests/test_curve_velocity.py`（3 项：初速等于摆置自身导数、
+  对齐不写方位进攻角坐标、力路线不加初速）。曲线相关测试 22 passed / 1 xfailed。
+- 下一步（判据已写死）：把曲线**写进站表**（两侧同源、轨距 1.493、5 mm 站位，`y = s'^2/(2R)`），
+  `curve_geometry = false`、座在直股段，另加"允许按站表对齐"的开关；判据 R=1100/80 km/h 跑满 ≥0.34 s、
+  八轮 ∈[0.625,1.6]×、`|n_y/n_z| < 0.3`、直向与两条冻结基线逐位不变。

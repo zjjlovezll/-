@@ -36,7 +36,7 @@ EVEN_SHARE_N = 59_662.0
 
 
 def build(*, radius_m: float, speed_kmh: float, duration_s: float, x_start_m: float,
-          name: str) -> Path:
+          name: str, route: str = "geometry") -> Path:
     raw = json.loads((data_root.case_dir() / "case_A_final_law.json").read_text(encoding="utf-8"))
     raw["case_id"] = name
     raw["run"].update({
@@ -46,8 +46,8 @@ def build(*, radius_m: float, speed_kmh: float, duration_s: float, x_start_m: fl
         "output_step_s": 2.0e-4,
         "max_solver_step_s": 1.0e-4,
         "curve_radius_m": radius_m,
-        "curve_geometry": True,
-        "align_to_track": True,
+        "curve_geometry": route == "geometry",
+        "align_to_track": route == "geometry",
     })
     raw["run"].pop("curve_cant_m", None)
     raw["vehicle"]["travel_speed_m_s"] = speed_kmh / 3.6
@@ -86,13 +86,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--radius", type=float, default=1100.0)
     parser.add_argument("--kmh", type=float, default=80.0)
     parser.add_argument("--x-start", type=float, default=30.0)
+    parser.add_argument("--route", choices=("geometry", "force"), default="geometry")
     args = parser.parse_args(argv)
 
-    name = f"case_curve_r{args.radius:.0f}_{args.kmh:.0f}.json"
-    path = build(radius_m=args.radius, speed_kmh=args.kmh,
-                 duration_s=args.duration, x_start_m=args.x_start, name=name)
+    name = f"case_curve_r{args.radius:.0f}_{args.kmh:.0f}_{args.route}.json"
+    path = build(radius_m=args.radius, speed_kmh=args.kmh, duration_s=args.duration,
+                 x_start_m=args.x_start, name=name, route=args.route)
     case = load_vehicle_case(path)
-    print(f"case {path.name}  radius {args.radius} m  {args.kmh} km/h  from {args.x_start} m")
+    print(f"case {path.name}  radius {args.radius} m  {args.kmh} km/h  from {args.x_start} m  "
+          f"route {args.route}")
     from velch.vehicle_solver import VehicleDynamics
     dynamics = VehicleDynamics(case)
     print(f"  coordinates {dynamics.dimension}  rails {len(case.rails)}  "

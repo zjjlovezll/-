@@ -736,14 +736,23 @@ class VehicleDynamics:
                 travel_speed_m_s=travel,
                 creep_attack_velocity_m_s=float(travel * q[axes["yaw"]]),
                 support_compliance_m_per_n=(support.at(x) if support is not None else None),
-                # Curvature reaches the creep only while the track really is curved: the seat
-                # stands the vehicle on the equivalent straight, and a curvature term applied
-                # there writes a +-v kappa b longitudinal difference between the left and right
-                # contact of each axle -- a yaw moment with nothing behind it.  Measured on
-                # R = 1100 m at 80 km/h, flags on but placement off: 4 of 8 wheels loaded and
-                # 128 901 N on the heaviest, exactly 2x the share; the same case with the
-                # flags cleared seats at numerically_checked.
-                curvature_1_per_m=(self._curvature_1_per_m if self.placement_enabled else 0.0),
+                # Curvature belongs to the *track*, not to the route that carries it.  An axle on a
+                # curve runs its two contacts on different arc lengths (+-v kappa b), and that is a
+                # kinematic fact in the vehicle's own frame -- which is exactly where the force
+                # route lives, with straight rails and m v^2 / R as the body force.  The term used
+                # to be gated on the placement, i.e. only the geometry route carried it, and that
+                # left each route owning half of a co-rotating frame: the geometry route placed the
+                # vehicle on an arc and pushed it with nothing (measured: 8/8 seated at 0.988..1.013x
+                # and then graph slope limit after 1.04 m of travel, R = 1100 m at 80 km/h), while
+                # the force route had the centripetal force and no arc-length difference.
+                #
+                # Turning it on for the force route needs the *seat* to be able to absorb the yaw
+                # moment it produces.  Without a yaw unknown the vertical-only seat read 4 of 8
+                # wheels and 128 901 N (2x the 59 662 N share); with the wheelsets' yaw free the
+                # same balance is well posed, because the attack velocity travel * yaw gives the
+                # yaw row real stiffness whenever the vehicle is rolling.  See the `curved` branch
+                # of _static_vertical_equilibrium.
+                curvature_1_per_m=self._curvature_1_per_m,
             )
             body_results.append((body.id, geometry, response))
         return (rail_index, rail, x), body_results
@@ -954,7 +963,61 @@ def _align_to_track_frame(case: VehicleCase, dynamics: VehicleDynamics,
         if (body_id, "y") in have:
             result[topology.require(body_id, "y")] = lateral
         if (body_id, "yaw") in have:
-            result[topology.require(body_id, "yaw")] = float(np.arctan(slope))
+            # The state's ``yaw`` is read by the creep law as an *angle of attack*
+            # (``creep_attack_velocity_m_s = travel * q[yaw]``, contact.py), not as an absolute
+            # heading.  Writing the design line's own tangent here therefore injected
+            # ``travel * arctan(slope)`` of spurious lateral creep -- 0.352 m/s at 30 m on
+            # R = 1100 m, 0.6707 m/s at 81.6 m -- which saturates the patch.  The line's direction
+            # is already carried by the wheel's lateral *placement* (``lateral_extra``), so a body
+            # running along the line has zero angle of attack.
+            result[topology.require(body_id, "yaw")] = 0.0
+    return result
+
+
+def _align_velocity_to_track(case: VehicleCase, dynamics: VehicleDynamics,
+                             q: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Give every body the design line's own lateral velocity, so it starts following the line.
+
+    ``_align_to_track_frame`` puts the vehicle *on* the line but leaves it with zero lateral
+    velocity, while the rail surface at the same mileage moves at ``v * dy/ds`` (``local_state``'s
+    ``dy/dt``).  Measured on the geometry route at R = 1100 m, 80 km/h: the vehicle tracked the
+    straight while the line ran away at 0.202 m/s, and ``graph slope limit at axle1_left/left:main,
+    x=41.04259 m`` clipped the run after 1.04 m of travel -- 0.047 s of the 0.34 s the acceptance
+    gate asks for.
+    """
+
+    if not _placement_enabled(case.run):
+        return v
+    topology = dynamics.topology
+    signed = float(case.vehicle.travel_speed_m_s)
+    speed = abs(signed)
+    start = float(getattr(case.run, "x_start_m", 0.0) or 0.0)
+    offsets = list(getattr(case.vehicle, "axle_offsets_m", ()) or ())
+    if not offsets:
+        return v
+    half = float(getattr(case.vehicle, "bogie_half_spacing_m", 0.0) or 0.0)
+    mileages = {topology.wheelset_id(index): start + float(offset)
+                for index, offset in enumerate(offsets)}
+    for index, body in enumerate(topology.bogies()):
+        mileages[body.id] = start + (half if index == 0 else -half)
+    for body in topology.bodies:
+        if body.kind == "carbody":
+            mileages[body.id] = start
+    have = {(body.id, axis) for body in topology.bodies for axis in body.dof}
+    result = np.array(v, dtype=float, copy=True)
+    # Take the velocity from the *placement itself* (``local_state``'s third return value is
+    # ``speed * dy_ds``), not from a differenced slope: ``_gauge_centre`` differences the centre
+    # line over 1 m, which on a quadratic lags the true tangent by 0.5 m and gave 0.2121 m/s where
+    # the rail moves at 0.2020 m/s -- a 5 % outward creep that the saturated patch then spent the
+    # whole run removing.
+    axle_of = {body.id: index for index, body in enumerate(topology.wheelsets())}
+    zeros = np.zeros(len(q), dtype=float)
+    for body_id, mileage in mileages.items():
+        if (body_id, "y") not in have:
+            continue
+        index = axle_of.get(body_id, 0)
+        _, _, rail_vy, _ = dynamics.track.local_state(zeros, zeros, index, float(mileage), signed)
+        result[topology.require(body_id, "y")] = float(rail_vy)
     return result
 
 
@@ -1170,6 +1233,18 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         # 58.7..60.6 kN.  A curved vehicle's lateral state is a *running* equilibrium: the placement
         # sets it, the trajectory develops it, and the seat only decides how deep the wheels sit.
         del arc
+        # The wheelsets' *yaw* is the one lateral-family coordinate that is not rank deficient on a
+        # curve, because its row is stiffened by the creep law rather than by the contact geometry:
+        # an attack angle `yaw` gives a lateral creep velocity `travel * yaw`, so the row has a real
+        # tangent stiffness whenever the vehicle is rolling, while the vertical-only seat has nothing
+        # to resist the `+-v kappa b` yaw moment the curvature term writes.  Measured with the
+        # curvature term on and no yaw unknown: 4 of 8 wheels, 128 901 N = 2x the share.
+        # y and roll stay out: at zero state velocity the crown contact carries no lateral component,
+        # so those rows have no solution and make the system rank deficient (measured cond 3.76e12,
+        # smallest singular value 2.7e-11, every seed stopped at a stationary 240 kN).
+        for body in topology.wheelsets():
+            if "yaw" in body.dof:
+                indices.append(topology.require(body.id, "yaw"))
     if case.track_kind == "local_compliant":
         indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]
     elif case.track_kind == "two_layer":
@@ -1487,6 +1562,9 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     if bool(getattr(case.run, "align_to_track", False)):
         q = _place_on_alignment(case, dynamics, q)
         q = _align_to_track_frame(case, dynamics, q)
+        # Position alone is not enough: the line also *moves* under the vehicle.  Measured, the
+        # geometry route without this reached only 1.04 m of travel before the slope guard.
+        v = _align_velocity_to_track(case, dynamics, q, v)
     initial = np.concatenate((q, v))
     count = int(math.ceil(run.duration_s / run.output_step_s))
     times = np.linspace(0, run.duration_s, count + 1)

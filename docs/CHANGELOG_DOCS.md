@@ -1833,6 +1833,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [MEASURED_VALIDATION_2026-10-26.md](MEASURED_VALIDATION_2026-10-26.md) | 实测数据第一次验证：26 mm 波磨，声学 5/6、轴箱 3/6 |
 | [NONLINEAR_ELEMENTS_2026-10-23.md](NONLINEAR_ELEMENTS_2026-10-23.md) | 非线性力元 |
 | [OBSERVATION_LAYER_2026-10-20.md](OBSERVATION_LAYER_2026-10-20.md) | 观测量层：仿真对仿真 + 实测对模型（2026-10-20） |
+| [OMA_MEASURED_2026-10-27.md](OMA_MEASURED_2026-10-27.md) | 运行模态识别（SSI-FCM）接到实测：算法通过，实测上不收敛 |
 | [ONBOARDING_2026-10-21.md](ONBOARDING_2026-10-21.md) | 新增车体 / 新增道岔的接入指南 |
 | [OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md](OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md) | 开源轮轨接触算法调查（2026-10-19） |
 | [PACKAGING_2026-10-22.md](PACKAGING_2026-10-22.md) | 打包与安装包（Windows） |
@@ -4076,3 +4077,13 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 两个自造错：把运行起点与波磨起点绑在一起 → 增益小 **180 倍**；`Vi_Speed` 本身是 km/h，我又乘 3.6 → "274 km/h 的区段"。
 - 新 `tests/test_speed_table.py` 4 项：表内插值、表点精确、表外取端点并置 `extrapolated`、增益随速度单调降且降幅 >20 %。
 - L5 仍 `not_met`（3/6 检出、定位 ~30 m）；深度只作数量级引用。
+
+## 第 165 轮：运行模态识别接到实测——算法通过，实测不收敛（2026-10-27）
+
+- 新增 `src/velch/inverse/oma.py`：Cov-SSI（平均相关信号 → 协方差 → 块 Toeplitz → SVD → 状态矩阵极点）+ 奇异熵增量定阶 + 阶次间稳定判据 + 模糊 C 均值剔除伪模态 + **簇内自洽与 |ζ|≤0.5 两条物理过滤**。按 Lv 等的 SSI-FCM 论文实现。
+- `tests/test_oma.py` 6 项全绿：合成 2 自由度链（解析模态 22.0 / 57.6 Hz）恢复到 3 % 以内、单音 37 Hz、SEI 阶次、归一化、四类拒绝、证据字段。
+- 实测 `Run_75kmh_E1toE2.mat`（145 s @ 4 kHz，2 通道）：S2 给 134.4/135.0/150.7/189.0 Hz，S3 给 69.7/100.2 Hz，S5 给 65.9/165.0 Hz，整程给 67.4/166.8 Hz（12 个稳定极点 / 154，SEI 阶次 5，MAC 代理 0.06）——**区段之间不重复**，只有一个 134.43 Hz 与模型轮盘 133.34 Hz 吻合（+0.8 %），但三套互不相容的答案使这条吻合不可引用。
+- 两处自己的错：`Vi_Speed` 是 km/h（当 m/s 读会把 75 km/h 显示成 279 km/h）；区段样本阈值 20 000 过严（真实区段 13 686–26 121）。
+- 结论：两通道轴箱记录在 5–200 Hz、4 s 级区段下不足以支撑稳定模态识别；下一步 FDD/EFDD、加入 `Vi_Lat` 作第三通道、只在平顺段识别，三者都不成则如实登记。
+- 新增 `docs/OMA_MEASURED_2026-10-27.md`；`scripts/s21_oma_measured.py`。
+

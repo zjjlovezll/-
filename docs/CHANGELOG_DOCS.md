@@ -4180,3 +4180,29 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 实测（`x_start` 30 m、R=1100、100 km/h、0.02 s）：不给 origin / origin=30 / **origin=50.578** 三个变体
   都 `numerically_checked`、7/7。第三个变体即"从直股进入曲线"，以前不存在。
 - `docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` 新增 §26（含一阶误差表与三个变体）。
+
+## 第 173 轮（未决）：同一条 R=1100 m 曲线，起点 30 m 能坐、60 m 不能
+
+B039（第 172 轮）落地后，回测同一条几何曲线在不同起点上的静态平衡，结果不一致：
+
+| 算例 | 起点 | 结果 | 门 |
+|---|---|---|---|
+| R=1100、cant=0、100 km/h、0.02 s | 30 m | `numerically_checked` | 7/7 |
+| 同上 | **60 m** | **坐不住** `unbalanced branch - 4 of 8 wheels carry load … heaviest 127821.9 N`（均分 59 662 N） | — |
+
+已排除的两条：
+
+1. **不是 `align_to_track` 与 `curve_geometry` 重复平移**：`curved_geom`（只开 `curve_geometry`）与
+   `curved_both`（两者都开）报**同一个数**（127 821.9 N，四位相同），所以不是两倍 45 mm 叠加；
+2. **不是几何没到位**：在 60 m 起点、前轴里程 70 m 处，轨面侧横向偏移实测 **+0.045455 m**、
+   横向速度 **+0.252525 m/s**（= v·s/R），与 `s²/(2R)`、`s/R` 的设计值一致；`_seat` 结束后
+   placement 已按设计恢复（on / enabled）。
+
+**因此未决的是**：`_seat` 内部把 placement 关掉之后，接触搜索看到的到底是直轨还是弯轨——需要沿用
+第 17 轮那个"记录 `evaluate` 每一次调用"的探针（`scripts/s12_curved_seat_residual.py`），在 `_seat`
+**内部**打印每块斑的里程与 `rail y`，而不是在调用前后打印（本轮探针打在了恢复之后，因此看不到）。
+探针已入库：`scripts/s72_curve_creep_terms.py`（三条路由对照）、`scripts/s72_seat_frames.py`（起点内外帧）、
+`scripts/s72_curve_origin_variants.py`（三个切线变体）。
+
+这一条不改变 B039 的结论——切线位置本身已由 5 项测试与三个变体证明；它只说明"起点离弧顶远到一定程度"
+时还有第二个问题，而第 172 轮的三个变体起点都在 30 m（离弧顶 20.6 m 以内）。

@@ -3637,3 +3637,18 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
   **18 passed / 1 xfailed**；`import velch.vehicle` 正常。
 - 未做（下一轮）：**没有重跑静平衡**，所以「几何路由现在能坐住」这句话还**不能说**。要量的是 R=1100 / cant=0 /
   100 km/h 的 `simulate_vehicle`。
+
+## 第 140 轮：去掉重复计入之后，几何路由依然坐不住（结论与下一步都写清）
+
+- 第 25 轮删掉 `CurveSeries` 的接线后重跑静平衡（`F:\velch_tmp\round26_seat.py`，R=1100 m、100 km/h、x_start 60 m、0.01 s）：
+  - **A 力路由** cant=0.107 → `numerically_checked`，**七门全过**（唯一能跑的那条，仍然是它）；
+  - **B 几何路由** cant=0 + `align_to_track` → `vertical preload equilibrium failed: no seed converged; gtol`；
+  - **C 几何路由** cant=0 不对齐 → 同样的失败。
+  所以「去掉重复计入」**没有**让几何路由坐住，这一步只是把一个确定的代码错误消掉，不改变结论。
+- 重新量第一次求值（`F:\velch_tmp\round23_first_loads.py`）：几何路由 cant=0 仍是左轨 54 764 / 70 379 / 134 822 / 152 453 kN、
+  右轨 0；cant=0.107 是右轨 161 289 / 936 715 / 971 169 / 174 810 kN、左轨 0 —— **与第 23 轮逐位相同**。
+  这点很重要：说明这些巨值不是「轨面被数两次」造成的，而是另一件事。
+- 反解量级：`F = C·δ^1.5`、`C = 1.1267e11`，`9.7e8 N` 对应 **δ ≈ 4.2 mm**，不是 65 µm。4 mm 的有效穿透 + 完全单侧，
+  指向**侧向接触/轮缘根**而不是正常轨顶接触（正常 δ≈65 µm 给 59.7 kN）。下一轮要量的是接触点位置
+  （`geometry.lever_y_m` 与车轮/轨面最近的 y 区间），而不是继续调种子。
+- 交付：无代码改动（本轮是测量与记录），`docs/CHANGELOG_DOCS.md` 本条；文档索引 149 篇不变。

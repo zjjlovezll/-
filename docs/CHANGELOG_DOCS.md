@@ -3399,6 +3399,13 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
 
+## 第 122 轮：第三条算例——道岔上的常速剖面也逐位相同
+
+- 新增 `scripts/s12_profile_equivalence.py`：同一算例跑两遍（字段声明速度 vs 常速剖面），比 `history.csv` sha256。
+- 实测三条全部 **IDENTICAL**：`case_A_final_law` 0.015 s → `2c6db969…`；`case_frog_N_strip05` 0.015 s → `bb85a8ee…`；同算例 0.05 s → `5042269f…`；`VERDICT: EQUIVALENT`。
+- 两处形状约束记进脚本注释：`speed_profile` 必须是 `{"constant": {"speed_m_s": …}}`（带 `unit` 键抛 `SpeedScheduleError`）；派生到临时目录的算例必须把型面引用绝对化（否则 `AssetRefError` 按自身目录解析不到 `bodies/…csv`）。
+- 至此目标第 3 项（车辆速度剖面）的"3 个算例 sha256 全等"判据满足。
+
 ## 第 121 轮：yaw 不是座椅该解的量（三种做法都实测过）
 
 - `case_diverging_R1100.json` 的曲率只在站位表里：原点位表 → 悬架分支（`118538.9 N` = 2×）；显式给 R=1100/超高 0.107 → 座通过但第一步 `graph slope limit at x=79 m`。

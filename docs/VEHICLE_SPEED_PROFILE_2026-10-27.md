@@ -182,3 +182,28 @@ force[spin] += mass[spin] * (target - v[spin]) / SPIN_TIME_CONSTANT_S   # 2 ms
 还有一处必须补：`save_vehicle_result` 里写里程列的那行原先是 `x_start + travel_speed_m_s * t`，多段剖面下会写出一条不属于该几何的轨迹。现在走 `travel_mileage_m(case, t)`，与力路径同一个函数；常速路径仍逐位相同（方向 ±1.0）。
 
 测试：`tests/test_mileage_closure.py` 1 项——两段 80/40 km/h，`np.array_equal` 比较每帧里程与 `travel_mileage_m`，末帧与解析距离差 <1e-12，且 `spin_tracking` 为真。
+
+## 9. 第三条算例：道岔上的常速剖面也逐位相同
+
+验收门要求"3 个算例 `history.csv` sha256 全等"，之前只有两个直向算例由测试覆盖。新增
+`scripts/s12_profile_equivalence.py`，把同一条算例跑两遍——一遍按字段声明速度，一遍加
+`"speed_profile": {"constant": {"speed_m_s": <同一速度>, "duration_s": ...}}`——然后比哈希：
+
+| 算例 | 声明速度 | 常速剖面 | 判定 | 两次耗时 |
+|---|---|---|---|---|
+| `case_A_final_law`（直向，刚性，0.015 s） | `2c6db969…` | `2c6db969…` | **IDENTICAL** | 2.8 s / 4.1 s |
+| `case_frog_N_strip05`（辙叉，0.015 s） | `bb85a8ee…` | `bb85a8ee…` | **IDENTICAL** | 5.0 s / 5.0 s |
+| `case_frog_N_strip05`（辙叉，0.05 s） | `5042269f…` | `5042269f…` | **IDENTICAL** | 13.5 s / 13.5 s |
+
+`VERDICT: EQUIVALENT`（退出码 0），逐例记录在 `F:\velch_tmp\s12\equivalence.json`。
+
+过程中撞到两件事，都写进脚本注释而不是绕过：
+
+1. **`speed_profile` 的形状是显式的**：`{"constant": {"speed_m_s": …}}`，不是
+   `{"constant": 2.0, "unit": "m_s"}` —— 后者抛
+   `SpeedScheduleError: unknown speed_profile keys ['duration_s', 'unit']`。单位必须写在键名里，
+   这是当初为了不让裸数字被一个人读成 m/s、另一个人读成 km/h 而定下的。
+2. **派生算例必须把型面引用绝对化**：型面名不带到 `lib:/case:/data:` 前缀时按**算例自身所在目录**
+   解析，所以写到 `F:\velch_tmp` 的副本会报
+   `AssetRefError: cannot resolve profile 'bodies/main_r0791310.csv'`。脚本里的 `absolutise()`
+   只改那些以 `.csv/.prr/.txt` 结尾、既无前缀也不是绝对路径的字符串，别的一概不动。

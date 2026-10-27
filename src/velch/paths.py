@@ -63,7 +63,15 @@ class PathTrack:
         return float((self.y_m[index + 1] - self.y_m[index]) / span)
 
     def lateral_velocity_m_s(self, station_m: float, speed_m_s: float) -> float:
-        """Rate at which the wheel surface moves laterally in the rail frame."""
+        """Rate at which the *reference frame* carries a point sideways: ``v * dy/ds``.
+
+        This is a property of the coordinate change, not a contact quantity.  A vehicle that follows
+        the line has zero lateral sliding against the rail, so do not feed this into the creep law --
+        B040 was exactly that, and it saturated the contact from the first frame (measured
+        ``slip_lateral`` 0.5737 m/s against 0.01-0.1 m/s of saturating creep).  It is kept because it
+        is the honest description of the transport and because the offset it belongs with
+        (``at``) does belong in the wheel position.
+        """
         return float(speed_m_s) * self.slope_at(station_m)
 
     @property

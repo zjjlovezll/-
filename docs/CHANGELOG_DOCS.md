@@ -1813,6 +1813,9 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CURVE_APPROACH_DECISIONS_2026-10-27.md](CURVE_APPROACH_DECISIONS_2026-10-27.md) | 曲线走进哪一侧：四条被实测否掉的路，和一条还没被否的 |
 | [CURVE_CANT_DECISION_2026-10-27.md](CURVE_CANT_DECISION_2026-10-27.md) | ADR：几何路由上的超高，为什么仍然拒绝 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
+| [CURVE_PATH_RATE_DEFECT_2026-10-28.md](CURVE_PATH_RATE_DEFECT_2026-10-28.md) | 曲股工况为什么跑不过 81 m：路线的横向速率被当成了横向蠕滑 |
+| [CURVE_QUASISTATIC_SEAT_2026-10-28.md](CURVE_QUASISTATIC_SEAT_2026-10-28.md) | 曲股能不能"坐"出一个静态平衡？——滚动静平衡实验（否定结论） |
+| [CURVE_RAIL_GEOMETRY_2026-10-28.md](CURVE_RAIL_GEOMETRY_2026-10-28.md) | 曲股右轨的站位表不是一条一致的轨道几何（B041） |
 | [CURVE_SEAT_AND_CREEP_2026-10-27.md](CURVE_SEAT_AND_CREEP_2026-10-27.md) | 曲线：先把静平衡问对，再把曲率放进蠕滑 |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
@@ -4342,3 +4345,73 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
 - 下一轮的唯一实验：让 `_seat` 在超高速径上**带倾角求解**（座内 `roll` 初值取 φ，placement 保持开启），
   再看第 0 帧穿透是否归零；若归零且七门全过，则几何路由的超高可以发布，否则按 §180 继续拒绝并保留
   26.4 mm 这个证据。
+
+## 第 182 轮：滚动初值下的静态侧向平衡也不收敛——曲股侧向状态是「运行平衡」
+
+- 目的：验收门第 4 项要求把静平衡未知量从「只有 z」扩到 y/yaw/roll。此前只量过**零速**（秩亏
+  `cond 3.76e12`、σ_min 2.7e-11、所有种子停在 240 kN）。这一轮把轮对自转设成 `omega = v/r = 51.6796 rad/s`、
+  让 `creep_attack_velocity = travel * yaw` 与 `slip_x` 的曲率项真正起作用，再解 36 个未知量
+  （每个体 y/z/roll/yaw + 8 根弹性轨垂向行），三个种子。
+- 结果（否定）：最好一次 `|r|max = 6.5699e+04 N`（`xtol`）、`cond 5.441e+07`、**只有 2/8 轮承力**
+  （`axle3_right 131807.9 N = 2.209×`、`axle4_right 138987.3 N = 2.330×`，四个左轮全 0）；
+  最大残留行是 `wheelset4.roll 65698.9`、`wheelset3.roll 56894.3`、`bogie2.roll 56284.7`。
+  下沉 1/2 mm 的两个种子更差（全行撞 1.0 势垒，guard 命中 76 次）。
+- 对齐的两个变体 `none` 与只给横移的 `shift` 给出**逐位相同**的结果（同一 5.7637e+04、同样 2/8、
+  134591.9–139094.6 N）→ 两者都落到同一支外轨贴靠解，对齐不是差别所在。
+- 判读：曲线上车辆的侧向状态由运动闭合（滚动半径差给偏航力矩、冲角给横向蠕滑力），压成静态根必落贴靠支。
+  与 Elkins & Gostling（VSD 1977）一致；也与「同一算例时程跑 7/7、八轮承载」互为对照——**轨迹找得到、座找不到**。
+  因此**不再扩张静态座的未知量**，座只决定车轮坐多深。
+- 顺带登记一个待定缺陷（未改代码）：`_align_to_track_frame` 把 `yaw` 写成**绝对航向** `arctan(dy/ds)`，
+  而 `contact.py:732` 把同一坐标当**冲角**用；本条曲线上两者差 0.0158 rad，即 `travel*yaw = 0.352 m/s`
+  的虚假横向蠕变（约 0.9° 冲角）。下一轮用「同状态比较 yaw=0 与 yaw=切线角时的横向合力是否等于
+  `m v²/R = 21.4 kN`」这个可判定的实验来定它。
+- 新增 [`docs/CURVE_QUASISTATIC_SEAT_2026-10-28.md`](CURVE_QUASISTATIC_SEAT_2026-10-28.md) 与
+  `scripts/s26_quasistatic_seat.py`（约 17 s 可复算）。冻结物理未动。
+
+## 第 183 轮：B040 —— 路线的横向「搬运速率」被当成横向蠕滑，曲股第一帧就饱和
+
+- 触发：曲股波磨算例（`s27_curve_corrugation.py`，R=1100 m / 80 km/h）在 `x=81.289777 m` 处报
+  `graph slope limit at axle1_right/right:main`。这个 `x` 是**钢轨站位里程**（含 1 位轴 +10 m 偏置），
+  所以车辆只走了 **2.29 m**（t ≈ 0.103 s）。
+- 实测（`scripts/s29b_seat_slip.py`，座位后第一帧，除自转外状态速度全为零）：`slip_lateral`
+  为 **+0.5737 / +0.5232 / +0.2205 / +0.1700 m/s**，`sum(Fy) = −36 939 N` —— 方向与曲线所需
+  `+21 842 N` 相反，量级 1.7 倍。蠕滑饱和速度量级只有 0.01–0.1 m/s，所以接触从第一帧起就是饱和的。
+- 根因：`vehicle_solver.py` 把 `path.lateral_velocity_m_s = v·dy/ds`（79 m 处 `1/0.0257`、22.22 m/s
+  下 0.571 m/s）加进 `wheel_v_y_m_s`。**顺着曲线走的车辆对钢轨没有横向相对速度**（`dq[y]/dt = 0`）；
+  `v·dy/ds` 是参考系在笛卡尔坐标里的搬运速率，不是材料滑移。位置上的 `lateral_extra = path.at(x)`
+  是对的（车轮必须被搬到设计线上），速度上的那一项是错的。
+- 修法：`wheel_v_y_m_s=float(v[axes["y"]])`（去掉 `+ lateral_rate`）；`PathTrack.lateral_velocity_m_s`
+  的 docstring 改成它真实的含义并写明不得进蠕滑；新增 `tests/test_path_transport.py` 两项
+  （搬运速率随里程增长、量级 0.61 m/s；以及一个源码级守卫，钉住接触调用不再加这一项）。
+- 效果（实测）：`slip_lateral` 四项全部 **0.00000**、`sum(Fy)` **+292.5 N**；斜率守卫触发点从
+  `x=81.289777 m` 推到 `x=83.525026 m`，即行程 **2.29 m → 4.53 m**（t 0.103 s → 0.204 s）。
+  直向算例 `dy/ds = 0`，两个冻结基线 `UNCHANGED`。
+- **没修好**：曲股仍然过不去。0.30 s 跑 784.7 s 后仍在同一守卫停下，右轨 `2.69–2.91×` 过载、
+  `axle1_right`/`axle2_right` 无接触依旧 —— 那是几何问题（B041，见下一条），不是蠕滑问题。
+- 新增 [`docs/CURVE_PATH_RATE_DEFECT_2026-10-28.md`](CURVE_PATH_RATE_DEFECT_2026-10-28.md)、
+  `scripts/s28_curve_contact_table.py`、`scripts/s29_path_rate.py`、`scripts/s29b_seat_slip.py`、
+  `tests/test_path_transport.py`。
+
+## 第 184 轮：B041 —— 曲股右轨的站位表不是一条一致的轨道几何
+
+- 事实：两侧站位表来自两个不同模型（左 `Profile_Mileage_JBG.prr`（CRH380A）19 001 站 / 5 mm；
+  右 `jbg-20200418-R.prr`（SDITT）16 664 站 / 5.2 mm），各自给 `y_offset_m`。左轨严格跟着
+  设计线 `s'²/(2·1100.75)`（吻合 1e-4）；右轨相对左轨的偏离在 **1.4438 … 1.5876 m** 之间漂移，
+  即轨距 1.4438–1.5876 m，而车轮是按 1.493 m 放的。
+- 后果：79–94 m 处右轮内移 63–95 mm，落在轨距角/轮缘根上 —— 第一帧 `axle3_right 160.5 kN = 2.69×`
+  （侵入 120.6 µm），`axle1_right` / `axle2_right` 无接触，而左轨四轮 0.97×。两侧冠高还差
+  72–134 µm，垂直座没有 roll 自由度，只能靠不等侵入吸收。
+- 三种重建方案都失败（`scripts/s30_fix_diverging_gauge.py` + `s30b` + `s30d` + `s30e`）：
+  右 = 左 + **1.493**（车轮轨距）→ 第一帧 `axle1_right` y=+1.08229 给 3143 µm、`|n_y/n_z| = 1.274`，
+  斜率守卫在 t=0 抛出、`gtol` 停住；右 = 左 + **1.50649**（45 m 处已知能坐住的关系）→ 座位"收敛"
+  但 `axle1_right 1 879 096 N = 31.5×`、`axle2_right 758 335 N = 12.7×`、`sum N = 6.33×` 重量；原样 →
+  2.69× 与两个右轮无接触。
+- 原因已定位到断面本身：两个断面的**冠部不在其中位**（左冠比中位靠外 6.8 mm、右冠靠外 6.7 mm），
+  实测**冠距恒为 1.5071 m，而车轮冠距是 1.4930 m**（两个车轮断面最大半径都在 local y ≈ 0），
+  一直差 14.1 mm。正确的重建必须**逐站位**把冠钉在车轮冠上：
+  `right_offset = left_offset + 1.4930 + (左冠偏移) − (右冠偏移) ≈ 1.4795 m`（在原样、1.493、1.50649
+  三个候选之外）。验收门已先写死（四轴位冠距 1.4930±0.5 mm、8/8 承力 ∈[0.625,1.6]×、第一帧
+  `|n_y/n_z| < 0.3`、80 km/h 跑 ≥0.30 s 且越过 79.6–83.6 m 补片、直线与两个冻结基线 `UNCHANGED`）。
+- 新增 [`docs/CURVE_RAIL_GEOMETRY_2026-10-28.md`](CURVE_RAIL_GEOMETRY_2026-10-28.md)、
+  `scripts/s30_fix_diverging_gauge.py`、`scripts/s30b_seat_after_gauge.py`、
+  `scripts/s30c_crown_heights.py`、`scripts/s30d_seat_diagnose.py`、`scripts/s30e_guard_geometry.py`。

@@ -640,11 +640,16 @@ class VehicleDynamics:
         x = self.station_m(rail, t_s, q)
         travel = self.speed_at(t_s) + (float(v[axes["x"]]) if "x" in axes else 0.0)
         path = self.case.path
-        # The case's path is expressed in the rail reference frame, so its *offset* is absorbed by the
-        # rail placement and only its slope matters here: the route's curvature turns the wheel against
-        # the rail, which is a lateral creepage.  Feed it as extra lateral surface velocity.
+        # B040: the route's offset belongs in the *position*, not in the velocity.  A vehicle that
+        # follows the design line has dq[y]/dt = 0 against the rail, so its lateral creep is zero --
+        # `v * dy/ds` is the rate at which the curve transports a point of the reference frame through
+        # Cartesian space, not a material sliding velocity.  Feeding it as creep saturated the contact
+        # at t = 0: measured on the 18-turnout diverging route at 80 km/h, slip_lateral came out
+        # +0.5737 / +0.5232 / +0.2205 m/s with every state velocity except spin exactly zero, giving
+        # sum(Fy) = -36 939 N against the +21 842 N the curve needs, and the run tripped the slope
+        # guard 2.29 m after the start.  With the rate forced to zero the same frame reads slip_lateral
+        # 0.0000 and sum(Fy) = +292 N.  The straight cases have dy/ds = 0, so they are unchanged.
         lateral_extra = path.at(x) if path is not None else 0.0
-        lateral_rate = path.lateral_velocity_m_s(x, self.speed_at(t_s)) if path is not None else 0.0
         rail_y, rail_z, rail_vy, rail_vz = self.track.local_state(q, v, rail_index, x,
                                                                   self.speed_at(t_s))
         body_results = []
@@ -723,7 +728,7 @@ class VehicleDynamics:
             support = self._support
             response = evaluate_contact(
                 geometry, self.case.contact,
-                wheel_v_y_m_s=float(v[axes["y"]]) + lateral_rate,
+                wheel_v_y_m_s=float(v[axes["y"]]),
                 wheel_v_z_m_s=float(v[axes["z"]]),
                 wheel_roll_rate_rad_s=float(v[axes["roll"]]),
                 wheel_spin_rate_rad_s=float(v[axes["spin"]]),

@@ -445,3 +445,55 @@ FAILED: SimulationFailure vertical preload equilibrium failed: no seed converged
 ```
 python -X utf8 F:\velch_tmp\roll_probe.py
 ```
+
+## 17. 把曲线体力项按路线分叉之后：无超高的几何曲线第一次坐住并跑起来（第 131 轮）
+
+### 17.1 改了什么
+
+`evaluate` 里的等效直线曲线体力项 `m(v²/R − g sinθ)` 原来只按 `curve_radius_m` 判断，几何路线会与"抬高 + 侧滚 + 断面旋转"**重复计入**。现在按 `_placement_enabled(run)` 分叉：
+
+- 力路线（`curve_geometry = false`）：轨道保持直，曲线在这里作为体力出现；
+- 几何路线（`curve_geometry = true`）：轨道本身是弯的、平面已倾斜，**不再加体力**，向心力由钢轨提供。
+
+### 17.2 结果：R = 1100 m、无超高、100 km/h 的内联 35 坐标算例
+
+| 项 | 之前 | 现在 |
+|---|---|---|
+| 静平衡 | 每个种子都失败 | **坐住** |
+| 运行 | 无法开始 | `numerical_gate_failed` |
+| 接触斑 | — | 8 个（`axle1_left … axle4_right`） |
+| 门 | — | 7 门中 6 通过，唯一失败 `translational_action_reaction` |
+
+这是"几何曲线能跑"的第一次。失败的那一门是**门本身的定义问题**：曲线运行时车辆所受合力等于"重力 + 向心合力"，而该门仍只拿重力当参考。下一轮要把它的参考量按 `curve_radius_m` 补上向心项——这是修门，不是放宽容差。
+
+### 17.3 有超高的几何曲线仍然坐不住，而且诊到了新位置
+
+同一算例加平衡超高 0.107 m 后仍失败。逐行残差（`F:\velch_tmp\seat_rows.py`，三个种子取最好）：
+
+| 行 | 残差 |
+|---|---|
+| `wheelset4.y` | −43 162 N |
+| `wheelset3.roll` | −38 830 N |
+| `bogie2.y` | −35 099 N |
+| `wheelset1.y` | −32 906 N |
+| `wheelset1.z` | −29 355 N |
+
+而且**放置后的状态本身**就不平衡：在 `_place_on_alignment` 之后直接求值，四个轮对的 y 行各带 **+1.95 MN**（bogie y 行为 −62.7 kN、carbody y 行为 −16.3 kN）。也就是说"每个刚体按自己的里程取 s²/2R 与 s/R"并不是一个力自由（force-free）的运动学状态：各体之间的横向相对位移与弹簧锚点不自洽。
+
+### 17.4 顺带否掉的两个假设
+
+1. **超高符号**：把外轨换成另一侧、车架侧滚同时反号后，实测变成**整车只压在右轨上**（四轮 78.2–79.3 kN = 1.31×，左轮全 0），比原符号（六个斑承力、前四 1.25×）更差 → 原符号是对的，符号翻转已回退。
+2. **加大横向种子**：三档种子（0 / −2 mm / −5 mm）残差从 68.2 kN / 74.2 kN / 43.2 kN，最小也远高于 0.1 N 接受线，说明不是种子问题。
+
+### 17.5 下一步（顺序固定）
+
+1. 修 `translational_action_reaction` 的曲线参考量（重力 + 向心合力），让无超高曲线算例真正过七门；
+2. 让放置成为力自由状态：按"刚体绕同一曲率中心的整体运动"给出各体 y 与 yaw（当前逐体 `s²/2R` 与 `s/R` 的差在 1.95 MN 量级上不自洽），再复测有超高的几何曲线；
+3. 只有 1–2 过了，才动倾斜平面的接触运动学（`lever_z`、滚动半径差）。
+
+复算：
+
+```
+python -X utf8 F:\velch_tmp\seat_rows.py
+python -X utf8 -m pytest tests/test_curve_seat.py -q
+```

@@ -143,7 +143,9 @@ def test_a_contact_guard_inside_the_seat_rejects_the_step_instead_of_escaping(tm
 
     path = _case(tmp_path, "barrier", radius=1100.0, cant=0.0, speed_kmh=100.0, geometry=True)
     raw = json.loads(path.read_text(encoding="utf-8"))
-    raw["run"]["maximum_abs_contact_slope"] = 0.20
+    # 0.02 is far below any real flank slope, so the search trips it on purpose: the barrier
+    # only has a job while the guard can fire at all.
+    raw["run"]["maximum_abs_contact_slope"] = 0.02
     path.write_text(json.dumps(raw, indent=1, ensure_ascii=False), encoding="utf-8")
 
     dynamics = VehicleDynamics(load_vehicle_case(path), contact_workers=1)
@@ -151,8 +153,13 @@ def test_a_contact_guard_inside_the_seat_rejects_the_step_instead_of_escaping(tm
     q = _place_on_alignment(dynamics.case, dynamics,
                             np.array(dynamics.case.initial_q, dtype=float))
     v = np.array(dynamics.case.initial_v, dtype=float)
-    with pytest.raises(SimulationFailure, match="vertical preload equilibrium failed"):
+    # Whether the seat converges or not, the guard must never escape as its own message: that was
+    # the defect this test exists for.  Since the curve body force stopped being double-counted on
+    # the geometry route, a no-cant curve now seats here, so convergence is an allowed outcome.
+    try:
         _static_vertical_equilibrium(dynamics.case, dynamics, q, v)
+    except SimulationFailure as error:
+        assert "vertical preload equilibrium failed" in str(error)
     assert dynamics.seat_barrier_hits > 0, "the guard never fired, so this test proves nothing"
 
 

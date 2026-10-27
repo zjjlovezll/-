@@ -321,6 +321,10 @@ class VehicleDynamics:
 
         def placement(rail_index: int, x_m: float) -> tuple[float, float, float]:
             s = x_m - start
+            # The centre of ``y(s) = s^2/(2R)`` is at +y, so the OUTER rail is the one on the -y
+            # side and it is that one that is raised.  Getting this backwards cants the track
+            # against the vehicle, and the seat then cannot balance the lateral force (measured:
+            # 43 kN on ``wheelset4.y`` with the sign reversed).
             outer = "right" in str(rails[rail_index].id).lower()
             return s * s / (2.0 * radius), (rise if outer else -rise), s / radius
 
@@ -342,7 +346,12 @@ class VehicleDynamics:
         # drags the wheels onto the flange until the contact-slope guard fires (measured:
         # `graph slope limit at axle1_left/left:main, x=41.2461871 m`).
         curve = getattr(self.case.run, "curve_radius_m", None)
-        if curve:
+        # Two routes, one body force.  On the *force* route the track stays straight and the curve
+        # enters here as an equivalent-straight body force ``m (v^2/R - g sin(theta))``.  On the
+        # *geometry* route the track itself is curved and the plane is tilted (rise + roll +
+        # surface rotation), so the rails supply the centripetal force and no body force is added:
+        # adding it there double-counts both terms and the seat had no solution because of it.
+        if curve and not _placement_enabled(self.case.run):
             speed = abs(self.speed_at(t_s))
             cant = float(getattr(self.case.run, "curve_cant_m", 0.0) or 0.0)
             gauge = 2.0 * abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 1.5

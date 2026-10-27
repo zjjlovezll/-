@@ -110,6 +110,16 @@ numpy 手写实现，未改动环境。
 
 **未闭合**：混源站表覆盖交界处的 `ProfileError`；超高需要车架随坡面倾斜。
 
+### 第 153 轮：反演流水线 L0 通过、L1 以实测差值拒绝
+
+新增 `scripts/s13_admission.py`：L0 数据准入（采样率、里程单调、跨度、非有限值、静止段占比）与
+L1 配准（轴箱两列滞后 vs 轴距/速度、里程 vs 速度积分），产出 `verdict.json` 且
+`measurement_validation_status` 保持 `not_evaluated`。
+
+实测：**L0 PASS**；**L1 FAIL**——两列滞后 110.5 ms，而 2.5 m 轴距在 17.29 m/s 下应为 144.6 ms
+（比值 0.76）。三种可能（列身份、宽带相关峰、速度基准）未排除前不建标定，这是 L1 该有的行为。
+记录两个自伤坑：`ravel()` 压掉 `Vi_y (n,2)`；把 km/h 当 m/s 积分得到 9021 m vs 2505 m（3.6 倍）。
+
 ## 文档清单
 
 | 文档 | 回答什么问题 | 仍成立？ || [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | 0.4.9 装什么、修了什么、仍然没有什么 | ✅ 2026-10-23 |
@@ -1757,6 +1767,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md) | 谐波阶梯反演：用一条缺陷的谐波序列恢复它的**形状**（2026-10-26） |
 | [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
+| [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
 | [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |

@@ -122,7 +122,7 @@ def test_cant_on_the_geometry_route_is_refused_with_the_way_out(tmp_path):
         _dynamics(_with_run(tmp_path, "cant", curve_radius_m=RADIUS,
                             curve_cant_m=0.06, curve_geometry=True))
     message = str(error.value)
-    assert "needs the rail surface to be tilted" in message
+    assert "needs the vehicle frame tilted with the track plane" in message
     assert "curve_geometry = false" in message
 
 

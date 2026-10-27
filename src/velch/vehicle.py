@@ -491,6 +491,20 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                 f"axle spans {reach['axles_m']} m, excited band {reach.get('band_m')} m. "
                 f"This run is identical to one with no irregularity.",
                 RuntimeWarning, stacklevel=2)
+    # Cant turns the whole track plane, so the rail surfaces are rotated and not merely raised.
+    # The angle comes from the cant and the gauge the vehicle declares; on the geometry route the
+    # level difference is published by ``_curve_placement`` and the rotation here, and the force
+    # route keeps using the equivalent-straight lateral force plus its gravity component.
+    run_block = raw.get("run", {})
+    cant_m = float(run_block.get("curve_cant_m") or 0.0)
+    if cant_m != 0.0 and bool(run_block.get("curve_geometry", False)):
+        gauge_m = 2.0 * abs(float(wheels[0].lateral_offset_m))
+        if gauge_m <= 0.0:
+            raise ValueError("curve_cant_m needs a vehicle with a non-zero lateral wheel offset")
+        import math as _math
+        from .irregularity import roll_rails
+        angle = _math.asin(max(-1.0, min(1.0, cant_m / gauge_m)))
+        rails = roll_rails(rails, angle)
     track_spec = raw.get("track_dynamics", {"kind": "local_compliant"})
     track_kind = track_spec["kind"]
     if track_kind not in {"rigid", "local_compliant", "two_layer", "layered", "modal"}:

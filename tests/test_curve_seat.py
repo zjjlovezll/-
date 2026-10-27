@@ -270,7 +270,7 @@ def test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it(
     assert result.summary["result_status"] == "numerically_checked"
 
 def test_cant_on_the_geometry_route_is_refused(tmp_path):
-    """A rail that is raised but not rotated cannot carry cant, so the run must say so."""
+    """Cant needs the frame tilted with the plane, not only the rail surface turned."""
 
     from velch import data_root
 
@@ -285,5 +285,5 @@ def test_cant_on_the_geometry_route_is_refused(tmp_path):
     with pytest.raises(SimulationFailure) as error:
         simulate_vehicle(case)
     message = str(error.value)
-    assert "needs the rail surface to be tilted" in message
+    assert "needs the vehicle frame tilted with the track plane" in message
     assert "curve_geometry = false" in message

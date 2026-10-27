@@ -437,6 +437,77 @@ class ShiftedSeries:
         return replace(base, profile=profile, dz_ds=base.dz_ds + slope)
 
 
+@dataclass(frozen=True)
+class RolledSeries:
+    """A rail profile series whose cross-section is turned with the track plane.
+
+    Cant is not a vertical offset: the whole track plane rotates by ``phi = cant / gauge``, so each
+    rail surface rotates about its own longitudinal axis as well as moving up or down.  Publishing
+    the level difference alone (``dz = +-rise``, no rotation) puts the wheel on its flange root and
+    leaves the static seat with no solution — measured at R = 1100 m with 107 mm of cant, where the
+    seat failed after every seed.  Rotating here means the contact search sees the surface the
+    vehicle really rides on, and its normal, without learning anything about cant.
+
+    The rotation is about the rail's own centreline, which is the origin of ``profile.y_m/z_m``.
+    """
+
+    inner: object
+    angle_rad: float
+
+    def covers(self, s_m: float) -> bool:
+        return bool(self.inner.covers(s_m))
+
+    @property
+    def lowest_m(self) -> float:
+        return float(self.inner.lowest_m)
+
+    @property
+    def highest_m(self) -> float:
+        return float(self.inner.highest_m)
+
+    def mileages(self):
+        return tuple(self.inner.mileages())
+
+    def sample(self, s_m: float, direction: int = 1):
+        from dataclasses import replace
+
+        import numpy as np
+
+        base = self.inner.sample(s_m, direction)
+        if self.angle_rad == 0.0:
+            return base
+        cosine = float(np.cos(self.angle_rad))
+        sine = float(np.sin(self.angle_rad))
+        y = np.asarray(base.profile.y_m, dtype=float)
+        z = np.asarray(base.profile.z_m, dtype=float)
+        profile = replace(
+            base.profile,
+            y_m=y * cosine - z * sine,
+            z_m=y * sine + z * cosine,
+            source=f"{base.profile.source}+roll",
+        )
+        # The longitudinal slope is unchanged by a rotation about the longitudinal axis: the
+        # tangent stays a tangent, and dz/ds of the surface is the same curve turned.
+        return replace(base, profile=profile)
+
+
+def roll_rails(rails, angle_rad: float):
+    """Wrap every rail body's series with :class:`RolledSeries` for one track-plane angle."""
+
+    from dataclasses import replace
+
+    if angle_rad == 0.0:
+        return tuple(rails)
+    rolled = []
+    for rail in rails:
+        bodies = tuple(
+            replace(body, series=RolledSeries(body.series, angle_rad))
+            for body in rail.bodies
+        )
+        rolled.append(replace(rail, bodies=bodies))
+    return tuple(rolled)
+
+
 def shift_rails(rails, track: IrregularityTrack, *, half_gauge_m: float):
     """Wrap every rail body's series with :class:`ShiftedSeries` for its own side."""
 

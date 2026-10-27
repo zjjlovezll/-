@@ -3478,3 +3478,12 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
   而 R=1100/100 km/h 需要 0.107 m 平衡超高；下一步是**轨面滚转**，不是放宽容差。
 - 测试：`tests/test_curve_seat.py` 新增势垒用例（`seat_barrier_hits > 0`）与"不平衡曲线坐不住"用例；
   `tests/test_curve_alignment.py` 的超高用例改为断言拒绝与体力路线保真。`15 passed, 1 xfailed`。
+
+## 第 128 轮：超高是转动而不是抬轨，转动之后仍需要倾斜车架
+
+- `src/velch/irregularity.py`：`RolledSeries` / `roll_rails`，绕轨自身中心线转断面，`dz_ds` 不变，0 角纯直通。
+- `src/velch/vehicle.py`：`angle = asin(cant/gauge)` 接到装配处；107 mm / 1.493 m → 0.0717 rad。
+- `src/velch/vehicle_solver.py`：几何路线对非零超高改为显式拒绝，文案说明"需要倾斜车架"，并指向 `curve_geometry = false`。
+- 实测：断面已转但几何路线仍坐不住（每个种子都失败），力路线同算例 `numerically_checked`；原因是平衡超高靠重力在倾斜平面内的分量抵消 `m v²/R`，本路线重力固定在世界 z，车轮需自扛约 34 kN。
+- 测试：新增 `tests/test_rail_roll.py`（5 项）；三个曲线测试文件合跑 **20 passed, 1 xfailed**。
+- 复算：见 `docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §15。

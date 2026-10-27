@@ -334,3 +334,58 @@ vertical preload equilibrium failed: no seed converged; `gtol` termination condi
 > 曲线几何路线的下一个必需件是**轨面滚转（S5）**，不是放宽容差、也不是再调放置。
 
 同一半径下体力路线（`curve_geometry = false` + 0.107 m 平衡超高）在 §7 已实测 `numerically_checked`、8 轮各 1.00×均分 —— 两条路线的分工因此明确：**横向力走体力路线可交付，几何一致要走滚转路线**。
+
+## 15. 超高不是"一条轨抬高"：断面要转，而转了还不够（第 13 轮）
+
+### 15.1 先把几何做对
+
+上一轮把超高做成 `dz = ±rise`（只平移、不转动），实测结果是车轮落到轮缘根部、静平衡无解。这一轮改成真的转动：
+
+- `src/velch/irregularity.py` 新增 `RolledSeries(inner, angle_rad)` 与 `roll_rails(rails, angle_rad)`：绕**该轨自身中心线**（即 `profile.y_m/z_m` 的原点）旋转断面，`y' = y cosφ − z sinφ`、`z' = y sinφ + z cosφ`，`source` 加 `+roll`；`dz_ds` 不动，因为绕纵轴转动时切向随之一同转。`angle_rad == 0` 是纯直通。
+- `src/velch/vehicle.py` 在车间几何装配后接上：`angle = asin(clamp(cant/gauge, -1, 1))`，`gauge = 2·|轮对横向偏置|`。107 mm / 1.493 m → **φ = 0.0717 rad**；轨顶高于中心 65 µm 的点横移只有 **4.7 µm**，对接触可忽略。
+
+### 15.2 转了之后，几何路线仍然坐不住
+
+同一算例（R = 1100 m、cant = 0.107 m、100 km/h、内联 35 坐标）：
+
+| 路线 | 结果 |
+|---|---|
+| `curve_geometry = true`（断面已转） | `vertical preload equilibrium failed: no seed converged`（每个种子都失败） |
+| `curve_geometry = false`（超高作横向力） | `numerically_checked`，七门全过 |
+
+原因写在代码注释与拒绝文案里：**平衡超高是靠"倾斜车架"抵消离心力的**——车架随轨道平面倾斜 φ 后，重力在轨道平面内有一个 `−g sinφ` 分量，与 `v²/R` 相消。本模型的几何路线把重力固定在世界 z 方向，于是车轮必须自己扛下全部横向力：
+
+```
+48654 kg × (27.78 m/s)² / 1100 m ≈ 34 kN
+```
+
+34 kN 需要大约 26° 的接触角，而钢轨轨顶给不出来。所以这不是容差问题，是重力方向问题。
+
+### 15.3 因此这一轮把几何路线的超高改成显式拒绝
+
+拒绝文案直接写出出路：
+
+```
+curve_cant_m needs the vehicle frame tilted with the track plane, not only the rail surface:
+balance cant cancels m v^2 / R through gravity's component along the plane, and this route
+keeps gravity along world z. Use curve_geometry = false, where the cant enters as a lateral
+force, or set curve_cant_m = 0.
+```
+
+判据保留了：力路线（`curve_geometry = false`）继续接受超高，任何真实超时步的 slope guard 也没有放宽（`maximum_abs_contact_slope` 未动，仍会 abort）。
+
+### 15.4 测试
+
+- 新增 `tests/test_rail_roll.py`（5 项）：四分之一转交换两轴且绕轨心；0 角是恒等且不改 source；`dz_ds` 在转动后仍是 0.001；`roll_rails(..., 0.0)` 不动；107 mm / 1.493 m 的角度是 0.0717 rad、轨顶横移 < 5 µm。
+- `tests/test_curve_seat.py` 的拒绝测试改为断言新文案；`tests/test_curve_alignment.py` 同步。
+- 三个曲线测试文件合跑：**20 passed, 1 xfailed**。
+
+### 15.5 下一步
+
+几何路线要支持真实超高，必须做的是**让车架随轨道平面倾斜**（frame attitude），把重力分解到倾斜坐标系里——也就是力路线已经在施加的那个 `−m g sinθ` 项，但作用在姿态上而不是作为外力。做完之后，"平衡超高 ⇒ 两条轨等载"才有几何含义，才能再谈曲线反演。
+
+复算：
+
+```
+python -X utf8 -m pytest tests/test_rail_roll.py tests/test_curve_seat.py tests/test_curve_alignment.py -q
+```

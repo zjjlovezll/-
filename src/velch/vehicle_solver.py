@@ -308,17 +308,22 @@ class VehicleDynamics:
         start = float(run.x_start_m)
         cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
         if abs(cant) > 0.0:
-            # Cant here is only a rail *level* difference (``dz = +-rise``): the rail profile is
-            # translated, never tilted.  A wheel that meets a translated-but-level rail on a curve
-            # ends up on its flange root and the contact-slope guard stops the run at the first
-            # step (measured: R = 1100 m, 107 mm, x = 70 m; and it fails with either roll sign).
-            # Rather than publish a level difference the contact cannot represent, refuse it and
-            # point at the route that does work.  Refusing also keeps this from silently becoming
-            # a gate failure that looks like physics.
+            # Cant is published as a level difference here, and the *rotation* of each rail surface
+            # is applied by ``velch.irregularity.roll_rails`` when the case is loaded.  Measured: the
+            # rotation alone does not make a geometric curve seatable at R = 1100 m with 107 mm of
+            # cant (``vertical preload equilibrium failed`` after every seed).  The reason is that
+            # balance cant works by tilting the *frame*: gravity then has a component along the track
+            # plane which cancels ``m v^2 / R``, and the wheels need almost no lateral force.  Our
+            # vehicle frame stays level — gravity is applied along world z — so on the geometry route
+            # the wheels must still supply the whole 34 kN laterally, which needs a contact angle no
+            # rail crown can give.  The force route does carry that term (``-m g sin(theta)``) and is
+            # the route that works; until the frame is tilted as well, this one refuses instead of
+            # failing with a message about the seat.
             raise SimulationFailure(
-                "curve_cant_m needs the rail surface to be tilted, which this geometry route does "
-                "not do yet (the rail is only raised, not rotated). Use curve_geometry = false, "
-                "where the cant enters as a lateral force, or set curve_cant_m = 0."
+                "curve_cant_m needs the vehicle frame tilted with the track plane, not only the rail "
+                "surface: balance cant cancels m v^2 / R through gravity's component along the plane, "
+                "and this route keeps gravity along world z. Use curve_geometry = false, where the "
+                "cant enters as a lateral force, or set curve_cant_m = 0."
             )
         rise = 0.0
         rails = tuple(self.case.rails)

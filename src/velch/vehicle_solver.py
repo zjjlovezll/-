@@ -822,7 +822,12 @@ def _placement_enabled(run) -> bool:
     return bool(getattr(run, "curve_geometry", False))
 
 
-def _gauge_centre(case: VehicleCase, s_m: float) -> tuple[float, float]:
+def _gauge_centre(
+    case: VehicleCase,
+    s_m: float,
+    dynamics: "VehicleDynamics | None" = None,
+    speed_m_s: float = 0.0,
+) -> tuple[float, float]:
     """The centre line of the track at ``s_m``, and its slope, read off the sampled rails.
 
     A turnout curves through its *station table*, not through ``curve_radius_m``: the diverging
@@ -846,7 +851,20 @@ def _gauge_centre(case: VehicleCase, s_m: float) -> tuple[float, float]:
             if key in seen:
                 continue
             sample = bodies[0].series.sample(float(x_m))
-            seen[key] = float(np.mean(np.asarray(sample.profile.y_m, dtype=float)))
+            local = float(np.mean(np.asarray(sample.profile.y_m, dtype=float)))
+            if dynamics is not None:
+                # Measured: on the geometry route ``profile.y_m`` is the *relative* section
+                # coordinate, and the curve offset sits in the track kernel's placement.  Reading
+                # only the profile returned exactly 0.000000 m at 60..80 m, which made this whole
+                # function a no-op and left the vehicle straight while the rail moved 45.455 mm --
+                # the 27 mm flange-root contact of round 27.
+                index = next((i for i, item in enumerate(case.rails) if item is rail), None)
+                if index is not None:
+                    zero = np.zeros(dynamics.track.dimension)
+                    local += float(
+                        dynamics.track.local_state(zero, zero, index, float(x_m), float(speed_m_s))[0]
+                    )
+            seen[key] = local
         if not seen:
             return None
         return float(np.mean(list(seen.values())))
@@ -869,10 +887,14 @@ def _align_to_track_frame(case: VehicleCase, dynamics: VehicleDynamics,
     # Opt-in only.  A turnout's *frog* also has rails that converge and diverge, so "the sampled
     # rails have a slope" is not evidence that the run is on a curve -- gating on the slope alone
     # moved the frog case's start state and its seat stopped converging.
-    if not bool(getattr(case.run, "curve_geometry", False)
-                or getattr(case.run, "align_to_track", False)):
+    # The alignment complements the *geometry* route, where the rail has been placed on the arc and
+    # the vehicle has to be placed with it.  On the force route the rails stay straight, so moving
+    # the vehicle sideways puts it beside its own rails: measured, the force route that seats at
+    # 59 652..59 708 N per wheel failed with `xtol` the moment align_to_track was switched on.
+    if not bool(getattr(case.run, "curve_geometry", False)):
         return q
-    here, tangent = _gauge_centre(case, start)
+    speed = abs(float(case.vehicle.travel_speed_m_s))
+    here, tangent = _gauge_centre(case, start, dynamics, speed)
     if abs(tangent) <= 1.0e-4:
         return q
     offsets = list(getattr(case.vehicle, "axle_offsets_m", ()) or ())
@@ -891,7 +913,7 @@ def _align_to_track_frame(case: VehicleCase, dynamics: VehicleDynamics,
     have = {(body.id, axis) for body in topology.bodies for axis in body.dof}
     result = np.array(q, dtype=float, copy=True)
     for body_id, mileage in list(stations.items()) + list(centres.items()):
-        lateral, slope = _gauge_centre(case, mileage)
+        lateral, slope = _gauge_centre(case, mileage, dynamics, speed)
         if (body_id, "y") in have:
             result[topology.require(body_id, "y")] = lateral
         if (body_id, "yaw") in have:

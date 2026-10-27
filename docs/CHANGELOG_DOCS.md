@@ -3675,3 +3675,25 @@ R1100 几何路由，不对齐        与“对齐”逐位相同
    但它没有生效。下一轮要打印 `_align_to_track_frame` 的返回值，确认是 `_gauge_centre` 返回 0（`template_id` 过滤）
    还是写入的索引与接触读取的索引不同 —— 这是量而不是猜。
 - 本轮无代码改动；文档索引 149 篇不变。
+
+## 第 142 轮：对齐终于生效了（13 个分量），曲线仍然坐不住
+
+上一轮发现 `_align_to_track_frame` 对配置“逐位无影响”。本轮把这个 no-op 一路查到根：
+
+1. `_gauge_centre` 只读 `sample.profile.y_m`，而**几何路由的曲线偏移在 track kernel 的 placement 里**，
+   `profile.y_m` 是相对断面坐标（对称断面均值恒为 0）——所以它每次返回 `+0.000000 m, slope +0.000000`。
+   这就是“对齐无效”的原因，不是写入索引错。
+2. 修法：`_gauge_centre(case, s_m, dynamics=None, speed_m_s=0.0)`，在得到相对均值后加上
+   `dynamics.track.local_state(zeros, zeros, index, x_m, speed)[0]`（与接触读取同一个 frame），
+   并把 `dynamics`/`speed` 从 `_align_to_track_frame` 的两个调用点透传。
+3. 实测（R=1100、cant=0、x_start 60 m、35 坐标）：对齐向量**13/35 个分量非零** ——
+   `q[0]=q[15]=+0.045455`（前后轴）、`q[5]=q[10]=+0.025568`（中间轴）、
+   `q[4]=+0.009545 / q[9]=+0.007273 / q[14]=-0.006364 / q[19]=-0.008636`（各轴 yaw）、
+   `q[20]=q[25]=+0.034801`（构架 y）、`q[34]=+0.000455`（车体 y）。与 placement 的 +45.455/25.568 完全对上。
+4. **但对齐到位后曲线仍然坐不住**：`aligned geometry cant 0`、`unaligned geometry cant 0` 都是
+   `no seed converged; gtol`；而 **`align_to_track=True` 配力路由反而从“能坐”变成 `xtol`** ——
+   力路由的轨面不动，把车横移 45 mm 等于把车挪到钢轨旁边。
+5. 因此 `_align_to_track_frame` 的开关改为**只认 `curve_geometry`**（力路由不允许对齐），并在注释里写明这条实测。
+   曲线四个测试文件 12 passed / 1 xfailed。
+- 结论更新：第 27 轮把失败归因于“车辆没跟着移”**只对了一半**——移了以后仍然失败，说明还有第二个原因；
+  下一轮要量的是“对齐后八个接触斑的 pen 与 lever_y 各是多少”（上一轮的表是未修 `_gauge_centre` 之前的状态）。

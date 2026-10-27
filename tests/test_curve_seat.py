@@ -126,3 +126,33 @@ def test_an_unbalanced_curve_still_trips_the_slope_guard(tmp_path):
     path = _case(tmp_path, "unbalanced", radius=1100.0, cant=0.0, speed_kmh=100.0)
     with pytest.raises(SimulationFailure, match="graph slope limit"):
         simulate_vehicle(load_vehicle_case(path))
+
+
+def test_the_curved_seat_does_not_answer_the_yaw_question(tmp_path):
+    """Yaw stays an initial condition, not a seat unknown.
+
+    Letting the seat solve yaw looked attractive — the rails of a curved station table are already
+    turned while the vehicle stands at zero yaw — but it is the wrong lever: a solved yaw branch can
+    satisfy every load criterion and still leave the wheels rotated against the track, and the run
+    then dies at ``graph slope limit at axle3_left/left:main, x=52.5 m`` *after* a seat that looked
+    balanced.  A rigid yaw offset cannot repair it either: over the 20 m footprint at R = 1100 m the
+    tangent differs by 18 mrad front to rear, so a sweep of 0, ±2, ±5, ±9.1 and ±14 mrad failed at
+    every value.  Aligning the vehicle on the route therefore belongs to the placement work (the
+    geometry decides where the body sits and which way it points), and this test keeps the seat from
+    quietly growing a fifth unknown family in the meantime.
+    """
+
+    path = _case(tmp_path, "yaw_untouched", radius=1100.0, cant=0.107, speed_kmh=100.0,
+                 duration_s=0.002)
+    case = load_vehicle_case(path)
+    dynamics = VehicleDynamics(case, contact_workers=1)
+    topology = dynamics.topology
+    yaw_rows = [topology.require(body.id, "yaw") for body in topology.bodies if "yaw" in body.dof]
+    assert yaw_rows
+    from velch.vehicle_solver import _static_vertical_equilibrium
+
+    q = np.array(case.initial_q, dtype=float)
+    v = np.array(case.initial_v, dtype=float)
+    before = q[yaw_rows].copy()
+    seated, _residual = _static_vertical_equilibrium(case, dynamics, q, v)
+    assert np.array_equal(seated[yaw_rows], before)

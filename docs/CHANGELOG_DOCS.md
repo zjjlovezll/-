@@ -3399,6 +3399,14 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
 
+## 第 121 轮：yaw 不是座椅该解的量（三种做法都实测过）
+
+- `case_diverging_R1100.json` 的曲率只在站位表里：原点位表 → 悬架分支（`118538.9 N` = 2×）；显式给 R=1100/超高 0.107 → 座通过但第一步 `graph slope limit at x=79 m`。
+- 把 **yaw 加进座未知量**：座"通过"（八轮 0.5–1.6×），积分却在 `x=52.5 m` 挂 —— 解出满足载荷但姿态错的分支。
+- **刚体 yaw 偏置扫 0/±2/±5/±9.1/±14 mrad，九个值全败**，失败轴在 4/1/4/2/2 之间换。R=1100 下 20 m 足迹切线差 **18 mrad**，刚体偏置只能平移分布、不能产生分布。
+- 结论：yaw 属于 S4 随动坐标系的**放置**问题，不是座椅未知量；`tests/test_curve_seat.py` 新增第 6 项钉住"曲线座不得改动 yaw 行"。
+- 顺带把 `Velch/.gitattributes` 真正入库（前一轮 renormalize 时它只存在于工作区，规则没有进仓库）——行尾策略现在可继承。
+
 ## 第 120 轮：曲线先问对静平衡，再把曲率放进蠕滑
 
 直向路径逐位不动（`freeze_baseline --check` → UNCHANGED），两处改动都在曲线分支里：

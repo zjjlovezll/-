@@ -1,0 +1,25 @@
+# Text files are stored with LF and checked out with LF, whatever the platform.
+#
+# This repository has been bitten three times by a Python patch flipping a file between CRLF and LF
+# and turning a ten-line change into a whole-file diff (src/velch/jacobian.py, tests/test_speed_
+# profile_case.py, and the 2026-10-27 curve round).  One declaration removes the class of accident:
+# the byte stream in the repository is LF, so a diff shows what changed and not what the editor
+# happened to write.
+* text=auto eol=lf
+
+# Generated or captured artefacts, never translated.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.pptx binary
+*.xlsx binary
+*.zip binary
+*.mat binary
+*.odb binary
+*.prt binary
+*.inp text eol=lf
+
+# Windows launchers keep CRLF: cmd.exe and PowerShell both read them more reliably that way.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf

@@ -3819,3 +3819,32 @@ R1100 几何路由，不对齐        与“对齐”逐位相同
 `test_a_350_metre_curve_at_its_eighty_limit_sits_within_the_band`（0.96–1.27×）、
 `test_an_uncompensated_350_metre_curve_runs_but_transfers_load`（2.80×）、
 `test_the_force_route_carries_no_load_transfer_and_must_not_be_quoted_as_a_curve`（力路由 <1.05× 而几何路由 >2.0×）。
+
+## 第 148 轮：超高上几何路由——两种符号都试过，都是「4/8 轮着地、另一侧全脱空」
+
+上一轮之后几何路由已能 quotable（R=1100/350、cant 0 全部 7/7）。本轮试把**超高**也做进去，两条改动都做了：
+
+1. `_curve_placement` 恢复外轨抬高（`rise = 0.5·gauge·sin(theta)`，前一轮为保证可坐把它置零了）；
+2. `evaluate` 里重力按坡面分解（`cos` 竖向 + `sin` 横向，`self._plane_angle_rad = asin(cant/gauge)`）。
+
+**实测（0.01 s、35 坐标、几何路由、x_start 60 m）**
+
+| 工况 | cant | 结果 |
+|---|---|---|
+| R=1100，100 km/h | 0 | **7/7**，份额 0.985–1.064，侵入 69.7 µm |
+| R=1100，100 km/h | +0.107（平衡超高） | `4 of 8 wheels carry load`，最重 **124.8 kN**（≈2×） |
+| R=1100，100 km/h | **−0.107** | `4 of 8 wheels carry load`，最重 **119.0 kN** |
+| R=1100，80 km/h | ±0.107 | 同上（119.0 / 124.8 kN） |
+| R=350，80 km/h | ±0.100 | 同上（119.1 / 126.4 kN） |
+
+**两种符号给出同一种失败**，所以不是「外轨抬高与车体侧滚方向相反」这类符号错：抬高确实生效（`±53.5 mm`），
+但车体侧滚没有跟着生效——118–126 kN ≈ 2×均分正是「车站在一根轨上」。这是第 20/21 轮「flag 接上了但没生效」
+的同一类问题（`align_to_track` 字段缺失、`curve_rail_surface` 不是字段、`_gauge_centre` 读错帧），
+**第四次**出现在同一条链上。
+
+处置：**两条改动整体回退**（`git checkout src/velch/vehicle_solver.py`），不把「一半生效」的状态留在树里；
+探测脚本收进 `scripts/s12g_cant_balance.py`，下一轮直接从「车体侧滚为何没生效」入手（先打印
+`_place_on_alignment` 返回的 roll 分量与 `_static_vertical_equilibrium` 的初始 q，再谈物理解释）。
+
+曲线结论不变：**cant=0 的几何曲线已可引用**（R=350/80 km/h 满足 [0.5,1.6]×，R=350/100 km/h 与 R=1100 全 7/7）；
+**超高曲线仍不可引用**，原因已缩到一处。

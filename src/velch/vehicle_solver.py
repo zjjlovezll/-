@@ -786,6 +786,59 @@ class VehicleDynamics:
         return float(energy)
 
 
+def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
+                        q: np.ndarray) -> np.ndarray:
+    """Put the vehicle where the curved design line is, before the seat solves anything.
+
+    ``_curve_placement`` moves the *track* onto ``y(s) = s^2/(2R)``; a vehicle that keeps
+    ``y = yaw = 0`` then stands beside its own rails, and the seat has to drag every wheel into the
+    flange to close the gap — the run dies on the contact-slope guard rather than on a force.  The
+    vehicle therefore has to be placed on the same line: lateral offset ``s^2/(2R)`` and heading
+    ``atan(s/R)`` for every body, each at its own mileage.
+
+    Gated on ``run.curve_geometry``, which is exactly the flag that moves the track: with the rails
+    left straight there is no line to sit on, and placing the vehicle would push it off a straight
+    track by up to ``s^2/(2R)``.  Every case without that flag keeps its initial state unchanged.
+    """
+
+    radius = getattr(case.run, "curve_radius_m", None)
+    if radius is None or not getattr(case.run, "curve_geometry", False):
+        return q
+    radius = float(radius)
+    if radius == 0.0:
+        raise SimulationFailure("curve_radius_m must not be zero")
+    topology = dynamics.topology
+    placed = q.copy()
+    for body in topology.bodies:
+        s = _body_offset_m(case, topology, body, placed)
+        if "y" in body.dof:
+            placed[topology.require(body.id, "y")] += s * s / (2.0 * radius)
+        if "yaw" in body.dof:
+            placed[topology.require(body.id, "yaw")] += math.atan(s / radius)
+    return placed
+
+
+def _body_offset_m(case: VehicleCase, topology, body, q: np.ndarray) -> float:
+    """Distance from the run's start to where this body meets the track.
+
+    Only the ``_x`` layouts carry a longitudinal coordinate, so the legacy 35-coordinate layout has
+    to take the mileage from the geometry it already declares: a wheelset sits at its axle offset, a
+    bogie halfway between its two axles, and the carbody on the vehicle centre.
+    """
+
+    if "x" in body.dof:
+        return float(q[topology.require(body.id, "x")]) - float(case.run.x_start_m)
+    offsets = [float(value) for value in case.vehicle.axle_offsets_m]
+    if getattr(body, "kind", None) == "wheelset" and getattr(body, "axle", None) is not None:
+        return offsets[int(body.axle)]
+    if getattr(body, "kind", None) == "bogie" and getattr(body, "bogie", None) is not None:
+        axles = [int(item.axle) for item in topology.wheelsets()
+                 if getattr(item, "bogie", None) == int(body.bogie)]
+        if axles:
+            return sum(offsets[axle] for axle in axles) / float(len(axles))
+    return 0.0
+
+
 def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
                                  q: np.ndarray, v: np.ndarray) -> tuple[np.ndarray, float]:
     """Solve the vertical preload equilibrium, rejecting the hung-bogie branch.
@@ -1100,6 +1153,9 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                     body.series.sample(x, direction)
     q = np.array(case.initial_q, dtype=float)
     v = np.array(case.initial_v, dtype=float)
+    # A curved design line carries the vehicle with it: same lateral offset, same heading, per body.
+    # Without this the seat answers a question that has no solution and the wheels go to the flange.
+    q = _place_on_alignment(case, dynamics, q)
     static_residual_n = None
     if case.equilibrate_vertical:
         q, static_residual_n = _static_vertical_equilibrium(case, dynamics, q, v)

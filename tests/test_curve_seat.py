@@ -43,13 +43,16 @@ def _base_path() -> pathlib.Path:
 
 
 def _case(tmp_path: pathlib.Path, name: str, *, radius: float, cant: float,
-          speed_kmh: float, duration_s: float = 0.01) -> pathlib.Path:
+          speed_kmh: float, duration_s: float = 0.01,
+          geometry: bool = False) -> pathlib.Path:
     raw = json.loads(_base_path().read_text(encoding="utf-8"))
     raw["run"].update({"x_start_m": 60.0, "duration_s": duration_s,
                        "output_step_s": duration_s})
     if radius is not None:
         raw["run"]["curve_radius_m"] = float(radius)
         raw["run"]["curve_cant_m"] = float(cant)
+    if geometry:
+        raw["run"]["curve_geometry"] = True
     raw["vehicle"]["travel_speed_m_s"] = speed_kmh / 3.6
     raw.pop("initial_state", None)
     raw["case_id"] = f"curve_{name}"
@@ -156,3 +159,59 @@ def test_the_curved_seat_does_not_answer_the_yaw_question(tmp_path):
     before = q[yaw_rows].copy()
     seated, _residual = _static_vertical_equilibrium(case, dynamics, q, v)
     assert np.array_equal(seated[yaw_rows], before)
+
+
+def test_curve_geometry_places_the_vehicle_on_the_line_it_moves_the_track_onto(tmp_path):
+    """The track and the vehicle must agree about where the curve is.
+
+    ``curve_geometry`` moves the rails onto ``y(s) = s^2/(2R)``.  A vehicle that keeps ``y = yaw = 0``
+    then stands beside them and the seat can only close that gap by riding the flange.  Placement
+    gives every body the line's own offset and heading at its own mileage, so the wheelbase is
+    rotated by ``footprint / R`` instead of being dragged there.
+    """
+
+    from velch.vehicle_solver import VehicleDynamics, _body_offset_m, _place_on_alignment
+
+    path = _case(tmp_path, "placed", radius=1100.0, cant=0.107, speed_kmh=100.0,
+                 duration_s=0.005, geometry=True)
+    case = load_vehicle_case(path)
+    dynamics = VehicleDynamics(case, contact_workers=1)
+    topology = dynamics.topology
+    q = np.asarray(case.initial_q, dtype=float)
+    placed = _place_on_alignment(case, dynamics, q)
+    assert not np.array_equal(placed, q)
+    for body in topology.wheelsets():
+        s = _body_offset_m(case, topology, body, placed)
+        assert placed[topology.require(body.id, "y")] == pytest.approx(s * s / 2200.0, abs=1e-15)
+        assert placed[topology.require(body.id, "yaw")] == pytest.approx(np.arctan(s / 1100.0),
+                                                                         abs=1e-15)
+    by_axle = sorted(topology.wheelsets(),
+                     key=lambda body: _body_offset_m(case, topology, body, placed))
+    front, rear = by_axle[0], by_axle[-1]
+    s_front = _body_offset_m(case, topology, front, placed)
+    s_rear = _body_offset_m(case, topology, rear, placed)
+    assert s_front != s_rear
+    spread = (float(placed[topology.require(rear.id, "yaw")])
+              - float(placed[topology.require(front.id, "yaw")]))
+    # Two headings add, they do not compose: atan(a) + atan(b) differs from atan(a + b) in the third
+    # order, which is 5e-6 rad over this footprint and not a placement error.
+    assert spread == pytest.approx(np.arctan((s_rear - s_front) / 1100.0), abs=2e-5)
+    # A case without the geometry flag has no line to sit on, so placement must leave it alone.
+    straight = load_vehicle_case(_case(tmp_path, "no_geometry", radius=1100.0, cant=0.107,
+                                       speed_kmh=100.0, duration_s=0.005))
+    straight_dynamics = VehicleDynamics(straight, contact_workers=1)
+    untouched = _place_on_alignment(straight, straight_dynamics,
+                                    np.asarray(straight.initial_q, dtype=float))
+    assert np.array_equal(untouched, np.asarray(straight.initial_q, dtype=float))
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "the analytic geometry route is blocked inside the contact search: with curve_geometry the "
+    "rails are rolled by the cant and the wheel envelope becomes non-monotonic at cant 0 and 0.107 "
+    "(ValueError from contact.py:106), while 0.02 and 0.05 trip the slope guard.  Placement is in "
+    "place, so this is the next blocker, not a placement error."))
+def test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it(tmp_path):
+    path = _case(tmp_path, "geometry_run", radius=1100.0, cant=0.107, speed_kmh=100.0,
+                 duration_s=0.005, geometry=True)
+    result = simulate_vehicle(load_vehicle_case(path))
+    assert result.summary["result_status"] == "numerically_checked"

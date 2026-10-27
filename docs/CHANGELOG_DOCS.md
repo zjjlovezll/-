@@ -3399,6 +3399,14 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
 
+## 第 123 轮：车辆按几何摆上曲线（S4 第一半），解析几何路线被接触搜索挡住
+
+- 新增 `_place_on_alignment()` / `_body_offset_m()`：每个刚体按自己里程加 `y = s²/(2R)` 与 `yaw = atan(s/R)`；35 坐标布局没有 `x` 时由 `axle_offsets_m` 推里程（轮对取轴偏移、构架取两轴中点、车体取中心）。
+- 实测放置：前轴 +10 m → y 45.45 mm / yaw **+9.0907 mrad**；前后轴航向差 **18.18 mrad = 20 m / 1100 m**，正是上一轮刚体偏置扫不到的分布。
+- 但 `curve_geometry = true`（轨道也搬到曲线上并滚转）四个超高全部失败：0 与 0.107 → `ValueError: wheel roll made the lower envelope non-monotonic in lateral y`（`contact.py:106`）；0.02 / 0.05 → `graph slope limit`。
+- 结论：放置不是瓶颈，卡在接触搜索对"滚转后包络"的表示；而"只用几何"本来就在专家列的 8 条错答案里，正确路线仍是随动坐标系 + 力/速度场。
+- `tests/test_curve_seat.py`：7 passed + **1 strict xfail**（`test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it`），几何路线一旦能跑，这个 xfail 会变红。
+
 ## 第 122 轮：第三条算例——道岔上的常速剖面也逐位相同
 
 - 新增 `scripts/s12_profile_equivalence.py`：同一算例跑两遍（字段声明速度 vs 常速剖面），比 `history.csv` sha256。

@@ -88,3 +88,39 @@ slip_x = travel + ω·lever_z − κ·travel·lever_y
 并把上面这段证据写进 docstring，避免下一轮又把它当成"加一个未知量就好"。
 
 证据：`pytest tests\test_curve_seat.py -q` → 6 passed；`scripts/freeze_baseline.py --check` → **UNCHANGED**。
+
+## 10. 车辆的放置（S4 第一半）：算出来了，但解析几何这条路被接触搜索挡住
+
+`_curve_placement` 把**轨道**搬到 `y(s) = s²/(2R)`，而车辆仍站在原地，于是"车在旁边、轮往轮缘上爬"。
+新增 `_place_on_alignment()`：给每个刚体按**它自己的里程**加 `y = s²/(2R)` 与 `yaw = atan(s/R)`，
+`y` 与 `yaw` 都只在 35 坐标布局没有 `x` 时由几何推出（轮对取 `axle_offsets_m`，构架取两轴中点，车体取中心）。
+
+**放置本身是对的**（`case_A_final_law`，R=1100，前轴 +10 m）：
+
+| 车轴 offset | 加上的 y | 加上的 yaw |
+|---|---|---|
+| +10.0 m | 45.45 mm | **+9.0907 mrad** |
+| +7.5 m | 25.57 mm | +6.8181 mrad |
+| −7.5 m | 25.57 mm | −6.8181 mrad |
+| −10.0 m | 45.45 mm | −9.0907 mrad |
+
+前后轴航向差 **18.18 mrad = 20 m / 1100 m**，正是"足迹/R"，也就是上一轮刚体偏置扫不出来、扫也扫不到的那个分布。
+
+### 但解析几何这条路现在跑不了
+
+`curve_geometry = true`（轨道被搬到曲线上并按超高滚转）下，四个超高全部失败：
+
+| 超高 | 结果 |
+|---|---|
+| 0.000 m | `ValueError: wheel roll made the lower envelope non-monotonic in lateral y`（`contact.py:106`） |
+| 0.020 m | `graph slope limit at axle3_right/right:main, x=52.5 m` |
+| 0.050 m | `graph slope limit at axle1_right/right:main, x=70 m` |
+| 0.107 m（平衡超高） | 同 0.000：`ValueError ... non-monotonic` |
+
+两条读法都要留下：
+
+1. **放置不是瓶颈**：`yaw` 分布已经与几何一致，剩下的失败发生在接触搜索内部——滚转后的车轮下包络在横向 `y` 上不再单值，搜索直接拒绝。这不是容差、也不是接触刚度，是**几何表示**的问题。
+2. **"只用几何"本来就是专家列的 8 条错答案之一**：轨道搬到曲线上而力与速度场不动，等价于"车被摆到曲线上却不受离心力"，物理上不成立。所以这一条**不该**再往深里修——正确的路仍是随动坐标系（`(1−κy)` 因子、`Δv_x = ∓vκb`、离心竖向分量 `m v² κ sinφ`），几何只是它的显示层。
+
+`tests/test_curve_seat.py` 现在 7 passed + **1 strict xfail**：`test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it`
+把上面这张表钉成"已知阻塞"。strict 的含义是——一旦接触搜索能处理滚转后的包络，这个 xfail 会**变红**，逼着把它改成正式验收。

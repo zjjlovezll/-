@@ -1729,6 +1729,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
+| [CURVE_SEAT_AND_CREEP_2026-10-27.md](CURVE_SEAT_AND_CREEP_2026-10-27.md) | 曲线：先把静平衡问对，再把曲率放进蠕滑 |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
@@ -3397,6 +3398,19 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - `simulate_vehicle` 不再拒绝多段剖面（拒绝的理由已消失），`SpeedSchedule.leg_end_times_s` 提供腿边界。
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
+
+## 第 120 轮：曲线先问对静平衡，再把曲率放进蠕滑
+
+直向路径逐位不动（`freeze_baseline --check` → UNCHANGED），两处改动都在曲线分支里：
+
+1. **静平衡的未知量在曲线时扩到 y 与 roll**（`vehicle_solver.py`）：原先只有 z，右端有 `m v^2/R` 却没有横向坐标可以平衡，于是轮胎只能被推到轮缘——`graph slope limit at axle1_left, x=41.24 m` 与 `2 of 8 wheels carry load, 264504.2 N` 都是这个病。配套加了 0 / ±2 mm 三个横向种子。
+2. **曲率进纵向蠕滑**（`contact.py`）：`slip_x = travel + omega*lever_z - kappa*travel*lever_y`。曲线上同一轮对两个接触点走过的弧长不同，这是轮对能转向的物理来源；缺它就没有滚动半径差，只能硬顶轮缘。
+
+实测（`case_A_final_law` 内联 35 坐标 → R=1100 m / 超高 0.107 m / 100 km/h / 0.01 s）：`numerically_checked`、**七门全真**、八轮 59 652–59 708 N 对均分 59 662 N，**每轮 1.00×，全部落在 [0.5, 1.6]**。0.107 m 正是该半径 100 km/h 的理论超高 `1.5 v^2/(g R)`，不是调出来的。
+
+**斜率门没有放宽**：同半径、超高 0 仍然 `graph slope limit`——未平衡的侧向力只能靠轮缘，这正是该门要识别的工况。
+
+证据：`tests/test_curve_seat.py` 5 项（直向 kappa=0、曲线 kappa=1/R、蠕滑项 `curved - straight == -kappa v b` 相对误差 1e-12、配平曲线八轮 1.00× 且七门全真、不平衡曲线仍报斜率门）；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md`；文档索引 148 篇。
 
 ## 第 119 轮：里程列改走调度，三段剖面闭合 0.000
 

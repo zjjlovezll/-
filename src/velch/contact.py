@@ -250,6 +250,7 @@ def evaluate_contact(
     travel_speed_m_s: float,
     creep_attack_velocity_m_s: float = 0.0,
     support_compliance_m_per_n: float | None = None,
+    curvature_1_per_m: float = 0.0,
 ) -> ContactResponse:
     if geometry is None or geometry.penetration_m <= 0:
         return ContactResponse(False, geometry)
@@ -262,7 +263,14 @@ def evaluate_contact(
     # The prescribed x motion changes the profile elevation at the contact.
     approach += travel_speed_m_s * g.rail_dz_ds * g.normal_z
     slip_lateral = rel_y * g.tangent_y + rel_z * g.tangent_z + creep_attack_velocity_m_s
-    slip_x = travel_speed_m_s + wheel_spin_rate_rad_s * g.lever_z_m
+    # On a curve the two contact points of a wheelset travel different arc lengths: the point at
+    # lateral offset ``b`` from the axle centre moves at ``v (1 + kappa b)`` when the centre of the
+    # curve is on the -y side (the code's convention, where +y is the outer rail).  Without this
+    # term the longitudinal creep carries no curvature at all, so a wheelset asked to run a 350 m
+    # curve sees no rolling-radius difference to steer with and rides up the flange instead -- the
+    # failure was `graph slope limit at axle1_left/left` ten metres into the run.
+    slip_x = (travel_speed_m_s + wheel_spin_rate_rad_s * g.lever_z_m
+              - curvature_1_per_m * travel_speed_m_s * g.lever_y_m)
     depth = g.penetration_m
     stiffness = g.stiffness_n_m_1p5
     if stiffness is None:

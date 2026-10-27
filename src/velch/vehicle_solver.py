@@ -126,6 +126,13 @@ class VehicleDynamics:
         # law.  It is off for a constant profile so that path stays bit-identical.
         self.spin_control = bool(getattr(case.run, "spin_control", False)
                                  or not self._schedule.is_constant)
+        # 1/R of the equivalent-straight curve, signed the way the lateral force is: zero for
+        # every straight case, so the curvature term in the creep slip is inert and the archived
+        # numbers cannot move.  This is the term that lets a wheelset steer: the two contact
+        # points of one axle then travel different arc lengths, exactly as they do in reality.
+        radius = getattr(case.run, "curve_radius_m", None)
+        self._curvature_1_per_m = 0.0 if not radius else 1.0 / float(radius)
+
         # The topology decides the state vector: which bodies exist, what each carries, and
         # in which order.  With no node table it reproduces the frozen 35-slot layout.
         self.topology: Topology = topology_for(case)
@@ -679,6 +686,7 @@ class VehicleDynamics:
                 travel_speed_m_s=travel,
                 creep_attack_velocity_m_s=float(travel * q[axes["yaw"]]),
                 support_compliance_m_per_n=(support.at(x) if support is not None else None),
+                curvature_1_per_m=self._curvature_1_per_m,
             )
             body_results.append((body.id, geometry, response))
         return (rail_index, rail, x), body_results
@@ -796,7 +804,16 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     # legacy layout has: an axle box carries a z coordinate and a mass, and freezing it turns the
     # primary spring into a rigid support (the car then rests on a motionless box while the
     # wheelsets sink on their bearings).
+    # A curve puts a lateral force and a roll moment on every body, so freezing the lateral and
+    # roll coordinates would make the seat answer a question the equations never asked: the run
+    # would settle with every wheel on the same side of its clearance band and report a converged,
+    # laterally meaningless set-down.  The unknowns are therefore widened only when the run really
+    # has a curve, so every straight case keeps today's equations bit for bit.
+    curved = bool(getattr(case.run, "curve_radius_m", None))
     indices = [topology.require(body.id, "z") for body in topology.bodies if "z" in body.dof]
+    if curved:
+        indices += [topology.require(body.id, axis) for body in topology.bodies
+                    for axis in ("y", "roll") if axis in body.dof]
     if case.track_kind == "local_compliant":
         indices += [topology.body_dimension + 2 * i + 1 for i in range(len(case.rails))]
     elif case.track_kind == "two_layer":
@@ -820,6 +837,16 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     # primary spring and the bearing, so its set-down is a fraction of the wheel's; without a box
     # dimension Newton settles on the symmetric branch where one side carries 2x and the other
     # side lifts off, which is exactly the failure the 1.2 s case showed (240.6 kN vs 59.7 kN).
+    if curved:
+        # A lateral seed matters as much as a vertical one: with the curve force pushing outward the
+        # solution sits somewhere between the straight-ahead position and flange contact, and a
+        # single seed at zero can stall against the clearance band.
+        for lateral_m in (0.0, 2.0e-3, -2.0e-3):
+            seeded = q.copy()
+            for body in topology.bodies:
+                if "y" in body.dof:
+                    seeded[topology.require(body.id, "y")] += lateral_m
+            seeds.append(seeded[indices].copy())
     for wheel_drop, bogie_drop, box_drop in (
             (2.0e-3, 2.0e-3, 2.0e-3), (5.0e-4, 5.0e-4, 5.0e-4), (2.0e-3, 0.0, 2.0e-3),
             (0.0, 2.0e-3, 2.0e-3), (1.0e-3, 1.0e-3, 5.0e-4), (3.0e-3, 3.0e-3, 3.0e-3)):

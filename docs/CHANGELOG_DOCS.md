@@ -1728,6 +1728,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md) | 在连续的 PRR 文件里模拟波磨：表示、密度与两个坑 |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
+| [CURVE_APPROACH_DECISIONS_2026-10-27.md](CURVE_APPROACH_DECISIONS_2026-10-27.md) | 曲线走进哪一侧：四条被实测否掉的路，和一条还没被否的 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
 | [CURVE_SEAT_AND_CREEP_2026-10-27.md](CURVE_SEAT_AND_CREEP_2026-10-27.md) | 曲线：先把静平衡问对，再把曲率放进蠕滑 |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
@@ -3592,3 +3593,12 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 顺带核对：`scripts/s9l_differential_bands.py:87-93` 与 `src/velch/inverse/harmonics.py:248-287` 的两处口径缺陷
   **已经在代码里修好**（前者要求 ±A 两半都 `numerically_checked`，后者把 `floor_gain` 默认成 `1e-3·max|g|`），
   所以目标第 2 项现在只剩「s10 用新口径重跑并落数」，本轮已完成。
+
+## 第 136 轮：把曲线的四条死路写成决策记录，免得第四次重走
+
+- 新增 `docs/CURVE_APPROACH_DECISIONS_2026-10-27.md`：力路由（能坐住但只对平衡超高）、轨面横移
+  （78 786 / 150 690 kN 两次实测否掉）、超高当抬升（旋转断面仍不解平衡，因为重力没有随框架倾）、
+  `align_to_track` 曾是不存在字段（现已补上）四条，每条都带可直接复查的数字与脚本。
+- 第五节写明唯一没被否的路线：曲率放车辆侧（站表已弯、`(1−κy)` 与 `Δv_x=∓vκb` 已在并有 rel=1e-12 测试），
+  缺的是"车架随轨道平面倾斜"这个姿态自由度，下一轮要量而不是猜。
+- 第 21 轮的实测重算（段级虚警 3/6，P=0.002）记在第 135 轮。

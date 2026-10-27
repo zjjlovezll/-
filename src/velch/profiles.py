@@ -265,8 +265,15 @@ class ProfileSeries:
                 neighbor = min(at + 1, len(stations) - 1) if direction > 0 else max(at - 1, 0)
                 if neighbor == at:
                     neighbor = max(at - 1, 0) if direction > 0 else min(at + 1, len(stations) - 1)
-                other = self._select(stations[neighbor], "before" if neighbor > at else "after")
-                derivative = _station_derivative(selected, other)
+                if abs(float(stations[neighbor]) - float(stations[at])) <= 1e-12:
+                    # A repeated mileage has no direction to difference along: the neighbour is the
+                    # same station.  Measured on the turnout table, where this produced
+                    # `dz_ds = nan` over 52-74 m and made the seat report four of eight wheels.
+                    derivative = np.zeros_like(selected.profile.z_m)
+                else:
+                    other = self._select(stations[neighbor],
+                                         "before" if neighbor > at else "after")
+                    derivative = _station_derivative(selected, other)
             return ProfileSample(selected.profile, derivative, stations[at], stations[at], (selected.profile_id,))
         # The interpolation grid, the sampled endpoint shapes and the source
         # digest prefix depend only on the station pair, not on the position
@@ -304,8 +311,16 @@ class ProfileSeries:
         z = (1 - fraction) * z_lower + fraction * z_upper
         digest = hashlib.sha256((digest_prefix + repr(fraction)).encode()).hexdigest()
         profile = GraphProfile(y, z, digest, source, verified=False)
-        return ProfileSample(profile, (z_upper - z_lower) / (upper_s - lower_s), lower_s, upper_s,
-                             profile_ids)
+        span = float(upper_s) - float(lower_s)
+        if span > 0.0:
+            slope = (z_upper - z_lower) / span
+        else:
+            # A station table may repeat a mileage (the Simpack turnout table does).
+            # Interpolating inside a zero-width interval is 0 / 0, and the NaN slope reaches
+            # the contact normal: measured `dz_ds = nan` from 52 m to 74 m on case_table.json,
+            # which made the static seat report four of eight wheels carrying load.
+            slope = np.zeros_like(z_upper)
+        return ProfileSample(profile, slope, lower_s, upper_s, profile_ids)
 
 
 def _station_derivative(current: Station, other: Station) -> np.ndarray:

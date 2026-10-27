@@ -178,6 +178,19 @@ class RunSettings:
     #: numbers bit for bit; turning it on for a curved case is what lets the wheelset yaw along the
     #: curve instead of being dragged flange-first (measured: 1.17 m of missing yaw over the
     #: footprint at R = 350 m).
+    #: Mileage at which to solve the static seat.  A turnout's diverging route is *entered*:
+    #: the vehicle stands on the straight lead (where both rails are level and parallel) and the
+    #: curve arrives with mileage.  Seating at the diverging mileage instead asks for a static
+    #: equilibrium on rails that are already rotated and offset, which has no solution -- measured
+    #: on case_diverging_R1100 at 80 km/h: 7 of 8 wheels loaded from 69 m, 4 of 8 from 30 m.
+    seat_x_start_m: float | None = None
+    seat_templates: tuple[str, ...] | None = None
+    """Rail template ids the static seat may touch; None means every rail.
+
+    A turnout carries the through and the diverging route at the same mileage, so a
+    vehicle placed once cannot seat on both: measured 4 of 8 wheels carrying load at
+    30 m until the seat is restricted to the through group.
+    """
     curve_geometry: bool = False
     # Place the vehicle on the sampled track's own centreline and tangent.  A turnout's diverging
     # route is curved through its station table, not through curve_radius_m, so without this the

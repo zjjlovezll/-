@@ -29,7 +29,7 @@ from velch.vehicle_solver import (
 )
 
 CASE = pathlib.Path(__file__).resolve().parents[1] / "examples" / "vehicle_v2" / "case.json"
-RADIUS = 350.0
+RADIUS = 1100.0
 X_START = 30.0
 SPEED = 22.2222
 

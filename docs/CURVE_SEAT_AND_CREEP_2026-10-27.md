@@ -799,3 +799,45 @@ with the track plane, which is not implemented; use curve_geometry = false ...
 水平差这条路是对的（cant=0 逐位不变、4/8 → roll 一进就换一种失败），但**抬升没有到达接触几何**这一点必须先修：`RaisedSeries` 需要像 `RolledSeries` 一样被 `_absolute_arrays` 的调用方看到（`rail_sample.profile.z_m`），而不是只在 `series.sample` 里生效一次。下一步先写一个最小探针：同一 placed 状态打印 `rail_sample.profile.z_m.max()` 与 `rail_z_m` 实参，确认是「抬升没进这个字段」还是「进了但接触的 y 窗口不重叠」。
 
 三处改动（`RaisedSeries`/`raise_rails`、`_cant_gravity` 重力分量、roll 入未知量）**已 `git checkout` 回退**，仓库保持上一轮的拒绝状态——半个接好的超高比明确拒绝更危险。
+
+## 25. 18 号道岔侧向：4/8 的真因是站表起点，修好后 7/7 通过（第 54–55 轮）
+
+### 25.1 逐轨量出来的真因
+
+八个接触斑只剩四个、且都报 `no geometry`，先前的假设（分支、帧、NaN 斜率）**全部证伪**。
+按每根轨**自己的轴位里程**查覆盖（轴偏移 10 / 7.5 / −7.5 / −10 m，`x_start = 30 m`）：
+
+| 轨 | 自己的里程 | `covers` |
+|---|---|---|
+| `axle1_left` / `axle1_right` | 40.00 m | **True** |
+| `axle2_left` / `axle2_right` | 37.50 m | **True** |
+| `axle3_left` / `axle3_right` | 22.50 m | **False** |
+| `axle4_left` / `axle4_right` | 20.00 m | **False** |
+
+站表从 **30 m** 起，后转向架的两根轴在表外——**四个车轮下面没有钢轨**。给座位预压 65 / 120 µm 也无效，
+因为缺的不是位移而是几何。这不是物理，是算例与几何对不上。
+
+### 25.2 两个修正
+
+1. **起点进表内**：只改 `x_start_m`，40 / 41 / 45 / 50 m 全部 **8/8 着地**，残差 1.5e-08…1.1e-07，
+   载荷 0.97–1.03 × 均分（59 662 N）。这是道岔第一次 8/8 静平衡，容忍度一个没动。
+2. **座位里程与运行起点解耦**：`run.seat_x_start_m`，座位在直股段（41–45 m）求解，运行从 69 m 起。
+
+### 25.3 验收实测（51 坐标：35 车辆 + 16 弹性轨，80 km/h，0.05 s）
+
+| 座位起点 | 运行起点 | 状态 | 门 |
+|---|---|---|---|
+| 45 m | 69 m | `numerically_checked` | **7/7，无失败** |
+| 41 m | 69 m | `numerically_checked` | **7/7，无失败** |
+| 45 m | 55 m | `numerically_checked` | **7/7，无失败** |
+
+**18 号道岔侧向（R = 1100 m，限速 80 km/h）第一次跑通并七门全绿。**
+这也解释了为什么直向算例一直 8/8：它们的站表覆盖全程。
+
+### 25.4 仍未闭合的两件
+
+- `_station_derivative` 在**混源站表**（左 1999 点 / 右 1001 点）的覆盖交界处仍会抛
+  `ProfileError: longitudinal profile derivative is undefined at the contact point`；
+  正解是选**下一个有覆盖的站位**并在错误里点名两个站位与来源。
+- 超高：几何路由已有轨面旋转（φ = 0.0717 rad），但「车架随坡面倾斜」没有做，
+  所以平衡超高仍坐不上（力路由的 8 × 59 652–59 708 N 是已验证的对照）。

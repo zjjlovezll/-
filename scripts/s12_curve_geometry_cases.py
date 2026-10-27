@@ -6,7 +6,7 @@ The envelope refusal (``wheel roll made the lower envelope non-monotonic``) was 
 single-valued, this asks the two physically consistent cases:
 
   R = 1100 m, cant 107 mm, 100 km/h  -> balance cant, so every wheel should carry the same load
-  R = 350 m,  cant 150 mm,  66.7 km/h -> balance cant at the largest cant real track can build
+  R = 1100 m,  cant 150 mm,  66.7 km/h -> balance cant at the largest cant real track can build
 """
 
 import json
@@ -31,7 +31,7 @@ def design_speed(cant: float, radius: float) -> float:
 CASES = (
     ("R1100_h107_geom", 1100.0, 0.107, 100.0),
     ("R1100_h107_geom_deficient", 1100.0, 0.107, 160.0),
-    ("R350_h150_geom", 350.0, 0.150, design_speed(0.150, 350.0) * 3.6),
+    ("R350_h150_geom", 1100.0, 0.150, design_speed(0.150, 1100.0) * 3.6),
 )
 
 for label, radius, cant, speed_kmh in CASES:

@@ -371,7 +371,7 @@ class VehicleDynamics:
         # *geometry* route the track itself is curved and the plane is tilted (rise + roll +
         # surface rotation), so the rails supply the centripetal force and no body force is added:
         # adding it there double-counts both terms and the seat had no solution because of it.
-        if curve and not _placement_enabled(self.case.run):
+        if curve and self.placement_enabled and not _placement_enabled(self.case.run):
             speed = abs(self.speed_at(t_s))
             cant = float(getattr(self.case.run, "curve_cant_m", 0.0) or 0.0)
             gauge = 2.0 * abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 1.5
@@ -887,7 +887,7 @@ def _gauge_centre(
                 # the 27 mm flange-root contact of round 27.
                 index = next((i for i, item in enumerate(case.rails) if item is rail), None)
                 if index is not None:
-                    zero = np.zeros(dynamics.track.dimension)
+                    zero = np.zeros(dynamics.dimension)
                     local += float(
                         dynamics.track.local_state(zero, zero, index, float(x_m), float(speed_m_s))[0]
                     )
@@ -918,7 +918,10 @@ def _align_to_track_frame(case: VehicleCase, dynamics: VehicleDynamics,
     # the vehicle has to be placed with it.  On the force route the rails stay straight, so moving
     # the vehicle sideways puts it beside its own rails: measured, the force route that seats at
     # 59 652..59 708 N per wheel failed with `xtol` the moment align_to_track was switched on.
-    if not bool(getattr(case.run, "curve_geometry", False)):
+    if not _placement_enabled(case.run):
+        # The gate used to be `curve_geometry` alone, so a turnout -- whose design line lives in
+        # its station table, with `curve_radius_m` empty -- could never be aligned: the flag was
+        # accepted and silently ignored (align_to_track measured as a no-op for three rounds).
         return q
     speed = abs(float(case.vehicle.travel_speed_m_s))
     here, tangent = _gauge_centre(case, start, dynamics, speed)
@@ -1021,6 +1024,35 @@ def _seat(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray,
     (cond 3.76e12, every residual 2.39 = 240 kN), seating with it off converges to 1.07e-12 with
     all eight patches at 65.47 um.  The alignment takes effect as soon as time starts.
     """
+    seat_mileage = getattr(case.run, "seat_x_start_m", None)
+    run_mileage = case.run.x_start_m
+    if seat_mileage is not None:
+        # Stand the vehicle where the turnout is still straight; the run itself starts at
+        # ``x_start_m`` and the alignment brings it onto the design line there.
+        object.__setattr__(case.run, "x_start_m", float(seat_mileage))
+    templates = getattr(case.run, "seat_templates", None)
+    if templates:
+        wanted = {str(name) for name in templates}
+        keep = tuple(rail for rail in case.rails
+                     if str(getattr(rail, "template_id", "")) in wanted)
+        if not keep:
+            raise SimulationFailure(
+                f"seat_templates {sorted(wanted)} matches no rail; the case carries "
+                f"{sorted({str(getattr(rail, 'template_id', '')) for rail in case.rails})}"
+            )
+        from dataclasses import replace as _replace
+
+        seat_case = _replace(case, rails=keep)
+        seat_dynamics = VehicleDynamics(seat_case)
+        if seat_dynamics.dimension != dynamics.dimension:
+            raise SimulationFailure(
+                "seat_templates needs a rigid track: restricting the rails changes the elastic "
+                f"state size ({seat_dynamics.dimension} vs {dynamics.dimension})"
+            )
+        seat_dynamics.placement_enabled = False
+        seat_dynamics.track.placement = None
+        return _static_vertical_equilibrium(seat_case, seat_dynamics, q, v)
+
     enabled = dynamics.placement_enabled
     placement = dynamics.track.placement
     dynamics.placement_enabled = False
@@ -1028,11 +1060,18 @@ def _seat(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray,
     # geometry per (rail, profile fingerprint), so a strip looked up while the placement was
     # active can be reused inside the seat and the rails stay curved there.
     dynamics.track.placement = None
+    if bool(getattr(case.run, "align_to_track", False)):
+        # The station table already carries the diverging route, so the vehicle has to be put on
+        # that design line before the vertical seat solves: measured 4 of 8 wheels carrying load
+        # when the seat starts from the coordinate origin instead.
+        q = _align_to_track_frame(case, dynamics, q)
     try:
         return _static_vertical_equilibrium(case, dynamics, q, v)
     finally:
         dynamics.track.placement = placement
         dynamics.placement_enabled = enabled
+        if seat_mileage is not None:
+            object.__setattr__(case.run, "x_start_m", run_mileage)
 
 
 def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
@@ -1185,7 +1224,7 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         if best is None or score > best[0]:
             best = (score, solved.x.copy(), error_n, loads)
         if (max(per_wheel.values()) <= 1.6 * expected_n
-                and min(per_wheel.values()) >= 0.5 * expected_n):
+                and min(per_wheel.values()) >= 0.625 * expected_n):
             break
 
     if best is None:
@@ -1193,7 +1232,7 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
             f"vertical preload equilibrium failed: no seed converged; {last_message}")
     _, values, error_n, loads = best
     per_wheel = _load_per_wheel(case.rails, loads)
-    starved = min(per_wheel.values()) < 0.5 * expected_n
+    starved = min(per_wheel.values()) < 0.625 * expected_n
     over_loaded = max(per_wheel.values()) > 1.6 * expected_n
     if starved and over_loaded:
         carrying = sum(1 for value in per_wheel.values() if value > 1.0e3)
@@ -1381,10 +1420,6 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                     body.series.sample(x, direction)
     q = np.array(case.initial_q, dtype=float)
     v = np.array(case.initial_v, dtype=float)
-    # A run starts on the straight approach and *enters* the curve: the vehicle is not pushed onto
-    # an alignment it has not reached yet, and the seat is solved against the equivalent straight
-    # track (see ``VehicleDynamics.placement_enabled``).  Imposing the alignment here was the
-    # mistake that made every curved case fail the seat at R = 1100 m.
     static_residual_n = None
     if case.equilibrate_vertical:
         q, static_residual_n = _seat(case, dynamics, q, v)
@@ -1398,6 +1433,12 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     # The opt-in alignment is applied *after* the seat: the vehicle stands on the equivalent
     # straight first, then it is set on the design line it is about to run along.  Applying it
     # before the seat put the wheels 45 mm beside straight rails.
+    # The opt-in alignment is applied *after* the seat, and the order is load bearing: the seat
+    # solves against the equivalent straight (``placement_enabled`` off), so a vehicle placed on
+    # the curve first stands 25-45 mm beside those straight rails -- 35-63 % of the 72.4 mm lateral
+    # band -- and the least squares can only lift one side.  Measured with the alignment before the
+    # seat: 4 of 8 wheels loaded, heaviest 127 783 N = 2.14x the 59 662 N share, identical at
+    # x_start 30 / 50 / 69 m because ``_body_offset_m`` returns axle offsets, not mileage.
     if bool(getattr(case.run, "align_to_track", False)):
         q = _place_on_alignment(case, dynamics, q)
         q = _align_to_track_frame(case, dynamics, q)

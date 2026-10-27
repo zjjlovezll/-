@@ -79,3 +79,27 @@ python -X utf8 .tmp\s12e_alignment_parts.py   # 第二、三节那张表
 python -X utf8 .tmp\s12d_z_only_seat.py       # 只解 z 时的 150 690 kN
 python -X utf8 -m pytest tests/test_curve_series.py tests/test_rail_roll.py tests/test_curve_seat.py -q --basetemp F:\velch_tmp\pytest
 ```
+
+## 七、`curve_geometry` 单独打开是一种构造上不可能对的配置（第 23 轮实测）
+
+第 20 轮把轨面横移改成默认关闭（`curve_rail_surface`），但**没有同时约束车辆侧**：于是
+`curve_geometry = true` 现在意味着「车按 s²/2R 横移、轨面仍是直的」。这一轮把三条配置的**第一次 `evaluate`**
+打出来（`F:\velch_tmp\round23_first_loads.py`，R=1100 m，100 km/h，x_start 60 m，内联 35 坐标）：
+
+| 配置 | 第一次求值的八斑载荷 | 判读 |
+|---|---|---|
+| 力路由 cant=0.107 | 全 0（车在直线上、未横移，静平衡尚未下沉） | 正常起点，随后坐成 59.65–59.71 kN |
+| 几何路由 cant=0.107 | 右轨 161 289 / 936 715 / 971 169 / 174 810 **kN**，左轨 0 | 1e6 kN 量级 = 车轮被放到轨面里 |
+| 几何路由 cant=0 | 左轨 54 764 / 70 379 / 134 822 / 152 453 **kN**，右轨 0 | 同上，只是换了侧 |
+
+**1e6 kN 不是物理载荷**，它的意思是「每次求值都在一个荒谬的穿透量上」。所以这三行不是在说“曲线难算”，
+而是在说**这个配置本身自相矛盾**：车被移开 45.5 mm，而它的轨面还停在原处。
+
+结论与下一步：
+
+1. `curve_geometry` 与 `curve_rail_surface` 必须**同进同出**——前者移车、后者移轨，任何一个单独打开都是把两者
+   放到不同框架里（第 2 节已经量到 78 786 / 150 690 kN，本节量到 1e6 kN，同一件事的不同幅度）。
+2. 下一轮的正确改法不是继续调收敛，而是**在加载时拒绝这种组合**（`curve_geometry` 且非 `curve_rail_surface`
+   且 `curve_radius_m` 非空 → 报错并给出这两条测量），再决定“同进同出”时两者如何共享同一个框架。
+3. 在那之前，任何“几何路由曲线跑不了”的结论都只对**这个自相矛盾的配置**成立，不能写成“曲线无法建模”。
+

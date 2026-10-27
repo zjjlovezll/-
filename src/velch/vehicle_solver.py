@@ -822,12 +822,21 @@ def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
         raise SimulationFailure("curve_radius_m must not be zero")
     topology = dynamics.topology
     placed = q.copy()
+    # The track plane is tilted by the cant, so the vehicle has to be tilted with it.  Without this
+    # roll the wheel stays level while the rail rotates: the wheel then meets the high rail on the
+    # flange root, where the profile slope is of order one, and the contact-slope guard stops the
+    # run at the first step (measured: R = 1100 m, 107 mm cant, x = 70 m).
+    cant = float(getattr(case.run, "curve_cant_m", 0.0) or 0.0)
+    half_gauge = abs(float(case.wheels[0].lateral_offset_m)) if case.wheels else 0.75
+    theta = 0.0 if half_gauge == 0.0 else math.asin(max(-1.0, min(1.0, cant / (2.0 * half_gauge))))
     for body in topology.bodies:
         s = _body_offset_m(case, topology, body, placed)
         if "y" in body.dof:
             placed[topology.require(body.id, "y")] += s * s / (2.0 * radius)
         if "yaw" in body.dof:
             placed[topology.require(body.id, "yaw")] += math.atan(s / radius)
+        if theta and "roll" in body.dof:
+            placed[topology.require(body.id, "roll")] += theta
     return placed
 
 

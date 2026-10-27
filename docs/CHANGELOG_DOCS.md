@@ -3399,6 +3399,14 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
 
+## 第 125 轮：放置逐轴一致（上轮猜测错），超高被做成台阶而非倾斜
+
+- 逐轴对比证明放置没错：轨道 dy 与车轮 dy 在 +10/+7.5/−7.5/−10 m 四个里程**完全相等**（45.455 / 25.568 mm），因为放置本来就是 `(rail_index, x_m)` 与按刚体各自里程算的。
+- 真正的错：`_curve_placement` 的 `dz = ±rise` 是**垂直平移**，轨型面没有转 θ；车体按 θ 滚之后与"平移未转"的轨面相遇，接触法向偏离竖直 → 斜率门在第一步退出（失败点全在右/外轨：x=67.5 / 70 / 52.5 m）。
+- 反号对照：θ 取负仍全败，说明不是符号问题而是表示问题；θ 保留正号（物理方向对），缺的是轨侧旋转。
+- 待做：`find_graph_contact/_strip_contact` 增加 `rail_roll_rad`，`local_state` 的 placement 从三元组扩到四元组 `(dy, dz, dz_dy, dy_ds)`。在此之前 `curve_geometry=true` 记为"表示不完备"，可交付口径用体力路线。
+- 验证：11 passed / 1 xfailed；冻结基线 UNCHANGED。
+
 ## 第 124 轮：滚转车轮下包络改单值，曲线失败点前移；R=350@100 km/h 的验收在物理上不成立
 
 - **修一个真正的闸门**：`contact.py` 的 `wheel_y = wheel_y_m + c·local_y − s·local_z` 要求严格递增，判据等价于 `|dz/dy| < 1/tan(roll)`；轮缘斜率几十，超高角 4.08° 时 `1/tan = 14`，于是**所有几何一致的曲线**（轨道+车辆都上曲线）在第一步抛 `wheel roll made the lower envelope non-monotonic in lateral y`。新增 `_single_valued_envelope()`：按 y 排序、同一 y 取最低点；`roll = 0` 时原样返回，故逐位不变（baseline UNCHANGED）。

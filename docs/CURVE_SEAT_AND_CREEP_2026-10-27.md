@@ -191,3 +191,57 @@ h_th = 1.5 v² / (g R) = 1.5 · 27.78² / (9.81 · 350) = 0.337 m
 pytest tests -q --basetemp F:\velch_tmp\pytest      905 passed, 1 skipped, 1 xfailed
 scripts/freeze_baseline.py --check                   VERDICT: UNCHANGED
 ```
+
+## 12. 放置已经一致，剩下的错在超高：模型把超高做成了"台阶"，不是"倾斜"
+
+### 12.1 先证明放置没错
+
+上一轮猜测"轨道按某里程搬、车轮按另一里程放，45 mm 不同步"。实测（R=1100，107 mm 超高，t=0，
+`geometry` 一致，`_place_on_alignment` 之后逐轴对比）：
+
+| 钢轨 | x_m | 轨道 dy | 轨道绝对 y | 车体 s | 车轮 dy |
+|---|---|---|---|---|---|
+| axle1_left | 70.00 | 45.455 mm | 45.455 mm | +10.0 | 45.455 mm |
+| axle2_left | 67.50 | 25.568 | 25.568 | +7.5 | 25.568 |
+| axle3_left | 52.50 | 25.568 | 25.568 | −7.5 | 25.568 |
+| axle4_left | 50.00 | 45.455 | 45.455 | −10.0 | 45.455 |
+
+**轨道与车轮逐轴完全一致**（放置是按 `(rail_index, x_m)` 与按刚体各自里程算的，本来就没错）。
+所以上一轮那个"不同步"的猜测是错的，记在这里以免重走。
+
+### 12.2 真正的错：`_curve_placement` 的 `dz` 是垂直平移
+
+```
+def placement(rail_index, x_m):
+    s = x_m - start
+    return s*s/(2R), (rise if outer else -rise), s/R
+                ↑ dy            ↑ dz：整根轨**上下平移** rise，而不是**转动** θ
+```
+
+外侧轨被抬高 `rise`、型面却仍是水平的；车轮（哪怕也跟着滚了 θ）与一个"被平移但没转"的轨面相遇，
+接触法向立刻偏离竖直，`|normal_y/normal_z| > 1.0` → 斜率门在第一步退出。
+
+- 实测（车体按超高角滚 θ=asin(cant/2b)=4.08°）：R=1100/107 mm/100 km/h 在 `axle2_right, x=67.5 m` 退出；
+  R=350/150 mm/66.7 km/h 在 `axle1_right, x=70 m`；欠超高 160 km/h 在 `axle3_right, x=52.5 m` —— **全在右（外）轨**。
+- 把 θ **反号**再跑：失败点变成 `axle3_right x=52.5` / `axle3_right x=52.5` / `axle1_right x=70` —— 仍然失败，
+  说明这**不是符号问题**，是"轨面没转"这个表示问题。所以 θ 保留 `+`（物理方向对：右轨抬高 → 车体同向滚），
+  缺的是另一半。
+
+### 12.3 缺的那一半说明白
+
+要几何一致，超高必须让**轨面也转**：
+
+* 轮侧已有 `wheel_roll_rad`（`contact.py` 的 `wheel_y/wheel_z` 变换里用 `c,s`）；
+* 轨侧没有对应参数——`rail_z = rail_z_m + rail_sample.profile.z_m` 只做平移。
+
+所以下一步是给 `find_graph_contact` / `find_strip_contact` 增加 `rail_roll_rad`（把轨型面绕线路中心转 −θ，
+并把法向一起转），由 `local_state` 从 `placement` 的三元组扩成四元组（`dy, dz, dz_dy, dy_ds`）传入。
+在此之前，`curve_geometry = true` 属于**已知表示不完备**，继续用体力路线（`curve_geometry = false` + 平衡超高）
+作为可交付口径，并在任何报告里标明。
+
+### 12.4 验证
+
+```
+pytest tests/test_curve_seat.py tests/test_speed_profile_case.py -q    11 passed, 1 xfailed
+scripts/freeze_baseline.py --check                                     VERDICT: UNCHANGED
+```

@@ -334,8 +334,11 @@ class VehicleDynamics:
         # the rotation alone could not seat at all (R = 1100 m, 107 mm cant, every seed).
         gauge = 2.0 * abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 1.5
         theta = math.asin(max(-1.0, min(1.0, cant / gauge))) if gauge else 0.0
+        # Both halves of a cant must be published or neither is: the outer rail stands ``b sin(phi)``
+        # higher *and* the section is rolled by ``phi`` (``roll_rails`` at load).  With the rise pinned
+        # to zero the wheel met a rotated surface at the wrong height, which measured as a 103 mm
+        # peak-to-peak gap in round 37.
         rise = abs(0.5 * gauge * math.sin(theta))
-        rise = 0.0
         rails = tuple(self.case.rails)
 
         def placement(rail_index: int, x_m: float) -> tuple[float, float, float]:

@@ -272,14 +272,15 @@ def test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it(
 
 @pytest.mark.corpus
 def test_cant_on_the_geometry_route_is_refused_because_of_the_wheel_transform(tmp_path):
-    """Rolling one of the two surfaces cannot publish cant, so the route now refuses it.
+    """All three pieces of a cant now exist, the seat succeeds, and the run still sinks 26.4 mm.
 
-    Measured with the rail surface rolled: the contact lands on the rail shoulder, ``lever_y``
-    -714.322 mm against a rail band of -785.4..-713.2 mm, because rotating a wheel by phi carries its
-    tread contact point ``R sin(phi) = 30.8 mm`` inboard while the rail crown moves 5 mm at most.  A
-    balanced curve needs the vehicle frame tilted with the track plane, which this route does not do,
-    so the refusal names the measurement instead of publishing a shoulder contact as a tread one.
-    The force route (``curve_geometry = false``) seats the same case.
+    Measured at R = 1100 m, cant 107 mm, 100 km/h: the outer rail rises ``b sin(phi)``, ``roll_rails``
+    turns the section, ``_place_on_alignment`` tilts the frame, and the static equilibrium seats with
+    residual 4.2e-08 N and eight patches at 59.7 kN each.  The 0.01 s run that follows fails
+    ``penetration_within_case_limit`` with a maximum penetration of 26.4 mm -- flange depth -- so the
+    canted wheel/rail transform is still wrong somewhere.  The refusal therefore stays, now naming
+    that measurement instead of "not implemented".  The force route seats the same case with seven
+    gates and eight wheels at 59 652-59 708 N.
     """
 
     from velch import data_root
@@ -295,8 +296,9 @@ def test_cant_on_the_geometry_route_is_refused_because_of_the_wheel_transform(tm
     with pytest.raises(ValueError) as error:
         load_vehicle_case(path)
     message = str(error.value)
-    assert "R sin(phi) = 30.8 mm" in message
-    assert "vehicle frame tilted" in message
+    assert "sinks 26.4 mm" in message
+    assert "flange depth" in message
+    assert "59 652-59 708 N" in message
 
 
 def test_the_seat_refuses_to_run_against_curved_rails(tmp_path):

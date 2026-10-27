@@ -4314,3 +4314,17 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
 - 验证：`tests/test_curve_seat.py` + `tests/test_curve_alignment.py` **14 passed / 1 xfailed**；
   `scripts/freeze_baseline.py --check` → **UNCHANGED**（`straight_rigid 06928c9db944796d`、
   `straight_flexible ab81290f5924c3a5`）。
+
+## 第 180 轮：超高的三件已在位，静平衡能坐住，但运行会陷 26.4 mm——因此仍然拒绝，数字换了
+
+- 上一轮我怀疑「外轨抬高」那半又被钉成 0（`rise = abs(0.5·gauge·sin(theta))` 后面紧跟 `rise = 0.0`，
+  第 38 轮还原时的残留）。恢复之后，几何路由的超高三件齐了：**外轨抬高 `b sinφ`**、
+  **轨面绕自身轴滚 φ**（`roll_rails`）、**车架随坡面倾 φ**（`_place_on_alignment`）。
+- 实测（R=1100 m、cant=0.107 m、100 km/h、0.01 s、`curve_geometry + align_to_track`）：
+  - **静平衡第一次坐住**：残差 **4.181e-08 N**，八个接触各 **59.7 kN**（与 cant=0 的 59.7 kN 一致）；
+  - 但 0.01 s 运行报 `numerical_gate_failed`，唯一失败门 `penetration_within_case_limit`，
+    **最大侵入 26.4 mm**——正好是轮缘深度，说明加超高的轮轨变换仍把车轮送到轨距面上。
+- 因此 `curve_cant_m` 在几何路由**继续拒绝**，但拒绝理由从"未实现"换成了量到的
+  **26.4 mm（= 轮缘深度）**，并保留"力路由可用（七门、八轮 59 652–59 708 N）"作为正路。
+- 这条把 `docs/CURVE_CANT_DECISION_2026-10-27.md` 的结论从"没试"推进到"试了、坐住、跑不住"，
+  下一个要查的是加超高后 `penetration_m` 在**哪一帧哪一轨**变成 26.4 mm。

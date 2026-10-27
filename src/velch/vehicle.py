@@ -514,13 +514,21 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
         gauge_m = 2.0 * abs(float(wheels[0].lateral_offset_m))
         if gauge_m <= 0.0:
             raise ValueError("curve_cant_m needs a vehicle with a non-zero lateral wheel offset")
-        raise ValueError(
-            "curve_cant_m on the geometry route is not supported yet: rolling a rail under a rolling "
-            "wheel moves the contact point R sin(phi) = 30.8 mm inboard of the crown (measured at "
-            f"phi = {float(cant_m) / gauge_m:+.5f} rad on a {gauge_m:.3f} m gauge). A balanced curve "
-            "needs the vehicle frame tilted with the track plane, which is not implemented; use "
-            "curve_geometry = false, where cant enters as a lateral force, or set curve_cant_m = 0."
-        )
+        # All three pieces of a cant now exist (outer rail rise, surface roll via roll_rails, vehicle
+        # frame tilt via _place_on_alignment) and the static equilibrium *does* seat: eight patches at
+        # 59.7 kN each, residual 4.2e-08 N (measured at R = 1100 m, cant 107 mm, 100 km/h).  The run
+        # that follows sinks 26.4 mm -- flange depth -- so the wheel is still riding the gauge face
+        # somewhere in the canted contact, and a shoulder contact published as a tread contact is
+        # exactly what this route must not do.  Refused until that 26.4 mm is understood.
+        if float(cant_m) != 0.0:
+            theta = float(cant_m) / gauge_m
+            raise ValueError(
+                "curve_cant_m on the geometry route is not supported yet: the seat succeeds (eight "
+                f"patches at 59.7 kN) but the run sinks 26.4 mm at phi = {theta:+.5f} rad, which is "
+                "flange depth -- the canted wheel/rail transform is still wrong. Use "
+                "curve_geometry = false, where cant enters as a lateral force (seven gates, eight "
+                "wheels 59 652-59 708 N at balance cant), or set curve_cant_m = 0."
+            )
     radius = run_block.get("curve_radius_m")
     # OFF BY DEFAULT, because it is measurably wrong today.  Shifting the sampled rail surface by
     # s^2/(2R) while the vehicle keeps its own lateral frame gives 78 786 kN on the left rail with

@@ -3487,3 +3487,10 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 实测：断面已转但几何路线仍坐不住（每个种子都失败），力路线同算例 `numerically_checked`；原因是平衡超高靠重力在倾斜平面内的分量抵消 `m v²/R`，本路线重力固定在世界 z，车轮需自扛约 34 kN。
 - 测试：新增 `tests/test_rail_roll.py`（5 项）；三个曲线测试文件合跑 **20 passed, 1 xfailed**。
 - 复算：见 `docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §15。
+
+## 第 129 轮：看不见的谐波留在先验，而不是被钉成"确定为零"
+
+- `src/velch/inverse/harmonics.py`：`invert_corrugation` 的 `floor_gain` 默认改为"最强阶增益的 2 %"（`None` 触发），低于地板的阶不进方程、留先验并列入 `silent_orders`；防止 `sigma = noise/gain` 把噪声变成"确定为零"。
+- 测试：`tests/test_harmonics.py` 新增 `test_a_gain_nobody_can_see_stays_at_the_prior_by_default`（11 passed）。
+- 复核：`scripts/s9l_differential_bands.py` 的 "‑A 静默通过" 已在第 114 轮改为两半都必须 `numerically_checked`。
+- 文档：`docs/HARMONIC_LADDER_INVERSION_2026-10-26.md` 新增 §7。

@@ -247,3 +247,19 @@ def test_the_default_floor_keeps_a_negligible_gain_out_of_the_operator() -> None
     assert inverted.depth().coefficients[1] == pytest.approx(30e-6, rel=1e-6)
     assert inverted.depth().coefficients[2] == pytest.approx(0.0 + 0.0j)
     assert inverted.amplitude_sigma()[2] == pytest.approx(80e-6 * math.sqrt(2.0), rel=0.05)
+
+
+def test_a_gain_nobody_can_see_stays_at_the_prior_by_default() -> None:
+    """Two percent of the strongest gain is the default floor: silence is not a measurement."""
+
+    model = HarmonicModel(gains={1: complex(10.0, 0.0), 2: complex(0.05, 0.0)},
+                          reference_depth_m=30e-6)
+    measured = {1: complex(10.0 * 30e-6, 0.0), 2: complex(0.05 * 30e-6, 0.0)}
+    inversion = invert_corrugation(model, measured, measurement_sigma=0.01,
+                                   prior_sigma=80e-6, fundamental_hz=444.4,
+                                   period_m=0.05)
+    # Order 1 is measured; order 2 sits under the default floor and must keep the prior width.
+    first, second = inversion.orders
+    assert first == 1 and second == 2
+    assert inversion.posterior.sigma[2] == pytest.approx(80e-6, rel=1e-6)
+    assert inversion.posterior.mean[2] == pytest.approx(0.0, abs=1e-9)

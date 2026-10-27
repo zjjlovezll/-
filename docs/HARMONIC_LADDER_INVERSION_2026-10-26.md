@@ -85,3 +85,25 @@ python -X utf8 scripts/s9ae_harmonic_redundant.py     # 四通道冗余（16 条
 - 接触脱离限幅：60 µm 峰峰对 65.8 µm 静侵入会每转离地一次（15/30/60 µm 的增益离散 146 %）。
 - 全部来自自建仿真，没有实测标定；`physics_validation_status` 仍是
   `unvalidated_against_measurement_or_Simpack`。
+
+## 7. 默认地板：看不见的谐波不能变成"确定为零"（第 129 轮）
+
+`invert_corrugation` 原来的 `floor_gain` 默认值是 `0.0`，含义是"任何非零增益都当作测量用"。问题在于：若某阶增益只有 1e-4，而响应噪声是 1e-2，那么 `sigma = noise/gain = 100`，反演会把这一阶钉在**深度 0、σ 极小**——相当于用一条什么都测不到的数据宣布"这里确定没有深度"。
+
+现在默认地板是**最强阶增益的 2 %**：
+
+```python
+if floor_gain is None:
+    strongest = max((abs(value) for value in model.gains.values()), default=0.0)
+    floor_gain = 0.02 * strongest
+```
+
+低于地板的阶不进方程，留在先验（均值 0、σ = 先验 σ），并在 `silent_orders` 里点名。实测（`tests/test_harmonics.py::test_a_gain_nobody_can_see_stays_at_the_prior_by_default`）：增益 10 与 0.05（比地板 0.2 小），第 2 阶的 σ 保持先验 8.0e-5、均值 < 1e-9，而第 1 阶被正常估计。
+
+**同时确认 `scripts/s9l_differential_bands.py` 的"−A 静默通过"已在第 114 轮修掉**：现在 `for tag, status in zip(("plus", "minus"), statuses)` 要求两半都是 `numerically_checked`，否则显式失败并说明"返回 statuses[0] 正是失败的 −A 跑过去的方式"。
+
+复算：
+
+```
+python -X utf8 -m pytest tests/test_harmonics.py -q
+```

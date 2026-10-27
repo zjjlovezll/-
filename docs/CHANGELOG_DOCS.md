@@ -3938,3 +3938,9 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 新探测 `scripts/s12j_cant_double_count.py`（固定基准，打印每轨 `rail_z_m`/`wheel_z_m`/侵入/力）在 R=1100 m、100 km/h、几何路由量到 cant **+0.107 → 右轨 +104.008 mm**（≈2×53.5）、cant **−0.107 → −0.285 mm**（≈0），即超高被加两次、负号相消。
 - 两处来源：`src/velch/vehicle_solver.py:318` 的 placement `rise = abs(...)`（符号被 `abs()` 抹掉，永远抬右轨）与 `src/velch/irregularity.py:472-477` 的轨面旋转（符号跟随 cant）。
 - 本轮不改这条路径（探测时临时打开的 `rise` 已 `git checkout` 复原），cant 在几何路由仍标不可引用；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §152 记录修法 A/B 与验收读数。
+
+## 第 153 轮：超高只加一次了，车仍坐在一侧
+
+- 按 §152 的两种修法各试一次：只留轨面旋转 → 右轨 `rail_z` **+49.976 mm**、侵入 24.953 mm；只留带符号 level difference → **+50.645 mm**、侵入 26.095 mm。两者都把 §152 的 +104.008 mm 消掉，证明重复是唯一被消掉的东西。
+- 两种修法下车的状态相同：**4/8 轮着地**、左轨四根无接触、右轨各压 25–26 mm。结论：左右抬升与车轮 roll 不是同一约定（一侧相加一侧相减），需要同时打印两轨 `rail_z_m` 与四轮 `wheel_z_m` 才能定符号。
+- 两处改动均未提交（`git checkout` 复原）；新增探测 `scripts/s12k_cant_single_owner.py`；cant 在几何路由仍不可引用。

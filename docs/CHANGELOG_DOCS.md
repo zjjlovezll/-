@@ -3884,3 +3884,26 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 下一轮的第一件事因此明确成一条可测的命题：**打印单个车轮接点在 +roll 下的 z 与同里程轨面的 z**，
 两者必须在 1e-3 m 内相等；做不到就说明 rise 没有进 `geometry`，而不是再换符号。
 曲线能力边界不变：**cant=0 的几何曲线可引用**（R=350/80 km/h 带内、其余 7/7），**超高曲线不可引用**。
+
+## 第 150 轮：抬高与侧滚**都**进得了接触点，剩下的只可能是 `_absolute_arrays` 内部的一个符号
+
+第 149 轮的推断（「rise 没进接触点」）也被代码否掉了。两处调用链逐一核对：
+
+- `src/velch/vehicle_solver.py:626-627`：`rail_y, rail_z, rail_vy, rail_vz = self.track.local_state(q, v, rail_index, x, speed)`，
+  `src/velch/vehicle_solver.py:651` 把 `rail_z_m=rail_z` 交给接触搜索；`src/velch/contact_search.py:203` 再把它与断面坐标相加
+  （`rail_z = rail_z_m + rail_sample.profile.z_m`）。**所以 ±rise 确实进了轨面高度**。
+- `src/velch/vehicle_solver.py:648-650`：`wheel_z_m = cfg.wheel_center_height_m + q[z]`、`wheel_roll_rad = q[roll]`、
+  `wheel_lateral_offset_m = ±0.7465`。**所以车体侧滚也确实进了接触点**。
+
+两条都在，因此第 149 轮那三个「读数一模一样」的配置需要重新解释：它们不是『rise 丢了』，而是
+**`_absolute_arrays` 里车轮那一侧的 roll 旋转方向与轨面抬高的方向约定相反**——两种 `outer` 选择各自把
+一侧配成「+53.5 对 −53.5」（107 mm 错位），于是两种配置给出**同量级、同形态**的 `4 of 8 / 124.8 kN`，
+看起来像「没变化」。这解释了为什么换符号不改变读数。
+
+下一轮的唯一实验因此非常具体：在 `src/velch/contact_search.py::_absolute_arrays` 前后各打印一次
+`wheel_y/wheel_z/rail_y/rail_z`（同一 y 处），量出车轮接点与轨面在 +roll 下的**高度差**；
+- 若差 ≈ 107 mm → 旋转方向约定相反，改 `_absolute_arrays` 里 roll 的符号（并同时核对直向是否逐位不变）；
+- 若差 ≈ 0 → 说明错位来自别处，回到 `_gauge_centre`/placement 再查。
+
+本轮没有改代码（两处都已确认在位），只记录这两条路径与修正后的推断；曲线边界不变：
+**cant=0 可引用**（R=350/80 km/h 带内、其余 7/7），**超高不可引用**。

@@ -289,3 +289,70 @@ def test_cant_on_the_geometry_route_does_not_yet_seat(tmp_path):
     with pytest.raises(SimulationFailure) as error:
         simulate_vehicle(case)
     assert "vertical preload equilibrium failed" in str(error.value)
+
+
+@pytest.mark.corpus
+def test_a_350_metre_curve_at_its_eighty_limit_sits_within_the_band(tmp_path):
+    """R = 350 m, no cant, 80 km/h: every wheel inside [0.5, 1.6] x the even share.
+
+    This is the acceptance point the architecture review asked for, at the speed the diverging
+    route is actually limited to rather than at 100 km/h.  The measured shares were
+    57.3-75.6 kN against an even share of 59.66 kN, i.e. 0.96-1.27x, and the run is quotable
+    (seven of seven gates, maximum penetration 74.9 um).
+    """
+
+    path = _case(tmp_path, "r350_80", radius=350.0, cant=0.0, speed_kmh=80.0, geometry=True)
+    result = simulate_vehicle(load_vehicle_case(path))
+    summary = getattr(result, "summary", None) or {}
+    gates = summary.get("gates", {})
+    assert gates and all(gates.values()), {name: value for name, value in gates.items() if not value}
+    peaks = summary.get("peak_normal_force_n", {})
+    even = 59.66e3
+    shares = sorted(value / even for value in peaks.values())
+    assert 0.5 <= shares[0] and shares[-1] <= 1.6, (shares[0], shares[-1])
+
+
+@pytest.mark.corpus
+def test_an_uncompensated_350_metre_curve_runs_but_transfers_load(tmp_path):
+    """R = 350 m at 100 km/h has no cant it could carry, so the outer wheel really does overload.
+
+    The balance cant for this radius and speed is 0.337 m, above both the model's 0.20 m
+    plausibility guard and the largest cant in service, so the honest statement is not "it fails"
+    but "it runs, and the load transfer is the physics": measured leading-outer 166.9 kN and
+    trailing-outer 104.4 kN against an even share of 59.66 kN (2.80x and 1.75x), seven of seven
+    gates true, maximum penetration 177.7 um.
+    """
+
+    path = _case(tmp_path, "r350_100", radius=350.0, cant=0.0, speed_kmh=100.0, geometry=True)
+    result = simulate_vehicle(load_vehicle_case(path))
+    summary = getattr(result, "summary", None) or {}
+    gates = summary.get("gates", {})
+    assert gates and all(gates.values()), {name: value for name, value in gates.items() if not value}
+    peaks = summary.get("peak_normal_force_n", {})
+    worst = max(peaks.values()) / 59.66e3
+    assert worst > 2.0, worst
+
+
+@pytest.mark.corpus
+def test_the_force_route_carries_no_load_transfer_and_must_not_be_quoted_as_a_curve(tmp_path):
+    """A curve pushed as a body force transfers almost nothing: measured 1.0039 x on R = 350 m.
+
+    With the lateral force applied to every body but the wheels still inside the clearance band,
+    the rail never supplies a reaction, so the vertical loads stay even and the run still reports
+    seven of seven gates -- the action-reaction gate counts the applied force by construction.
+    Ten milliseconds is far too short for the flange to be reached (2.2 m/s^2 gives 0.11 mm).
+    The geometry route, which places the vehicle on the arc, gives 2.80 x on the same case; that
+    is the route a curve result may be quoted from.
+    """
+
+    force_route = _case(tmp_path, "r350_force", radius=350.0, cant=0.0, speed_kmh=100.0)
+    geometry = _case(tmp_path, "r350_geom", radius=350.0, cant=0.0, speed_kmh=100.0, geometry=True)
+
+    force_summary = getattr(simulate_vehicle(load_vehicle_case(force_route)), "summary", None) or {}
+    geometry_summary = getattr(simulate_vehicle(load_vehicle_case(geometry)), "summary", None) or {}
+
+    even = 59.66e3
+    force_worst = max(force_summary["peak_normal_force_n"].values()) / even
+    geometry_worst = max(geometry_summary["peak_normal_force_n"].values()) / even
+    assert force_worst < 1.05, force_worst
+    assert geometry_worst > 2.0, geometry_worst

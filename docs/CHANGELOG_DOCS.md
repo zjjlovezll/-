@@ -3784,3 +3784,38 @@ R1100 几何路由，不对齐        与“对齐”逐位相同
 `test_a_geometric_curve_runs_and_passes_every_gate`，断言**全门通过**，并在 docstring 里写清这两轮各自修了什么。
 
 直线/柔轨冻结基线不受影响（只有在 `curve_radius_m` 且 placement 开启时才走新分支）。
+
+## 第 147 轮：R=350 不是「过不去」，是「没有超高可给」——两条读数各归其位
+
+第 32 轮之后几何路由首次 quotable，于是把架构审查要求的验收点真跑了一遍（0.01 s，x_start 60 m，35 坐标）：
+
+| 工况 | 所需横向力 / 接触角 | 状态 | 八轮载荷 | 最大侵入 |
+|---|---|---|---|---|
+| R=350，cant 0，**80 km/h** | 68.6 kN / 8.18° | **numerically_checked 7/7** | 57.3–75.6 kN（0.96–1.27× 均分） | 74.9 µm |
+| R=350，cant 0，100 km/h | 107.3 kN / 12.67° | **numerically_checked 7/7** | 56.8–166.9 kN（0.95–2.80×） | 177.7 µm |
+| R=1100，cant 0，100 km/h | 34.1 kN / 4.09° | **numerically_checked 7/7** | 58.7–63.5 kN（0.98–1.06×） | 69.7 µm |
+
+三条读数，一条结论：**`graph slope limit` 不再被触发**，R=350 的失败不再是几何问题。80 km/h 那行**完全满足验收判据**
+（8/8 着地、每轮 ∈[0.5,1.6]×均分）；100 km/h 那行载荷到 **2.80×**，而它的平衡超高是
+`h_th = 1.5·27.78²/(9.81·350) = 0.337 m`——**超过模型的 0.20 m 合理上限，也超过实际线路最大超高**。
+所以正确表述不是「R=350 过不去」，而是**「R=350 在 100 km/h 下没有超高可给，载荷转移就是它应有的物理」**：
+前外轮 166.9 kN、后外轮 104.4 kN，七门全真、侵入 177.7 µm（限值 500 µm 以内）。
+
+两条读数都写成测试（`test_a_350_metre_curve_at_its_eighty_limit_sits_within_the_band`、
+`test_an_uncompensated_350_metre_curve_runs_but_transfers_load`），这样以后谁改坏了载荷分配或谁把斜率守卫调回去，
+测试立刻红。
+
+### 33d 顺带查明：力路由的曲线**不做载荷转移**，不能当作曲线结果引用
+
+写测试时把 `geometry` 默认值（`False`）用错了，于是同一 R=350/100 km/h 走了力路由，读数 **1.0039×**（几乎均分），
+而几何路由是 **2.80×**。这不是笔误，是物理：
+
+- 力路由把 `m v²/R`（107.3 kN）作为体力加到每个含 y 的刚体上，但车仍在**游间**里，钢轨没有提供反力；
+- 0.01 s 内横向加速度 2.2 m/s² 只走 **0.11 mm**，够不到轮缘，所以垂直载荷根本不转移；
+- 而 `translational_action_reaction` 把施加的力按构造记入账本，于是**七门照样全真**。
+
+结论：**曲线结果只能引几何路由**；力路由的 7/7 不能当曲线证据（第 6 轮那次「力路由八轮均分 59 652–59 708 N」
+正是同一个现象）。两条读数都钉成测试：
+`test_a_350_metre_curve_at_its_eighty_limit_sits_within_the_band`（0.96–1.27×）、
+`test_an_uncompensated_350_metre_curve_runs_but_transfers_load`（2.80×）、
+`test_the_force_route_carries_no_load_transfer_and_must_not_be_quoted_as_a_curve`（力路由 <1.05× 而几何路由 >2.0×）。

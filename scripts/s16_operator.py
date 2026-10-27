@@ -36,7 +36,8 @@ def project(time_s: np.ndarray, signal: np.ndarray, frequency_hz: float) -> floa
 
 
 def model_gain(work: Path, *, duration_s: float, speed_kmh: float | None = None,
-               patch_start_m: float | None = None, periods: float | None = None) -> dict:
+               patch_start_m: float | None = None, periods: float | None = None,
+               crossing_window: bool = False) -> dict:
     """Gain of the axle-box channel for a corrugation at ``WAVELENGTH_M`` and ``DEPTH_M``.
 
     The three overrides exist so a speed table can be built: with the defaults this is exactly the
@@ -92,7 +93,23 @@ def model_gain(work: Path, *, duration_s: float, speed_kmh: float | None = None,
         raise SystemExit(f"no axle-box vertical channel in {names[:6]}...")
     accelerations = np.asarray(result.accelerations)[:, column]
     time_s = np.asarray(result.times_s)
-    amplitude = project(time_s, accelerations, frequency)
+    # Project over the interval the leading axle spends on the patch, not over the whole record.
+    # Without this the answer depends on how much dead record surrounds the patch: the same speed
+    # read 2.755e4 (790 periods, axle already inside, whole record) and 2.115e4 (240 periods, axle at
+    # the edge) -- a 23 % difference that was pure bookkeeping.
+    if crossing_window:
+        enter = (start_m - 30.0 - 10.0) / speed
+        leave = (start_m + period_count * WAVELENGTH_M - 30.0 - 10.0) / speed
+        inside = (time_s >= enter) & (time_s <= leave)
+        if np.count_nonzero(inside) < 64:
+            raise SystemExit(f"crossing window {enter:.3f}-{leave:.3f} s holds "
+                             f"{np.count_nonzero(inside)} samples; lengthen duration_s")
+        window_time = time_s[inside]
+        window_values = accelerations[inside]
+    else:
+        window_time = time_s
+        window_values = accelerations
+    amplitude = project(window_time, window_values, frequency)
     return {
         "speed_kmh": speed_value,
         "wavelength_mm": WAVELENGTH_M * 1000.0,
@@ -102,6 +119,13 @@ def model_gain(work: Path, *, duration_s: float, speed_kmh: float | None = None,
         "gain_per_m": amplitude / DEPTH_M,
         "status": result.summary.get("result_status"),
         "duration_s": duration_s,
+        "design": {
+            "periods": period_count,
+            "patch_start_m": start_m,
+            "patch_length_m": period_count * WAVELENGTH_M,
+            "crossing_window": bool(crossing_window),
+            "leading_axle_offset_m": 10.0,
+        },
     }
 
 

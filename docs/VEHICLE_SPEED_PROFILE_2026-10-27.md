@@ -162,3 +162,23 @@ force[spin] += mass[spin] * (target - v[spin]) / SPIN_TIME_CONSTANT_S   # 2 ms
 ### 7.5 还没做的（属于第 3 项剩下的部分）
 
 里程闭合 ≤0.2 %（`x_at` 与 ∫v 的一致性）目前只有单元级断言，还没有在「多段 + 长时程」算例上量；第 5 轮补上，同时把三段剖面（含一段降速）跑成一条归档基线。
+
+## 8. 里程闭合（第 5 轮）：三段剖面，闭合 0.000，转速门过
+
+目标第 3 项要的「里程闭合 ≤0.2 %」这一轮量了。测量点是**写出来的 `history.csv`**，不是产生它的函数——否则测的是同一个错误的两面。
+
+`scripts/s11_mileage_closure.py`：80 / 60 / 40 km/h 各一段（20 / 15 / 15 ms），`duration 0.05 s`，101 帧：
+
+| 量 | 值 |
+|---|---|
+| `result_status` / 门 | `numerically_checked`，含 `spin_tracking` |
+| 腿末相对滑移 | **1.02e-4** |
+| 调度说走过 | 0.861111111 m |
+| 里程列末帧 − `x_start` | 0.861111111 m |
+| **闭合** | **0.000e+00**（阈值 0.2 %） |
+
+顺带记一个口径：用 101 帧做梯形积分只得 0.85833 m（−0.32 %），因为帧不落在腿上，跨过腿边界的那一格被平均掉了。**参考值只能取解析距离**（`schedule.distance_m` / `x_at`），梯形积分只能当交叉检查，不能当基准。
+
+还有一处必须补：`save_vehicle_result` 里写里程列的那行原先是 `x_start + travel_speed_m_s * t`，多段剖面下会写出一条不属于该几何的轨迹。现在走 `travel_mileage_m(case, t)`，与力路径同一个函数；常速路径仍逐位相同（方向 ±1.0）。
+
+测试：`tests/test_mileage_closure.py` 1 项——两段 80/40 km/h，`np.array_equal` 比较每帧里程与 `travel_mileage_m`，末帧与解析距离差 <1e-12，且 `spin_tracking` 为真。

@@ -3397,3 +3397,10 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - `simulate_vehicle` 不再拒绝多段剖面（拒绝的理由已消失），`SpeedSchedule.leg_end_times_s` 提供腿边界。
 - 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
 - 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。
+
+## 第 119 轮：里程列改走调度，三段剖面闭合 0.000
+
+- `save_vehicle_result` 写在 `history.csv` 里的里程列原先是 `x_start + travel_speed_m_s * t`，多段剖面下会写出一条不属于该几何的轨迹；现改为 `travel_mileage_m(case, t)`（与力路径同一个函数），常速仍逐位相同。
+- 新脚本 `scripts/s11_mileage_closure.py`：80/60/40 km/h 三段、0.05 s、101 帧 → 里程列与解析距离**闭合 0.000e+00**（阈值 0.2 %），`spin_tracking` 相对滑移 **1.02e-4**，`numerically_checked`。
+- 口径记录：梯形积分在 101 帧上只得 0.85833 m（−0.32 %），因为帧不落在腿上；参考值只能取解析距离。
+- 测试 `tests/test_mileage_closure.py` 1 项。

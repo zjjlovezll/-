@@ -955,6 +955,23 @@ def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.nd
     return settled
 
 
+def travel_mileage_m(case: VehicleCase, t_s: float) -> float:
+    """Mileage of the vehicle reference point at ``t_s``, for anything written to disk.
+
+    The history file's mileage columns and the force path must agree: if the solver samples the
+    steel with ``x_at`` and the file reports ``v*t`` (the case's single speed), then a run with a
+    varying speed produces a trail that does not belong to the geometry that was used.  A
+    constant profile stays bit-identical, because the direction is ±1.0 and the product is the
+    same one.
+    """
+
+    schedule = getattr(case, "speed_schedule", None)
+    if schedule is None:
+        return case.run.x_start_m + case.vehicle.travel_speed_m_s * t_s
+    direction = 1.0 if case.vehicle.travel_speed_m_s >= 0.0 else -1.0
+    return case.run.x_start_m + direction * schedule.x_at(t_s)
+
+
 def simulate_vehicle(case: VehicleCase, contact_workers: int = 1) -> VehicleResult:
     # A varying speed is allowed now that the spin tracks it (``VehicleDynamics.spin_control``
     # is switched on automatically for a non-constant schedule) and the ``spin_tracking`` gate
@@ -1404,8 +1421,9 @@ def save_vehicle_result(case: VehicleCase, result: VehicleResult,
         writer.writerow(columns)
         for index, (t, q, v, contacts) in enumerate(
                 zip(result.times_s, result.positions, result.velocities, result.contacts)):
-            row = [float(t), *[case.run.x_start_m + case.vehicle.travel_speed_m_s * float(t) + offset
-                               for offset in case.vehicle.axle_offsets_m], *map(float, q), *map(float, v)]
+            reference = travel_mileage_m(case, float(t))
+            row = [float(t), *[reference + offset for offset in case.vehicle.axle_offsets_m],
+                   *map(float, q), *map(float, v)]
             if result.accelerations is not None:
                 row += map(float, result.accelerations[index])
             for rail in case.rails:

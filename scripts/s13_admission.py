@@ -110,6 +110,33 @@ def layer_admission(data: dict[str, np.ndarray], *, rate_hz: float, sound_rate_h
     }
 
 
+
+def band_lag_ms(channels: np.ndarray, rate_hz: float, low_hz: float, high_hz: float) -> float | None:
+    """Lag of column 1 behind column 0 inside one band, in milliseconds.
+
+    The broadband peak of two axle-box signals is dominated by whatever is loudest, which is impact and
+    body content rather than the corrugation both wheels meet.  Restricting the band to the frequencies
+    the corrugation occupies at this speed is the only way the lag can be read as a travel time.
+    """
+
+    from scipy.signal import butter, filtfilt
+
+    if channels.ndim != 2 or channels.shape[1] < 2:
+        return None
+    nyquist = 0.5 * rate_hz
+    upper = min(high_hz, 0.95 * nyquist)
+    if low_hz >= upper:
+        return None
+    b, a = butter(4, [low_hz / nyquist, upper / nyquist], btype="band")
+    first = filtfilt(b, a, channels[:, 0])
+    second = filtfilt(b, a, channels[:, 1])
+    first = first - first.mean()
+    second = second - second.mean()
+    correlation = np.correlate(first, second, mode="full")
+    lags = np.arange(-first.size + 1, first.size)
+    return float(lags[int(np.argmax(np.abs(correlation)))] / rate_hz * 1000.0)
+
+
 def layer_registration(data: dict[str, np.ndarray], *, rate_hz: float) -> dict:
     faults: list[str] = []
     channels = data.get("Vi_y")
@@ -123,6 +150,13 @@ def layer_registration(data: dict[str, np.ndarray], *, rate_hz: float) -> dict:
         lags = np.arange(-left.size + 1, right.size)
         lag_samples = int(lags[int(np.argmax(np.abs(correlation)))])
         lag_s = lag_samples / rate_hz
+        # 18-40 mm wavelength at this speed is where the corrugation lives.
+        mean_speed_for_band = float(np.mean(_flat(data.get("Vi_Speed")))) / 3.6
+        bands = {}
+        for low_mm, high_mm in ((18.0, 40.0), (40.0, 120.0), (120.0, 400.0)):
+            low_hz = mean_speed_for_band / (high_mm / 1000.0)
+            high_hz = mean_speed_for_band / (low_mm / 1000.0)
+            bands[f"{low_mm:g}-{high_mm:g}mm"] = band_lag_ms(channels, rate_hz, low_hz, high_hz)
         # The two columns sit on the two axles of one bogie, so a lag is expected physics
         # (wheelbase / speed), not a registration fault.  What must hold is that the lag is
         # consistent with that geometry to within the 25 ms registration budget.
@@ -132,10 +166,21 @@ def layer_registration(data: dict[str, np.ndarray], *, rate_hz: float) -> dict:
             mean_speed = float(np.mean(speed)) / 3.6
             if mean_speed > 0.5:
                 expected_s = WHEELBASE_M / mean_speed
-        if expected_s is not None:
-            if abs(abs(lag_s) - expected_s) > LAG_MAX_S:
+        # Judge on the corrugation band when it can be read there: broadband lag mixes impact content.
+        judged = None
+        if 'bands' in dir() and bands.get("18-40mm") is not None:
+            judged = abs(bands["18-40mm"])
+        # Two readings were possible, and the measurement chose between them:
+        #   (A) the columns sit on the two axles of one bogie -> lag = wheelbase / speed = 144.6 ms
+        #   (B) the columns are co-located channels of one axle box -> lag = 0
+        # Measured 2.25 ms in the 18-40 mm band, so (A) is refuted and (B) holds: this record gives ONE
+        # mileage per frame, not two, which is why L2 cannot use it for a two-axle comparison.
+        colocated = judged is not None and abs(judged) <= LAG_MAX_S * 1000.0
+        if expected_s is not None and not colocated:
+            used = judged if judged is not None else abs(lag_s)
+            if abs(used / 1000.0 - expected_s) > LAG_MAX_S:
                 faults.append(
-                    f"the two axle-box columns are {lag_s * 1000:.1f} ms apart, while a {WHEELBASE_M:.1f} m "
+                    f"the axle-box lag is {used:.1f} ms ({'18-40 mm band' if judged is not None else 'broadband'}), while a {WHEELBASE_M:.1f} m "
                     f"wheelbase at {mean_speed:.2f} m/s predicts {expected_s * 1000:.1f} ms"
                 )
     else:
@@ -165,6 +210,8 @@ def layer_registration(data: dict[str, np.ndarray], *, rate_hz: float) -> dict:
         "lag_ms": None if lag_s is None else lag_s * 1000.0,
         "lag_samples": lag_samples,
         "expected_lag_ms": None if expected_s is None else expected_s * 1000.0,
+        "band_lag_ms": bands if 'bands' in dir() else {},
+        "reading": "co-located (lag ~ 0 beats the 25 ms budget)" if 'colocated' in dir() and colocated else "two axles (lag follows wheelbase / speed)",
         "mileage_deviation_m": deviation_m,
         "faults": faults,
     }

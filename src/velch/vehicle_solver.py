@@ -143,9 +143,17 @@ class VehicleDynamics:
         # The topology decides the state vector: which bodies exist, what each carries, and
         # in which order.  With no node table it reproduces the frozen 35-slot layout.
         self.topology: Topology = topology_for(case)
+        #: A curve is something a vehicle *enters*, not something it stands on.  At zero speed
+        #: there is no lateral equilibrium on a curved track -- creep is what steers a wheelset
+        #: round a curve (Elkins & Gostling, Vehicle System Dynamics 1977, quasi-static curving
+        #: theory) -- so the seat is solved against the equivalent straight and the placement
+        #: takes effect once time starts.  Measured at R = 1100 m: seating with the placement on
+        #: stalled every seed (cond 3.76e12, all residuals 2.39 = 240 kN), while seating with it
+        #: off converges to 1.07e-12 with all eight patches at 65.47 um.
+        self.placement_enabled = True
         self.track = TrackKernel(case.track_kind, case.rails, case.modal_track,
                                  case.track_layers, offset=self.topology.body_dimension,
-                                 placement=self._curve_placement())
+                                 placement=self._guarded_placement(self._curve_placement()))
         self.mass = self.topology.mass_array(self.track.mass)
         # Flexible-wheelset modal coordinates go *after* the track block, never among the
         # bodies: their mass of 1.0 is a normalisation, and ``total_weight`` adds up
@@ -282,6 +290,18 @@ class VehicleDynamics:
                       spec.speed_jacobian(self.dimension))
             for spec in self.topology.link_specs
         )
+
+    def _guarded_placement(self, placement):
+        """Wrap a placement so :attr:`placement_enabled` can switch it off for the seat."""
+        if placement is None:
+            return None
+
+        def guarded(rail_index: int, x_m: float):
+            if not self.placement_enabled:
+                return (0.0, 0.0, 0.0)
+            return placement(rail_index, x_m)
+
+        return guarded
 
     def _curve_placement(self):
         """Where the design centreline sits, as a function of mileage, for a curved case.
@@ -709,7 +729,14 @@ class VehicleDynamics:
                 travel_speed_m_s=travel,
                 creep_attack_velocity_m_s=float(travel * q[axes["yaw"]]),
                 support_compliance_m_per_n=(support.at(x) if support is not None else None),
-                curvature_1_per_m=self._curvature_1_per_m,
+                # Curvature reaches the creep only while the track really is curved: the seat
+                # stands the vehicle on the equivalent straight, and a curvature term applied
+                # there writes a +-v kappa b longitudinal difference between the left and right
+                # contact of each axle -- a yaw moment with nothing behind it.  Measured on
+                # R = 1100 m at 80 km/h, flags on but placement off: 4 of 8 wheels loaded and
+                # 128 901 N on the heaviest, exactly 2x the share; the same case with the
+                # flags cleared seats at numerically_checked.
+                curvature_1_per_m=(self._curvature_1_per_m if self.placement_enabled else 0.0),
             )
             body_results.append((body.id, geometry, response))
         return (rail_index, rail, x), body_results
@@ -983,6 +1010,31 @@ def _body_offset_m(case: VehicleCase, topology, body, q: np.ndarray) -> float:
     return 0.0
 
 
+def _seat(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray,
+          v: np.ndarray) -> tuple[np.ndarray, float]:
+    """Solve the static seat against the equivalent straight track.
+
+    At zero speed a curved track has no lateral equilibrium -- creep is what steers a wheelset
+    round a curve (Elkins & Gostling, *A General Quasi-static Curving Theory for Railway
+    Vehicles*, Vehicle System Dynamics 1977), so a curve can only be *entered* at speed, never
+    stood on.  Measured at R = 1100 m: seating with the placement on stalled every seed
+    (cond 3.76e12, every residual 2.39 = 240 kN), seating with it off converges to 1.07e-12 with
+    all eight patches at 65.47 um.  The alignment takes effect as soon as time starts.
+    """
+    enabled = dynamics.placement_enabled
+    placement = dynamics.track.placement
+    dynamics.placement_enabled = False
+    # Take the hook off the kernel as well as switching it off: the contact search caches
+    # geometry per (rail, profile fingerprint), so a strip looked up while the placement was
+    # active can be reused inside the seat and the rails stay curved there.
+    dynamics.track.placement = None
+    try:
+        return _static_vertical_equilibrium(case, dynamics, q, v)
+    finally:
+        dynamics.track.placement = placement
+        dynamics.placement_enabled = enabled
+
+
 def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
                                  q: np.ndarray, v: np.ndarray) -> tuple[np.ndarray, float]:
     """Solve the vertical preload equilibrium, rejecting the hung-bogie branch.
@@ -1057,16 +1109,11 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     # primary spring and the bearing, so its set-down is a fraction of the wheel's; without a box
     # dimension Newton settles on the symmetric branch where one side carries 2x and the other
     # side lifts off, which is exactly the failure the 1.2 s case showed (240.6 kN vs 59.7 kN).
-    if curved:
-        # A lateral seed matters as much as a vertical one: with the curve force pushing outward the
-        # solution sits somewhere between the straight-ahead position and flange contact, and a
-        # single seed at zero can stall against the clearance band.
-        for lateral_m in (0.0, 2.0e-3, -2.0e-3):
-            seeded = q.copy()
-            for body in topology.bodies:
-                if "y" in body.dof:
-                    seeded[topology.require(body.id, "y")] += lateral_m
-            seeds.append(seeded[indices].copy())
+    # Lateral seeds are gone with the lateral unknowns.  A seed written into a coordinate the solve
+    # never touches is not a starting guess, it is a permanent offset: measured on R = 1100 m after
+    # the unknowns became vertical-only, a +-2 mm seed left the vehicle standing on one side --
+    # "4 of 8 wheels carry load, the heaviest 128901.3 N", exactly 2x the 59 662 N share -- because
+    # nothing in the residual pulls the wheelset back to the middle of its clearance.
     for wheel_drop, bogie_drop, box_drop in (
             (2.0e-3, 2.0e-3, 2.0e-3), (5.0e-4, 5.0e-4, 5.0e-4), (2.0e-3, 0.0, 2.0e-3),
             (0.0, 2.0e-3, 2.0e-3), (1.0e-3, 1.0e-3, 5.0e-4), (3.0e-3, 3.0e-3, 3.0e-3)):
@@ -1334,20 +1381,26 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                     body.series.sample(x, direction)
     q = np.array(case.initial_q, dtype=float)
     v = np.array(case.initial_v, dtype=float)
-    # A curved design line carries the vehicle with it: same lateral offset, same heading, per body.
-    # Without this the seat answers a question that has no solution and the wheels go to the flange.
-    q = _place_on_alignment(case, dynamics, q)
-    q = _align_to_track_frame(case, dynamics, q)
+    # A run starts on the straight approach and *enters* the curve: the vehicle is not pushed onto
+    # an alignment it has not reached yet, and the seat is solved against the equivalent straight
+    # track (see ``VehicleDynamics.placement_enabled``).  Imposing the alignment here was the
+    # mistake that made every curved case fail the seat at R = 1100 m.
     static_residual_n = None
     if case.equilibrate_vertical:
-        q, static_residual_n = _static_vertical_equilibrium(case, dynamics, q, v)
+        q, static_residual_n = _seat(case, dynamics, q, v)
         # A flexible wheelset has a second static unknown: how far the tread is pressed in.
         # Solving only the heights leaves the tread flat and the load unbalanced, and the
         # integrator then spends the first tenths of a second settling — inside every short
         # window.  Two outer rounds are enough: the inner fixed point converges to ~2e-4.
         for _round in range(2):
             q = _settle_modal_coordinates(dynamics, q, v)
-            q, static_residual_n = _static_vertical_equilibrium(case, dynamics, q, v)
+            q, static_residual_n = _seat(case, dynamics, q, v)
+    # The opt-in alignment is applied *after* the seat: the vehicle stands on the equivalent
+    # straight first, then it is set on the design line it is about to run along.  Applying it
+    # before the seat put the wheels 45 mm beside straight rails.
+    if bool(getattr(case.run, "align_to_track", False)):
+        q = _place_on_alignment(case, dynamics, q)
+        q = _align_to_track_frame(case, dynamics, q)
     initial = np.concatenate((q, v))
     count = int(math.ceil(run.duration_s / run.output_step_s))
     times = np.linspace(0, run.duration_s, count + 1)

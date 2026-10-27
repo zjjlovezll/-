@@ -4285,3 +4285,18 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   仍是因为没有断面真值可核。
 - 新增 `docs/MEASURED_MULTIPASS_2026-10-28.md` 与
   `reports/inversion_measured_2026-10-28/multipass_sections.json`。
+
+## 第 178 轮：manifest 现在自己声明 measurement_validation_status，且只有验收层能抬高它
+
+- `manifest.json` 的 `summary` 新增 `"measurement_validation_status": "not_evaluated"`，与
+  `physics_validation_status` 并列；写死在这一处、并在注释里写明**只有 `velch.inverse.verdict` 能返回更强的值**，
+  因为只有那一层真的拿实测记录做了比较。一次仿真本身永远不能声称自己的数字被实测验证过。
+- 顺手清掉 `verdict.measurement_validation_status` 里把 `L5_acceptance` 绑两次、两个名字同一层的写法
+  （行为不变，读起来不再像"检测层"和"验收层"是两条证据）。
+- 新增 `tests/test_measurement_status.py`（5 项）：manifest 默认值 + 真实跑一次 0.005 s 算例取 manifest；
+  **源码扫描**——除 `src/velch/inverse/verdict.py` 外任何模块都不得出现 `detection_only` /
+  `consistent_with_recorded_section` 字面量；失败验收只授权"仅检出"、无 `detected` 时退回 `not_evaluated`；
+  通过验收必须有 `consistent_with_recorded_section` 证据；每个取值都有含义。
+- 测试里两个坑：`LayerResult` 拒绝"通过但没有数字"和"失败但不说原因"，所以构造判决对象必须带 metrics/notes；
+  把示例算例复制到临时目录会丢失型面的相对根（`AssetRefError: cannot resolve profile 'wheel_lower.csv'`），
+  必须把 `.csv/.txt/.prr` 引用改写成绝对路径。

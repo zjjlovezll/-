@@ -1675,6 +1675,10 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         "case_id": case.case_id, "case_purpose": case.purpose,
         "result_status": "numerically_checked" if all(gates.values()) else "numerical_gate_failed",
         "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
+        # Written here as the no-claim default and nowhere else: only velch.inverse.verdict may
+        # return anything stronger, because that is the layer that actually compares against a
+        # measured record.  A run on its own can never say its numbers were validated.
+        "measurement_validation_status": "not_evaluated",
         "vehicle_dof": topology.body_dimension, "total_dof": dynamics.dimension,
         "spin_tracking_max_m": spin_tracking_max_m,
         "spin_tracking_relative": spin_tracking_relative,

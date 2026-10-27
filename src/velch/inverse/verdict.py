@@ -108,8 +108,9 @@ class Verdict:
         """Derived, never set: this is the rule the goal's first criterion asked for."""
         acceptance = self.layer("L5_acceptance")
         if acceptance is None or acceptance.status != PASSED:
-            detection = self.layer("L5_acceptance")
-            if detection is not None and detection.status == FAILED and detection.metrics.get("detected"):
+            # A failed acceptance layer still licenses the weaker detection claim when it did find the
+            # sections -- it bound the same layer twice under two names before this.
+            if acceptance is not None and acceptance.status == FAILED and acceptance.metrics.get("detected"):
                 return "detection_only"
             return "not_evaluated"
         if acceptance.metrics.get("consistent_with_recorded_section") is True:

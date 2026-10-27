@@ -69,3 +69,14 @@ physics_validation_status     = unvalidated_against_measurement_or_Simpack
 任务书把 95 % 定义成「6 段检出 ≥95 %（即 6/6）@ 段级虚警 ≤5 % + 定位误差 0 m」。当前 **3/6 + 5 %**，
 所以目标第 6 项（直向/曲线过岔随机速度反演）**未达成**，且不能通过调阈值、换波段或加平均来达成——
 那三项属于「把失败变绿」，任务书明令禁止。
+
+## 状态字段：谁能说"验证过"
+
+`manifest.json` 的 `summary` 现在有两个并列的状态字段：
+
+| 字段 | 默认值 | 谁能改 |
+|---|---|---|
+| `physics_validation_status` | `unvalidated_against_measurement_or_Simpack` | 尚未被任何一层置位（标定之后才能谈） |
+| `measurement_validation_status` | `not_evaluated` | **只有 `velch.inverse.verdict`**：L5 未通过但检出了 → `detection_only`；L5 通过且与记录区段一致 → `consistent_with_recorded_section` |
+
+这条由 `tests/test_measurement_status.py` 的源码扫描守着——除验收层外任何模块出现那两个字面量都会红。

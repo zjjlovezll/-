@@ -3950,3 +3950,9 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 新探测 `scripts/s12l_both_rails.py` 同时打印两条轨的 `max z_m` 与四个轮心的 `y/z/roll`：左轨 **−53.721 mm**、右轨 **+54.799 mm**（差 108.520 = 2×54.26，与 `b·sinφ = 53.5` 吻合），四轮 `z = 0`、`roll = +0.071729`。
 - 结论：轨面超高这半边已经正确（`RolledSeries` 以轨道中心为轴），placement 的 level difference 确实不该再加；剩余的 26 mm 是车轮变换里 `z` 抬升只拿到一半，下一轮用 `_absolute_arrays` 的 `wheel_z.min()` 与解析值对照定位。
 - cant 在几何路由仍不可引用；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §154 记录表与下一步。
+
+## 第 155 轮：车轮倾斜项正确，差的 23 mm 是轮缘而不是高度
+
+- 新探测 `scripts/s12m_wheel_tilt_arrays.py`：左右跨各调 `_absolute_arrays`，两轮都恰好比「轮心 − R ± b·sinφ」低 **22.982 mm**（= 轮缘），两轮踏面差 **107.000 mm**，两轨顶差 **108.520 mm**，只剩 **1.52 mm**。
+- 结论：`local_y·sin(theta)` 项完全正确，§154 的 26 mm 不是高度失配，而是**接触落在轮缘根**（`wheel_z.min()` 在轮缘上）。
+- 下一轮：打印 `find_strip_contact` 的 `wheel_y` 区间与 `lever_y`，判定是否落在踏面；若是轮缘根，按踏面带宽限定候选，不动高度。

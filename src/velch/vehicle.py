@@ -491,20 +491,26 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
                 f"axle spans {reach['axles_m']} m, excited band {reach.get('band_m')} m. "
                 f"This run is identical to one with no irregularity.",
                 RuntimeWarning, stacklevel=2)
-    # Cant turns the whole track plane, so the rail surfaces are rotated and not merely raised.
-    # The angle comes from the cant and the gauge the vehicle declares; on the geometry route the
-    # level difference is published by ``_curve_placement`` and the rotation here, and the force
-    # route keeps using the equivalent-straight lateral force plus its gravity component.
+    # Cant cannot be published by rolling one of the two surfaces.  Measured: with the rail surface
+    # rolled by phi the contact lands on the rail shoulder -- lever_y -714.322 mm against a rail band
+    # of -785.4..-713.2 mm -- because rotating a wheel by phi carries its tread contact point
+    # R sin(phi) = 30.8 mm inboard, while raising or rolling the rail about the track centre moves its
+    # crown 5 mm at most.  A balanced curve needs the *frame* tilted with the plane (level difference
+    # plus a tilted gravity vector), so refuse cant on this route instead of publishing a shoulder
+    # contact as if it were a tread contact.
     run_block = raw.get("run", {})
     cant_m = float(run_block.get("curve_cant_m") or 0.0)
     if cant_m != 0.0 and bool(run_block.get("curve_geometry", False)):
         gauge_m = 2.0 * abs(float(wheels[0].lateral_offset_m))
         if gauge_m <= 0.0:
             raise ValueError("curve_cant_m needs a vehicle with a non-zero lateral wheel offset")
-        import math as _math
-        from .irregularity import roll_rails
-        angle = _math.asin(max(-1.0, min(1.0, cant_m / gauge_m)))
-        rails = roll_rails(rails, angle)
+        raise ValueError(
+            "curve_cant_m on the geometry route is not supported yet: rolling a rail under a rolling "
+            "wheel moves the contact point R sin(phi) = 30.8 mm inboard of the crown (measured at "
+            f"phi = {float(cant_m) / gauge_m:+.5f} rad on a {gauge_m:.3f} m gauge). A balanced curve "
+            "needs the vehicle frame tilted with the track plane, which is not implemented; use "
+            "curve_geometry = false, where cant enters as a lateral force, or set curve_cant_m = 0."
+        )
     radius = run_block.get("curve_radius_m")
     # OFF BY DEFAULT, because it is measurably wrong today.  Shifting the sampled rail surface by
     # s^2/(2R) while the vehicle keeps its own lateral frame gives 78 786 kN on the left rail with

@@ -760,3 +760,24 @@ tangent      +0.015833 rad    （解析 18.422/1100     = 0.0167 rad）
 ### 下一轮
 
 让轨截面绕**自己的轨顶**转（而不是绕轨道中心），并继续由 `_curve_placement` 把轨顶抬到超高高度。这样轨顶横向不动、只改法向倾角，轮踏面的 31 mm 位移就不会再撞到轨顶内缘。验收：`lever_y` 回到距轨带中心 10 mm 以内，且 cant=0 逐位不变。
+
+## 157. 超高在几何路由改成拒绝：滚一个面不可能表达超高
+
+上一轮量到接触落在轨顶内缘 35 mm，算式给出 `R·sinφ = 30.8 mm`，本轮据此做了一个决定：**几何路由不再发布超高，而是拒绝**。
+
+理由是一次可复算的不对称（`scripts/s12n_contact_band.py`）：轨截面绕轨道中心转，轨顶横向只移动 `z·sinφ ≈ 5 mm`；车轮 roll 绕轴心转，踏面接触点横向移动 `R·sinφ = 30.8 mm`。两者不可能同时成立，除非**整个车架随轨道平面一起倾斜**——那正是力路由一直在做的事（等效直线 + 重力沿坡面的分量），也是本模型还没实现的那一层。
+
+拒绝文案现在带数字：
+
+```
+curve_cant_m on the geometry route is not supported yet: rolling a rail under a rolling
+wheel moves the contact point R sin(phi) = 30.8 mm inboard of the crown (measured at
+phi = +0.07167 rad on a 1.493 m gauge). A balanced curve needs the vehicle frame tilted
+with the track plane, which is not implemented; use curve_geometry = false ...
+```
+
+`tests/test_curve_seat.py` 里那条旧测试（断言「转、升、侧滚都发了但坐不住」）被替换为 `test_cant_on_the_geometry_route_is_refused_because_of_the_wheel_transform`，断言消息含 `R sin(phi) = 30.8 mm` 与 `vehicle frame tilted`。同一次还修掉一个我自己造成的事故：按行号截断文件时把后面三条 R=350 测试一起删了，`git checkout` 恢复后改用「只删这一个函数的跨度」并核对 `def test_` 数量（13 条），全套 `920 passed / 1 skipped / 1 xfailed`。
+
+### 还剩什么
+
+超高要真能用，需要**车架随坡面倾斜**：`gravity` 在倾斜坐标系里分解（`−m g sinθ` 进 y、`−m g cosθ` 进 z），轨面用纯平移的 level difference，轮与轨的相对几何不动。这是下一轮的主体工作，不是符号问题。

@@ -3962,3 +3962,9 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 新探测 `scripts/s12n_contact_band.py`：四轴抬到 `wheel_center_height_m` 后只量搜索选中位置，左轨 `lever_y −714.322 mm`（轨带 −785.4…−713.2 的内缘），右轨 `+787.344 mm`（轨带 +713.2…+785.4），即接触比轨顶中心**内移约 35 mm**。
 - 算式给出量级：轨绕轨道中心转 → 轨顶横向只动 `z·sinθ ≈ 5 mm`；轮绕轴心转 → 踏面接触点横向动 `R·sinθ = 30.8 mm`；差 **≈31 mm**。
 - 下一轮：`RolledSeries` 改为绕自身轨顶旋转，轨顶横向不动、只改法向倾角；验收 `lever_y` 距轨带中心 ≤10 mm 且 cant=0 逐位不变。
+
+## 第 157 轮：超高在几何路由改成拒绝——滚一个面表达不了超高
+
+- `src/velch/vehicle.py` 的 cant 分支由 `roll_rails` 改为抛出带数字的 `ValueError`：`R sin(phi) = 30.8 mm`（φ = +0.07167 rad、1.493 m 轨距）说明滚轨面无法同时满足 `z·sinφ = 5 mm` 的轨顶横移。
+- `tests/test_curve_seat.py`：旧测试替换为 `test_cant_on_the_geometry_route_is_refused_because_of_the_wheel_transform`（断言新文案）；顺带修掉按行号截断误删三条 R=350 测试的事故，`def test_` 计数 13。
+- 全套 **920 passed / 1 skipped / 1 xfailed**；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §157。

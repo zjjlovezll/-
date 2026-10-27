@@ -265,14 +265,16 @@ def test_the_analytic_geometry_route_would_run_if_the_contact_search_allowed_it(
     result = simulate_vehicle(load_vehicle_case(path))
     assert result.summary["result_status"] == "numerically_checked"
 
-def test_cant_on_the_geometry_route_does_not_yet_seat(tmp_path):
-    """Rotation, rise and frame roll are all published now, and the seat still has no solution.
+@pytest.mark.corpus
+def test_cant_on_the_geometry_route_is_refused_because_of_the_wheel_transform(tmp_path):
+    """Rolling one of the two surfaces cannot publish cant, so the route now refuses it.
 
-    Measured at R = 1100 m with the balance cant of 107 mm and 100 km/h: the surface is turned
-    (``roll_rails``), the outer rail centre is raised by half the gauge times sin(phi), and the
-    vehicle's roll coordinates carry the same angle.  The residual still cannot come under the
-    0.1 N acceptance, so the route says so instead of publishing a cant it cannot carry.  The
-    force route (``curve_geometry = false``) seats the same case.
+    Measured with the rail surface rolled: the contact lands on the rail shoulder, ``lever_y``
+    -714.322 mm against a rail band of -785.4..-713.2 mm, because rotating a wheel by phi carries its
+    tread contact point ``R sin(phi) = 30.8 mm`` inboard while the rail crown moves 5 mm at most.  A
+    balanced curve needs the vehicle frame tilted with the track plane, which this route does not do,
+    so the refusal names the measurement instead of publishing a shoulder contact as a tread one.
+    The force route (``curve_geometry = false``) seats the same case.
     """
 
     from velch import data_root
@@ -285,10 +287,11 @@ def test_cant_on_the_geometry_route_does_not_yet_seat(tmp_path):
     path = tmp_path / "cant_on_geometry.json"
     path.write_text(json.dumps(raw, indent=1), encoding="utf-8")
 
-    case = load_vehicle_case(path)
-    with pytest.raises(SimulationFailure) as error:
-        simulate_vehicle(case)
-    assert "vertical preload equilibrium failed" in str(error.value)
+    with pytest.raises(ValueError) as error:
+        load_vehicle_case(path)
+    message = str(error.value)
+    assert "R sin(phi) = 30.8 mm" in message
+    assert "vehicle frame tilted" in message
 
 
 @pytest.mark.corpus

@@ -1811,6 +1811,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
 | [CURVE_APPROACH_DECISIONS_2026-10-27.md](CURVE_APPROACH_DECISIONS_2026-10-27.md) | 曲线走进哪一侧：四条被实测否掉的路，和一条还没被否的 |
+| [CURVE_CANT_DECISION_2026-10-27.md](CURVE_CANT_DECISION_2026-10-27.md) | ADR：几何路由上的超高，为什么仍然拒绝 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
 | [CURVE_SEAT_AND_CREEP_2026-10-27.md](CURVE_SEAT_AND_CREEP_2026-10-27.md) | 曲线：先把静平衡问对，再把曲率放进蠕滑 |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
@@ -4151,3 +4152,15 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 - 新文档 `docs/MEASUREMENT_CAPABILITY_2026-10-27.md`：把"能声称 / 不能声称 / 归类 / 需要什么新数据"
   四栏写成验收级声明（含 L0 台账、检出 3/6、波长缩放必要条件、四速度命中矩阵、五条不能声称的判据失败位置）。
 - `docs/OMA_MEASURED_2026-10-27.md` 新增 §12 记录两个旋钮的实测与结论。
+
+## 第 171 轮：几何路由的超高补上重力倾角后仍不足以闭合，写成 ADR 并保留拒绝
+
+- 试了最后一块拼图：把重力放进倾斜坐标系（`force[y] += m g sin(phi)`、`force[z] -= m g (1 - cos(phi))`），
+  同时恢复被写死成 `rise = 0.0` 的外轨抬高。`cant0` 的几何曲线仍 `numerically_checked` 7/7（改动对无超高
+  工况惰性），而 `cant = 0.107 m` 的工况仍在加载阶段被 `vehicle.py:503` 拒绝。两处改动在现有配置下是死代码，
+  已回退。
+- 写清算术：外轨抬高 `±b sin phi = ±53.5 mm` 与轮对 roll 的 `±b sin phi` 必须成对且同号，缺一边就是
+  `2 b sin phi = 107 mm` 错位（与第 38 轮实测 103 mm 一致）；重力倾角只解决横向力那一半，**不解决竖向错位**。
+  竖向错位要静平衡同时解 z 与 roll，而 0 速度下横向方程无平衡解（第 30 轮 cond 3.76e12）。
+- 新增 `docs/CURVE_CANT_DECISION_2026-10-27.md`：ADR 形式记录"几何路由继续拒绝"+ 力路由可用（59 652–59 708 N）
+  + 正路是"运行态坐车"（先无超高坐 8/8，再在时程中把坡面抬进去）+ 禁止的四条捷径。

@@ -165,6 +165,17 @@ class SpeedSchedule:
         return getattr(self, "_starts")
 
     @property
+    def leg_end_times_s(self) -> tuple[float, ...]:
+        """Cumulative end time of every leg, i.e. the instants the schedule may jump."""
+
+        total = 0.0
+        ends: list[float] = []
+        for leg in self.legs:
+            total += leg.length_s
+            ends.append(total)
+        return tuple(ends)
+
+    @property
     def duration_s(self) -> float:
         return getattr(self, "_total_s")
 

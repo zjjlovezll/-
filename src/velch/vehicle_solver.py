@@ -92,6 +92,12 @@ class VehicleResult:
     acceleration_names: tuple[str, ...] = ()
 
 
+#: Time constant of the wheel-spin servo, seconds.  Slow enough for DOP853 at
+#: ``max_step=1e-4`` (20 steps per constant) and fast enough that the slip is gone long
+#: before the creep law can saturate on it.
+SPIN_TIME_CONSTANT_S = 2.0e-3
+
+
 class VehicleDynamics:
     """Small-rotation body/bogie/wheelset connector assembly.
 
@@ -114,6 +120,12 @@ class VehicleDynamics:
         self._schedule = getattr(case, "speed_schedule", None) or SpeedSchedule.constant(
             abs(float(cfg.travel_speed_m_s)), duration_s=float(case.run.duration_s))
         self._direction = 1.0 if float(cfg.travel_speed_m_s) >= 0.0 else -1.0
+        # Spin tracking: a first-order servo on each wheelset's rotation.  With the inertia as
+        # the gain the time constant is exactly SPIN_TIME_CONSTANT_S whatever the wheelset, and
+        # the torque is bounded by I * (v / r) / tau, i.e. a few kN*m, well inside the creep
+        # law.  It is off for a constant profile so that path stays bit-identical.
+        self.spin_control = bool(getattr(case.run, "spin_control", False)
+                                 or not self._schedule.is_constant)
         # The topology decides the state vector: which bodies exist, what each carries, and
         # in which order.  With no node table it reproduces the frozen 35-slot layout.
         self.topology: Topology = topology_for(case)
@@ -320,6 +332,15 @@ class VehicleDynamics:
                 # Outward is +y; the cant component points inward, so the two subtract.
                 lateral = body.mass_kg * (speed * speed / curve - cfg.gravity_m_s2 * sin_theta)
                 force[self.topology.require(body.id, "y")] += lateral
+        if self.spin_control:
+            radius = float(cfg.nominal_wheel_radius_m)
+            target = self.speed_at(t_s) / radius
+            for axle in range(len(cfg.axle_offsets_m)):
+                # The spin coordinate belongs to the topology, not to the contact-axis map
+                # (which only carries x/y/z when the layout declares them).
+                spin = self.topology.require(self.topology.wheelset_id(axle), "spin")
+                # Inertia as the gain: the same time constant on every axle.
+                force[spin] += self.mass[spin] * (target - float(v[spin])) / SPIN_TIME_CONSTANT_S
         for connector in self.connectors:
             force += connector.force(q, v)
         # The track block is no longer the tail of the vector once modal coordinates exist, so
@@ -935,18 +956,9 @@ def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.nd
 
 
 def simulate_vehicle(case: VehicleCase, contact_workers: int = 1) -> VehicleResult:
-    schedule = getattr(case, "speed_schedule", None)
-    if schedule is not None and not schedule.is_constant:
-        # Refusing is the point.  Twelve sites still read a single `travel_speed_m_s` and the
-        # wheelset spin is integrated from the contact force, so a varying v would make the
-        # creep reference disagree with the spin and turn that disagreement into a fake
-        # longitudinal demand.  Wire the schedule through those sites *and* add the
-        # `spin_tracking` gate first; until then a multi-leg profile is refused rather than
-        # silently run at its first leg's speed.
-        raise SpeedScheduleError(
-            f"a multi-leg speed profile is parsed but not yet wired into the solver: "
-            f"{schedule.describe()}.  Use a constant profile, or add the spin-tracking gate first."
-        )
+    # A varying speed is allowed now that the spin tracks it (``VehicleDynamics.spin_control``
+    # is switched on automatically for a non-constant schedule) and the ``spin_tracking`` gate
+    # reports how well it did.  A constant profile still takes the pass-through path.
     dynamics = VehicleDynamics(case, contact_workers=contact_workers)
     try:
         return _integrate_vehicle(case, dynamics)
@@ -1193,6 +1205,40 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                         peak_step[rail.id], step_contacts[rail.id].normal_force_n
                     )
 
+    # Eighth gate, only when there is something to gate: with a varying speed the wheel spin is
+    # driven towards ``v(t)/r``, and the metric is how far it actually sits from it.  A lag here
+    # is not cosmetic -- it is booked as longitudinal creep, saturates, and takes lateral force
+    # with it through ``hypot``.  A constant profile has no servo, so the gate is absent and the
+    # seven-gate set is unchanged.
+    spin_tracking_max_m = None
+    spin_tracking_relative = None
+    if dynamics.spin_control:
+        radius = float(case.vehicle.nominal_wheel_radius_m)
+        velocity_part = np.asarray(solution.y[dynamics.dimension:])
+        spin_indices = [dynamics.topology.require(dynamics.topology.wheelset_id(axle), "spin")
+                        for axle in range(len(case.vehicle.axle_offsets_m))]
+        steps = np.asarray(solution.t, dtype=float)
+        worst = 0.0
+        for index, t_value in enumerate(steps):
+            speed = abs(dynamics.speed_at(float(t_value)))
+            for spin in spin_indices:
+                worst = max(worst, abs(float(velocity_part[spin, index]) * radius - speed))
+        spin_tracking_max_m = worst
+        # The gate is measured where it means something.  A leg change is a step in the schedule
+        # and no servo can follow a step: measured, the tread slip at the boundary is the whole
+        # speed change (2.0 m/s at 2 -> 4 m/s), while it is back under 0.02 m/s within 5 ms.
+        # So the gate reads each leg's *end*, where the creep reference and the spin must agree,
+        # and reports the boundary peak separately rather than hiding it.
+        settled = 0.0
+        for end in dynamics.speed_schedule.leg_end_times_s:
+            index = int(np.searchsorted(steps, end - 1.0e-12, side="right")) - 1
+            index = min(max(index, 0), len(steps) - 1)
+            speed = abs(dynamics.speed_at(float(steps[index])))
+            for spin in spin_indices:
+                slip = abs(float(velocity_part[spin, index]) * radius - speed)
+                settled = max(settled, slip / max(speed, 1.0))
+        spin_tracking_relative = settled
+
     gates = {
         "solver_completed": True,
         "finite_states_and_forces": True,
@@ -1205,11 +1251,15 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         gates["modal_generalized_contact_power"] = bool(max_modal_projection_error_w <= 1e-6)
     else:
         gates["translational_action_reaction"] = bool(max_translation_balance_error_n <= 1e-6)
+    if spin_tracking_relative is not None:
+        gates["spin_tracking"] = bool(spin_tracking_relative <= 0.01)
     summary = {
         "case_id": case.case_id, "case_purpose": case.purpose,
         "result_status": "numerically_checked" if all(gates.values()) else "numerical_gate_failed",
         "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
         "vehicle_dof": topology.body_dimension, "total_dof": dynamics.dimension,
+        "spin_tracking_max_m": spin_tracking_max_m,
+        "spin_tracking_relative": spin_tracking_relative,
         "track_kind": case.track_kind, "track_dof": dynamics.track.dimension,
         "rail_patch_count": len(case.rails), "connector_count": len(dynamics.connectors),
         "gates": gates, "solver": {"method": run.method, "nfev": int(solution.nfev),

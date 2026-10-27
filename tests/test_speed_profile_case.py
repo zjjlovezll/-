@@ -66,7 +66,17 @@ def test_a_constant_profile_overrides_the_travel_speed_it_replaces(tmp_path: Pat
     assert first_hash == second_hash, "a constant profile must not change a single byte"
 
 
-def test_a_multi_leg_profile_is_carried_and_refused(tmp_path: Path) -> None:
+def test_a_multi_leg_profile_turns_the_spin_servo_on(tmp_path: Path) -> None:
+    """A varying speed is allowed only because the spin now follows it.
+
+    The refusal that used to live here was a placeholder: it existed because the spin was
+    integrated from the contact force while the creep reference was a single number.  The servo
+    removes that reason, so the assertion moves to "the servo is on" — and the gate that
+    measures how well it does is checked in ``tests/test_spin_control.py``.
+    """
+
+    from velch.vehicle_solver import VehicleDynamics
+
     path = _derive(tmp_path, "legs", travel=2.0, profile={"legs": [
         {"speed_m_s": 2.0, "duration_s": 0.008},
         {"speed_m_s": 4.0, "duration_s": 0.007},
@@ -75,8 +85,11 @@ def test_a_multi_leg_profile_is_carried_and_refused(tmp_path: Path) -> None:
     assert loaded.speed_schedule is not None
     assert not loaded.speed_schedule.is_constant
     assert loaded.speed_schedule.duration_s == pytest.approx(0.015)
-    with pytest.raises(SpeedScheduleError, match="not yet wired into the solver"):
-        simulate_vehicle(loaded)
+    dynamics = VehicleDynamics(loaded)
+    try:
+        assert dynamics.spin_control is True
+    finally:
+        dynamics.close()
 
 
 def test_x_at_is_the_literal_it_replaces(tmp_path):

@@ -3389,3 +3389,11 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 测试 +2：`x_at` 与 `x_start + v*t` 逐位相等（含负速度），以及「字段 99 m/s + 剖面 2 m/s → 里程按 2 m/s」——后者是防止力路径里再出现直接读字段的地方。
 
 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 新增第 6 节（四个位置的原写法/现写法/为什么不能留两处）。
+
+## 第 118 轮：轮对转速跟着速度，多段剖面放开
+
+- `VehicleDynamics.spin_control`：一阶伺服把自转驱向 `v(t)/r`，增益取惯量（时间常数恒为 2 ms），2→4 m/s 阶跃峰值力矩 176.7 kN·m；`run.spin_control` 可显式开启，非匀速剖面自动开启，常速剖面不开。
+- 第 8 门 `spin_tracking`：判据取**每条腿结束时**的相对滑移 ≤1 %——阶跃点本身是 2.000 m/s，无法跟随，如实报告但不入门。实测腿末 **1.39e-4**；常速剖面不带该门，仍是 7 门。
+- `simulate_vehicle` 不再拒绝多段剖面（拒绝的理由已消失），`SpeedSchedule.leg_end_times_s` 提供腿边界。
+- 测试 `tests/test_spin_control.py` 2 项；基线 UNCHANGED；**897 passed, 1 skipped**。
+- 文档：`docs/VEHICLE_SPEED_PROFILE_2026-10-27.md` 第 7 节。

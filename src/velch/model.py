@@ -151,6 +151,12 @@ class RunSettings:
     #: ``maximum_abs_contact_slope`` trips.  Turn it on only for a case whose longitudinal
     #: behaviour is the thing being measured (the wheel-polygon runs).
     longitudinal_force: bool = False
+    #: Drive each wheelset's spin towards ``v(t) / r`` with a first-order servo.  Needed as
+    #: soon as the speed varies: the spin is integrated from the contact force, and if it lags
+    #: the schedule the mismatch is booked as longitudinal creep, saturates, and eats lateral
+    #: force through ``hypot``.  A constant profile leaves this off, so its results stay
+    #: bit-identical; a multi-leg profile turns it on automatically.
+    spin_control: bool = False
     #: How fast the vehicle is going, as a value rather than a single number.  Either
     #: ``{"constant": {"speed_kmh": 80}}`` or ``{"legs": [{"speed_kmh": 80, "duration_s": 2}]}``.
     #: A constant profile becomes ``vehicle.travel_speed_m_s`` and changes nothing; a

@@ -841,3 +841,72 @@ with the track plane, which is not implemented; use curve_geometry = false ...
   正解是选**下一个有覆盖的站位**并在错误里点名两个站位与来源。
 - 超高：几何路由已有轨面旋转（φ = 0.0717 rad），但「车架随坡面倾斜」没有做，
   所以平衡超高仍坐不上（力路由的 8 × 59 652–59 708 N 是已验证的对照）。
+
+## 26. 曲线的切线不在运行起点：`curve_origin_m`（B039 关闭）
+
+前 25 节的曲线都假设"运行起点就是曲线起点"——`_curve_placement` 用 `s = x_m - x_start`，于是
+`y = s²/(2R)` 的顶点被钉在 `run.x_start_m`。真实线路不是这样：车辆先在**直股**上跑十几米，然后才进入导曲线。
+
+### 26.1 一阶错误有多大
+
+R = 1100 m、切线在 50.578 m（18 号道岔的导曲线起点）、`x_start = 30 m`。旧公式在**切线之前**也给出
+`s < 0`，于是把车辆放到一条**镜像弧**上——一条现实中不存在的线：
+
+| 位置 | 距切线 | 旧公式横向偏移 | 正确值 |
+|---|---|---|---|
+| 后轴（20.0 m） | −30.6 m | **−425.1 mm** | **0** |
+| 前轴（40.0 m） | −10.6 m | **−50.8 mm** | **0** |
+| 车体（30.0 m） | −20.6 m | **−192.5 mm** | **0** |
+
+这是**一阶**误差（不是符号问题）：`y = s²/(2R)` 与 `yaw = atan(s/R)` 是自洽的（`dy/ds = tan yaw`），
+缺的是"切线之前是直线"这一条。
+
+### 26.2 改法：一处钳位，两侧共用
+
+新增模块函数 `_arc_parameter_m(run, mileage_m)`（`F:\ai道岔状态反演辨识\Velch\src\velch\vehicle_solver.py`）：
+
+```python
+tangent = float(run.x_start_m) if run.curve_origin_m is None else float(run.curve_origin_m)
+return max(float(mileage_m) - tangent, 0.0)
+```
+
+- **两侧共用**：轨面侧（`_curve_placement` 的 `placement(rail_index, x_m)`）与车辆侧
+  （`_place_on_alignment`，按每个刚体自己的里程）都调它，所以轨道与车辆不会对"弧从哪里开始"有分歧；
+- **`None` 保持旧含义**（运行起点）：此时 `s` 是**带符号**的，顶点在运行起点——`y = s²/(2R)` 关于顶点对称，
+  落在线顶之后的刚体仍在同一条弧上、只是航向取反。所有既有算例都按这个含义建，**逐位不变**；
+- 只有**显式给了切线**（`curve_origin_m`）才钳位；钳位后 **一阶连续**（`dy/ds` 在切线两侧都为 0，没有折角）。
+
+### 26.3 拒绝的两条组合
+
+`F:\ai道岔状态反演辨识\Velch\src\velch\vehicle.py` 在加载时拒绝：
+
+| 组合 | 文案 |
+|---|---|
+| `curve_origin_m` 没有 `curve_radius_m` | `curve_origin_m needs curve_radius_m: ... the setting would silently do nothing` |
+| `curve_origin_m` + `curve_cant_m` | `cannot be combined with curve_cant_m: the canted geometry route is refused ...` |
+
+第二条是必要的：带超高的几何路由本身被拒绝（`docs/CURVE_CANT_DECISION_2026-10-27.md`），再允许
+`origin` 只会造出一个"配了但不起作用"的工况——这个项目已经被这类配置坑过两次。
+
+### 26.4 实测：从直股进入曲线的三个变体都跑通
+
+`x_start = 30 m`、R = 1100 m、100 km/h、0.02 s、`align_to_track`：
+
+| 变体 | 结果 | 门 |
+|---|---|---|
+| 不给 `curve_origin_m`（旧含义：起点即切线） | `numerically_checked` | **7/7** |
+| `curve_origin_m = 30`（切线在起点） | `numerically_checked` | **7/7** |
+| **`curve_origin_m = 50.578`（切线在前方 20.6 m）** | `numerically_checked` | **7/7** |
+
+第三个变体就是"先在直股上跑、再进曲线"——**这一条以前没有**，因为旧公式会在直股段就把车推到镜像弧上。
+
+### 26.5 复算
+
+```powershell
+cd F:\ai道岔状态反演辨识\Velch
+$env:PYTHONPATH="F:\ai道岔状态反演辨识\Velch\src"
+python -X utf8 -m pytest tests\test_curve_origin.py -q      # 5 项
+```
+
+测试覆盖：切线前 `s = 0`、切线处 `s = 0`、切线后 10 m 处 `s = 10`；`None` 保持旧含义；轨面与车辆两侧
+在同里程一致且直股段严格为零；两条拒绝组合。

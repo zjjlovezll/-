@@ -325,7 +325,6 @@ class VehicleDynamics:
         radius = float(radius)
         if radius == 0.0:
             raise SimulationFailure("curve_radius_m must not be zero")
-        start = float(run.x_start_m)
         cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
         # Cant belongs to the track plane, so on this route it is published as *both* things the
         # plane does: each rail surface is turned with it by ``roll_rails`` at load time, and the
@@ -340,7 +339,7 @@ class VehicleDynamics:
         rails = tuple(self.case.rails)
 
         def placement(rail_index: int, x_m: float) -> tuple[float, float, float]:
-            s = x_m - start
+            s = _arc_parameter_m(run, x_m)
             # The centre of ``y(s) = s^2/(2R)`` is at +y, so the OUTER rail is the one on the -y
             # side and it is that one that is raised.  Getting this backwards cants the track
             # against the vehicle, and the seat then cannot balance the lateral force (measured:
@@ -951,6 +950,33 @@ def _align_to_track_frame(case: VehicleCase, dynamics: VehicleDynamics,
     return result
 
 
+def _arc_parameter_m(run, mileage_m: float) -> float:
+    """Arc parameter of ``y = s^2/(2R)`` at an absolute mileage, clamped at the tangent point.
+
+    A curve does not begin where the run begins.  ``s = x - x_start`` put the arc's apex at the run
+    start, so a run that starts *before* the tangent sits on a mirror arc that does not exist: at
+    R = 1100 m with the tangent at 50.578 m and ``x_start = 30 m`` the rear axle is 425 mm off the
+    design line, and the front axle 381 mm, both to the wrong side.  Clamping at zero keeps the line
+    straight before the tangent, which is what a real alignment does, and is first-order continuous
+    (``dy/ds = 0`` on both sides of the joint).
+
+    ``run.curve_origin_m`` says where the tangent is; ``None`` keeps the old meaning (the run start),
+    so every existing case reproduces its numbers bit for bit.
+    """
+
+    radius = getattr(run, "curve_radius_m", None)
+    if radius is None:
+        return 0.0
+    origin = getattr(run, "curve_origin_m", None)
+    if origin is None:
+        # No tangent was given, so the old meaning stands: the arc's apex is the run start and the
+        # parameter is signed.  ``y = s^2/(2R)`` is symmetric, so a body behind the start sits on the
+        # same arc with the opposite heading -- that is how every existing case was built, and every
+        # one of them must stay bit-identical.
+        return float(mileage_m) - float(run.x_start_m)
+    return max(float(mileage_m) - float(origin), 0.0)
+
+
 def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
                         q: np.ndarray) -> np.ndarray:
     """Put the vehicle where the curved design line is, before the seat solves anything.
@@ -982,7 +1008,8 @@ def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
     half_gauge = abs(float(case.wheels[0].lateral_offset_m)) if case.wheels else 0.75
     theta = 0.0 if half_gauge == 0.0 else math.asin(max(-1.0, min(1.0, cant / (2.0 * half_gauge))))
     for body in topology.bodies:
-        s = _body_offset_m(case, topology, body, placed)
+        mileage = float(case.run.x_start_m) + _body_offset_m(case, topology, body, placed)
+        s = _arc_parameter_m(case.run, mileage)
         if "y" in body.dof:
             placed[topology.require(body.id, "y")] += s * s / (2.0 * radius)
         if "yaw" in body.dof:

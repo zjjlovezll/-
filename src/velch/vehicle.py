@@ -499,6 +499,16 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     # plus a tilted gravity vector), so refuse cant on this route instead of publishing a shoulder
     # contact as if it were a tread contact.
     run_block = raw.get("run", {})
+    origin_m = run_block.get("curve_origin_m")
+    if origin_m is not None:
+        if run_block.get("curve_radius_m") in (None, 0, 0.0):
+            raise ValueError(
+                "curve_origin_m needs curve_radius_m: without an analytic arc there is no tangent to "
+                "place, and the setting would silently do nothing")
+        if float(run_block.get("curve_cant_m") or 0.0) != 0.0:
+            raise ValueError(
+                "curve_origin_m cannot be combined with curve_cant_m: the canted geometry route is "
+                "refused (docs/CURVE_CANT_DECISION_2026-10-27.md), so the combination would be inert")
     cant_m = float(run_block.get("curve_cant_m") or 0.0)
     if cant_m != 0.0 and bool(run_block.get("curve_geometry", False)):
         gauge_m = 2.0 * abs(float(wheels[0].lateral_offset_m))

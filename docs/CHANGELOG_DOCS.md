@@ -4164,3 +4164,19 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
   竖向错位要静平衡同时解 z 与 roll，而 0 速度下横向方程无平衡解（第 30 轮 cond 3.76e12）。
 - 新增 `docs/CURVE_CANT_DECISION_2026-10-27.md`：ADR 形式记录"几何路由继续拒绝"+ 力路由可用（59 652–59 708 N）
   + 正路是"运行态坐车"（先无超高坐 8/8，再在时程中把坡面抬进去）+ 禁止的四条捷径。
+
+## 第 172 轮：曲线切线从运行起点挪到它的真实位置（B039 关闭）
+
+- `_curve_placement` 与 `_place_on_alignment` 原先都用 `s = x_m - x_start`，把 `y = s²/(2R)` 的顶点钉在
+  运行起点。R=1100 m、切线 50.578 m、`x_start` 30 m 时，切线**之前**也给出 `s < 0`，把车辆放到一条镜像弧上：
+  后轴 −425.1 mm、前轴 −50.8 mm、车体 −192.5 mm（正确值都是 0）。
+- 新增 `_arc_parameter_m(run, mileage_m)`：`max(mileage - tangent, 0)`，切线取 `run.curve_origin_m`，
+  `None` 时退回 `x_start_m`（既有算例逐位不变）。**轨面侧与车辆侧共用同一个函数**，避免两侧对"弧从哪开始"分歧；
+  切线处一阶连续（`dy/ds` 两侧都为 0）。
+- `RunSettings.curve_origin_m` 新增；加载时拒绝两种组合：无 `curve_radius_m` 的 `origin`（否则静默无效）、
+  `origin` + `cant`（带超高的几何路由本身被拒绝，组合只会造出"配了但不起作用"的工况）。
+- `tests/test_curve_origin.py` 5 项：切线前/处/后 10 m 的弧参数、`None` 的旧含义、两侧一致且直股段严格为零、
+  两条拒绝。
+- 实测（`x_start` 30 m、R=1100、100 km/h、0.02 s）：不给 origin / origin=30 / **origin=50.578** 三个变体
+  都 `numerically_checked`、7/7。第三个变体即"从直股进入曲线"，以前不存在。
+- `docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` 新增 §26（含一阶误差表与三个变体）。

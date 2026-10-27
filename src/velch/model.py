@@ -171,6 +171,13 @@ class RunSettings:
     #: seats on one side — keep ``curve_cant_m`` small or zero.
     curve_radius_m: float | None = None
     #: Cant (superelevation) in metres across the gauge; enters as ``m g sin(theta)`` inward.
+    curve_origin_m: float | None = None
+    """Mileage where the design line's tangent is.  ``None`` means the run start.
+
+    Only meaningful with ``curve_radius_m``; before the tangent the line is straight (see
+    ``_arc_parameter_m``).  Refused together with a cant, because the canted geometry route is
+    itself refused (docs/CURVE_CANT_DECISION_2026-10-27.md).
+    """
     curve_cant_m: float = 0.0
     #: Give the alignment to the contact geometry as well, not only to the body force: the rail's
     #: absolute position then follows ``y(s) = (s - s0)^2 / (2R)`` and its transverse velocity picks

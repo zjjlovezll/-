@@ -3930,3 +3930,11 @@ seat start: 非零 21 项，roll 全为 +0.071729（与 placement 一致）
 第 150 轮的续查就是打印 `type(rail.bodies[0].series)`。
 
 本轮不改代码（探测脚本入库，`scripts/s12i_wheel_rail_tilt.py`）；曲线边界不变：**cant=0 可引用**，**超高不可引用**。
+
+---
+
+## 第 152 轮：超高被加了两次，一处 `abs()` 一处随 cant 变号
+
+- 新探测 `scripts/s12j_cant_double_count.py`（固定基准，打印每轨 `rail_z_m`/`wheel_z_m`/侵入/力）在 R=1100 m、100 km/h、几何路由量到 cant **+0.107 → 右轨 +104.008 mm**（≈2×53.5）、cant **−0.107 → −0.285 mm**（≈0），即超高被加两次、负号相消。
+- 两处来源：`src/velch/vehicle_solver.py:318` 的 placement `rise = abs(...)`（符号被 `abs()` 抹掉，永远抬右轨）与 `src/velch/irregularity.py:472-477` 的轨面旋转（符号跟随 cant）。
+- 本轮不改这条路径（探测时临时打开的 `rise` 已 `git checkout` 复原），cant 在几何路由仍标不可引用；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §152 记录修法 A/B 与验收读数。

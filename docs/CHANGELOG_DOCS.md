@@ -3570,3 +3570,12 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 结论：病因是 `CurveSeries` 把曲线加在 `profile.y_m` 上，与车辆侧坐标约定不同框架——横移 45.5 mm 的轨面与横移 45.5 mm 的车没有抵消而是**叠加**（78 786 → 150 690 kN）。下一轮先判定 `profile.y_m` 是绝对还是轨局部坐标（§22 表里它带 −0.753337，倾向绝对），再把横移写到 `rail_y_m`（`contact_search.py:202` 里真正与轮面比较的量）或改回只移动车辆。
 
 证据：`scripts/s12e_alignment_parts.py`；`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §23。
+
+## 第 134 轮：`align_to_track` 一直是个 no-op；轨面横移默认关闭，曲线回到诚实边界
+
+- **真缺陷**：`vehicle_solver` 里用 `getattr(case.run, "align_to_track", False)` 读开关，但 `RunSettings` 从来没有这个字段，于是它恒为 False——前几轮所有「align_to_track」实际生效的都是 `curve_geometry`。本轮在 `RunSettings` 里正式加上该字段（默认 False），并写明用途。
+- `CurveSeries` 改为显式 opt-in（`curve_geometry` **且** `curve_rail_surface`），默认关闭，注释记录 §23 的 78 786 / 150 690 kN。
+- 只做对齐、不做轨面横移的 80 km/h 侧向过岔**仍不收敛**（`xtol`，0.01 s 与 0.05 s 都是），如实记录。
+- 下一步二选一：(a) 曲率全放车辆侧（横移+偏航+`v·κ` 与 `(1−κy)` 进蠕滑），(b) 先把 `profile.y_m` 的坐标系变成显式约定再谈轨面横移。两者都先量后改。
+
+证据：`src/velch/model.py`（新字段）、`src/velch/vehicle.py`（opt-in 门）、`docs/CURVE_SEAT_AND_CREEP_2026-10-27.md` §24。

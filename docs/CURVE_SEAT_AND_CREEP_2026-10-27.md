@@ -529,6 +529,27 @@ $env:PYTHONPATH="F:\ai道岔状态反演辨识\Velch\src"
 python -X utf8 -m pytest tests/test_curve_series.py -q
 ```
 
+## 24. 曲线能力回退到诚实的边界：轨面横移默认关闭，`align_to_track` 才真正存在
+
+第 23 轮证明「把曲线写进 `profile.y_m`」与车辆侧不同框架，因此这一轮做了两件收口的事：
+
+**① `CurveSeries` 改成显式 opt-in**（`run.curve_geometry` **且** 新增的 `run.curve_rail_surface`）。默认关闭，注释写明 78 786 / 150 690 kN 的实测依据。理由：道岔本身不需要它——18 号道岔的曲股已经写在站表里；需要的是把车放到那条设计线上。
+
+**② `RunSettings.align_to_track` 真正加上。** 之前代码里用 `getattr(case.run, "align_to_track", False)` 读，但 `RunSettings` 里**没有这个字段**，于是它永远返回 False —— 也就是说前几轮所有「`align_to_track`」的说法，实际生效的都是 `curve_geometry`。这是本轮抓到的真缺陷（静默 no-op 的开关），比曲线本身更值得记。
+
+**③ 用对齐（不含轨面横移）跑 80 km/h 侧向：仍不收敛。**
+
+```
+align-80-0.01s: FAILED vertical preload equilibrium failed: no seed converged; xtol termination condition is satisfied
+align-80-0.05s: FAILED 同上
+```
+
+所以当前的诚实边界是：**车辆能被放到道岔自己的设计线上（69 m 处 +0.159525 m / +0.015833 rad，与解析 0.154 / 0.0167 吻合），但这条设计线上的静平衡仍解不出来**；而 R=1100 人造曲线因为轨面横移被证伪、已默认关闭，也不再声称能跑。
+
+下一步的选择只剩两条，都不便宜，都需要先量再改：
+- **(a) 走车辆侧**：把曲率完全放进车辆（横移 + 偏航 + 蠕滑横向速度 `v·κ` 与 `(1−κy)`），轨面保持站表原样——这条与力路由已被验证的八轮等载（59 652–59 708 N）兼容；
+- **(b) 走轨面侧**：先把「`profile.y_m` 是绝对坐标」这件事在加载器里变成显式约定（`Profile.upstream_frame`），再让 `CurveSeries` 只在约定允许时横移，并与 `contact_search.py:202` 的 `rail_y_m` 语义对齐。
+
 ## 23. 罪魁是 `CurveSeries` 本身：车不动、只横移轨面，左轨就是 78.8 MN
 
 第 22 轮已知对齐状态下第一次 `evaluate` 就是左轨 150 690 kN、右轨 0。这一轮把对齐的三个成分（横移、偏航、轨面横移）逐个拆开，量同一个状态：

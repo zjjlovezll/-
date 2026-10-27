@@ -506,7 +506,13 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
         angle = _math.asin(max(-1.0, min(1.0, cant_m / gauge_m)))
         rails = roll_rails(rails, angle)
     radius = run_block.get("curve_radius_m")
-    if radius and run_block.get("curve_geometry"):
+    # OFF BY DEFAULT, because it is measurably wrong today.  Shifting the sampled rail surface by
+    # s^2/(2R) while the vehicle keeps its own lateral frame gives 78 786 kN on the left rail with
+    # the car straight, and 150 690 kN once the car is shifted by the same 45.5 mm -- two equal
+    # shifts in one frame would cancel, so profile.y_m and the vehicle position are not in the same
+    # frame (docs/CURVE_SEAT_AND_CREEP_2026-10-27.md §23).  A turnout does not need this path at all:
+    # its station table is already curved, and `align_to_track` places the vehicle on it.
+    if radius and run_block.get("curve_geometry") and run_block.get("curve_rail_surface"):
         from .irregularity import CurveSeries
 
         origin = float(run_block.get("x_start_m") or 0.0)

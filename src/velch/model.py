@@ -179,6 +179,11 @@ class RunSettings:
     #: curve instead of being dragged flange-first (measured: 1.17 m of missing yaw over the
     #: footprint at R = 350 m).
     curve_geometry: bool = False
+    # Place the vehicle on the sampled track's own centreline and tangent.  A turnout's diverging
+    # route is curved through its station table, not through curve_radius_m, so without this the
+    # vehicle starts straight at 69 m where the design line has already moved 0.154 m and turned
+    # 0.017 rad (7 of 8 wheels then carry load, one side at twice the share).
+    align_to_track: bool = False
 
     #: Whether the vehicle is moved onto the alignment (per-body ``y`` from its own mileage, yaw
     #: from ``s / R``).  ``None`` follows :attr:`curve_geometry`, so nothing that exists changes;

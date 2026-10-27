@@ -822,6 +822,83 @@ def _placement_enabled(run) -> bool:
     return bool(getattr(run, "curve_geometry", False))
 
 
+def _gauge_centre(case: VehicleCase, s_m: float) -> tuple[float, float]:
+    """The centre line of the track at ``s_m``, and its slope, read off the sampled rails.
+
+    A turnout curves through its *station table*, not through ``curve_radius_m``: the diverging
+    route of the 18 号道岔 has its tangent at 50.578 m and R = 1100 m afterwards, so by the run's
+    start at 69 m the track has already moved 154 mm sideways and is rotated by 0.017 rad.  A
+    vehicle that starts straight there meets the rail with its flange, which is what the seat
+    reported as ``7 of 8 wheels carry load``.
+    """
+
+    def centre(x_m: float) -> float | None:
+        # One value per *template*: a turnout template carries several surfaces at the same
+        # mileage (stock rail, point rail, wing rail), and averaging two of those surfaces is not
+        # the track centre.  Measured: taking the first two rails of the diverging case gave
+        # -0.599 m at 69 m, where the gauge centre is -0.154 m.
+        seen: dict[str, float] = {}
+        for rail in case.rails:
+            bodies = getattr(rail, "bodies", None) or getattr(rail, "contact_bodies", None) or ()
+            if not bodies:
+                continue
+            key = str(getattr(rail, "template_id", id(rail)))
+            if key in seen:
+                continue
+            sample = bodies[0].series.sample(float(x_m))
+            seen[key] = float(np.mean(np.asarray(sample.profile.y_m, dtype=float)))
+        if not seen:
+            return None
+        return float(np.mean(list(seen.values())))
+
+    here = centre(s_m)
+    if here is None:
+        return 0.0, 0.0
+    ahead = centre(s_m + 1.0)
+    if ahead is None:
+        return here, 0.0
+    return here, ahead - here
+
+
+def _align_to_track_frame(case: VehicleCase, dynamics: VehicleDynamics,
+                          q: np.ndarray) -> np.ndarray:
+    """Rotate and shift the vehicle onto the track's own centre line at its own mileages."""
+
+    topology = dynamics.topology
+    start = float(getattr(case.run, "x_start_m", 0.0) or 0.0)
+    # Opt-in only.  A turnout's *frog* also has rails that converge and diverge, so "the sampled
+    # rails have a slope" is not evidence that the run is on a curve -- gating on the slope alone
+    # moved the frog case's start state and its seat stopped converging.
+    if not bool(getattr(case.run, "curve_geometry", False)
+                or getattr(case.run, "align_to_track", False)):
+        return q
+    here, tangent = _gauge_centre(case, start)
+    if abs(tangent) <= 1.0e-4:
+        return q
+    offsets = list(getattr(case.vehicle, "axle_offsets_m", ()) or ())
+    if not offsets:
+        return q
+    half = float(getattr(case.vehicle, "bogie_half_spacing_m", 0.0) or 0.0)
+    stations = {topology.wheelset_id(index): start + float(offset)
+                for index, offset in enumerate(offsets)}
+    centres = {body.id: start for body in topology.bogies() if body.bogie == 0}
+    centres.update({body.id: start for body in topology.bogies() if body.bogie == 1})
+    for index, body in enumerate(topology.bogies()):
+        centres[body.id] = start + (half if index == 0 else -half)
+    for body in topology.bodies:
+        if body.kind == "carbody":
+            centres[body.id] = start
+    have = {(body.id, axis) for body in topology.bodies for axis in body.dof}
+    result = np.array(q, dtype=float, copy=True)
+    for body_id, mileage in list(stations.items()) + list(centres.items()):
+        lateral, slope = _gauge_centre(case, mileage)
+        if (body_id, "y") in have:
+            result[topology.require(body_id, "y")] = lateral
+        if (body_id, "yaw") in have:
+            result[topology.require(body_id, "yaw")] = float(np.arctan(slope))
+    return result
+
+
 def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
                         q: np.ndarray) -> np.ndarray:
     """Put the vehicle where the curved design line is, before the seat solves anything.
@@ -907,7 +984,8 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     # would settle with every wheel on the same side of its clearance band and report a converged,
     # laterally meaningless set-down.  The unknowns are therefore widened only when the run really
     # has a curve, so every straight case keeps today's equations bit for bit.
-    curved = bool(getattr(case.run, "curve_radius_m", None))
+    curved = bool(getattr(case.run, "curve_radius_m", None)) or bool(
+        getattr(case.run, "curve_geometry", False)) or bool(getattr(case.run, "align_to_track", False))
     indices = [topology.require(body.id, "z") for body in topology.bodies if "z" in body.dof]
     if curved:
         indices += [topology.require(body.id, axis) for body in topology.bodies
@@ -1215,6 +1293,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     # A curved design line carries the vehicle with it: same lateral offset, same heading, per body.
     # Without this the seat answers a question that has no solution and the wheels go to the flange.
     q = _place_on_alignment(case, dynamics, q)
+    q = _align_to_track_frame(case, dynamics, q)
     static_residual_n = None
     if case.equilibrate_vertical:
         q, static_residual_n = _static_vertical_equilibrium(case, dynamics, q, v)

@@ -3518,3 +3518,11 @@ B027（见 `docs/AXLEBOX_RESTRAINT_2026-10-26.md`）之后，同一套差分协�
 - 实测：R=1100 m、x_start=60 m 下轨面横向位移 61/70/80 m 为 +0.455 / +45.455 / +181.818 mm，高度变化恒为 0；车辆侧逐轴 `y = +45.455 / +25.568 mm`、`yaw = ±0.009091 / ±0.006818`，两者一致。
 - 静平衡仍未闭合：10/30/60/100 km/h 四档同样停在 `gtol termination condition is satisfied`，放置态最大力 `wheelset1.z = 1.46e8 N`、`wheelset1.roll = −9.5e7 N`，指向接触搜索在弯曲轨面上的取样前提。几何曲线因此**不宣称可用**，力路由仍是唯一可跑的曲线。
 - 测试 `tests/test_curve_series.py` 6 项（弧矢、无超高时高度不变、超高内外轨符号、覆盖转发、source 标记、与 `RolledSeries` 复合）。
+
+## 第 130 轮：18 号道岔把车放到自己的设计线上（80 km/h 侧向限速）
+
+- `_gauge_centre` + `_align_to_track_frame`：从被采样的轨面读该里程的轨距中心与切线，逐刚体写入 `y`/`yaw`；只在 `|tangent| > 1e-4` 时动手，直线基线因此 `UNCHANGED`。
+- 实测 69 m：轨距中心 **+0.159525 m**、切线 **+0.015833 rad**，与解析弧矢 0.154 m / 0.0167 rad 一致。
+- 取样口径：道岔同一里程有基本轨/尖轨/翼轨三面，「前两根轨取均值」给出 −0.599 m；改成按 `template_id` 每侧取一根才对。
+- 侧向 80 km/h 仍未跑通：对齐后静平衡停在 `xtol termination condition is satisfied`（力路由与几何路由相同），下一步打印道岔算例的残差行。
+- 否定结果：`contact_grid` 的横向轴改成绝对 `rail_y` 会打坏直线冻结基线（`ftol`），已回退并把否证写进注释。

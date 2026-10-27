@@ -38,6 +38,11 @@ def _build_rail_grid(rail_y: np.ndarray, rail_z: np.ndarray, rail_sample: Profil
     currently is; each call slices the part that overlaps the wheel.
     """
 
+    # NOTE: the axis is built from the *relative* profile coordinates.  Switching it to the
+    # absolute ``rail_y`` looked like the explanation for a curved rail reading 1.46e8 N of
+    # penetration, but it broke the straight frozen baseline (`ftol termination condition is
+    # satisfied` in the seat) because a profile's ``y_m`` is not ordered the way this axis needs.
+    # The frame question is therefore still open: see docs/CURVE_SEAT_AND_CREEP_2026-10-27.md §19.
     node = rail_sample.profile.y_m
     low = float(node[0])
     high = float(node[-1])

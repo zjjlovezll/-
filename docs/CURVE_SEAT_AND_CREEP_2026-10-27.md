@@ -528,3 +528,36 @@ python -X utf8 -m pytest tests/test_curve_seat.py -q
 $env:PYTHONPATH="F:\ai道岔状态反演辨识\Velch\src"
 python -X utf8 -m pytest tests/test_curve_series.py -q
 ```
+
+## 20. 18 号道岔：把车放到它自己的设计线上（80 km/h 侧向限速）
+
+### 20.1 用户口径
+
+侧向过岔限速 **80 km/h**，18 号道岔导曲线半径 **R = 1100 m**。之前所有曲线实验都用直线算例 + 人造半径，本轮改成**直接用道岔自己的站表**：`case_diverging_R1100.json`（19 001 个站位、30.0–125.0 m、8 根轨、内联 35 坐标），`run.curve_radius_m` 为 `None`——曲率本来就在站表里。
+
+### 20.2 为什么原来一定失败：车是直的，轨是弯的
+
+站表里 18 号道岔的切线点在 50.578 m，到 `x_start_m = 69 m` 时设计线已经横移 **0.154 m**、转角 **0.0167 rad**。车辆以 `y = 0`、`yaw = 0` 起步，等于横着撞上导轨：静平衡报 `unbalanced branch - 7 of 8 wheels carry load`（一侧全脱空）。
+
+新增 `_gauge_centre(case, s_m)` 与 `_align_to_track_frame(case, dynamics, q)`：从**被采样的轨面**读该里程的轨距中心与切线斜率，逐刚体（四个轮对用自己的里程、两个构架用定距、车体用中心）写入 `y` 与 `yaw`。实测 69 m 处：
+
+```
+gauge centre +0.159525 m      （解析弧矢 (69-50.578)²/2200 = 0.154 m）
+tangent      +0.015833 rad    （解析 18.422/1100     = 0.0167 rad）
+```
+
+两个数与道岔设计线一致，说明读出来的就是它的中心线。
+
+### 20.3 一个必须记住的取样口径
+
+第一版取「`case.rails` 前两根轨的型面均值」，得到 **−0.599 m**——因为道岔同一里程上同时有基本轨、尖轨、翼轨，两两平均不是轨距中心。改成**按 `template_id` 每侧只取一根**后得到 +0.1595 m。这条与 O008 的单侧横向导入、`CurveSeries` 的两侧都要包，属于同一类错误：**道岔区同一里程的多个承载面不能当成一根轨**。
+
+### 20.4 仍未闭合
+
+对齐之后静平衡**仍然**停在 `xtol termination condition is satisfied`（收敛到非零残差），力路由与几何路由都一样。因此 80 km/h 的 18 号道岔侧向**还没有跑通**，下一步是打印道岔算例的残差行（直线算例上已量到 `wheelset1.z = 1.46e8 N`，指向弯曲轨面上的接触取样）。
+
+已确认未受影响的部分：直线基线 `straight_rigid 06928c9db944796d` / `straight_flexible 8129…`——`scripts/freeze_baseline.py --check` 仍是 **UNCHANGED**，因为对齐只在 `|tangent| > 1e-4` 时才动手。
+
+### 20.5 本轮还留下的一个否定结果
+
+把 `contact_grid._build_rail_grid` 的横向轴从「相对型面坐标」改成「绝对 `rail_y`」看起来能解释 1.46e8 N 的穿透，但实测会**打坏直线冻结基线**（`ftol termination condition is satisfied`）：型面 `y_m` 的排序与这条轴需要的不一致。已回退，并把这段否证写进代码注释——下次不要再从同一个假设出发。

@@ -1,0 +1,28 @@
+{
+ "operator": {
+  "speed_kmh": 70.8,
+  "wavelength_mm": 27.5,
+  "frequency_hz": 715.151515151515,
+  "probe_depth_um": 30.0,
+  "amplitude_m_per_s2": 0.8265030592472923,
+  "gain_per_m": 27550.101974909743,
+  "status": "numerically_checked",
+  "duration_s": 0.08
+ },
+ "record": {
+  "file": "Run_75kmh_E1toE2.mat",
+  "rate_hz": 4000.0000000945874,
+  "band_hz": [
+   655.151515151515,
+   775.151515151515
+  ],
+  "amplitude_m_per_s2": [
+   0.04262367196720214,
+   0.041722725888989225
+  ],
+  "amplitude_median_m_per_s2": 0.04217319892809568
+ },
+ "implied_depth_um": 1.5307819537838152,
+ "single_band": true,
+ "note": "one band, one equation: this converts a band amplitude into a depth, not a profile, and it is valid only at the recorded mean speed"
+}

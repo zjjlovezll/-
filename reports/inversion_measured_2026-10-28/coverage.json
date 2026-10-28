@@ -1,0 +1,189 @@
+{
+ "estimand": "median_wavelength_in_band_mm",
+ "estimand_unit": "mm",
+ "sensitivity_estimand": "median_wavelength_mm",
+ "values": {
+  "Run_40kmh_E2toE1.mat": 28.06196441529251,
+  "Run_50kmh_E1toE2.mat": 28.4265193424429,
+  "Run_60kmh_E2toE1 (1).mat": 26.26536844206004,
+  "Run_75kmh_E1toE2.mat": 26.63041432374668
+ },
+ "speed_kmh": [
+  39.921,
+  49.215,
+  57.982,
+  70.815
+ ],
+ "folds": [
+  {
+   "held_out": "Run_40kmh_E2toE1.mat",
+   "held_out_value": 28.06196441529251,
+   "train_mean": 27.107434036083205,
+   "train_spread": 1.1568509662115642,
+   "sigma_prediction": 1.3358164335090505,
+   "z": 0.7145670282718817,
+   "inside_1_sigma": true,
+   "inside_2_sigma": true,
+   "interval_95": [
+    21.35987945099619,
+    32.85498862117022
+   ],
+   "inside_95": true,
+   "n_train": 3
+  },
+  {
+   "held_out": "Run_50kmh_E1toE2.mat",
+   "held_out_value": 28.4265193424429,
+   "train_mean": 26.985915727033078,
+   "train_spread": 0.9495921274751229,
+   "sigma_prediction": 1.0964945408362232,
+   "z": 1.3138265278650376,
+   "inside_1_sigma": false,
+   "inside_2_sigma": true,
+   "interval_95": [
+    22.268080201420478,
+    31.703751252645677
+   ],
+   "inside_95": true,
+   "n_train": 3
+  },
+  {
+   "held_out": "Run_60kmh_E2toE1 (1).mat",
+   "held_out_value": 26.26536844206004,
+   "train_mean": 27.70629936049403,
+   "train_spread": 0.9494058841981347,
+   "sigma_prediction": 1.0962794856240154,
+   "z": -1.31438281690895,
+   "inside_1_sigma": false,
+   "inside_2_sigma": true,
+   "interval_95": [
+    22.9893891428354,
+    32.42320957815266
+   ],
+   "inside_95": true,
+   "n_train": 3
+  },
+  {
+   "held_out": "Run_75kmh_E1toE2.mat",
+   "held_out_value": 26.63041432374668,
+   "train_mean": 27.584617399931815,
+   "train_spread": 1.1569522174064641,
+   "sigma_prediction": 1.335933348318313,
+   "z": -0.714259493099933,
+   "inside_1_sigma": true,
+   "inside_2_sigma": true,
+   "interval_95": [
+    21.836559770989982,
+    33.33267502887365
+   ],
+   "inside_95": true,
+   "n_train": 3
+  }
+ ],
+ "summary": {
+  "folds": 4,
+  "coverage_1_sigma": 0.5,
+  "coverage_2_sigma": 1.0,
+  "coverage_95_interval": 1.0,
+  "max_abs_z": 1.31438281690895,
+  "criterion": {
+   "min_coverage_1_sigma": 0.5,
+   "min_coverage_2_sigma": 1.0,
+   "max_abs_z": 3.0
+  },
+  "binomial_tail": {
+   "one_sigma": 0.3789203885687124,
+   "two_sigma": 1.0,
+   "ninety_five": 1.0
+  },
+  "passed": true
+ },
+ "sensitivity": {
+  "summary": {
+   "folds": 4,
+   "coverage_1_sigma": 0.5,
+   "coverage_2_sigma": 0.75,
+   "coverage_95_interval": 1.0,
+   "max_abs_z": 3.0638079777232012,
+   "criterion": {
+    "min_coverage_1_sigma": 0.5,
+    "min_coverage_2_sigma": 1.0,
+    "max_abs_z": 3.0
+   },
+   "binomial_tail": {
+    "one_sigma": 0.3789203885687124,
+    "two_sigma": 0.16995099956493745,
+    "ninety_five": 1.0
+   },
+   "passed": false
+  },
+  "folds": [
+   {
+    "held_out": "Run_40kmh_E2toE1.mat",
+    "held_out_value": 28.09421585176754,
+    "train_mean": 28.040864459574067,
+    "train_spread": 1.6518728661074464,
+    "sigma_prediction": 1.9074184878283456,
+    "z": 0.027970470315727934,
+    "inside_1_sigma": true,
+    "inside_2_sigma": true,
+    "interval_95": [
+     19.833904580663972,
+     36.247824338484165
+    ],
+    "inside_95": true,
+    "n_train": 3
+   },
+   {
+    "held_out": "Run_50kmh_E1toE2.mat",
+    "held_out_value": 29.89144105222715,
+    "train_mean": 27.441789392754192,
+    "train_spread": 0.6924260864098946,
+    "sigma_prediction": 0.7995447747653434,
+    "z": 3.0638079777232012,
+    "inside_1_sigma": false,
+    "inside_2_sigma": false,
+    "interval_95": [
+     24.001625668975763,
+     30.88195311653262
+    ],
+    "inside_95": true,
+    "n_train": 3
+   },
+   {
+    "held_out": "Run_60kmh_E2toE1 (1).mat",
+    "held_out_value": 26.715315408457094,
+    "train_mean": 28.500497940677548,
+    "train_spread": 1.2388190353804747,
+    "sigma_prediction": 1.4304650071082992,
+    "z": -1.2479735773678375,
+    "inside_1_sigma": false,
+    "inside_2_sigma": true,
+    "interval_95": [
+     22.345703386448,
+     34.655292494907094
+    ],
+    "inside_95": true,
+    "n_train": 3
+   },
+   {
+    "held_out": "Run_75kmh_E1toE2.mat",
+    "held_out_value": 27.515836918037955,
+    "train_mean": 28.23365743748393,
+    "train_spread": 1.5926476362095179,
+    "sigma_prediction": 1.8390310829795726,
+    "z": -0.39032538715059284,
+    "inside_1_sigma": true,
+    "inside_2_sigma": true,
+    "interval_95": [
+     20.320944831208624,
+     36.14637004375924
+    ],
+    "inside_95": true,
+    "n_train": 3
+   }
+  ]
+ },
+ "source_table": "F:\\ai\u9053\u5c94\u72b6\u6001\u53cd\u6f14\u8fa8\u8bc6\\Velch\\reports\\inversion_measured_2026-10-28\\speed_table.json",
+ "reading": "the four passes are four measurements of one track property; a fold outside two sigma says the quoted interval is too narrow, not that the track changed"
+}

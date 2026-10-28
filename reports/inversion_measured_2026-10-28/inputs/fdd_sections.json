@@ -1,0 +1,1553 @@
+{
+ "record": "Run_75kmh_E1toE2.mat",
+ "sections": {
+  "S1": {
+   "peaks": [
+    {
+     "frequency_hz": 19.0,
+     "singular_value": 0.8729905553564475,
+     "prominence_db": 11.036,
+     "shape": [
+      0.9898,
+      0.1426
+     ],
+     "shape_ratio": 0.1441,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 23.0,
+     "singular_value": 1.0521676932375061,
+     "prominence_db": 12.658,
+     "shape": [
+      0.981,
+      0.194
+     ],
+     "shape_ratio": 0.1978,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 36.0,
+     "singular_value": 1.1435179530265491,
+     "prominence_db": 13.381,
+     "shape": [
+      0.7109,
+      0.7033
+     ],
+     "shape_ratio": 0.9894,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 40.5,
+     "singular_value": 1.3841128315979108,
+     "prominence_db": 15.04,
+     "shape": [
+      0.8009,
+      0.5988
+     ],
+     "shape_ratio": 0.7476,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 50.0,
+     "singular_value": 0.8612453696758964,
+     "prominence_db": 10.919,
+     "shape": [
+      0.9209,
+      0.3898
+     ],
+     "shape_ratio": 0.4232,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 59.0,
+     "singular_value": 1.1454465807778247,
+     "prominence_db": 13.396,
+     "shape": [
+      0.9856,
+      0.1689
+     ],
+     "shape_ratio": 0.1714,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 63.5,
+     "singular_value": 0.9538513099195547,
+     "prominence_db": 11.806,
+     "shape": [
+      0.9815,
+      0.1914
+     ],
+     "shape_ratio": 0.195,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 86.5,
+     "singular_value": 0.7730938417172338,
+     "prominence_db": 9.981,
+     "shape": [
+      0.9784,
+      0.2065
+     ],
+     "shape_ratio": 0.211,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 89.5,
+     "singular_value": 0.7511552547909011,
+     "prominence_db": 9.731,
+     "shape": [
+      0.9927,
+      0.1204
+     ],
+     "shape_ratio": 0.1213,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 91.0,
+     "singular_value": 0.7849125458669501,
+     "prominence_db": 10.113,
+     "shape": [
+      0.9823,
+      0.1874
+     ],
+     "shape_ratio": 0.1908,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 108.5,
+     "singular_value": 0.7593329558877954,
+     "prominence_db": 9.825,
+     "shape": [
+      0.9944,
+      0.1061
+     ],
+     "shape_ratio": 0.1067,
+     "upper_singular_ratio": 0.0
+    },
+    {
+     "frequency_hz": 149.0,
+     "singular_value": 0.8052439548793205,
+     "prominence_db": 10.335,
+     "shape": [
+      0.9551,
+      0.2963
+     ],
+     "shape_ratio": 0.3102,
+     "upper_singular_ratio": 0.0
+    }
+   ],
+   "segment_seconds": 2.0,
+   "resolution_hz": 0.5,
+   "sample_rate_hz": 4000.0,
+   "frequency_range_hz": [
+    5.0,
+    200.0
+   ]
+  },
+  "S2": {
+   "peaks": [
+    {
+     "frequency_hz": 20.0,
+     "singular_value": 0.9846436421992834,
+     "prominence_db": 8.773,
+     "shape": [
+      0.8368,
+      0.5475
+     ],
+     "shape_ratio": 0.6542,
+     "upper_singular_ratio": 0.2077
+    },
+    {
+     "frequency_hz": 27.5,
+     "singular_value": 1.2573533979195262,
+     "prominence_db": 10.897,
+     "shape": [
+      0.8008,
+      0.5989
+     ],
+     "shape_ratio": 0.7478,
+     "upper_singular_ratio": 0.5479
+    },
+    {
+     "frequency_hz": 30.0,
+     "singular_value": 0.8754583613867044,
+     "prominence_db": 7.752,
+     "shape": [
+      0.8429,
+      0.5381
+     ],
+     "shape_ratio": 0.6385,
+     "upper_singular_ratio": 0.1722
+    },
+    {
+     "frequency_hz": 32.5,
+     "singular_value": 1.3845808439633043,
+     "prominence_db": 11.734,
+     "shape": [
+      0.8092,
+      0.5876
+     ],
+     "shape_ratio": 0.7261,
+     "upper_singular_ratio": 0.4115
+    },
+    {
+     "frequency_hz": 34.5,
+     "singular_value": 1.7024475922060243,
+     "prominence_db": 13.529,
+     "shape": [
+      0.7613,
+      0.6484
+     ],
+     "shape_ratio": 0.8518,
+     "upper_singular_ratio": 0.1642
+    },
+    {
+     "frequency_hz": 36.0,
+     "singular_value": 1.867014967208287,
+     "prominence_db": 14.33,
+     "shape": [
+      0.8211,
+      0.5708
+     ],
+     "shape_ratio": 0.6952,
+     "upper_singular_ratio": 0.197
+    },
+    {
+     "frequency_hz": 40.0,
+     "singular_value": 1.1933339294169416,
+     "prominence_db": 10.443,
+     "shape": [
+      0.4124,
+      0.911
+     ],
+     "shape_ratio": 0.4527,
+     "upper_singular_ratio": 0.1975
+    },
+    {
+     "frequency_hz": 42.0,
+     "singular_value": 1.1937247843648269,
+     "prominence_db": 10.446,
+     "shape": [
+      0.5818,
+      0.8133
+     ],
+     "shape_ratio": 0.7153,
+     "upper_singular_ratio": 0.3993
+    },
+    {
+     "frequency_hz": 52.0,
+     "singular_value": 0.9942036514508933,
+     "prominence_db": 8.857,
+     "shape": [
+      0.955,
+      0.2965
+     ],
+     "shape_ratio": 0.3105,
+     "upper_singular_ratio": 0.1782
+    },
+    {
+     "frequency_hz": 58.0,
+     "singular_value": 0.9978730898229853,
+     "prominence_db": 8.889,
+     "shape": [
+      0.8079,
+      0.5894
+     ],
+     "shape_ratio": 0.7295,
+     "upper_singular_ratio": 0.1561
+    },
+    {
+     "frequency_hz": 88.5,
+     "singular_value": 1.0411098136573602,
+     "prominence_db": 9.257,
+     "shape": [
+      0.9846,
+      0.1746
+     ],
+     "shape_ratio": 0.1773,
+     "upper_singular_ratio": 0.2324
+    },
+    {
+     "frequency_hz": 91.5,
+     "singular_value": 0.9183608373353098,
+     "prominence_db": 8.168,
+     "shape": [
+      0.9119,
+      0.4104
+     ],
+     "shape_ratio": 0.4501,
+     "upper_singular_ratio": 0.0949
+    }
+   ],
+   "segment_seconds": 2.0,
+   "resolution_hz": 0.5,
+   "sample_rate_hz": 4000.0,
+   "frequency_range_hz": [
+    5.0,
+    200.0
+   ]
+  },
+  "S3": {
+   "peaks": [
+    {
+     "frequency_hz": 6.0,
+     "singular_value": 0.3665771995342991,
+     "prominence_db": 8.362,
+     "shape": [
+      0.8971,
+      0.4419
+     ],
+     "shape_ratio": 0.4926,
+     "upper_singular_ratio": 0.2597
+    },
+    {
+     "frequency_hz": 27.5,
+     "singular_value": 0.4870235362079502,
+     "prominence_db": 10.829,
+     "shape": [
+      0.8248,
+      0.5654
+     ],
+     "shape_ratio": 0.6854,
+     "upper_singular_ratio": 0.1485
+    },
+    {
+     "frequency_hz": 30.0,
+     "singular_value": 0.464490327889346,
+     "prominence_db": 10.418,
+     "shape": [
+      0.9241,
+      0.3821
+     ],
+     "shape_ratio": 0.4135,
+     "upper_singular_ratio": 0.03
+    },
+    {
+     "frequency_hz": 38.5,
+     "singular_value": 0.42839425495546213,
+     "prominence_db": 9.715,
+     "shape": [
+      0.9087,
+      0.4174
+     ],
+     "shape_ratio": 0.4593,
+     "upper_singular_ratio": 0.2862
+    },
+    {
+     "frequency_hz": 40.5,
+     "singular_value": 0.49377399940100414,
+     "prominence_db": 10.949,
+     "shape": [
+      0.66,
+      0.7513
+     ],
+     "shape_ratio": 0.8784,
+     "upper_singular_ratio": 0.3264
+    },
+    {
+     "frequency_hz": 42.5,
+     "singular_value": 0.47536491076516296,
+     "prominence_db": 10.619,
+     "shape": [
+      0.6408,
+      0.7677
+     ],
+     "shape_ratio": 0.8347,
+     "upper_singular_ratio": 0.4557
+    },
+    {
+     "frequency_hz": 44.5,
+     "singular_value": 0.43456910746912153,
+     "prominence_db": 9.84,
+     "shape": [
+      0.7519,
+      0.6593
+     ],
+     "shape_ratio": 0.8769,
+     "upper_singular_ratio": 0.2139
+    },
+    {
+     "frequency_hz": 46.0,
+     "singular_value": 0.34331154208545417,
+     "prominence_db": 7.792,
+     "shape": [
+      0.8756,
+      0.4831
+     ],
+     "shape_ratio": 0.5517,
+     "upper_singular_ratio": 0.2188
+    },
+    {
+     "frequency_hz": 58.0,
+     "singular_value": 0.9923096935043302,
+     "prominence_db": 17.011,
+     "shape": [
+      0.7629,
+      0.6465
+     ],
+     "shape_ratio": 0.8475,
+     "upper_singular_ratio": 0.1117
+    },
+    {
+     "frequency_hz": 70.0,
+     "singular_value": 0.3881934937632231,
+     "prominence_db": 8.859,
+     "shape": [
+      0.7213,
+      0.6926
+     ],
+     "shape_ratio": 0.9602,
+     "upper_singular_ratio": 0.4872
+    },
+    {
+     "frequency_hz": 72.0,
+     "singular_value": 0.47740099527089264,
+     "prominence_db": 10.656,
+     "shape": [
+      0.2201,
+      0.9755
+     ],
+     "shape_ratio": 0.2256,
+     "upper_singular_ratio": 0.2268
+    },
+    {
+     "frequency_hz": 74.5,
+     "singular_value": 0.4176059572726902,
+     "prominence_db": 9.494,
+     "shape": [
+      0.9262,
+      0.377
+     ],
+     "shape_ratio": 0.4071,
+     "upper_singular_ratio": 0.5108
+    }
+   ],
+   "segment_seconds": 2.0,
+   "resolution_hz": 0.5,
+   "sample_rate_hz": 4000.0,
+   "frequency_range_hz": [
+    5.0,
+    200.0
+   ]
+  },
+  "S4": {
+   "peaks": [
+    {
+     "frequency_hz": 27.5,
+     "singular_value": 0.8076950736425265,
+     "prominence_db": 14.017,
+     "shape": [
+      0.663,
+      0.7486
+     ],
+     "shape_ratio": 0.8857,
+     "upper_singular_ratio": 0.246
+    },
+    {
+     "frequency_hz": 29.0,
+     "singular_value": 0.39889803119274303,
+     "prominence_db": 7.889,
+     "shape": [
+      0.9948,
+      0.1023
+     ],
+     "shape_ratio": 0.1028,
+     "upper_singular_ratio": 0.375
+    },
+    {
+     "frequency_hz": 31.0,
+     "singular_value": 0.4104145101618276,
+     "prominence_db": 8.137,
+     "shape": [
+      0.8189,
+      0.5739
+     ],
+     "shape_ratio": 0.7008,
+     "upper_singular_ratio": 0.3216
+    },
+    {
+     "frequency_hz": 32.5,
+     "singular_value": 0.5757662191945917,
+     "prominence_db": 11.077,
+     "shape": [
+      0.7074,
+      0.7068
+     ],
+     "shape_ratio": 0.9991,
+     "upper_singular_ratio": 0.2937
+    },
+    {
+     "frequency_hz": 36.0,
+     "singular_value": 0.8099828015174582,
+     "prominence_db": 14.042,
+     "shape": [
+      0.1387,
+      0.9903
+     ],
+     "shape_ratio": 0.14,
+     "upper_singular_ratio": 0.2877
+    },
+    {
+     "frequency_hz": 40.0,
+     "singular_value": 0.622593889647569,
+     "prominence_db": 11.756,
+     "shape": [
+      0.0713,
+      0.9975
+     ],
+     "shape_ratio": 0.0715,
+     "upper_singular_ratio": 0.436
+    },
+    {
+     "frequency_hz": 42.0,
+     "singular_value": 0.4264268296707654,
+     "prominence_db": 8.469,
+     "shape": [
+      0.3615,
+      0.9324
+     ],
+     "shape_ratio": 0.3877,
+     "upper_singular_ratio": 0.3409
+    },
+    {
+     "frequency_hz": 57.5,
+     "singular_value": 0.7280272455443773,
+     "prominence_db": 13.115,
+     "shape": [
+      0.5769,
+      0.8168
+     ],
+     "shape_ratio": 0.7063,
+     "upper_singular_ratio": 0.4335
+    },
+    {
+     "frequency_hz": 68.0,
+     "singular_value": 0.3841825021108899,
+     "prominence_db": 7.563,
+     "shape": [
+      0.8211,
+      0.5708
+     ],
+     "shape_ratio": 0.6951,
+     "upper_singular_ratio": 0.4699
+    },
+    {
+     "frequency_hz": 71.5,
+     "singular_value": 0.4103264056786565,
+     "prominence_db": 8.135,
+     "shape": [
+      0.5945,
+      0.8041
+     ],
+     "shape_ratio": 0.7394,
+     "upper_singular_ratio": 0.2976
+    },
+    {
+     "frequency_hz": 73.5,
+     "singular_value": 0.48693502931859695,
+     "prominence_db": 9.622,
+     "shape": [
+      0.8604,
+      0.5096
+     ],
+     "shape_ratio": 0.5923,
+     "upper_singular_ratio": 0.4888
+    },
+    {
+     "frequency_hz": 76.0,
+     "singular_value": 0.4238463419112629,
+     "prominence_db": 8.416,
+     "shape": [
+      0.883,
+      0.4694
+     ],
+     "shape_ratio": 0.5316,
+     "upper_singular_ratio": 0.381
+    }
+   ],
+   "segment_seconds": 2.0,
+   "resolution_hz": 0.5,
+   "sample_rate_hz": 4000.0,
+   "frequency_range_hz": [
+    5.0,
+    200.0
+   ]
+  },
+  "S5": {
+   "peaks": [
+    {
+     "frequency_hz": 44.0,
+     "singular_value": 1.4045587108832793,
+     "prominence_db": 13.639,
+     "shape": [
+      0.5638,
+      0.8259
+     ],
+     "shape_ratio": 0.6826,
+     "upper_singular_ratio": 0.221
+    },
+    {
+     "frequency_hz": 47.5,
+     "singular_value": 1.9272704062247905,
+     "prominence_db": 16.387,
+     "shape": [
+      0.8129,
+      0.5825
+     ],
+     "shape_ratio": 0.7165,
+     "upper_singular_ratio": 0.1168
+    },
+    {
+     "frequency_hz": 49.0,
+     "singular_value": 2.0168168600734764,
+     "prominence_db": 16.781,
+     "shape": [
+      0.738,
+      0.6748
+     ],
+     "shape_ratio": 0.9143,
+     "upper_singular_ratio": 0.0858
+    },
+    {
+     "frequency_hz": 50.5,
+     "singular_value": 2.37992744571454,
+     "prominence_db": 18.219,
+     "shape": [
+      0.6513,
+      0.7589
+     ],
+     "shape_ratio": 0.8582,
+     "upper_singular_ratio": 0.0718
+    },
+    {
+     "frequency_hz": 52.0,
+     "singular_value": 2.938300721381527,
+     "prominence_db": 20.05,
+     "shape": [
+      0.5699,
+      0.8217
+     ],
+     "shape_ratio": 0.6936,
+     "upper_singular_ratio": 0.0518
+    },
+    {
+     "frequency_hz": 53.5,
+     "singular_value": 2.4596303325932474,
+     "prominence_db": 18.505,
+     "shape": [
+      0.3238,
+      0.9461
+     ],
+     "shape_ratio": 0.3422,
+     "upper_singular_ratio": 0.086
+    },
+    {
+     "frequency_hz": 55.0,
+     "singular_value": 1.8638119232423216,
+     "prominence_db": 16.096,
+     "shape": [
+      0.157,
+      0.9876
+     ],
+     "shape_ratio": 0.159,
+     "upper_singular_ratio": 0.2876
+    },
+    {
+     "frequency_hz": 57.0,
+     "singular_value": 2.1457254316563175,
+     "prominence_db": 17.319,
+     "shape": [
+      0.5087,
+      0.861
+     ],
+     "shape_ratio": 0.5908,
+     "upper_singular_ratio": 0.1852
+    },
+    {
+     "frequency_hz": 59.5,
+     "singular_value": 1.979962848044856,
+     "prominence_db": 16.621,
+     "shape": [
+      0.1071,
+      0.9942
+     ],
+     "shape_ratio": 0.1077,
+     "upper_singular_ratio": 0.2475
+    },
+    {
+     "frequency_hz": 61.0,
+     "singular_value": 1.5858793488587337,
+     "prominence_db": 14.693,
+     "shape": [
+      0.0993,
+      0.9951
+     ],
+     "shape_ratio": 0.0998,
+     "upper_singular_ratio": 0.1587
+    },
+    {
+     "frequency_hz": 83.0,
+     "singular_value": 1.2745527527907214,
+     "prominence_db": 12.795,
+     "shape": [
+      0.825,
+      0.5651
+     ],
+     "shape_ratio": 0.685,
+     "upper_singular_ratio": 0.2612
+    },
+    {
+     "frequency_hz": 90.5,
+     "singular_value": 1.3351595577203066,
+     "prominence_db": 13.199,
+     "shape": [
+      0.8175,
+      0.5759
+     ],
+     "shape_ratio": 0.7044,
+     "upper_singular_ratio": 0.111
+    }
+   ],
+   "segment_seconds": 2.0,
+   "resolution_hz": 0.5,
+   "sample_rate_hz": 4000.0,
+   "frequency_range_hz": [
+    5.0,
+    200.0
+   ]
+  },
+  "S6": {
+   "peaks": [
+    {
+     "frequency_hz": 52.0,
+     "singular_value": 1.5846741617950084,
+     "prominence_db": 17.244,
+     "shape": [
+      0.6101,
+      0.7923
+     ],
+     "shape_ratio": 0.77,
+     "upper_singular_ratio": 0.1721
+    },
+    {
+     "frequency_hz": 60.0,
+     "singular_value": 1.9255246129375978,
+     "prominence_db": 18.937,
+     "shape": [
+      0.3772,
+      0.9261
+     ],
+     "shape_ratio": 0.4073,
+     "upper_singular_ratio": 0.1214
+    },
+    {
+     "frequency_hz": 62.5,
+     "singular_value": 1.757939100045246,
+     "prominence_db": 18.146,
+     "shape": [
+      0.2391,
+      0.971
+     ],
+     "shape_ratio": 0.2463,
+     "upper_singular_ratio": 0.176
+    },
+    {
+     "frequency_hz": 72.0,
+     "singular_value": 2.498579773940737,
+     "prominence_db": 21.199,
+     "shape": [
+      0.185,
+      0.9827
+     ],
+     "shape_ratio": 0.1883,
+     "upper_singular_ratio": 0.0768
+    },
+    {
+     "frequency_hz": 76.0,
+     "singular_value": 1.9242877744768787,
+     "prominence_db": 18.931,
+     "shape": [
+      0.8321,
+      0.5546
+     ],
+     "shape_ratio": 0.6665,
+     "upper_singular_ratio": 0.4659
+    },
+    {
+     "frequency_hz": 79.0,
+     "singular_value": 1.6539387485803296,
+     "prominence_db": 17.616,
+     "shape": [
+      0.1778,
+      0.9841
+     ],
+     "shape_ratio": 0.1807,
+     "upper_singular_ratio": 0.518
+    },
+    {
+     "frequency_hz": 81.0,
+     "singular_value": 3.789208397909848,
+     "prominence_db": 24.817,
+     "shape": [
+      0.8698,
+      0.4934
+     ],
+     "shape_ratio": 0.5673,
+     "upper_singular_ratio": 0.3044
+    },
+    {
+     "frequency_hz": 82.5,
+     "singular_value": 2.4911557200172165,
+     "prominence_db": 21.174,
+     "shape": [
+      0.9509,
+      0.3097
+     ],
+     "shape_ratio": 0.3257,
+     "upper_singular_ratio": 0.3075
+    },
+    {
+     "frequency_hz": 84.0,
+     "singular_value": 2.7233846798769408,
+     "prominence_db": 21.948,
+     "shape": [
+      0.923,
+      0.3848
+     ],
+     "shape_ratio": 0.4169,
+     "upper_singular_ratio": 0.2432
+    },
+    {
+     "frequency_hz": 87.5,
+     "singular_value": 2.1676822567036056,
+     "prominence_db": 19.965,
+     "shape": [
+      0.8823,
+      0.4707
+     ],
+     "shape_ratio": 0.5335,
+     "upper_singular_ratio": 0.3283
+    },
+    {
+     "frequency_hz": 89.0,
+     "singular_value": 1.9971324735267393,
+     "prominence_db": 19.254,
+     "shape": [
+      0.899,
+      0.438
+     ],
+     "shape_ratio": 0.4872,
+     "upper_singular_ratio": 0.3229
+    },
+    {
+     "frequency_hz": 90.5,
+     "singular_value": 1.6917056132728454,
+     "prominence_db": 17.812,
+     "shape": [
+      0.9845,
+      0.1753
+     ],
+     "shape_ratio": 0.1781,
+     "upper_singular_ratio": 0.1854
+    }
+   ],
+   "segment_seconds": 2.0,
+   "resolution_hz": 0.5,
+   "sample_rate_hz": 4000.0,
+   "frequency_range_hz": [
+    5.0,
+    200.0
+   ]
+  },
+  "ALL": {
+   "peaks": [
+    {
+     "frequency_hz": 47.5,
+     "singular_value": 0.8816192443666269,
+     "prominence_db": 12.712,
+     "shape": [
+      0.7535,
+      0.6575
+     ],
+     "shape_ratio": 0.8726,
+     "upper_singular_ratio": 0.5735
+    },
+    {
+     "frequency_hz": 50.5,
+     "singular_value": 1.0182717461372397,
+     "prominence_db": 13.964,
+     "shape": [
+      0.6897,
+      0.724
+     ],
+     "shape_ratio": 0.9526,
+     "upper_singular_ratio": 0.4976
+    },
+    {
+     "frequency_hz": 52.0,
+     "singular_value": 1.164331888003222,
+     "prominence_db": 15.128,
+     "shape": [
+      0.574,
+      0.8188
+     ],
+     "shape_ratio": 0.701,
+     "upper_singular_ratio": 0.3872
+    },
+    {
+     "frequency_hz": 53.5,
+     "singular_value": 0.9383884315884715,
+     "prominence_db": 13.254,
+     "shape": [
+      0.3514,
+      0.9362
+     ],
+     "shape_ratio": 0.3753,
+     "upper_singular_ratio": 0.3755
+    },
+    {
+     "frequency_hz": 55.5,
+     "singular_value": 0.9479730072901471,
+     "prominence_db": 13.342,
+     "shape": [
+      0.7014,
+      0.7127
+     ],
+     "shape_ratio": 0.9842,
+     "upper_singular_ratio": 0.4451
+    },
+    {
+     "frequency_hz": 57.5,
+     "singular_value": 1.0791675913030723,
+     "prominence_db": 14.468,
+     "shape": [
+      0.7027,
+      0.7115
+     ],
+     "shape_ratio": 0.9877,
+     "upper_singular_ratio": 0.6868
+    },
+    {
+     "frequency_hz": 61.5,
+     "singular_value": 0.9587528463732181,
+     "prominence_db": 13.44,
+     "shape": [
+      0.1954,
+      0.9807
+     ],
+     "shape_ratio": 0.1993,
+     "upper_singular_ratio": 0.3891
+    },
+    {
+     "frequency_hz": 72.5,
+     "singular_value": 1.103239649953211,
+     "prominence_db": 14.66,
+     "shape": [
+      0.3275,
+      0.9448
+     ],
+     "shape_ratio": 0.3466,
+     "upper_singular_ratio": 0.3617
+    },
+    {
+     "frequency_hz": 81.5,
+     "singular_value": 1.0052295393461135,
+     "prominence_db": 13.852,
+     "shape": [
+      0.7186,
+      0.6954
+     ],
+     "shape_ratio": 0.9676,
+     "upper_singular_ratio": 0.5867
+    },
+    {
+     "frequency_hz": 89.0,
+     "singular_value": 0.9494743954997331,
+     "prominence_db": 13.356,
+     "shape": [
+      0.8028,
+      0.5963
+     ],
+     "shape_ratio": 0.7428,
+     "upper_singular_ratio": 0.3568
+    },
+    {
+     "frequency_hz": 91.0,
+     "singular_value": 0.9479969219749604,
+     "prominence_db": 13.342,
+     "shape": [
+      0.8985,
+      0.4389
+     ],
+     "shape_ratio": 0.4884,
+     "upper_singular_ratio": 0.4129
+    },
+    {
+     "frequency_hz": 99.5,
+     "singular_value": 1.1181653642829488,
+     "prominence_db": 14.776,
+     "shape": [
+      0.7675,
+      0.641
+     ],
+     "shape_ratio": 0.8352,
+     "upper_singular_ratio": 0.2849
+    }
+   ],
+   "segment_seconds": 2.0,
+   "resolution_hz": 0.5,
+   "sample_rate_hz": 4000.0,
+   "frequency_range_hz": [
+    5.0,
+    200.0
+   ]
+  }
+ },
+ "repetition": [
+  {
+   "frequency_hz": 6.0,
+   "sections": [
+    "S3"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 19.0,
+   "sections": [
+    "S1"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 20.0,
+   "sections": [
+    "S2"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 23.0,
+   "sections": [
+    "S1"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 27.5,
+   "sections": [
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 29.0,
+   "sections": [
+    "S4"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 30.0,
+   "sections": [
+    "S2",
+    "S3"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 31.0,
+   "sections": [
+    "S4"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 32.5,
+   "sections": [
+    "S2",
+    "S4"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 34.5,
+   "sections": [
+    "S2"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 36.0,
+   "sections": [
+    "S1",
+    "S2",
+    "S4"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 38.5,
+   "sections": [
+    "S3"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 40.0,
+   "sections": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 40.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 42.0,
+   "sections": [
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 42.5,
+   "sections": [
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 44.0,
+   "sections": [
+    "S3",
+    "S5"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 44.5,
+   "sections": [
+    "S3",
+    "S5"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 46.0,
+   "sections": [
+    "S3"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 47.5,
+   "sections": [
+    "S5"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 49.0,
+   "sections": [
+    "S1",
+    "S5"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 50.0,
+   "sections": [
+    "S1",
+    "S5"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 50.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 52.0,
+   "sections": [
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 53.5,
+   "sections": [
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 55.0,
+   "sections": [
+    "S5"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 55.5,
+   "sections": [
+    "S5"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 57.0,
+   "sections": [
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 57.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+   ],
+   "count": 5
+  },
+  {
+   "frequency_hz": 58.0,
+   "sections": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+   ],
+   "count": 5
+  },
+  {
+   "frequency_hz": 59.0,
+   "sections": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6"
+   ],
+   "count": 6
+  },
+  {
+   "frequency_hz": 59.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S3",
+    "S5",
+    "S6"
+   ],
+   "count": 5
+  },
+  {
+   "frequency_hz": 60.0,
+   "sections": [
+    "S1",
+    "S5",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 61.0,
+   "sections": [
+    "S5",
+    "S6"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 61.5,
+   "sections": [
+    "S5",
+    "S6"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 62.5,
+   "sections": [
+    "S1",
+    "S5",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 63.5,
+   "sections": [
+    "S1",
+    "S6"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 68.0,
+   "sections": [
+    "S3",
+    "S4"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 70.0,
+   "sections": [
+    "S3",
+    "S4",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 71.5,
+   "sections": [
+    "S3",
+    "S4",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 72.0,
+   "sections": [
+    "S3",
+    "S4",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 72.5,
+   "sections": [
+    "S3",
+    "S4",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 73.5,
+   "sections": [
+    "S3",
+    "S4",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 74.5,
+   "sections": [
+    "S3",
+    "S4",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 76.0,
+   "sections": [
+    "S3",
+    "S4",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 79.0,
+   "sections": [
+    "S6"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 81.0,
+   "sections": [
+    "S5",
+    "S6"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 81.5,
+   "sections": [
+    "S5",
+    "S6"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 82.5,
+   "sections": [
+    "S5",
+    "S6"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 83.0,
+   "sections": [
+    "S5",
+    "S6"
+   ],
+   "count": 2
+  },
+  {
+   "frequency_hz": 84.0,
+   "sections": [
+    "S1",
+    "S5",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 86.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 87.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S6"
+   ],
+   "count": 3
+  },
+  {
+   "frequency_hz": 88.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 89.0,
+   "sections": [
+    "S1",
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 89.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 90.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 91.0,
+   "sections": [
+    "S1",
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 91.5,
+   "sections": [
+    "S1",
+    "S2",
+    "S5",
+    "S6"
+   ],
+   "count": 4
+  },
+  {
+   "frequency_hz": 99.5,
+   "sections": [],
+   "count": 0
+  },
+  {
+   "frequency_hz": 108.5,
+   "sections": [
+    "S1"
+   ],
+   "count": 1
+  },
+  {
+   "frequency_hz": 149.0,
+   "sections": [
+    "S1"
+   ],
+   "count": 1
+  }
+ ],
+ "repeated_modes_hz": [
+  40.0,
+  40.5,
+  50.5,
+  57.0,
+  57.5,
+  58.0,
+  59.0,
+  59.5,
+  88.5,
+  89.0,
+  89.5,
+  90.5,
+  91.0,
+  91.5
+ ]
+}

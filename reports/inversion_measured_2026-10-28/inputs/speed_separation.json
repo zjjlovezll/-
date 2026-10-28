@@ -1,0 +1,485 @@
+{
+ "record": "Run_75kmh_E1toE2.mat",
+ "bins": [
+  {
+   "low_kmh": 30.0,
+   "high_kmh": 45.0,
+   "mean_kmh": 36.43555894306427,
+   "peaks_hz": [
+    42.0,
+    44.0,
+    47.0,
+    49.5,
+    52.0,
+    57.5,
+    62.5,
+    64.0,
+    70.0,
+    72.0,
+    81.0,
+    82.5
+   ],
+   "resolution_hz": 0.5
+  },
+  {
+   "low_kmh": 45.0,
+   "high_kmh": 55.0,
+   "mean_kmh": 49.22481266320569,
+   "peaks_hz": [
+    29.5,
+    31.0,
+    33.0,
+    36.0,
+    38.0,
+    40.0,
+    41.5,
+    46.5,
+    68.0,
+    70.0,
+    71.5,
+    77.0
+   ],
+   "resolution_hz": 0.5
+  },
+  {
+   "low_kmh": 55.0,
+   "high_kmh": 65.0,
+   "mean_kmh": 60.927234011838685,
+   "peaks_hz": [
+    39.0,
+    40.5,
+    42.0,
+    45.5,
+    47.0,
+    48.5,
+    59.5,
+    66.0,
+    71.0,
+    72.5,
+    74.0,
+    83.0
+   ],
+   "resolution_hz": 0.5
+  },
+  {
+   "low_kmh": 65.0,
+   "high_kmh": 75.0,
+   "mean_kmh": 72.84907443260617,
+   "peaks_hz": [
+    41.5,
+    43.0,
+    44.5,
+    49.5,
+    51.0,
+    55.5,
+    57.5,
+    59.0,
+    72.5,
+    89.5,
+    91.0,
+    100.0
+   ],
+   "resolution_hz": 0.5
+  },
+  {
+   "low_kmh": 75.0,
+   "high_kmh": 90.0,
+   "mean_kmh": 77.55751867054353,
+   "peaks_hz": [
+    52.0,
+    55.5,
+    58.5,
+    61.5,
+    71.5,
+    79.0,
+    81.5,
+    83.0,
+    89.0,
+    91.5,
+    94.5,
+    99.5
+   ],
+   "resolution_hz": 0.5
+  }
+ ],
+ "classification": [
+  {
+   "frequency_hz": 38.0,
+   "bins": 2,
+   "slope_hz_per_kmh": 0.08545240085008683,
+   "intercept_hz": 33.79362157653332,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.40260250977720896,
+   "equivalent_order_ratio": 0.12103085999383513
+  },
+  {
+   "frequency_hz": 39.0,
+   "bins": 2,
+   "slope_hz_per_kmh": 0.08545240085008683,
+   "intercept_hz": 33.79362157653332,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3922793685008703,
+   "equivalent_order_ratio": 0.12103085999383513
+  },
+  {
+   "frequency_hz": 40.0,
+   "bins": 2,
+   "slope_hz_per_kmh": 0.04272620042504255,
+   "intercept_hz": 37.89681078826673,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3824723842883485,
+   "equivalent_order_ratio": 0.05784262843215475
+  },
+  {
+   "frequency_hz": 40.5,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.06355774489186684,
+   "intercept_hz": 36.78962047657142,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.41838390742489834,
+   "equivalent_order_ratio": 0.09314780149909092
+  },
+  {
+   "frequency_hz": 41.5,
+   "bins": 4,
+   "slope_hz_per_kmh": -0.008443809127644126,
+   "intercept_hz": 42.213220360488044,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.36719658643024566,
+   "equivalent_order_ratio": -0.010377026756541275
+  },
+  {
+   "frequency_hz": 42.0,
+   "bins": 4,
+   "slope_hz_per_kmh": -0.008443809127644126,
+   "intercept_hz": 42.213220360488044,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.36282519849655226,
+   "equivalent_order_ratio": -0.010377026756541275
+  },
+  {
+   "frequency_hz": 43.0,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.023373939443627947,
+   "intercept_hz": 41.007159373032515,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3665199556147914,
+   "equivalent_order_ratio": 0.02882909144497443
+  },
+  {
+   "frequency_hz": 44.0,
+   "bins": 2,
+   "slope_hz_per_kmh": 0.01373116529063489,
+   "intercept_hz": 43.49969731769611,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3449641205040102,
+   "equivalent_order_ratio": 0.015101942469650286
+  },
+  {
+   "frequency_hz": 44.5,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.020804722607221028,
+   "intercept_hz": 43.4862631048486,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.354165350369349,
+   "equivalent_order_ratio": 0.024330581164487896
+  },
+  {
+   "frequency_hz": 45.5,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.08465629578139813,
+   "intercept_hz": 50.66406567893889,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3724076538617227,
+   "equivalent_order_ratio": -0.11031142434557138
+  },
+  {
+   "frequency_hz": 46.5,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.0006035584804344238,
+   "intercept_hz": 46.862824730832465,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2918908913144338,
+   "equivalent_order_ratio": -0.0006023525300135866
+  },
+  {
+   "frequency_hz": 47.0,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.0006035584804344238,
+   "intercept_hz": 46.862824730832465,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2887856690664079,
+   "equivalent_order_ratio": -0.0006023525300135866
+  },
+  {
+   "frequency_hz": 48.5,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.006078501923604614,
+   "intercept_hz": 49.51154438777844,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3249558369368254,
+   "equivalent_order_ratio": -0.00643436182756794
+  },
+  {
+   "frequency_hz": 49.5,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.006078501923604614,
+   "intercept_hz": 49.51154438777844,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.31839107255426324,
+   "equivalent_order_ratio": -0.00643436182756794
+  },
+  {
+   "frequency_hz": 51.0,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.010432288298044207,
+   "intercept_hz": 52.316397065457714,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3392195934027124,
+   "equivalent_order_ratio": -0.011186541247285273
+  },
+  {
+   "frequency_hz": 52.0,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.010432288298044207,
+   "intercept_hz": 52.316397065457714,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3326961396834295,
+   "equivalent_order_ratio": -0.011186541247285273
+  },
+  {
+   "frequency_hz": 55.5,
+   "bins": 2,
+   "slope_hz_per_kmh": -2.983556650440572e-15,
+   "intercept_hz": 55.500000000000234,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.3763928756335078,
+   "equivalent_order_ratio": -4.0388002206051905e-15
+  },
+  {
+   "frequency_hz": 57.5,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.015080110786972106,
+   "intercept_hz": 56.89413321582227,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.30087303067023186,
+   "equivalent_order_ratio": 0.01449216062756123
+  },
+  {
+   "frequency_hz": 58.5,
+   "bins": 4,
+   "slope_hz_per_kmh": 0.029519457570378018,
+   "intercept_hz": 56.79649553025514,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2941232028229495,
+   "equivalent_order_ratio": 0.028667488786005616
+  },
+  {
+   "frequency_hz": 59.0,
+   "bins": 4,
+   "slope_hz_per_kmh": 0.029519457570378018,
+   "intercept_hz": 56.79649553025514,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2916306333075008,
+   "equivalent_order_ratio": 0.028667488786005616
+  },
+  {
+   "frequency_hz": 59.5,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.056582774969871255,
+   "intercept_hz": 62.985951461056395,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.328873058068765,
+   "equivalent_order_ratio": -0.0668103929574578
+  },
+  {
+   "frequency_hz": 61.5,
+   "bins": 2,
+   "slope_hz_per_kmh": -0.024317907186990537,
+   "intercept_hz": 63.386036540683556,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.25743694131347744,
+   "equivalent_order_ratio": -0.019389818802552684
+  },
+  {
+   "frequency_hz": 62.5,
+   "bins": 2,
+   "slope_hz_per_kmh": -0.024317907186990537,
+   "intercept_hz": 63.386036540683556,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2533179502524618,
+   "equivalent_order_ratio": -0.019389818802552684
+  },
+  {
+   "frequency_hz": 68.0,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.16321366836676177,
+   "intercept_hz": 75.97503361667718,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.19960185950178191,
+   "equivalent_order_ratio": -0.11164039521367815
+  },
+  {
+   "frequency_hz": 70.0,
+   "bins": 4,
+   "slope_hz_per_kmh": 0.040507840138978186,
+   "intercept_hz": 68.35509128434595,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.22236619473080574,
+   "equivalent_order_ratio": 0.029837457220212416
+  },
+  {
+   "frequency_hz": 71.0,
+   "bins": 5,
+   "slope_hz_per_kmh": 0.041205395627373846,
+   "intercept_hz": 68.8524473085311,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2323898268554447,
+   "equivalent_order_ratio": 0.03191174551296995
+  },
+  {
+   "frequency_hz": 71.5,
+   "bins": 5,
+   "slope_hz_per_kmh": 0.0010529737253650614,
+   "intercept_hz": 71.6374545824321,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.23076472317114088,
+   "equivalent_order_ratio": 0.0008086063705971816
+  },
+  {
+   "frequency_hz": 72.0,
+   "bins": 5,
+   "slope_hz_per_kmh": 0.0030573279375123324,
+   "intercept_hz": 71.81839826779404,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2291621903713413,
+   "equivalent_order_ratio": 0.0023389589104615255
+  },
+  {
+   "frequency_hz": 72.5,
+   "bins": 5,
+   "slope_hz_per_kmh": 0.0030573279375123324,
+   "intercept_hz": 71.81839826779404,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.2275817614722286,
+   "equivalent_order_ratio": 0.0023389589104615255
+  },
+  {
+   "frequency_hz": 74.0,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.023843973569022858,
+   "intercept_hz": 71.48049091095942,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.21297781204643285,
+   "equivalent_order_ratio": 0.017088928639775177
+  },
+  {
+   "frequency_hz": 77.0,
+   "bins": 2,
+   "slope_hz_per_kmh": 0.07058979821701557,
+   "intercept_hz": 73.52523040683394,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.228683858827109,
+   "equivalent_order_ratio": 0.05466037998471773
+  },
+  {
+   "frequency_hz": 79.0,
+   "bins": 3,
+   "slope_hz_per_kmh": -0.028877004316997277,
+   "intercept_hz": 80.5710812407116,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.1913008559268794,
+   "equivalent_order_ratio": -0.018025769693568644
+  },
+  {
+   "frequency_hz": 81.0,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.017371069794537754,
+   "intercept_hz": 80.82048235275737,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.19995463148770745,
+   "equivalent_order_ratio": 0.011240460046798515
+  },
+  {
+   "frequency_hz": 81.5,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.017371069794537754,
+   "intercept_hz": 80.82048235275737,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.19872791595710804,
+   "equivalent_order_ratio": 0.011240460046798515
+  },
+  {
+   "frequency_hz": 82.5,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.012778106102530426,
+   "intercept_hz": 82.08828323285411,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.1963190927333855,
+   "equivalent_order_ratio": 0.00816192379506162
+  },
+  {
+   "frequency_hz": 83.0,
+   "bins": 3,
+   "slope_hz_per_kmh": 0.012778106102530426,
+   "intercept_hz": 82.08828323285411,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.1951364475964374,
+   "equivalent_order_ratio": 0.00816192379506162
+  },
+  {
+   "frequency_hz": 89.0,
+   "bins": 2,
+   "slope_hz_per_kmh": -0.10619218891271578,
+   "intercept_hz": 97.23600267426384,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.23471690559168185,
+   "equivalent_order_ratio": -0.08938349522170742
+  },
+  {
+   "frequency_hz": 89.5,
+   "bins": 2,
+   "slope_hz_per_kmh": -0.10619218891271578,
+   "intercept_hz": 97.23600267426384,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.23340563796267802,
+   "equivalent_order_ratio": -0.08938349522170742
+  },
+  {
+   "frequency_hz": 91.0,
+   "bins": 2,
+   "slope_hz_per_kmh": 0.10619218891270808,
+   "intercept_hz": 83.26399732573675,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.22955829228197455,
+   "equivalent_order_ratio": 0.08743957041111838
+  },
+  {
+   "frequency_hz": 91.5,
+   "bins": 2,
+   "slope_hz_per_kmh": 0.10619218891270808,
+   "intercept_hz": 83.26399732573675,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.22830387538425884,
+   "equivalent_order_ratio": 0.08743957041111838
+  },
+  {
+   "frequency_hz": 99.5,
+   "bins": 2,
+   "slope_hz_per_kmh": -0.10619218891271268,
+   "intercept_hz": 107.73600267426359,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.20994778490110236,
+   "equivalent_order_ratio": -0.07997544438857962
+  },
+  {
+   "frequency_hz": 100.0,
+   "bins": 2,
+   "slope_hz_per_kmh": -0.10619218891271268,
+   "intercept_hz": 107.73600267426359,
+   "kind": "vehicle",
+   "equivalent_wavelength_m": 0.20889804597659684,
+   "equivalent_order_ratio": -0.07997544438857962
+  }
+ ]
+}

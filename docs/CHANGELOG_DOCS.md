@@ -1809,6 +1809,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CONTACT_REFERENCE_THREE_WAY_2026-10-21.md](CONTACT_REFERENCE_THREE_WAY_2026-10-21.md) | 三方对拍：解析真值 / 45 µm 网格 / 分段样条 2026-10-21 |
 | [CONTACT_SEARCH_LOCAL_2026-10-19.md](CONTACT_SEARCH_LOCAL_2026-10-19.md) | 轮轨接触搜索：型面表化 + 局部连续搜索（2026-10-19） |
 | [CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md) | 在连续的 PRR 文件里模拟波磨：表示、密度与两个坑 |
+| [COVERAGE_HELDOUT_2026-10-28.md](COVERAGE_HELDOUT_2026-10-28.md) | Held-out coverage, and why the measured verdict had to be made reproducible first |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
 | [CURVE_ALIGNMENT_VELOCITY_2026-10-28.md](CURVE_ALIGNMENT_VELOCITY_2026-10-28.md) | 曲线：把路线自己的横向速度装回去，以及为什么几何路由仍然拿不住这条曲线 |
@@ -4677,3 +4678,28 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   `reports/inversion_synthetic_2026-10-28/inputs/` 保留副本（`git add -f` 入库），`s40` 优先读 scratch、
   读不到读该副本；把 scratch 挪走后重跑输出逐项相同（已实测）。
 - 文档 `docs/BAND_CLAIM_CLASS_2026-10-28.md`（6 节）。
+
+## 第 197 轮：L4 从 skipped 变成实测留出覆盖率；实测判决不再只活在这台机器上
+
+* `scripts/s41_coverage.py`：四个速度档是同一条轨道的四次独立测量，主导波磨波长属于轨道而不是某一趟，
+  因此留出一趟就是真正的样本外检验。**判据在看结果之前写进 docstring**：区间取"一个新观测的预测区间"
+  `mu ± k·s·sqrt(1+1/n_train)`（`mu`/`s` 只来自三个训练折，`s` 用 `ddof=1`），且必须
+  **1σ 覆盖 ≥ 0.50、2σ 覆盖 = 1.00、任何折 |z| < 3**。
+* 折表（估计量 `median_wavelength_in_band_mm`）：28.062（z **+0.71**）、28.427（**+1.31**）、
+  26.265（**−1.31**）、26.630（**−0.71**）mm；**1σ 覆盖 0.50（正好压线）、2σ 1.00、max|z| 1.31 → PASSED**；
+  二项尾概率 **P(X≤2)=0.379** —— 四折只能"证伪"、不能"证明标定"，故正确读法是"未被证伪，且 2σ 条款成立"。
+* 敏感性判定估计量：同一批折在 `median_wavelength_mm`（全窗）上 **2σ 只有 0.75、max|z| = 3.06 → FAILED**。
+  说明全窗中位数有一次 3.06σ 的胖尾（最强线偶尔落在波磨带外），**带内中位数才是可引用的速度无关观测量**。
+* 第二个不确定度来源：同谱类两条记录之间每带误差差 **1.96 / 1.78 / 0.54 / 1.78 dB**，四带中三带 ≳1.8 dB，
+  与整个 ±2 dB 预算同量级 ⇒ 要作 ±2 dB 声明必须跨多记录平均，而本数据集没有这么多记录（散布不是覆盖率，已注明）。
+* 判决更新：`reports/inversion_measured_2026-10-28/verdict.json` 的 **L4 skipped → passed**（其余五层状态不变，
+  L5 仍 failed 3/6），派生 **`measurement_validation_status` 仍为 `detection_only`**（加一层不确定度不授权幅值声明）。
+* 可复算性问题（上一轮只补了合成侧）：`reports/` 被 git 忽略，实测产物从未入库，而 `s24_verdict.py` 从
+  `F:\velch_tmp` 读四个输入 —— 干净检出后每层都会退回 `skipped`。现在 `reports/inversion_measured_2026-10-28/inputs/`
+  存四个输入 + `detection.json`，`s24` **优先读入库副本、其次读 scratch**；证据字符串因此指向仓库内文件。
+  **实测**：删掉 scratch 的 `coverage.json` 后重跑，`verdict.json` **逐字节相同**（sha256 `ae79a756…`）。
+* 合成侧补上缺失的 `windows.csv`（8 行：种子 × 带；窗 **0.127985–0.281568 s**、42.5–45.5 m、保留 bin
+  7/5/4/3、能量占比 0.99），两条路线的 `verdict.json + bands.csv + windows.csv` 至此齐全。
+* 新增 `tests/test_coverage.py` **7 项**（预测区间宽度含"新观测"的 +1、`s` 用 `ddof=1`、z 的符号与两端的对称性、
+  远折必挂 2σ、四折覆盖只能落在四分之一、退化训练集给 inf 而不是"零宽区间算覆盖"、判据三个条件缺一不可）。
+* 文档 `docs/COVERAGE_HELDOUT_2026-10-28.md`（8 节）。

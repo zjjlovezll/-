@@ -1,0 +1,66 @@
+{
+ "record": "Run_75kmh_E1toE2.mat",
+ "section": "ALL",
+ "section_m": [
+  3798.0,
+  6303.421466321993
+ ],
+ "mean_speed_kmh": 62.24180501010474,
+ "sample_rate_hz": 4000.0,
+ "band_hz": [
+  5.0,
+  200.0
+ ],
+ "identification": {
+  "modes": [
+   {
+    "frequency_hz": 67.3759,
+    "damping_ratio": 0.292257,
+    "mac": 0.0601,
+    "mean_phase_deviation_deg": 0.0,
+    "poles": 2,
+    "frequency_spread_hz": 0.0,
+    "damping_spread": 0.0
+   },
+   {
+    "frequency_hz": 166.7563,
+    "damping_ratio": 0.187104,
+    "mac": 0.0717,
+    "mean_phase_deviation_deg": 0.0,
+    "poles": 2,
+    "frequency_spread_hz": 0.0,
+    "damping_spread": 0.0
+   }
+  ],
+  "order": 5,
+  "orders_tried": 11,
+  "poles_total": 154,
+  "poles_stable": 12,
+  "time_lag": 800,
+  "block_rows": 12,
+  "sample_rate_hz": 4000.0
+ },
+ "model_comparison": [
+  {
+   "name": "box_bounce_group",
+   "model_hz": 12.0,
+   "measured_hz": 67.37587628102358,
+   "relative_percent": 461.4656356751965,
+   "agrees": false
+  },
+  {
+   "name": "box_on_primary",
+   "model_hz": 24.86,
+   "measured_hz": 67.37587628102358,
+   "relative_percent": 171.0212239783732,
+   "agrees": false
+  },
+  {
+   "name": "wheel_disc_pair",
+   "model_hz": 133.34,
+   "measured_hz": 166.7562998480421,
+   "relative_percent": 25.060971837439695,
+   "agrees": false
+  }
+ ]
+}

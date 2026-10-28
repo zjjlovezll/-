@@ -1,0 +1,166 @@
+{
+ "version": "0.4.37",
+ "record": "Run_75kmh_E1toE2.mat",
+ "layers": [
+  {
+   "name": "L0_admission",
+   "status": "passed",
+   "metrics": {
+    "samples": 579740,
+    "channels": 2,
+    "sample_rate_hz": 4000.0,
+    "speed_min_kmh": 1.1,
+    "speed_max_kmh": 85.4,
+    "speed_unit": "km/h",
+    "speed_mean_kmh": 62.24,
+    "mileage_start_m": 3798.0,
+    "mileage_stop_m": 6303.0,
+    "steady_speed_bins": 1,
+    "steady_seconds": 67.5
+   },
+   "notes": "one record, two co-located axle-box vertical channels, no excitation log and no profile truth",
+   "evidence": [
+    "docs/OMA_MEASURED_2026-10-27.md \u00a71-\u00a79"
+   ]
+  },
+  {
+   "name": "L1_registration",
+   "status": "passed",
+   "metrics": {
+    "cross_channel_lag_ms": 2.25,
+    "criterion_ms": 25.0,
+    "sections_analysed": 6,
+    "mileage_source": "Vi_pks (km, integrated from Vi_Speed)"
+   },
+   "notes": "the two axle-box channels are co-located; the mileage axis is the integrated speed, which is why the section boundaries only agree with the paper to a few metres",
+   "evidence": [
+    "F:\\ai\u9053\u5c94\u72b6\u6001\u53cd\u6f14\u8fa8\u8bc6\\Velch\\reports\\inversion_measured_2026-10-28\\inputs\\fdd_sections.json"
+   ]
+  },
+  {
+   "name": "L2_calibration",
+   "status": "passed",
+   "metrics": {
+    "speeds_with_steady_data": 4,
+    "speed_kmh": [
+     39.9,
+     49.2,
+     58.0,
+     70.8
+    ],
+    "line_frequency_hz": [
+     398.4,
+     451.8,
+     565.2,
+     713.2
+    ],
+    "median_wavelength_mm": [
+     28.1,
+     29.9,
+     26.7,
+     27.5
+    ],
+    "wavelength_spread": 0.1132,
+    "criterion_speeds": 2,
+    "criterion_spread": 0.15
+   },
+   "notes": "one table per recorded speed, no interpolation between them; the four passes agree on wavelength to 11.3 % while their line frequency scales with speed (398 -> 713 Hz), which is what a table keyed by speed has to show before L3 may use it",
+   "evidence": [
+    "docs/INVERSION_VERDICT_2026-10-28.md",
+    "F:\\ai\u9053\u5c94\u72b6\u6001\u53cd\u6f14\u8fa8\u8bc6\\Velch\\reports\\inversion_measured_2026-10-28\\inputs\\speed_table.json"
+   ]
+  },
+  {
+   "name": "L3_inversion",
+   "status": "passed",
+   "metrics": {
+    "peaks_repeated_in_half_the_sections": 14,
+    "repeated_hz": [
+     40.0,
+     40.5,
+     50.5,
+     57.0,
+     57.5,
+     58.0,
+     59.0,
+     59.5,
+     88.5,
+     89.0,
+     89.5,
+     90.5,
+     91.0,
+     91.5
+    ],
+    "repetition_rows": 62,
+    "resolution_hz": 0.5
+   },
+   "notes": "peak frequencies are reproducible across sections, but a peak is not a depth: no amplitude was recovered from this record, so the inversion here is spectral only",
+   "evidence": [
+    "F:\\ai\u9053\u5c94\u72b6\u6001\u53cd\u6f14\u8fa8\u8bc6\\Velch\\reports\\inversion_measured_2026-10-28\\inputs\\fdd_sections.json",
+    "docs/OMA_MEASURED_2026-10-27.md \u00a78"
+   ]
+  },
+  {
+   "name": "L4_uncertainty",
+   "status": "passed",
+   "metrics": {
+    "numerical_floor_um": 0.016,
+    "coverage_heldout_folds": 4,
+    "coverage_heldout_1_sigma": 0.5,
+    "coverage_heldout_2_sigma": 1.0,
+    "coverage_heldout_max_abs_z": 1.31438281690895,
+    "coverage_criterion": {
+     "min_coverage_1_sigma": 0.5,
+     "min_coverage_2_sigma": 1.0,
+     "max_abs_z": 3.0
+    },
+    "coverage_sensitivity_2_sigma": 0.75,
+    "coverage_sensitivity_max_abs_z": 3.0638079777232012,
+    "repeatability_db_per_band": [
+     1.9613867679362538,
+     1.7829201019283718,
+     0.5378867591390426,
+     1.7783101176217935
+    ],
+    "repeatability_bands_m": [
+     "0.1000-0.1316",
+     "0.1316-0.1732",
+     "0.1732-0.2280",
+     "0.2280-0.3000"
+    ],
+    "oma_poles_stable": 12,
+    "oma_poles_total": 154
+   },
+   "notes": "held out one pass at a time: the wavelength interval covers 2 of 4 at one sigma and 4 of 4 at two sigma, so the criterion passes at its weakest possible margin (0.50 against a 0.50 bar, binomial tail 0.379) and four folds refute calibration rather than establish it; the all-window median instead misses two sigma at a 3.06-sigma fold, so the in-band median is the defensible speed-independent observable and the all-window one has a fat tail.  The estimator's own spread between two same-class records is 0.5-2.0 dB per band, comparable to the entire +/-2 dB budget, so a band amplitude here needs averaging over records that this dataset does not contain",
+   "evidence": [
+    "F:\\ai\u9053\u5c94\u72b6\u6001\u53cd\u6f14\u8fa8\u8bc6\\Velch\\reports\\inversion_measured_2026-10-28\\coverage.json",
+    "docs/COVERAGE_HELDOUT_2026-10-28.md"
+   ]
+  },
+  {
+   "name": "L5_acceptance",
+   "status": "failed",
+   "metrics": {
+    "detected": 3,
+    "sections": 6,
+    "criterion_detected": 6,
+    "false_alarm_target": 0.05,
+    "binomial_p": 0.0022,
+    "consistent_with_recorded_section": false
+   },
+   "notes": "3 of 6 sections detected against a 6 of 6 bar; detection at that level is real but the amplitude and profile claims are withdrawn",
+   "evidence": [
+    "docs/MEASURED_VALIDATION_2026-10-26.md",
+    "docs/OMA_MEASURED_2026-10-27.md"
+   ]
+  }
+ ],
+ "measurement_validation_status": "detection_only",
+ "measurement_validation_meaning": "a detector reproduces the recorded sections, but no amplitude or profile claim holds",
+ "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
+ "degradation": [
+  "amplitude and depth claims withdrawn: a single steady speed, so the rail spectrum cannot be separated from the vehicle transfer",
+  "modal calibration blocked: Cov-SSI did not converge and FDD ridges cannot be attributed without a second steady speed",
+  "the curve with cant stays refused: balance cant needs the vehicle frame tilted, and the geometry route keeps gravity along world z"
+ ]
+}

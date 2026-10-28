@@ -33,6 +33,8 @@ from velch.inverse.verdict import LayerResult, Verdict, calibration_class, write
 SCRATCH = Path("../scratch")
 OUT_DIR = Path("reports/inversion_synthetic_2026-10-28")
 BAND_COLUMNS = ["seed", "band", "estimator", "truth_um", "recovered_um", "error_db", "within_gate"]
+WINDOW_COLUMNS = ["seed", "band", "window_start_s", "window_end_s", "window_start_m",
+                  "window_end_m", "bins_kept", "energy_fraction", "record_rms_um"]
 
 
 def source(name: str, fallback: str) -> Path:
@@ -49,6 +51,18 @@ def load(path: Path) -> dict:
     if not path.exists():
         raise SystemExit(f"missing {path}: run the round that produced it first")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _script_module(name: str):
+    """Import a sibling experiment script so its protocol constants are read, never re-typed."""
+    import importlib.util
+    import sys
+
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).resolve().parent / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def record_statistics(harmonics: int, rms_um: float) -> dict:
@@ -158,6 +172,26 @@ def main(argv: list[str] | None = None) -> int:
                              "error_db": band["error_db"], "within_gate": band["within_gate"]})
     write_table(args.out / "bands.csv", rows, BAND_COLUMNS)
 
+    # windows.csv -- the analysis windows the claim rests on, so a reader can rebuild the estimator's window
+    # rather than take the two times on trust.  The window is not a free choice made after the fact: it is the
+    # time the leading axle spends over the patch, taken from the protocol's own constants.
+    protocol = _script_module("s38_spectral_bands")
+    speed = protocol.SPEED_KMH / 3.6
+    lead = protocol.X_START_M + protocol.LEAD_AXLE_OFFSET_M
+    entry_s = (protocol.PATCH_M[0] - lead) / speed
+    exit_s = (protocol.PATCH_M[1] - lead) / speed
+    windows = []
+    for test in same["tests"]:
+        for band in test["bands"]:
+            windows.append({
+                "seed": test["seed"], "band": band["band"],
+                "window_start_s": round(entry_s, 6), "window_end_s": round(exit_s, 6),
+                "window_start_m": protocol.PATCH_M[0], "window_end_m": protocol.PATCH_M[1],
+                "bins_kept": band["bins"], "energy_fraction": protocol.ENERGY_FRACTION,
+                "record_rms_um": round(float(band["truth_um"]), 4),
+            })
+    write_table(args.out / "windows.csv", windows, WINDOW_COLUMNS)
+
     print(f"synthetic straight-route verdict -> {args.out / 'verdict.json'}")
     print(f"  class: {declared}")
     print(f"  crest factors measured: "
@@ -165,7 +199,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  same-class {same['spectral_hits']}/{same['predictions']}, "
           f"tone {tone['hits']}/{tone['predictions']}")
     print(f"  measurement_validation_status = {verdict.measurement_validation_status}")
-    print(f"  bands.csv rows: {len(rows)}")
+    print(f"  bands.csv rows: {len(rows)}, windows.csv rows: {len(windows)} ")
     return 0
 
 

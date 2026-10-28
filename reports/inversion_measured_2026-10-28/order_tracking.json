@@ -1,0 +1,106 @@
+{
+ "file": "Run_75kmh_E1toE2.mat",
+ "step_m": 0.005,
+ "band_mm": [
+  18.0,
+  40.0
+ ],
+ "gain_per_m": 27550.0,
+ "columns": [
+  {
+   "column": 0,
+   "samples": 501084,
+   "span_m": 2505.415000054688,
+   "peak_wavelength_mm": 26.677243494768604,
+   "amplitude_m_per_s2": 0.20356064348437614,
+   "implied_depth_um": 7.388771088362111
+  },
+  {
+   "column": 1,
+   "samples": 501084,
+   "span_m": 2505.415000054688,
+   "peak_wavelength_mm": 29.537035946084057,
+   "amplitude_m_per_s2": 0.1398251749477251,
+   "implied_depth_um": 5.075323954545375
+  }
+ ],
+ "depth_um_median": 6.232047521453743,
+ "wavelength_mm_median": 28.107139720426332,
+ "in_corrugation_range": true,
+ "section_depths_um": [
+  {
+   "section": "S1",
+   "column": 0,
+   "amplitude_m_per_s2": 0.2806125548060482,
+   "depth_um": 10.185573677170533
+  },
+  {
+   "section": "S1",
+   "column": 1,
+   "amplitude_m_per_s2": 0.13867963437159875,
+   "depth_um": 5.033743534359302
+  },
+  {
+   "section": "S2",
+   "column": 0,
+   "amplitude_m_per_s2": 0.13988014266510534,
+   "depth_um": 5.0773191529983785
+  },
+  {
+   "section": "S2",
+   "column": 1,
+   "amplitude_m_per_s2": 0.41676652780196766,
+   "depth_um": 15.127641662503363
+  },
+  {
+   "section": "S3",
+   "column": 0,
+   "amplitude_m_per_s2": 0.21152619188679908,
+   "depth_um": 7.6779017018801845
+  },
+  {
+   "section": "S3",
+   "column": 1,
+   "amplitude_m_per_s2": 0.22609849466008103,
+   "depth_um": 8.206841911436698
+  },
+  {
+   "section": "S4",
+   "column": 0,
+   "amplitude_m_per_s2": 0.584257192470311,
+   "depth_um": 21.207157621426898
+  },
+  {
+   "section": "S4",
+   "column": 1,
+   "amplitude_m_per_s2": 0.24986444039198177,
+   "depth_um": 9.069489669400427
+  },
+  {
+   "section": "S5",
+   "column": 0,
+   "amplitude_m_per_s2": 1.0293973050862488,
+   "depth_um": 37.364693469555306
+  },
+  {
+   "section": "S5",
+   "column": 1,
+   "amplitude_m_per_s2": 0.08334921386567726,
+   "depth_um": 3.025379813636198
+  },
+  {
+   "section": "S6",
+   "column": 0,
+   "amplitude_m_per_s2": 0.6943834687369888,
+   "depth_um": 25.20448162384714
+  },
+  {
+   "section": "S6",
+   "column": 1,
+   "amplitude_m_per_s2": 0.293393008492457,
+   "depth_um": 10.649473992466678
+  }
+ ],
+ "section_depth_median_um": 9.62753167328548,
+ "section_duty_fraction": 0.22231788443071288
+}

@@ -1,0 +1,46 @@
+[
+ {
+  "file": "Run_40kmh_E2toE1.mat",
+  "mean_speed_kmh": 39.92075734107006,
+  "windows": 988,
+  "median_frequency_hz": 398.3770356819307,
+  "median_wavelength_mm": 28.09421585176754,
+  "in_band_fraction": 0.9362348178137652,
+  "median_frequency_in_band_hz": 398.9549017474779,
+  "median_wavelength_in_band_mm": 28.06196441529251,
+  "median_prominence_db": 28.16952679401446
+ },
+ {
+  "file": "Run_50kmh_E1toE2.mat",
+  "mean_speed_kmh": 49.21517314777251,
+  "windows": 990,
+  "median_frequency_hz": 451.8030026766021,
+  "median_wavelength_mm": 29.89144105222715,
+  "in_band_fraction": 0.902020202020202,
+  "median_frequency_in_band_hz": 464.2003094778499,
+  "median_wavelength_in_band_mm": 28.4265193424429,
+  "median_prominence_db": 23.72358869464996
+ },
+ {
+  "file": "Run_60kmh_E2toE1 (1).mat",
+  "mean_speed_kmh": 57.98198942561907,
+  "windows": 986,
+  "median_frequency_hz": 565.181451108647,
+  "median_wavelength_mm": 26.715315408457094,
+  "in_band_fraction": 0.6825557809330629,
+  "median_frequency_in_band_hz": 644.3790057315028,
+  "median_wavelength_in_band_mm": 26.26536844206004,
+  "median_prominence_db": 22.959358576811532
+ },
+ {
+  "file": "Run_75kmh_E1toE2.mat",
+  "mean_speed_kmh": 70.81532044836368,
+  "windows": 994,
+  "median_frequency_hz": 713.238464872407,
+  "median_wavelength_mm": 27.515836918037955,
+  "in_band_fraction": 0.6468812877263581,
+  "median_frequency_in_band_hz": 773.8023044452234,
+  "median_wavelength_in_band_mm": 26.63041432374668,
+  "median_prominence_db": 23.073628052776577
+ }
+]

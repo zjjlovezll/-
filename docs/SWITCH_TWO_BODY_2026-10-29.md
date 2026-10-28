@@ -68,3 +68,37 @@ PYTHONPATH=src python -X utf8 -m pytest tests/test_switch_two_body.py -q   # 4 �
 ```
 
 `tests/test_switch_two_body.py`（4 项，`pytest.mark.corpus`）钉住：设计表数值（23 mm@尖端、0.5 mm@6.569 m、7.304 m 之后保持 0）；该侧变成两个体且尖轨区间有界（`s_lo_m`/`s_hi_m`）；尖端处尖轨比基本轨低 22.5–23.5 mm、远端落在基准 0.2 mm 内且单调；基本轨体里**不再有任何 `qjg` 断面**（但保留原站位的横向偏移）。
+
+## 6 第一次通过：双体算例跑完 0.05 s，七门全过
+
+`scripts/s53_switch_passage.py --x-start 52 --duration 0.05`（座位 45 m，80 km/h，BDF + 解析雅可比）：
+
+```
+track     local_compliant   rails 8   bodies 12
+frames    101
+gates     7/7
+penetration  max 124.83 um
+travelled 1.11 m   front axle 63.11 m
+```
+
+要点：
+
+* **12 个接触体**（8 根轨，右侧多一个尖轨体）说明双体真的进了求解器，不是只在算例文件里；
+* 前轴从 62.00 m 走到 **63.11 m**，即进入尖轨区（尖端 60.95 m）**1.11 m**；这一段设计降低值从
+  约 20 mm 升到约 9 mm，车轮必须留在基本轨上——**七门全过说明它没有掉下去**（否则会以大于 3 mm
+  的穿透或斜率门报错）；
+* 最大穿透 124.83 µm，是既有曲线工况的量级（不是 23 mm 那种量级），进一步说明走的是走行面。
+
+**这一条不能延伸成什么**：0.05 s 只覆盖 1.11 m，尖轨真正抬起承力要到约 68.5 m 之后；所以「尖轨开始
+分担轮载的位置」还没量到。要达到那里需要 ≥0.6 s 的行程（约 13 m），会穿过上一轮记录的横向边界区间
+（B045/B047），因此本轮停在这里，把边界留给下一步单独量。
+
+复算：
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/s52_switch_two_body.py          # 先建双体算例
+PYTHONPATH=src python -X utf8 scripts/s53_switch_passage.py --x-start 52 --duration 0.05
+```
+
+（本轮跑完后才发现脚本里逐接触打印用错了 API——`VehicleResult.contacts[-1]` 在该版本里是
+`{rail_id: ContactResponse}` 而不是两层字典，已改；上面那六行是修正前的运行输出，与打印无关。）

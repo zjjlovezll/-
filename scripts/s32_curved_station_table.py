@@ -50,7 +50,8 @@ def y_route(x: np.ndarray | float, tangent_m: float, radius_m: float):
 def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
           duration_s: float, run_at_m: float, seat_at_m: float,
           curvature_force: bool = False,
-          primary_lateral_damping: tuple[float, float] | None = None) -> Path:
+          primary_lateral_damping: tuple[float, float] | None = None,
+          creep_scale: float | None = None) -> Path:
     raw = json.loads((data_root.case_dir() / "case_A_final_law.json").read_text(encoding="utf-8"))
     raw.pop("initial_state", None)
     raw["case_id"] = f"curved_station_table_R{radius_m:.0f}"
@@ -80,6 +81,17 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
         "y_m": [float(value) for value in y_route(path_stations, tangent_m, radius_m)],
     }
     raw["vehicle"]["travel_speed_m_s"] = SPEED_KMH / 3.6
+    if creep_scale is not None:
+        # DIAGNOSTIC ONLY, never the acceptance case: the frozen law carries f11 = 1e6 N and
+        # f22 = 5e5 N, roughly a decade below the physical creep coefficients of a 60 kN wheel-rail
+        # contact (5-10 MN).  Scaling them is *not* a repair of a failure -- it is a separate
+        # question ("would a physical creep law steer this curve?") and the emitted case records
+        # the factor so a run can never be quoted without it.  `creep_scale = 10` gives
+        # f11 = 1e7, f22 = 5e6.
+        contact = raw["contact"]
+        contact["creep_stiffness_x_n"] = float(contact["creep_stiffness_x_n"]) * float(creep_scale)
+        contact["creep_stiffness_lateral_n"] = (float(contact["creep_stiffness_lateral_n"])
+                                                * float(creep_scale))
     if primary_lateral_damping is not None:
         # The inline vehicle carries `c_y = 0` and `c_yaw = 0`, so the lateral and yaw modes are
         # damped only by the creep law.  A real bogie has an axle-box arm bushing and a lateral
@@ -152,6 +164,9 @@ def main(argv: list[str] | None = None) -> int:
                         metavar=("C_Y", "C_YAW"),
                         help="add primary lateral (N.s/m) and yaw (N.m.s/rad) damping to this "
                              "synthetic case only, to test whether the curve settles")
+    parser.add_argument("--creep-scale", type=float, default=None,
+                        help="DIAGNOSTIC: multiply f11 and f22 by this factor (10 gives the "
+                             "physical 1e7 / 5e6 N); the frozen cases are untouched")
     parser.add_argument("--curvature-force", action="store_true",
                         help="add the frame's fictitious m v^2/R (curving load) to the station-table route")
     args = parser.parse_args(argv)
@@ -160,7 +175,8 @@ def main(argv: list[str] | None = None) -> int:
                  duration_s=args.duration, run_at_m=args.run_at, seat_at_m=args.seat_at,
                  curvature_force=args.curvature_force,
                  primary_lateral_damping=(None if args.primary_damping is None
-                                          else tuple(args.primary_damping)))
+                                          else tuple(args.primary_damping)),
+                 creep_scale=args.creep_scale)
     case = load_vehicle_case(path)
     print(f"case {path.name}: R {args.radius:.0f} m, tangent {args.tangent:.0f} m, "
           f"{len(case.rails)} rails, path {len(case.path.stations_s_m)} points, "

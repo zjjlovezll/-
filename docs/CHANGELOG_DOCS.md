@@ -1820,6 +1820,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CURVE_RAIL_GEOMETRY_2026-10-28.md](CURVE_RAIL_GEOMETRY_2026-10-28.md) | 曲股右轨的站位表不是一条一致的轨道几何（B041） |
 | [CURVE_ROUTE_COMPARISON_2026-10-28.md](CURVE_ROUTE_COMPARISON_2026-10-28.md) | 曲线两条路线各自的缺口（2026-10-28） |
 | [CURVE_SEAT_AND_CREEP_2026-10-27.md](CURVE_SEAT_AND_CREEP_2026-10-27.md) | 曲线：先把静平衡问对，再把曲率放进蠕滑 |
+| [CURVE_YAW_BALANCE_2026-10-28.md](CURVE_YAW_BALANCE_2026-10-28.md) | 曲线为什么停不下来：摇头平衡被量到闭合（2026-10-28） |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
@@ -4525,3 +4526,21 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   因此 1.50667 m 的冠距不是缺陷而是**标定用的参考构型**（冻结 oracle 的 59 680.5769 N / 65.47 µm 就是在
   "车轮落在轨冠内侧 6.8 mm"这个位置量出来的，那条 ±0.0250 的法向倾角是它的组成部分）。
   脚本已 `git checkout` 回退、不留开关；剩余唯一候选改为"摇头平衡条件"，下一轮量需求力矩与可用蠕滑力矩。
+
+## 第 189 轮：摇头平衡量到闭合，并否掉"把蠕滑系数标定上去"这条修法
+
+- 新增 `scripts/s33_yaw_balance.py`：坐在曲线站表上带自转做**一次** `evaluate`，逐接触打
+  `N / slip_x / Fx / slip_lat / Fy / lever_y / lever_z`，逐轮对打力偶 `−Σ(lever_y·Fx)`、`yaw` 与 `k_yaw·yaw`。
+- 实测：**力偶 = `k_yaw·yaw` 逐个吻合到 1 %**（−0.98/−0.98、−1.00/−1.00、−1.02/−1.02、−1.02/−1.02 kN·m，
+  yaw 0.50–0.52 mrad）。链条逐项闭合：`κvb = 0.0151 m/s` → `Fx = f11·Δv/v = 680 N` → 力偶 1.02 kN·m
+  → `yaw = 1.02/1.96 = 0.52 mrad`；攻角只给 `f22·(vψ)/v = 260 N`，轨冠倾斜给 `N·n_y/n_z = 1 492 N`，
+  单轮合计 1.75 kN（实测 1.75/1.76），每轮对净 0.53 kN 对需求 5 460 N —— **差 10 倍**。
+- **否证**：`--creep-scale 10`（`f11 1e7`、`f22 5e6`，真实量级）后失稳**更早**（`x=22.0499317 m`，
+  车体只走 2.05 m、t≈0.09 s，对照 4.53 m）⇒ 横向力不是不够而是**方向不对**，
+  调大蠕滑增益只会让同向的错力来得更快。**"去标定 f22"这条路在动手前被实测关掉。**
+- 新线索：轮对型面（282 点，y ∈ [−69.30, +70.07] mm）最大 z 落在**自己的横向边界**上、从那里 1 mm
+  掉 4.11 mm（斜率 1.4，是轮缘/倒角侧而非 0.025 的踏面锥度），而八个接触的 `lever_z` **完全相同**
+  （−0.42982 m）⇒ 接触落在等半径平段，横向移动不产生滚动半径差、轮对**无回正机制**。
+  下一轮查型面装载（`y_sign`/`z_sign` 与前 70 mm 裁剪的语义），属几何装载问题。
+- 文档 `docs/CURVE_YAW_BALANCE_2026-10-28.md`（九节，含第 2 节实测表、第 3 节闭合表、第 7 节否证、
+  第 8 节锥度线索）。脚本 `s32` 新增 `--creep-scale`（只改合成算例，冻结算例不动）。

@@ -1923,6 +1923,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [SIMPACK_COMPARE_2026-10-23.md](SIMPACK_COMPARE_2026-10-23.md) | Simpack 与 Velch 的定量对照（前轮对，23.5–138.5 m） |
 | [SIMPACK_IMPORT_2026-10-22.md](SIMPACK_IMPORT_2026-10-22.md) | 从 Simpack 模型算一个算例（2026-10-22） |
 | [SIMPACK_IRREGULARITY_MINING_2026-10-23.md](SIMPACK_IRREGULARITY_MINING_2026-10-23.md) | Simpack 里"轨道不平顺"是怎么装进模型的（齿轨模型取证） |
+| [SINGLE_BAND_SWEEP_2026-10-28.md](SINGLE_BAND_SWEEP_2026-10-28.md) | 逐分量幅值扫描：非线性是**逐带**的，85–94 Hz 线性、142–195 Hz 不是 |
 | [SOFTWARE_AND_INVERSION_2026-10-25.md](SOFTWARE_AND_INVERSION_2026-10-25.md) | Velch：软件怎么建起来的，以及长波 / 短波不平顺怎么反演 |
 | [SOFTWARE_ARCHITECTURE_V0_4.md](SOFTWARE_ARCHITECTURE_V0_4.md) | Velch 0.4 软件架构与模型边界 |
 | [SPECTRUM_SOURCE_2026-10-21.md](SPECTRUM_SOURCE_2026-10-21.md) | 153.85 Hz 是什么：速度标定实验 |
@@ -4572,3 +4573,25 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   再用 0.1 与 0.3 的增益对数内插预测 0.2 mm，**1/4** —— 分段 `H(A)` 也被否掉。
   故第 6 门直向半边**显式降级**：可检出、可给量级，不可报 ±2 dB 带限幅值。
 - 文档 `docs/STRAIGHT_RANDOM_SPEED_2026-10-28.md`（8 节，含排除表与下一步判据）。
+
+## 第 192 轮：逐带幅值扫描 —— 非线性是逐带的，85–94 Hz 线性（1.007×）142–195 Hz 不是（5.3–7.6×）
+
+- 新增 `scripts/s36b_contact_migration.py`：把同一根轨抬高/降低 ±150 µm 后重算接触，
+  **`lever_y` 完全不动**（d lever_y/dz = 0.0000 m/m，跨度 0.0 µm），侵入量与抬高量 1:1
+  （−150 µm → 0、+150 µm → 215.4 µm）。零偏移处与求解器 `evaluate` 的差是 12 µm / 19 nm。
+  ⇒ **"接触点随波峰迁移"这条假设被否掉**。
+- 预载实验设计被否（记入文档）：单侧抬高 85 µm 会让只解 z 的静平衡落到"站在一边"分支
+  （2 837.5 N … 116 523.7 N）；两侧同时抬高则重新解回 65.47 µm。预载不是自由变量。
+- 新增 `scripts/s36_single_component_sweep.py`（一次一个波长 × 三档幅值，12 次 0.30 s 运行，
+  全部 `numerically_checked` 7/7）：增益跨度 **0.1004 m 7.558× / 0.1379 m 5.333× /
+  0.2073 m 1.064× / 0.2293 m 1.007×**。
+- 机理（观测到的相关性）：线性两带的平均侵入稳定在 62–72 µm，非线性两带升到 90–134 µm
+  （静止 65.47 µm）——高频带里车轮跟不上波峰，被持续压住，`δ^1.5` 上侧被压缩。
+- 逐带判定（0.1 mm 标定 → 预测 0.2/0.3 mm）：**2/4 带达标**（0.2073 m +0.06/+0.54 dB、
+  0.2293 m +0.03/+0.06 dB），另两带 −5.35…−17.57 dB。合计 4/8，与混合激励的 4/8 相同，
+  说明变的是**归因**：`s35` 里低频带的偏差来自高频带的**带间泄漏**，不是它们本身非线性。
+- 协议规则（可执行）：定量只在"自身增益平"的带上给；混合激励必须先窄带分离再逐带投影。
+- 顺手抓到自己脚本的一个坑：未窗化的记录经 `ShiftedSeries` 会在补片外被**钳位成端点常数**，
+  0.2 mm 的单音因此把整车压到一侧、静平衡被判据拒绝；改成 `scaled_track(..., fade_m)` 后正常。
+  这个坑第 182 轮记过一次，本轮在自己的新脚本里复发。
+- 文档 `docs/SINGLE_BAND_SWEEP_2026-10-28.md`（6 节）。

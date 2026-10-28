@@ -50,6 +50,7 @@ def y_route(x: np.ndarray | float, tangent_m: float, radius_m: float):
 def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
           duration_s: float, run_at_m: float, seat_at_m: float,
           curvature_force: bool = False,
+          cant_m: float = 0.0,
           primary_yaw_stiffness: float | None = None,
           primary_lateral_damping: tuple[float, float] | None = None,
           creep_scale: float | None = None,
@@ -131,6 +132,18 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
                                  f" Primary lateral damping {c_y:.3e} N.s/m and yaw damping "
                                  f"{c_yaw:.3e} N.m.s/rad are added to this synthetic case only; "
                                  "the inline baseline keeps zero.")
+    if cant_m:
+        # Cant enters as three parts of one tilted reference frame: the raised-rail level
+        # difference (geometry), the gravity component along the track plane (force), and -- in a
+        # real frame -- a rigid roll of the vehicle *with* the track.  The last one is deliberately
+        # NOT applied here: rolling the rail and rolling the wheel by the same angle is a rigid
+        # rotation of the whole system and changes no contact geometry, while rolling only one of
+        # them (which is what `RolledSeries` did) moves the tread contact R sin(phi) = 30.8 mm
+        # against the crown's z sin(phi) ~ 5 mm and is the mirror error B046 was found in.
+        raw["run"]["curve_cant_m"] = float(cant_m)
+        raw["purpose_detail"] = (raw["purpose_detail"] +
+                                 f" Cant {cant_m:.3f} m enters as a level difference plus the "
+                                 "gravity component along the track plane; nothing is rolled.")
     raw["run"].update({
         "x_start_m": run_at_m,
         "seat_x_start_m": seat_at_m,
@@ -159,6 +172,7 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
         # the creep was removed, the +-v kappa b arc-length difference comes with it.
         raw["run"]["curve_radius_m"] = float(radius_m)
     OUT.mkdir(parents=True, exist_ok=True)
+    tag = "" if not cant_m else f"_cant{cant_m * 1e3:.0f}mm"
     tag = "" if primary_yaw_stiffness is None else f"_kyaw{primary_yaw_stiffness:.1e}"
     tag += "" if primary_lateral_damping is None else (
         f"_cy{primary_lateral_damping[0]:.0e}_cyaw{primary_lateral_damping[1]:.0e}")
@@ -198,6 +212,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--span", type=float, default=150.0)
     parser.add_argument("--run-at", type=float, default=30.0)
     parser.add_argument("--seat-at", type=float, default=30.0)
+    parser.add_argument("--cant", type=float, default=0.0,
+                        help="cant in metres (107 mm is the balanced value for R 1100 at 100 km/h)")
     parser.add_argument("--primary-yaw", type=float, default=None,
                         help="replace vehicle.primary.k_yaw_nm_rad in the synthetic case only")
     parser.add_argument("--primary-damping", nargs=2, type=float, default=None,
@@ -219,6 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     path = build(radius_m=args.radius, tangent_m=args.tangent, step_m=args.step, span_m=args.span,
                  duration_s=args.duration, run_at_m=args.run_at, seat_at_m=args.seat_at,
                  curvature_force=args.curvature_force,
+                 cant_m=args.cant,
                  primary_yaw_stiffness=args.primary_yaw,
                  primary_lateral_damping=(None if args.primary_damping is None
                                           else tuple(args.primary_damping)),

@@ -50,6 +50,7 @@ def y_route(x: np.ndarray | float, tangent_m: float, radius_m: float):
 def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
           duration_s: float, run_at_m: float, seat_at_m: float,
           curvature_force: bool = False,
+          primary_yaw_stiffness: float | None = None,
           primary_lateral_damping: tuple[float, float] | None = None,
           creep_scale: float | None = None,
           creep_kalker: bool = False,
@@ -108,6 +109,16 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
                                  " Creep coefficients set to the Kalker scale (f11 3.5e6 N, "
                                  "f22 2.5e6 N) for this synthetic case only; the frozen cases keep "
                                  "1e6 / 5.0e5.")
+    if primary_yaw_stiffness is not None:
+        # The yaw mode is the one the creep couple drives: ``yaw = f11 * kappa * v * b / k_yaw``,
+        # and the lateral force follows as ``f22 * yaw * v``.  The inline value 1.96e6 N.m/rad is
+        # the number the whole archived history used, so this option only ever *measures* whether
+        # a stiffer yaw joint stops the curved response from growing.
+        k_yaw = float(primary_yaw_stiffness)
+        raw["vehicle"]["primary"]["k_yaw_nm_rad"] = k_yaw
+        raw["purpose_detail"] = (raw["purpose_detail"] +
+                                 f" Primary yaw stiffness {k_yaw:.3e} N.m/rad replaces the inline "
+                                 "value in this synthetic case only.")
     if primary_lateral_damping is not None:
         # The inline vehicle carries `c_y = 0` and `c_yaw = 0`, so the lateral and yaw modes are
         # damped only by the creep law.  A real bogie has an axle-box arm bushing and a lateral
@@ -148,7 +159,8 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
         # the creep was removed, the +-v kappa b arc-length difference comes with it.
         raw["run"]["curve_radius_m"] = float(radius_m)
     OUT.mkdir(parents=True, exist_ok=True)
-    tag = "" if primary_lateral_damping is None else (
+    tag = "" if primary_yaw_stiffness is None else f"_kyaw{primary_yaw_stiffness:.1e}"
+    tag += "" if primary_lateral_damping is None else (
         f"_cy{primary_lateral_damping[0]:.0e}_cyaw{primary_lateral_damping[1]:.0e}")
     tag += "_kalker" if creep_kalker else ""
     tag += "" if creep_scale is None else f"_cs{creep_scale:g}"
@@ -186,6 +198,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--span", type=float, default=150.0)
     parser.add_argument("--run-at", type=float, default=30.0)
     parser.add_argument("--seat-at", type=float, default=30.0)
+    parser.add_argument("--primary-yaw", type=float, default=None,
+                        help="replace vehicle.primary.k_yaw_nm_rad in the synthetic case only")
     parser.add_argument("--primary-damping", nargs=2, type=float, default=None,
                         metavar=("C_Y", "C_YAW"),
                         help="add primary lateral (N.s/m) and yaw (N.m.s/rad) damping to this "
@@ -205,6 +219,7 @@ def main(argv: list[str] | None = None) -> int:
     path = build(radius_m=args.radius, tangent_m=args.tangent, step_m=args.step, span_m=args.span,
                  duration_s=args.duration, run_at_m=args.run_at, seat_at_m=args.seat_at,
                  curvature_force=args.curvature_force,
+                 primary_yaw_stiffness=args.primary_yaw,
                  primary_lateral_damping=(None if args.primary_damping is None
                                           else tuple(args.primary_damping)),
                  creep_scale=args.creep_scale,

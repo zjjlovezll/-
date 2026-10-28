@@ -1826,6 +1826,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CURVE_ROUTE_COMPARISON_2026-10-28.md](CURVE_ROUTE_COMPARISON_2026-10-28.md) | 曲线两条路线各自的缺口（2026-10-28） |
 | [CURVE_SEAT_AND_CREEP_2026-10-27.md](CURVE_SEAT_AND_CREEP_2026-10-27.md) | 曲线：先把静平衡问对，再把曲率放进蠕滑 |
 | [CURVE_YAW_BALANCE_2026-10-28.md](CURVE_YAW_BALANCE_2026-10-28.md) | 曲线为什么停不下来：摇头平衡被量到闭合（2026-10-28） |
+| [CURVE_YAW_STABILITY_2026-10-28.md](CURVE_YAW_STABILITY_2026-10-28.md) | 摇头刚度与 Kalker 蠕滑都不能让曲线稳定（2026-10-28，第 204 轮） |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
@@ -4872,3 +4873,23 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   力路由与线形路由的超高不能混用、无稳态的四组证据、Kalker 尺度下单斑力够用、七项确认无需改动、判据与复算）。
 - 测试 `tests/test_alignment_conventions.py` **7 项**（线形曲率符号、惯性力背离中心、超高指向抬高轨、
   旧半径算式逐位相等、直线为零、按算例内容选线形、含 NaN 的站表被拒绝）。
+
+### 第 204 轮：摇头刚度与 Kalker 蠕滑都不能让曲线稳定
+
+第 203 轮把离心力符号改为由设计线形给出后，0.34 s 净横向力从 −78.1 % 变成 +53.5 %（侵入
+120.51 → 78.40 µm），但 0.60 s 仍是 +135.3 %、峰值 1.90×。判据先定为
+`|sum Fy(0.60 s)| / |sum Fy(0.34 s)| <= 1.2`，测三种配置：`k_yaw` ×2、×5 与 Kalker 蠕滑
+（f11 3.5e6 / f22 2.5e6）。
+
+实测比值：基准 2.53、×2 得 2.32、×5 得 2.47、Kalker 2.19 —— **一个都不稳定**。`k_yaw` 加到
+5 倍只把 0.34 s 的净横向力动了 1.6 %（11 691.2 → 11 883.8 N），所以"摇头角是主因"被否掉；
+Kalker 尺度是迄今最接近的一次（0.34 s 86.8 %、峰值 1.06–1.58× 全在带内），但 0.60 s 冲到
+190.1 %、侵入 383→478 µm，越压越深。六次运行七门全过、没有一次撞斜率守卫 ⇒ 不是数值故障。
+
+曲线项继续降级，理由收窄成一张逐项排除表（两点接触、蠕滑尺度、符号、摇头刚度、横向阻尼、
+积分/搜索全部排除），剩下唯一未被否掉的是轮轨几何本身：带内横向力上限 8 169.6 N = 需求的
+37.4 %，要拿 21.8 kN 必须外移 2.5 mm、而那里一侧承担 1.6 倍整车重量。
+
+新增 `scripts/s45_yaw_stability.py`（只读日志的分析器）、`reports/curve_yaw_stability_2026-10-28/`、
+`docs/CURVE_YAW_STABILITY_2026-10-28.md`、`tests/test_yaw_stability.py` 3 项；`s32` 新增
+`--primary-yaw`。

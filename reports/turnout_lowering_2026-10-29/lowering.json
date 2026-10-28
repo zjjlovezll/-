@@ -1,0 +1,153 @@
+{
+ "fsr_offset_m": 50.0,
+ "static_penetration_mm": 0.06547,
+ "frog_cn18_lowering_range_m": [
+  103.25,
+  104.75
+ ],
+ "schedules": {
+  "07(009)": [
+   {
+    "turnout": "07(009)",
+    "feature": "blade",
+    "mileage_m": [
+     50.0,
+     50.578,
+     52.889,
+     55.28,
+     56.569,
+     57.304,
+     60.962
+    ],
+    "lowering_mm": [
+     23.0,
+     14.0,
+     3.0,
+     1.375,
+     0.5,
+     0.0,
+     0.0
+    ],
+    "source": "Cal_RailBeam_230518.m InpPar.RailBeam.Pos_Z.R2_zjg"
+   },
+   {
+    "turnout": "07(009)",
+    "feature": "blade-as-built",
+    "mileage_m": [
+     50.0,
+     50.578,
+     52.889,
+     55.28,
+     56.569,
+     57.304,
+     60.962
+    ],
+    "lowering_mm": [
+     23.9,
+     13.6,
+     4.9,
+     3.166687429218573,
+     2.233295583238958,
+     1.7,
+     0.0
+    ],
+    "source": "Cal_RailBeam_230518.m InpPar.RailBeam.Pos_Z.R2_zjg + Choose_zjgUnEven"
+   },
+   {
+    "turnout": "07(009)",
+    "feature": "frog",
+    "mileage_m": [
+     103.2,
+     103.28,
+     103.36,
+     103.431,
+     103.589,
+     103.819,
+     104.12299999999999,
+     104.425
+    ],
+    "lowering_mm": [
+     16.0,
+     13.5,
+     11.06,
+     8.87,
+     4.0,
+     2.9,
+     1.4,
+     0.0
+    ],
+    "source": "Cal_RailBeam_230518.m InpPar.RailBeam.Pos_Z.R3 (commented out)"
+   }
+  ],
+  "CN18": [
+   {
+    "turnout": "CN18",
+    "feature": "blade",
+    "mileage_m": [
+     50.485,
+     53.307,
+     54.11,
+     55.881,
+     55.913
+    ],
+    "lowering_mm": [
+     16.0,
+     4.4,
+     2.8,
+     0.1,
+     0.0
+    ],
+    "source": "Cal_RailBeam_230518.m InpPar.RailBeam.Pos_Z.R2_zjg"
+   },
+   {
+    "turnout": "CN18",
+    "feature": "blade-as-built",
+    "mileage_m": [
+     50.485,
+     53.307,
+     54.11,
+     55.881,
+     55.913
+    ],
+    "lowering_mm": [
+     15.80916955017301,
+     6.281064552661382,
+     4.644688561721404,
+     1.864462061155153,
+     1.7630124575311439
+    ],
+    "source": "Cal_RailBeam_230518.m InpPar.RailBeam.Pos_Z.R2_zjg + Choose_zjgUnEven"
+   },
+   {
+    "turnout": "CN18",
+    "feature": "frog",
+    "mileage_m": [
+     104.379,
+     104.695,
+     105.153
+    ],
+    "lowering_mm": [
+     2.0,
+     0.4,
+     0.1
+    ],
+    "source": "Bezier_InterpProfile_CN18_250813.m:63-65 + CN18-Mileage-cx.txt"
+   },
+   {
+    "turnout": "CN18",
+    "feature": "frog-as-built",
+    "mileage_m": [
+     104.379,
+     104.695,
+     105.153
+    ],
+    "lowering_mm": [
+     3.8,
+     2.7,
+     1.5
+    ],
+    "source": "Bezier_InterpProfile_CN18_250813.m:63-65 + CN18-Mileage-cx.txt"
+   }
+  ]
+ }
+}

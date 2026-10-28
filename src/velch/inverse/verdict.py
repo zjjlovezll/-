@@ -39,6 +39,44 @@ class VerdictError(ValueError):
     """Raised when a layer result or a verdict cannot be assembled."""
 
 
+#: What a calibrated operator is valid *for*.
+#:
+#: Round 195 measured |H_tone / H_record| = 1.14-1.78 (that is 1.2-5.0 dB) between a 24-harmonic random
+#: record and a pure tone at the same rms, and an eight-fold tone amplitude change moved |H| by 0.17 %.
+#: So the operator is **class-calibrated**: an amplitude number means nothing without the excitation class
+#: it was calibrated on, and "within 2 dB" without one is not a claim.
+CALIBRATION_CLASS_FIELDS = ("harmonic_count", "band_edges_m", "rms_um", "crest_factor")
+
+#: Metric keys that constitute an amplitude claim on a band.
+AMPLITUDE_CLAIM_KEYS = ("band_amplitudes_um", "band_hit_rate", "band_errors_db")
+
+
+def _is_blank(value) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value.strip()
+    if isinstance(value, (list, tuple)):
+        return not value
+    return False
+
+
+def calibration_class(*, harmonic_count, band_edges_m, rms_um, crest_factor) -> dict:
+    """Assemble the class declaration for a calibrated operator, refusing anything incomplete."""
+    values = {"harmonic_count": harmonic_count, "band_edges_m": band_edges_m,
+              "rms_um": rms_um, "crest_factor": crest_factor}
+    missing = [key for key, value in values.items() if _is_blank(value)]
+    if missing:
+        raise VerdictError(f"a calibration class needs {missing}; got {values}")
+    if float(rms_um) <= 0.0:
+        raise VerdictError(f"a calibration class needs a positive rms, got {rms_um}")
+    if len(band_edges_m) != 2 or float(band_edges_m[0]) >= float(band_edges_m[1]):
+        raise VerdictError(f"band_edges_m must be an increasing pair, got {band_edges_m}")
+    return {"harmonic_count": int(harmonic_count),
+            "band_edges_m": [float(band_edges_m[0]), float(band_edges_m[1])],
+            "rms_um": float(rms_um), "crest_factor": float(crest_factor)}
+
+
 @dataclass
 class LayerResult:
     name: str
@@ -57,6 +95,18 @@ class LayerResult:
         if self.status != SKIPPED and not self.metrics:
             # A layer that "passed" with no numbers is the failure mode this whole project keeps hitting.
             raise VerdictError(f"layer {self.name} reports {self.status} but carries no metrics")
+        claims = [key for key in AMPLITUDE_CLAIM_KEYS if key in self.metrics]
+        if claims and self.status == PASSED:
+            declared = self.metrics.get("calibration_class")
+            missing = [name for name in CALIBRATION_CLASS_FIELDS
+                       if not isinstance(declared, dict) or _is_blank(declared.get(name))]
+            if missing:
+                raise VerdictError(
+                    f"layer {self.name} claims a band amplitude ({', '.join(claims)}) without a "
+                    f"declared calibration class; missing {missing}.  A calibrated operator is only "
+                    "valid inside the excitation class it was calibrated on: a 24-harmonic record and a "
+                    "pure tone at the same rms differ by 1.2-5.0 dB per band, so an undeclared "
+                    "'within 2 dB' is not a claim.")
 
     def as_dict(self) -> dict:
         return {"name": self.name, "status": self.status, "metrics": _plain(self.metrics),

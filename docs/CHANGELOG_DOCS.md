@@ -1794,6 +1794,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [B4_DESCRIPTOR_2026-10-22.md](B4_DESCRIPTOR_2026-10-22.md) | B4 接触状态描述子降维 —— 实测**负结果** |
 | [B5_JACOBIAN_EVENTS_2026-10-22.md](B5_JACOBIAN_EVENTS_2026-10-22.md) | B5 雅可比作事件检测（2026-10-22） |
 | [BAND_CAPABILITY_2026-10-26.md](BAND_CAPABILITY_2026-10-26.md) | 分带反演能力表：修掉三处测量错误之后 |
+| [BAND_CLAIM_CLASS_2026-10-28.md](BAND_CLAIM_CLASS_2026-10-28.md) | 带幅值必须带"标定谱类"：从约定变成构造约束 |
 | [bench_toolchain_design.md](bench_toolchain_design.md) | Velch 性能基准与剖析工具链（v1 最小可用设计） |
 | [BUGS.md](BUGS.md) | 缺陷账本（BUGS） |
 | [CAPABILITY_INVENTORY_2026-10-20.md](CAPABILITY_INVENTORY_2026-10-20.md) | 能力清单：现在的 Velch 到底准备好了什么（2026-10-20） |
@@ -4654,3 +4655,22 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
 - 判据影响：第 6 门"±2 dB 带命中率"必须**同时声明标定谱类**；交付时 6/8（同类标定）与
   3/8（单音标定）**并列**报告。
 - 文档 `docs/TONE_CALIBRATION_2026-10-28.md`（8 节）。
+
+## 第 196 轮：带幅值必须带"标定谱类"，从约定变成构造约束
+
+- `src/velch/inverse/verdict.py` 新增 `CALIBRATION_CLASS_FIELDS`、`AMPLITUDE_CLAIM_KEYS`、
+  `calibration_class(...)` 与 `LayerResult` 构造期守卫：**状态 `passed` 且 `metrics` 出现带幅值声明键
+  时，`calibration_class` 必须四字段齐全**，否则抛 `VerdictError`，文案引用第 195 轮的 1.2–5.0 dB。
+  规则**单向** —— `failed` 的层允许不带谱类报数（降级路径不是声明，堵死只会逼人绕过）。
+- 新增 `scripts/s40_band_verdict.py`：读第 194 轮（同类，6/8）与第 195 轮（单音，3/8）写出的两个 JSON，
+  **不手抄数字**，组出带谱类的 `Verdict` 并落 `reports/inversion_synthetic_2026-10-28/verdict.json`
+  + `bands.csv`（16 行 = 2 种子 × 4 带 × 2 估计子）。
+  层状态：L0 passed、L1 skipped（单通道）、L2 passed、L3 passed（`band_hit_rate` 0.75 + 谱类）、
+  L4 skipped（只有两个种子）、L5 failed（6/8 未达 8/8）；派生
+  **`measurement_validation_status = not_evaluated`** —— 合成自洽性检验不对实测做声明，这是正确结果。
+- 谱类实测值（不是设定值）：每带 rms **8.000 / 7.999 / 7.997 / 7.999 µm**；整条记录 rms
+  **16.578 / 15.487 µm**（**8 µm 是每带不是整条**，前几轮措辞在此明确）；峰值 37.771 / 47.170 µm；
+  峰值因数 **2.278 / 3.046**（归种子决定，**不属于谱类常量**，故谱类里存的是标定记录的实测值）。
+- 新增 `tests/test_verdict_calibration_class.py` **9 项**（缺谱类被拒且文案点名缺哪几个字段、
+  完整谱类可写入 JSON、部分谱类被拒、`failed` 层不受限、四类非法谱类值被拒、派生状态未被破坏）。
+- 文档 `docs/BAND_CLAIM_CLASS_2026-10-28.md`（6 节）。

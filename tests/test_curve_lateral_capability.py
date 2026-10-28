@@ -77,3 +77,36 @@ def test_the_in_band_window_is_narrow() -> None:
     offsets = sorted({row["offset_mm"] for row in record["capability"] if row["in_band"]})
     assert max(offsets) - min(offsets) <= 1.0, (
         "the lateral window that keeps all eight wheels in band must stay sub-millimetre")
+
+
+TILT = (pathlib.Path(__file__).resolve().parents[1]
+        / "reports" / "curve_capability_2026-10-28" / "tilt_sensitivity.json")
+
+
+def _tilt() -> dict:
+    return json.loads(TILT.read_text(encoding="utf-8"))
+
+
+def test_the_contact_tilt_does_not_respond_to_lateral_shift() -> None:
+    """This is the measurement the curve conclusion rests on: a frozen tilt is a frozen capacity."""
+    record = _tilt()
+    assert abs(record["tilt_slope_1_per_m"]) < 1e-3
+    assert abs(record["lever_slope"]) < 1e-4
+    tilts = [0.5 * (row["tilt_left"] - row["tilt_right"]) for row in record["rows"]]
+    assert max(tilts) - min(tilts) < 2e-3, "the tilt must stay inside a couple of tenths of a percent"
+
+
+def test_the_frozen_tilt_bounds_the_lateral_force_below_the_demand() -> None:
+    record = _tilt()
+    weight = 477_295.7
+    tilts = [0.5 * (row["tilt_left"] - row["tilt_right"]) for row in record["rows"]]
+    bound = weight * max(tilts)
+    assert bound < record["demand_n"], (
+        f"a frozen tilt of {max(tilts):.5f} gives W tan(tau) = {bound:.1f} N; if that ever exceeds "
+        f"the {record['demand_n']:.1f} N demand the argument has to be redone")
+
+
+def test_no_in_band_state_reaches_the_demand_in_the_tilt_sweep() -> None:
+    record = _tilt()
+    assert record["best_in_band_fy_n"] < 0.5 * record["demand_n"]
+    assert record["verdict"].startswith("BAND STILL SHORT")

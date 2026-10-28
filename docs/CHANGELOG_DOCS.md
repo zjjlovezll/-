@@ -4759,3 +4759,20 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   到需求的点必须整侧卸载且另一侧 ≈2.00×、带内横移窗口 ≤1 mm），读取归档
   `reports/curve_capability_2026-10-28/capability.json`；结论一旦变化测试会红，不允许静默继承。
 * 文档 `docs/CURVE_LATERAL_CAPABILITY_2026-10-28.md`（7 节，含预注册的下一步三行判据）。
+
+## 第 200 轮（2026-10-28）倾角对横移不响应：横向力被"冻结的 2.5 %"封在 11.9 kN
+
+* 接着第 199 轮 §5 留下的判据做独立测量：`scripts/s44_tilt_sensitivity.py`（横移 −3…+3 mm、0.25 mm 步长，
+  每个几何重解竖向行保持一个车重，读 `n_y/n_z`、`lever_y`、净横向力；±2.25 mm 以外一侧失接触）。
+* **倾角对横移完全不响应**：`d(n_y/n_z)/dy = +0.000 1/m`（拟合值 6.9e-16），`d(lever_y)/dy = 0.00000 m/m`；
+  倾角只取 0.02182 / 0.02238 / 0.02326 / 0.02328 / 0.02463 / 0.02498 / 0.02547 这几个离散值，
+  接触点在横向**跳格**。
+* 由此得到比"带内 8.17 kN"更强的**结构上限**：`Fy ≤ W·tan τ = 477 295.7 × 0.02498 = 11 922 N`，
+  而需求 21 842.4 N；要 21.8 kN 需要 `ΔN = 872 kN > W`，物理上不可能。
+* 蠕滑通道同时量化：`slip_lat ≈ 11 mm/s` → `f22·slip/v ≈ 248 N/接触`；2 mrad 冲角 → `≈1 kN/接触`，
+  八个接触约 8 kN——两条通道加起来仍不到需求的一半。
+* 结论（三处独立数字支持）：**无超高时曲线只能靠轮缘，而轮缘被 `maximum_abs_contact_slope = 1.0` 挡住；
+  正路是超高**（18 号道岔与真实曲线都有 107 mm 超高 = `h_th = 1.5v²/(gR)`）。缺的物理是"倾角随横移演化"，
+  不是求解器精度。
+* 文档 `docs/CURVE_LATERAL_CAPABILITY_2026-10-28.md` 新增 §6b（表）、§6c（结论）；归档
+  `reports/curve_capability_2026-10-28/tilt_sensitivity.json`；`tests/test_curve_lateral_capability.py` 扩到 **8 项**。

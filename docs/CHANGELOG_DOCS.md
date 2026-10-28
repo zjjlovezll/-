@@ -1944,6 +1944,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |
 | [STAGE_B_SURROGATE_2026-10-21.md](STAGE_B_SURROGATE_2026-10-21.md) | B 阶段：可微代理与保险丝 2026-10-21 |
 | [STRAIGHT_RANDOM_SPEED_2026-10-28.md](STRAIGHT_RANDOM_SPEED_2026-10-28.md) | 直向过岔 + 随机速度：波磨反演的六段判定（第 6 门的直向半边） |
+| [SWITCH_TWO_BODY_2026-10-29.md](SWITCH_TWO_BODY_2026-10-29.md) | 把降低值装进算例：双体尖轨区（2026-10-29，第 213 轮） |
 | [TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md](TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md) | 任务书：用轴箱加速度反演钢轨型面不平顺（2026-10-23 22:40 → 2026-10-24 10:00） |
 | [TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md](TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md) | 任务书：柔性轮对嵌入 + 反演链路（2026-10-25 夜） |
 | [TASKBOOK_INVERSION_NIGHT_2026-10-26.md](TASKBOOK_INVERSION_NIGHT_2026-10-26.md) | 任务书：长波与短波不平顺反演，以及问题到底出在哪里（2026-10-26 夜） |
@@ -5047,3 +5048,16 @@ P1 全靠一条映射（表里「距 FSR」= `里程 − 50 m`，且点名断面
 实测把左模板全设 `z_offset_m=-0.005`，左四轨冠高恰好 −5.000 mm、右轨一位不动。
 `tests/test_station_z_offset.py` 2 项钉住（冠高恰好动 5 mm；另一侧逐位不变）。下一步是“尖轨段双体”算例：
 降低值只有在两条轨并存时才可观。
+
+### 第 213 轮（2026-10-29）把降低值装进算例：双体尖轨区
+
+* 新增 `scripts/s52_switch_two_body.py`：把发散侧站表改成**双体**（`right:stock` 16664 站 + `right:blade` 1996 站），
+  基本轨体把 `qjg` 断面换回基本轨断面（保留各站自己的横向偏移），尖轨体按设计表逐站 `z_offset_m = -降低值`，
+  并以 `s_lo_m`/`s_hi_m` 限在 60.95–70.92 m。装载走的既有 `rail_templates[i]["bodies"]` 路径，未改求解器。
+* 校核：把两族断面各自的冠部数字化基准拟合掉（−0.061 mm）后，`(stock − blade) − 基准` 与设计表逐点差 **0.000 mm**。
+  说明：该残差是构造性的，验证的是注入算术与站表落地，**不是**设计表本身——设计表是 P1 的真值。
+* 新增 `tests/test_switch_two_body.py`（4 项，corpus 标记）：设计表数值、双体与区间有界、尖端低 22.5–23.5 mm 且远端归零并单调、
+  基本轨体不再含 `qjg` 断面。
+* 新增 `docs/SWITCH_TWO_BODY_2026-10-29.md`（5 节）：为什么双体是唯一合法表示、映射口径、校核表、边界、复算。
+* 边界：**没有跑时程**——P1 的零不平顺运行要穿过 60.95–70.92 m，须在 50 m 附近起步，那里正是 B047/B045 未清的区间；
+  尖轨形面仍是整体竖向偏移，没有做变截面。

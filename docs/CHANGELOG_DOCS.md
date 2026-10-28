@@ -1930,6 +1930,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |
 | [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |
 | [STAGE_B_SURROGATE_2026-10-21.md](STAGE_B_SURROGATE_2026-10-21.md) | B 阶段：可微代理与保险丝 2026-10-21 |
+| [STRAIGHT_RANDOM_SPEED_2026-10-28.md](STRAIGHT_RANDOM_SPEED_2026-10-28.md) | 直向过岔 + 随机速度：波磨反演的六段判定（第 6 门的直向半边） |
 | [TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md](TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md) | 任务书：用轴箱加速度反演钢轨型面不平顺（2026-10-23 22:40 → 2026-10-24 10:00） |
 | [TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md](TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md) | 任务书：柔性轮对嵌入 + 反演链路（2026-10-25 夜） |
 | [TASKBOOK_INVERSION_NIGHT_2026-10-26.md](TASKBOOK_INVERSION_NIGHT_2026-10-26.md) | 任务书：长波与短波不平顺反演，以及问题到底出在哪里（2026-10-26 夜） |
@@ -4557,3 +4558,17 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   轨距角，不能作为可引用的曲线通过结果。**符号口径（哪侧是外轨、虚设力朝哪）本轮不判定**，
   表里只引用幅值与斜率，方向待独立测试。
 - 文档 `docs/CURVE_YAW_BALANCE_2026-10-28.md` §10–§11。
+
+## 第 191 轮：直向 + 随机抽速的波磨反演跑通并判定 —— 带限幅值命中 4/8，显式降级
+
+- 新增 `scripts/s35_straight_random_speed.py`：直向路线（`case_A_final_law` 派生）、速度从
+  **70–90 km/h** 用种子 20261028 抽出 **70.32 km/h**（这是短波算子按速度标定的唯一有效带，
+  带外即外推）；四波长 0.10–0.30 m 混合、补片 42.5–45.5 m 只加左轨、幅值 0/0.1/0.2/0.3 mm 峰峰。
+- 四个水平全部 `numerically_checked` **7/7**（最大侵入 65.47 / 138.26 / 168.80 / 236.33 µm）。
+- **窗内该轮离轨帧比例 0.0 %**（四个水平），排除"轮子飞起造成非线性"这一解释。
+- 响应与幅值不成比例且**逐带方向相反**：0.1004 m 增益 3.610 → 0.454（掉 8 倍）、
+  0.1379 m 1.136 → 0.959、0.2073 m 0.302 → 0.457、0.2293 m 0.231 → 0.362。
+- 判定：0.1 mm 标定 → 0.2 mm **3/4** 带 ≤2 dB、→ 0.3 mm **1/4**，合计 **4/8 = 50 %**；
+  再用 0.1 与 0.3 的增益对数内插预测 0.2 mm，**1/4** —— 分段 `H(A)` 也被否掉。
+  故第 6 门直向半边**显式降级**：可检出、可给量级，不可报 ±2 dB 带限幅值。
+- 文档 `docs/STRAIGHT_RANDOM_SPEED_2026-10-28.md`（8 节，含排除表与下一步判据）。

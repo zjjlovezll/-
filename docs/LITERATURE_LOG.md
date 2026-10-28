@@ -136,3 +136,45 @@
   这也是我在文档里写"本增量只补了深度一个标量"时所说的那半个缺口，现在有了可引用的算法出处。
 - **没有改变什么**：它不提供数值算例（没有给出刚性/柔性的力差百分比），所以**不能**当作验收门；
   验收仍用陈嘉胤论文的 Ip1 87.92 → 84.74 kN、轴箱加速度 65.3 → 120.4 m/s² 那几条。
+
+## L12 轮轨接触点/横向力的**算法**：几何最小距离、两点接触、共形接触（第 199–200 轮的缺口出处）
+
+- **问题**：第 200 轮量到"接触平面倾角对横移不响应"（`d(n_y/n_z)/dy` 拟合 6.9e-16），
+  由此横向力被 `W·tan τ = 11.9 kN` 封住；而型面采样间距 0.496 mm 让倾角成阶梯。文献里这一步的**标准算法**是什么？
+- **来源（题录与可检索片段，正文多数未读）**：
+  - Popovici 学位论文（U. Twente），*The contact point position was determined by simply calculating
+    the minimum distance between the profiles in vertical direction*
+    — https://ris.utwente.nl/ws/portalfiles/portal/6067963/thesis_R_Popovici.pdf#4#20#4
+  - *A development of the 2-point Wheel-Rail Contact Algorithm*（韩国，题录可见）
+    — http://koreascience.kr/article/CFKO201132164226150.pdf
+  - *An innovative wheel rail wear model under conformal contact conditions*，Multibody Syst. Dyn.（2026）
+    — https://link.springer.com/content/pdf/10.1007/s11044-026-10185-2.pdf
+  - 道岔区接触位置研究（HAL 学位论文，含 diverging route 的 contact position 图）
+    — https://theses.hal.science/tel-03687144v1/file/TH2022UEFL2016.pdf
+  - 型面曲率的三点差分式 `R = -dy² / (z[i-1] - 2 z[i] + z[i+1])`（FRA/ROSA 文档）
+    — https://rosap.ntl.bts.gov/view/dot/85182/dot_85182_DS1.pdf
+- **它给了什么**：① 接触点定位的通行做法就是"**竖直距离最小**"，与我们 `find_patch_contact` 同源，
+  所以方法层面我们没有走偏；② 型面的**斜率/曲率按相邻三点差分**取，意味着斜率在采样点之间**本来就是分段常数**——
+  这正好解释了第 200 轮的阶梯；③ 两点接触（踏面 + 轮缘）有专门的算法文献，并且是**几何判定**，不是放宽容差；
+  ④ 在轮缘/轨距角这种**共形**区，Hertz 不成立，需要条带/非 Hertz 接触。
+- **它改变了什么**：把"倾角不响应"从"模型怪病"改判成**已知离散化 + 共形接触缺失的组合问题**，
+  并且给出两条正路：把接触几何做成**对 (y, roll) 的 C¹ 插值表**（并输出 `dn/dy`），以及在共形区改**条带/非 Hertz**。
+- **没有改变什么**：这些都是"怎么算"，**不提供**任何数值判据；验收仍是 `W·tan τ` 与 21 842.4 N 的对照。
+
+## L13 切向力（蠕滑律）模型的比较与选用（横向力的另一半）
+
+- **问题**：横向力 = 法向分量（几何）+ 切向蠕滑分量。第 200 轮量到我们的蠕滑只值 248 N/接触（`slip_lat≈11 mm/s`、
+  `f22 = 5e5 N`），2 mrad 冲角约 1 kN/接触。文献怎么选切向模型、怎么归一化？
+- **来源**：*Comparison of the Kalker table method from CONTACT, Kalker's FASTSIM and its modified version,
+  and the Polach approximate function*（Wiley 2019，题录可检索）
+  — https://onlinelibrary.wiley.com/doi/pdf/10.1155/2019/5279380 ；
+  FRA 1989《A Comparison of Model and Field Test Dynamic Performance》里关于 Kalker 表
+  "`τ_Y` 经 `F_N` 的 1/3 次幂归一"的说明
+  — https://railroads.fra.dot.gov/sites/fra.dot.gov/files/fra_net/16275/1989_A%20COMPARISON%20OF%20MODEL%20AND%20FIELD%20TEST%20DYNAMIC%20PERFO.PDF
+- **它给了什么**：切向模型（CONTACT 表 / FASTSIM / Polach）都**按 `μN` 归一**，因此**横向力的上限是 `μN`**，
+  与法向几何无关；而我们的实现里 `f22` 是**固定刚度**（`linear_lateral = -f22·slip/v`），
+  在正常蠕滑量级下只给出几百牛顿，离 `μN ≈ 23.9 kN` 差两个量级。
+- **它改变了什么**：把"要不要换切向模型"变成可判定的问题——在 `slip_lat` 的实测分布上比较
+  `f22·slip/v` 与 Polach/FASTSIM 的饱和曲线；若两者在 11 mm/s 与 44 mm/s 处相差 10 倍以上，
+  则**必须**换模型（这是物理，不是调参）。**仍不得**靠提高 `f22` 把曲线变绿（已实测更早失败）。
+- **没有改变什么**：不提供数值算据；且注意 FASTSIM/Polach 仍是**近似**，接触斑形状要用 L12 的几何。

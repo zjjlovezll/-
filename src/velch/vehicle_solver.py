@@ -382,8 +382,14 @@ class VehicleDynamics:
             for body in self.topology.bodies:
                 if "y" not in body.dof:
                     continue
-                # Outward is +y; the cant component points inward, so the two subtract.
-                lateral = body.mass_kg * (speed * speed / curve - cfg.gravity_m_s2 * sin_theta)
+                # Outward is +y *on the force route*, which is the convention every existing case
+                # was measured with; the cant component points inward, so the two subtract.  On a
+                # station-table curve the line ``y = s^2 / (2R)`` turns towards +y, so its centre
+                # sits at +y and the inertia force on the vehicle points towards -y -- hence
+                # ``run.curve_lateral_sign``, whose default keeps every existing case bit-identical.
+                sign = float(getattr(self.case.run, "curve_lateral_sign", 1.0))
+                lateral = sign * body.mass_kg * (speed * speed / curve
+                                 - cfg.gravity_m_s2 * sin_theta)
                 force[self.topology.require(body.id, "y")] += lateral
         if self.spin_control:
             radius = float(cfg.nominal_wheel_radius_m)
@@ -1741,7 +1747,8 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
         gauge = 2.0 * abs(float(case.wheels[0].lateral_offset_m)) if case.wheels else 1.5
         sin_theta = cant / gauge if gauge else 0.0
-        curve_lateral_n = sum(body.mass_kg for body in dynamics.topology.bodies if "y" in body.dof) \
+        curve_lateral_n = float(getattr(run, "curve_lateral_sign", 1.0)) \
+            * sum(body.mass_kg for body in dynamics.topology.bodies if "y" in body.dof) \
             * (speed * speed / curve_radius - cfg.gravity_m_s2 * sin_theta)
     # The loop below already calls evaluate() on every accepted state for the gates; that call
     # *is* the right-hand side, so acceleration is force/mass with no finite difference.

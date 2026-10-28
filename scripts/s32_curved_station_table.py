@@ -51,7 +51,9 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
           duration_s: float, run_at_m: float, seat_at_m: float,
           curvature_force: bool = False,
           primary_lateral_damping: tuple[float, float] | None = None,
-          creep_scale: float | None = None) -> Path:
+          creep_scale: float | None = None,
+          creep_kalker: bool = False,
+          curve_sign: float = 1.0) -> Path:
     raw = json.loads((data_root.case_dir() / "case_A_final_law.json").read_text(encoding="utf-8"))
     raw.pop("initial_state", None)
     raw["case_id"] = f"curved_station_table_R{radius_m:.0f}"
@@ -92,6 +94,20 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
         contact["creep_stiffness_x_n"] = float(contact["creep_stiffness_x_n"]) * float(creep_scale)
         contact["creep_stiffness_lateral_n"] = (float(contact["creep_stiffness_lateral_n"])
                                                 * float(creep_scale))
+    if creep_kalker:
+        # L13: Kalker's linear theory gives f11 = 3.5e6 N and f22 = 2.5e6 N for a 60 kN wheel load
+        # at a/b ~ 0.3, and CONTACT/FASTSIM/Polach all normalise the tangential force by mu*N.
+        # The frozen law carries 1e6 / 5e5, i.e. 3.5x and 5x below that, so this option asks one
+        # separate question -- "would a physical creep law steer this curve without touching the
+        # geometry?" -- and stamps the coefficients into the case so no run can be quoted without
+        # them.  It is not a repair of a failure and it does not touch any frozen case.
+        contact = raw["contact"]
+        contact["creep_stiffness_x_n"] = 3.5e6
+        contact["creep_stiffness_lateral_n"] = 2.5e6
+        raw["purpose_detail"] = (raw["purpose_detail"] +
+                                 " Creep coefficients set to the Kalker scale (f11 3.5e6 N, "
+                                 "f22 2.5e6 N) for this synthetic case only; the frozen cases keep "
+                                 "1e6 / 5.0e5.")
     if primary_lateral_damping is not None:
         # The inline vehicle carries `c_y = 0` and `c_yaw = 0`, so the lateral and yaw modes are
         # damped only by the creep law.  A real bogie has an axle-box arm bushing and a lateral
@@ -116,6 +132,13 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
     raw["run"].pop("curve_radius_m", None)
     raw["run"].pop("curve_geometry", None)
     raw["run"].pop("align_to_track", None)
+    if curve_sign != 1.0:
+        # DIAGNOSTIC: the sign of the fictitious m v^2/R.  On this route the line y = s^2/(2R)
+        # turns towards +y, so its centre sits at +y and the inertia force on the vehicle points
+        # towards -y -- the opposite of the force route's default.  The emitted case records it.
+        raw["run"]["curve_lateral_sign"] = float(curve_sign)
+        raw["purpose_detail"] = (raw["purpose_detail"] +
+                                 f" Fictitious lateral force sign {curve_sign:+.0f}.")
     if curvature_force:
         # The station table and `path` already carry the line, so nothing has to be *placed*.
         # What is still missing in that frame is the frame's own lateral acceleration: a frame
@@ -127,6 +150,9 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
     OUT.mkdir(parents=True, exist_ok=True)
     tag = "" if primary_lateral_damping is None else (
         f"_cy{primary_lateral_damping[0]:.0e}_cyaw{primary_lateral_damping[1]:.0e}")
+    tag += "_kalker" if creep_kalker else ""
+    tag += "" if creep_scale is None else f"_cs{creep_scale:g}"
+    tag += "" if curve_sign == 1.0 else f"_sign{curve_sign:+.0f}"
     path = OUT / f"case_curved_R{radius_m:.0f}_t{tangent_m:.0f}{tag}.json"
     path.write_text(json.dumps(raw, indent=1), encoding="utf-8")
     return path
@@ -167,6 +193,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--creep-scale", type=float, default=None,
                         help="DIAGNOSTIC: multiply f11 and f22 by this factor (10 gives the "
                              "physical 1e7 / 5e6 N); the frozen cases are untouched")
+    parser.add_argument("--curve-sign", type=float, default=1.0, choices=[1.0, -1.0],
+                        help="DIAGNOSTIC: sign of the fictitious m v^2/R on the station-table route")
+    parser.add_argument("--creep-kalker", action="store_true",
+                        help="DIAGNOSTIC: set f11 = 3.5e6 N and f22 = 2.5e6 N (Kalker scale, L13) "
+                             "in this synthetic case only; the frozen cases keep 1e6 / 5.0e5")
     parser.add_argument("--curvature-force", action="store_true",
                         help="add the frame's fictitious m v^2/R (curving load) to the station-table route")
     args = parser.parse_args(argv)
@@ -176,7 +207,9 @@ def main(argv: list[str] | None = None) -> int:
                  curvature_force=args.curvature_force,
                  primary_lateral_damping=(None if args.primary_damping is None
                                           else tuple(args.primary_damping)),
-                 creep_scale=args.creep_scale)
+                 creep_scale=args.creep_scale,
+                 creep_kalker=args.creep_kalker,
+                 curve_sign=args.curve_sign)
     case = load_vehicle_case(path)
     print(f"case {path.name}: R {args.radius:.0f} m, tangent {args.tangent:.0f} m, "
           f"{len(case.rails)} rails, path {len(case.path.stations_s_m)} points, "

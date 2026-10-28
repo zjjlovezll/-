@@ -211,6 +211,15 @@ class RunSettings:
     #: rail table — the steering half of a curve without the geometry half.
     curve_placement: bool | None = None
 
+    #: Direction of the frame's fictitious lateral force, ``m v^2 / R``, on the route that keeps the
+    #: rails straight and injects the curving load as a body force.  ``1.0`` is the sign every
+    #: existing case was measured with and stays the default; ``-1.0`` exists because the sign is
+    #: *not* a free parameter on a station-table curve -- the line ``y = s^2 / (2R)`` turns towards
+    #: +y, so its centre sits at +y and the inertia force on the vehicle points towards -y.  A
+    #: diagnostic run with the opposite sign is what decides between the two, and the emitted case
+    #: records it so no result can be quoted without it.
+    curve_lateral_sign: float = 1.0
+
     #: Look for a *second* local extremum of the clearance on the same wheel-rail side instead of
     #: keeping only the deepest one.  Two-point contact is what a wheelset actually does once the
     #: tread and the flange root both touch, and the algorithms that do it (L12: contact-line and
@@ -265,6 +274,8 @@ class RunSettings:
             _finite("contact_search_half_width_m", self.contact_search_half_width_m, positive=True)
         if self.curve_radius_m is not None:
             _finite("curve_radius_m", self.curve_radius_m, positive=True)
+        if self.curve_lateral_sign not in (1.0, -1.0):
+            raise ValueError("curve_lateral_sign must be +1.0 or -1.0")
         _finite("curve_cant_m", self.curve_cant_m)
         if abs(self.curve_cant_m) > 0.20:
             raise ValueError("curve_cant_m looks like a cant in millimetres; pass metres (0.06 for 60 mm)")

@@ -57,15 +57,16 @@ def builder():
 
 
 def build_case(*, radius_m: float, speed_kmh: float, run_at_m: float, seat_at_m: float,
-               creep_scale: float, duration_s: float) -> Path:
+               creep_scale: float, duration_s: float, creep_kalker: bool = False) -> Path:
     s32 = builder()
     s32.SPEED_KMH = speed_kmh
     base = s32.build(radius_m=radius_m, tangent_m=seat_at_m, step_m=0.1, span_m=180.0,
                      duration_s=duration_s, run_at_m=run_at_m, seat_at_m=seat_at_m,
-                     curvature_force=True,
+                     curvature_force=True, creep_kalker=creep_kalker,
                      creep_scale=None if creep_scale == 1.0 else creep_scale)
     raw = json.loads(Path(base).read_text(encoding="utf-8"))
     raw["case_id"] = (f"frame_equilibrium_R{radius_m:.0f}_t{seat_at_m:.0f}"
+                      f"{'_kalker' if creep_kalker else ''}"
                       f"{'' if creep_scale == 1.0 else f'_creep{creep_scale:g}'}")
     target = SCRATCH / f"{raw['case_id']}.json"
     SCRATCH.mkdir(parents=True, exist_ok=True)
@@ -243,6 +244,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-at", type=float, default=30.0)
     parser.add_argument("--seat-at", type=float, default=30.0)
     parser.add_argument("--creep-scale", type=float, default=1.0)
+    parser.add_argument("--creep-kalker", action="store_true",
+                        help="set f11 = 3.5e6 N and f22 = 2.5e6 N (Kalker scale, L13)")
     parser.add_argument("--duration", type=float, default=0.02)
     parser.add_argument("--run", type=float, default=0.0,
                         help="integrate this long from the solved state (needs --duration >= it)")
@@ -254,6 +257,7 @@ def main(argv: list[str] | None = None) -> int:
 
     path = build_case(radius_m=args.radius, speed_kmh=args.speed_kmh, run_at_m=args.run_at,
                       seat_at_m=args.seat_at, creep_scale=args.creep_scale,
+                      creep_kalker=args.creep_kalker,
                       duration_s=max(args.duration, args.run + 0.01))
     case = load_vehicle_case(path)
     dynamics = VehicleDynamics(case)
@@ -316,7 +320,8 @@ def main(argv: list[str] | None = None) -> int:
     SCRATCH.mkdir(parents=True, exist_ok=True)
     (SCRATCH / f"{path.stem}_result.json").write_text(json.dumps({
         "case": path.name, "radius_m": args.radius, "speed_kmh": args.speed_kmh,
-        "creep_scale": args.creep_scale, "demand_n": demand_n,
+        "creep_scale": args.creep_scale, "creep_kalker": args.creep_kalker,
+        "demand_n": demand_n,
         "seat_residual_n": seat_residual,
         "unbalanced_lateral_rows_n": [float(value) for value in lateral],
         "frame_residual_n": error_n, "cond": cond, "barrier_hits": hits,

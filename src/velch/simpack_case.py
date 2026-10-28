@@ -194,7 +194,8 @@ def _crown_of(spec: dict[str, Any]) -> tuple[float, float] | None:
         profile = load_profile(Path(spec["file"]), file_format=spec.get("format", "prr"),
                                surface="rail_top", y_sign=int(spec.get("y_sign", 1)),
                                z_sign=int(spec.get("z_sign", 1)),
-                               y_offset_m=float(spec.get("y_offset_m", 0.0)))
+                               y_offset_m=float(spec.get("y_offset_m", 0.0)),
+                               z_offset_m=float(spec.get("z_offset_m", 0.0)))
     except (ProfileError, OSError, ValueError):
         return None
     z = np.asarray(profile.z_m, dtype=float)

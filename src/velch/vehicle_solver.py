@@ -18,6 +18,14 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import least_squares, root
 
 from . import __version__
+BODY_CONTACT_HOOK: "Callable[[float, str, tuple[tuple[str, float], ...]], None] | None" = None
+"""Research hook called once per rail per evaluation with the per-body normal forces.
+
+Set by a probe (see ``scripts/s53_switch_passage.py``); ``None`` in every production path, so the
+solver's numbers cannot depend on it.
+"""
+
+
 from .contact import (ContactGeometry, ContactResponse, deduplicate_contacts, evaluate_contact,
                       find_graph_contact, merge_contact_responses)
 from .contact_search import masked_sample_around
@@ -488,6 +496,20 @@ class VehicleDynamics:
                 body_results = deduplicate_contacts(body_results, overlap)
             self._body_cache[rail.id] = tuple(item[2] for item in body_results)
             contacts[rail.id] = merge_contact_responses(self._body_cache[rail.id])
+            # Observation hook: `evaluate` merges the bodies of a rail into one response, which is
+            # what the wheel feels but hides which body carries it.  A turnout switch keeps a stock
+            # rail and a blade side by side (P1, `docs/SWITCH_TWO_BODY_2026-10-29.md`), and "where
+            # does the blade start carrying load" can only be read per body.  Off by default so no
+            # case, test or baseline sees a difference.
+            if BODY_CONTACT_HOOK is not None:
+                BODY_CONTACT_HOOK(
+                    float(t_s),
+                    rail.id,
+                    tuple(
+                        (body_id, float(response.normal_force_n) if response.active else 0.0)
+                        for body_id, _geometry, response in body_results
+                    ),
+                )
             if self.case.run.contact_seed_scope == "rail_hold" and self._pool is None:
                 loaded = any(geometry is not None and response.active
                              and geometry.penetration_m > 0.0

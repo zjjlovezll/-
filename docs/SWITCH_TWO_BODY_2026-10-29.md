@@ -215,3 +215,54 @@ VERDICT: every contact lies inside its own rail head at its own mileage
 ```bash
 PYTHONPATH=src python -X utf8 scripts/s54_contact_locus.py --x-start 52 --travelled 7.11
 ```
+
+## 11 P1 的第一组数字：尖轨开始承力的里程，误差 5 mm
+
+**预注册判据（写在本轮跑之前）**：设计降低值降到与静载侵入同量级时，尖轨才可能接触。降低值表在
+6.569 m 处是 0.5 mm、7.304 m 处是 0，斜率 0.667 mm/m，于是
+
+```
+降低值 = 65.47 um  <=>  距尖端 (7.304 - (0.06547 / 0.5) * 0.735) = 7.208 m
+                     <=>  里程 60.95 + 7.208 = 68.16 m      判据 ±0.20 m
+```
+
+**实测**（`scripts/s55_blade_onset.py --x-start 52 --duration 0.34`，681 帧、七门 7/7）：
+
+```
+first blade load  t 0.277 s   axle1 at 68.152 m   F 0.065 kN
+criterion error   -0.005 m   (PASS at +- 0.20 m)
+
+  axle1 at (m)   blade force (kN)
+        66.93            0.000
+        67.79            0.000
+        68.28           24.452
+        68.75           24.184
+        69.22           23.713
+```
+
+三条读数：
+
+1. **定位误差 −5 mm**（判据 ±200 mm）——这是 P1 意义上第一个"真值来自设计几何、不是我们写进去的不平顺"的
+   反演数字；
+2. **67.79 m 之前恒为 0**，说明尖轨在降低值还大于间隙时**完全不分担**，这正是设计意图；
+3. 接触后立刻承担 **约 24 kN（≈0.4× 均分）**，即在 0.5 m 行程内从 0 抬到 40 %——这是弹性压缩，不是几何跳变。
+
+## 12 为了读这个数字，加了一个默认关闭的观测钩子
+
+`evaluate` 把一根轨的多个体**合并**成一个响应（那是车轮感到的力），所以两体分担在 `history.csv` 里看不到。
+新增 `velch.vehicle_solver.BODY_CONTACT_HOOK`：每次求值、每根轨调用一次，参数是 `(t, rail_id, ((body_id, N), …))`；
+**默认 `None`**，生产路径、测试与冻结基线都看不到差别。
+
+`tests/test_body_contact_hook.py`（3 项）：默认必须为 `None`；不挂钩子时 `evaluate` 仍照常返回；挂上钩子后
+**各体法向力之和 = 合并响应的法向力**（`rel=1e-12`），且确实有轨报出两个体。
+
+复算：
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/s55_blade_onset.py --x-start 52 --duration 0.34
+PYTHONPATH=src python -X utf8 -m pytest tests/test_body_contact_hook.py -q
+```
+
+**边界**：这一组数字只覆盖**前轴右侧**（`axle1_right` 在 68 m 处，`lever_y` 已在 §10 证明落在轨头内）。尖轨
+**变截面**仍未做（尖轨体用的是基本轨断面 + 竖向偏移），所以接触后的接触斑形状不可引用；这里能引用的是
+**"降低值何时被吃掉"**这一个量。

@@ -8,6 +8,7 @@ switched body.
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import numpy as np
 
@@ -809,3 +810,40 @@ def find_spline_contact(
         geometry_policy="grid",
         grid_step_m=min(grid_step_m, half / 2.0),
     )
+
+
+def masked_sample_around(
+    sample: ProfileSample,
+    *,
+    center_y_m: float,
+    exclusion_m: float,
+    drop_m: float = 10.0,
+) -> ProfileSample:
+    """Copy the sampled rail surface with a deep well where the primary contact sits.
+
+    Two-point contact needs a *second* local extremum of the clearance on the same wheel-rail
+    side (L12: the contact-line and conformal two-point algorithms search every local minimum,
+    not only the global one).  Rather than write a second searcher, the primary patch is pushed
+    ten metres below the wheel and the ordinary search is run again: every policy then works on
+    the remaining surface with exactly the same code, so the second point is found, refined and
+    given a normal by the same path as the first, and two independent implementations cannot
+    drift apart.
+
+    A well (rather than deleting the samples) keeps the abscissa strictly increasing for
+    ``np.interp`` and leaves no invented surface spanning the gap: inside the window the depth is
+    around -10 m, so no extremum can be reported there.  ``sample`` is returned unchanged when the
+    window holds no sample, which is what makes the single-contact cases trivially identical.
+    """
+
+    if exclusion_m <= 0.0:
+        return sample
+    profile = sample.profile
+    y = np.asarray(profile.y_m, dtype=float)
+    if y.size == 0:
+        return sample
+    mask = np.abs(y - float(center_y_m)) < exclusion_m
+    if not np.any(mask):
+        return sample
+    z = np.asarray(profile.z_m, dtype=float).copy()
+    z[mask] -= float(drop_m)
+    return replace(sample, profile=replace(profile, z_m=z))

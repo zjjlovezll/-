@@ -211,6 +211,41 @@ class RunSettings:
     #: rail table — the steering half of a curve without the geometry half.
     curve_placement: bool | None = None
 
+    #: Look for a *second* local extremum of the clearance on the same wheel-rail side instead of
+    #: keeping only the deepest one.  Two-point contact is what a wheelset actually does once the
+    #: tread and the flange root both touch, and the algorithms that do it (L12: contact-line and
+    #: conformal two-point methods) find every local minimum of the clearance, not just the global
+    #: one.
+    #:
+    #: On by default, and that is a measurement rather than optimism.  The frozen static anchor
+    #: (59 680.5769 N per contact, -0.4628 mm) was calibrated with one point per rail, so the
+    #: multi-point search has to return exactly that when there is only one body in contact --
+    #: measured with the flag on: eight rails, one active contact each, 59 680.5769 N, vertical
+    #: -0.4628 mm, residual 1.88e-08 N, i.e. bit-identical to the flag off.  Getting there needed
+    #: two criteria, both measured on ``case_A_plain``: without them the search splits every contact
+    #: in two -- 41 400.5 N at y = -0.75277 (154.86 um) plus 18 298.0 N at y = -0.74471 (89.85 um),
+    #: two extrema **8.06 mm apart on the same rail head**, which is one Hertzian footprint seen
+    #: through the profile's own double curvature, not a tread/flange pair (those sit ~55 mm apart).
+    contact_two_point: bool = True
+
+    #: Lateral window, in metres, around the deepest contact that the second search excludes.
+    #: Two extrema closer than this are one patch: the deeper one already accounts for the shared
+    #: Hertzian area, so summing both would double count -- the same reason
+    #: ``duplicate_patch_window_m`` exists for two rail bodies in a turnout cross-section.
+    #: 12 mm sits above the measured same-head pair (8.06 mm) and far below a tread/flange pair
+    #: (~55 mm), so a genuine second body survives and a double-curvature artefact does not.
+    contact_two_point_exclusion_m: float = 0.012
+
+    #: Minimum |n_y / n_z| for the second contact to count as a second *body* rather than
+    #: another patch of the same tread.  This is the criterion that makes the search a
+    #: two-point contact model instead of a multi-lobe tread sampler: the tread is nearly
+    #: flat (measured |n_y/n_z| = 0.025 at the crown) while a flange root is steep by nature,
+    #: and it is the flange -- not a second flat lobe -- that lets a wheelset carry a curving
+    #: load.  Measured on ``case_A_plain`` with the flag on and no slope criterion: a second
+    #: flat lobe splits every contact and moves the frozen anchor to 59 698.5 N at 52 um,
+    #: which is why the criterion is not optional.
+    contact_two_point_min_slope: float = 0.25
+
     def __post_init__(self) -> None:
         if self.method not in {"DOP853", "Radau", "BDF"}:
             raise ValueError("supported methods are DOP853, Radau and BDF")
@@ -241,6 +276,10 @@ class RunSettings:
             raise ValueError("output step exceeds duration")
         if not isinstance(self.refine_peak, bool):
             raise ValueError("refine_peak must be a boolean")
+        if not isinstance(self.contact_two_point, bool):
+            raise ValueError("contact_two_point must be a boolean")
+        _finite("contact_two_point_exclusion_m", self.contact_two_point_exclusion_m, positive=True)
+        _finite("contact_two_point_min_slope", self.contact_two_point_min_slope, positive=True)
 
 
 @dataclass(frozen=True)

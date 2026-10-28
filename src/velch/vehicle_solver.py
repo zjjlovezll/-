@@ -20,6 +20,7 @@ from scipy.optimize import least_squares, root
 from . import __version__
 from .contact import (ContactGeometry, ContactResponse, deduplicate_contacts, evaluate_contact,
                       find_graph_contact, merge_contact_responses)
+from .contact_search import masked_sample_around
 from .solver import SimulationFailure
 from .topology import Topology, topology_for
 from .track_models import TrackKernel
@@ -653,6 +654,7 @@ class VehicleDynamics:
         rail_y, rail_z, rail_vy, rail_vz = self.track.local_state(q, v, rail_index, x,
                                                                   self.speed_at(t_s))
         body_results = []
+        steep: list[tuple[str, str, float]] = []
         # S9-1: the steel moves, so the contact is searched on the deformed tread.  Computed once
         # per patch because the deformation depends on the axle and the side, not on the body.
         profile = self._deformed_profile(wheel, rail, q)
@@ -670,33 +672,11 @@ class VehicleDynamics:
             seed_y = seeds.get(body.id) if seeds else None
             if seed_y is None and seeds:
                 seed_y = seeds.get("__rail__")
+            search = self._contact_search_kwargs(
+                q, wh, axes, wheel, lateral_extra, rail_y, rail_z, law)
             geometry = find_graph_contact(
-                profile, sample, wheel_y_m=float(q[wh]),
-                wheel_z_m=cfg.wheel_center_height_m + float(q[axes["z"]]),
-                wheel_roll_rad=float(q[axes["roll"]]),
-                wheel_lateral_offset_m=wheel.lateral_offset_m + lateral_extra,
-                rail_y_m=rail_y, rail_z_m=rail_z,
-                search_half_width_m=half_width,
-                previous_y_m=seed_y,
-                patch_half_width_m=law.patch_half_width_m,
-                patch_slices=law.patch_slices,
-                point_policy=law.point_policy,
-                point_theta_m=law.point_theta_m,
-                stiffness_policy=law.stiffness_policy,
-                effective_modulus_pa=law.effective_modulus_pa,
-                effective_radius_m=law.effective_radius_m,
-                ellipticity_correction=law.ellipticity_correction,
-                geometry_policy=law.geometry_policy,
-                patch_window_m=law.patch_window_m,
-                grid_step_m=law.grid_step_m,
-                surface_key=(rail.id, body.id),
-                normal_policy=law.normal_policy,
-                strip_dy_m=law.strip_dy_m,
-                strip_min_depth_m=law.strip_min_depth_m,
-                strip_half_width_m=law.strip_half_width_m,
-                strip_center_policy=law.strip_center_policy,
-                curvature_policy=law.curvature_policy,
-                partials=self.contact_partials,
+                profile, sample, search_half_width_m=half_width,
+                previous_y_m=seed_y, surface_key=(rail.id, body.id), **search,
             )
             if geometry is not None and not body.accepts_contact_y(geometry.y_m):
                 # Attribution gate: a head whose running surface is not under the
@@ -724,38 +704,187 @@ class VehicleDynamics:
                         self._contact_seed.pop(rail_key, None)
             if (geometry and geometry.penetration_m > 0
                     and abs(geometry.normal_y / geometry.normal_z) > self.case.run.maximum_abs_contact_slope):
-                raise SimulationFailure(f"graph slope limit at {rail.id}/{body.id}, x={x:.9g} m")
-            support = self._support
-            response = evaluate_contact(
-                geometry, self.case.contact,
-                wheel_v_y_m_s=float(v[axes["y"]]),
-                wheel_v_z_m_s=float(v[axes["z"]]),
-                wheel_roll_rate_rad_s=float(v[axes["roll"]]),
-                wheel_spin_rate_rad_s=float(v[axes["spin"]]),
-                rail_v_y_m_s=rail_vy, rail_v_z_m_s=rail_vz,
-                travel_speed_m_s=travel,
-                creep_attack_velocity_m_s=float(travel * q[axes["yaw"]]),
-                support_compliance_m_per_n=(support.at(x) if support is not None else None),
-                # Curvature belongs to the *track*, not to the route that carries it.  An axle on a
-                # curve runs its two contacts on different arc lengths (+-v kappa b), and that is a
-                # kinematic fact in the vehicle's own frame -- which is exactly where the force
-                # route lives, with straight rails and m v^2 / R as the body force.  The term used
-                # to be gated on the placement, i.e. only the geometry route carried it, and that
-                # left each route owning half of a co-rotating frame: the geometry route placed the
-                # vehicle on an arc and pushed it with nothing (measured: 8/8 seated at 0.988..1.013x
-                # and then graph slope limit after 1.04 m of travel, R = 1100 m at 80 km/h), while
-                # the force route had the centripetal force and no arc-length difference.
-                #
-                # Turning it on for the force route needs the *seat* to be able to absorb the yaw
-                # moment it produces.  Without a yaw unknown the vertical-only seat read 4 of 8
-                # wheels and 128 901 N (2x the 59 662 N share); with the wheelsets' yaw free the
-                # same balance is well posed, because the attack velocity travel * yaw gives the
-                # yaw row real stiffness whenever the vehicle is rolling.  See the `curved` branch
-                # of _static_vertical_equilibrium.
-                curvature_1_per_m=self._curvature_1_per_m,
-            )
+                # A steep normal is not an error by itself.  With two-point contact the flange root
+                # really does carry a near-vertical normal -- measured on the curved route:
+                # n_y/n_z = 0.7216/0.6923, slope 1.04 -- and refusing it is exactly what made the
+                # model unable to run a curve.  What the gate is for is the *single* steep point, a
+                # search that has slid onto the flange nose with nothing left on the tread.  The
+                # decision therefore moved below the loop and now requires the absence of any
+                # shallow contact on this patch.
+                steep.append((rail.id, body.id, x))
+            response = self._contact_response(geometry, rail, x, q, v, travel, rail_vy, rail_vz)
             body_results.append((body.id, geometry, response))
+            if (self.case.run.contact_two_point and geometry is not None
+                    and geometry.penetration_m > 0.0):
+                second = self._second_contact(
+                    profile, sample, body, rail, geometry, search, q, v,
+                    x=x, travel=travel,
+                    wheel_y_offset_m=wheel.lateral_offset_m + lateral_extra,
+                    rail_y=rail_y, rail_vy=rail_vy, rail_vz=rail_vz)
+                if second is not None:
+                    body_results.append((body.id, second[0], second[1]))
+        if steep:
+            shallow = any(
+                item_geometry is not None and item_geometry.penetration_m > 0.0
+                and abs(item_geometry.normal_y / item_geometry.normal_z)
+                <= self.case.run.maximum_abs_contact_slope
+                for _body_id, item_geometry, _response in body_results)
+            if not shallow:
+                steep_rail, steep_body, steep_x = steep[0]
+                raise SimulationFailure(
+                    f"graph slope limit at {steep_rail}/{steep_body}, x={steep_x:.9g} m")
         return (rail_index, rail, x), body_results
+
+    def _contact_search_kwargs(
+        self,
+        q: np.ndarray,
+        wh: int,
+        axes: dict[str, int],
+        wheel,
+        lateral_extra: float,
+        rail_y: float,
+        rail_z: float,
+        law,
+    ) -> dict[str, object]:
+        """Everything the contact search needs except the two bounded-search arguments.
+
+        Kept as one dict because the second contact has to be searched with *exactly* the same
+        policy as the first: two argument lists that drift apart would give the two points of a
+        two-point contact different normals, stiffnesses or strip rules, and nothing downstream
+        could tell.
+        """
+
+        cfg = self.case.vehicle
+        return dict(
+            wheel_y_m=float(q[wh]),
+            wheel_z_m=cfg.wheel_center_height_m + float(q[axes["z"]]),
+            wheel_roll_rad=float(q[axes["roll"]]),
+            wheel_lateral_offset_m=wheel.lateral_offset_m + lateral_extra,
+            rail_y_m=rail_y,
+            rail_z_m=rail_z,
+            patch_half_width_m=law.patch_half_width_m,
+            patch_slices=law.patch_slices,
+            point_policy=law.point_policy,
+            point_theta_m=law.point_theta_m,
+            stiffness_policy=law.stiffness_policy,
+            effective_modulus_pa=law.effective_modulus_pa,
+            effective_radius_m=law.effective_radius_m,
+            ellipticity_correction=law.ellipticity_correction,
+            geometry_policy=law.geometry_policy,
+            patch_window_m=law.patch_window_m,
+            grid_step_m=law.grid_step_m,
+            normal_policy=law.normal_policy,
+            strip_dy_m=law.strip_dy_m,
+            strip_min_depth_m=law.strip_min_depth_m,
+            strip_half_width_m=law.strip_half_width_m,
+            strip_center_policy=law.strip_center_policy,
+            curvature_policy=law.curvature_policy,
+            partials=self.contact_partials,
+        )
+
+    def _contact_response(
+        self,
+        geometry: ContactGeometry | None,
+        rail,
+        x: float,
+        q: np.ndarray,
+        v: np.ndarray,
+        travel: float,
+        rail_vy: float,
+        rail_vz: float,
+    ) -> ContactResponse:
+        """Force law for one contact, shared by the first point and the second.
+
+        Curvature belongs to the *track*, not to the route that carries it.  An axle on a curve
+        runs its two contacts on different arc lengths (+-v kappa b), and that is a kinematic fact
+        in the vehicle's own frame -- which is exactly where the force route lives, with straight
+        rails and m v^2 / R as the body force.  The term used to be gated on the placement, i.e.
+        only the geometry route carried it, and that left each route owning half of a co-rotating
+        frame: the geometry route placed the vehicle on an arc and pushed it with nothing
+        (measured: 8/8 seated at 0.988..1.013x and then graph slope limit after 1.04 m of travel,
+        R = 1100 m at 80 km/h), while the force route had the centripetal force and no arc-length
+        difference.
+
+        Turning it on for the force route needs the *seat* to be able to absorb the yaw moment it
+        produces.  Without a yaw unknown the vertical-only seat read 4 of 8 wheels and 128 901 N
+        (2x the 59 662 N share); with the wheelsets' yaw free the same balance is well posed,
+        because the attack velocity travel * yaw gives the yaw row real stiffness whenever the
+        vehicle is rolling.  See the `curved` branch of _static_vertical_equilibrium.
+        """
+
+        axes = self._wheel_axes[rail.axle_index]
+        support = self._support
+        return evaluate_contact(
+            geometry, self.case.contact,
+            wheel_v_y_m_s=float(v[axes["y"]]),
+            wheel_v_z_m_s=float(v[axes["z"]]),
+            wheel_roll_rate_rad_s=float(v[axes["roll"]]),
+            wheel_spin_rate_rad_s=float(v[axes["spin"]]),
+            rail_v_y_m_s=rail_vy, rail_v_z_m_s=rail_vz,
+            travel_speed_m_s=travel,
+            creep_attack_velocity_m_s=float(travel * q[axes["yaw"]]),
+            support_compliance_m_per_n=(support.at(x) if support is not None else None),
+            curvature_1_per_m=self._curvature_1_per_m,
+        )
+
+    def _second_contact(
+        self,
+        profile,
+        sample,
+        body,
+        rail,
+        primary: ContactGeometry,
+        search: dict[str, object],
+        q: np.ndarray,
+        v: np.ndarray,
+        *,
+        x: float,
+        travel: float,
+        wheel_y_offset_m: float,
+        rail_y: float,
+        rail_vy: float,
+        rail_vz: float,
+    ) -> tuple[ContactGeometry, ContactResponse] | None:
+        """The next-deepest contact on this wheel-rail side, if the surface leaves one.
+
+        L12's two-point algorithms find every local minimum of the clearance.  The primary patch
+        is pushed into a well and the ordinary search is run again, so the second point is found,
+        refined and given a normal by the same policy as the first; the only extra decision is the
+        exclusion window, which is what keeps two extrema inside one Hertzian footprint from being
+        counted twice (the same rule ``duplicate_patch_window_m`` applies across rail bodies).
+        """
+
+        exclusion = float(self.case.run.contact_two_point_exclusion_m)
+        masked = masked_sample_around(
+            sample, center_y_m=float(primary.y_m) - float(rail_y), exclusion_m=exclusion)
+        if masked is sample:
+            return None
+        geometry = find_graph_contact(
+            profile, masked, search_half_width_m=None, previous_y_m=None, surface_key=None,
+            **search)
+        if geometry is None or geometry.penetration_m <= 0.0:
+            return None
+        if abs(float(geometry.y_m) - float(primary.y_m)) < exclusion:
+            return None
+        if abs(float(geometry.normal_y) / float(geometry.normal_z)) < float(
+                self.case.run.contact_two_point_min_slope):
+            # A second *flat* extremum is another patch of the same tread (the profile polyline
+            # carries more than one maximum across its own crown), not a second body.  Counting it
+            # would halve every contact and move the frozen anchor; only a steep surface -- a flange
+            # root -- is a genuine second point of contact.
+            return None
+        if not body.accepts_contact_y(geometry.y_m):
+            return None
+        if self.contact_coupling is not None:
+            side_sign = -1.0 if "left" in str(rail.template_id) else 1.0
+            geometry = self._tilted_geometry(
+                geometry, rail, q,
+                side_sign * (float(geometry.y_m) - float(wheel_y_offset_m)))
+        response = self._contact_response(
+            geometry, rail, x, q, v, travel, rail_vy, rail_vz)
+        if not response.active or response.normal_force_n <= 0.0:
+            return None
+        return geometry, response
 
     @property
     def body_contacts(self) -> dict[str, tuple[ContactResponse, ...]]:

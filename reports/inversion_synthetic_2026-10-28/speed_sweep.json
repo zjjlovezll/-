@@ -1,0 +1,450 @@
+{
+ "summary": {
+  "draw_seed": 20261032,
+  "speed_range_kmh": [
+   70.0,
+   90.0
+  ],
+  "speeds_kmh": [
+   78.68,
+   79.47,
+   82.16,
+   88.02,
+   88.16
+  ],
+  "hits_per_speed": 8,
+  "min_hits": 7,
+  "gate_db": 2.0,
+  "quantifiable_speeds": 0,
+  "speeds_drawn": 5,
+  "total_hits": 29,
+  "total_predictions": 40,
+  "per_band": {
+   "0.1000-0.1316": {
+    "hits": 8,
+    "predictions": 10
+   },
+   "0.1316-0.1732": {
+    "hits": 6,
+    "predictions": 10
+   },
+   "0.1732-0.2280": {
+    "hits": 5,
+    "predictions": 10
+   },
+   "0.2280-0.3000": {
+    "hits": 10,
+    "predictions": 10
+   }
+  },
+  "criterion": "a speed is quantifiable when >= 7 of 8 predictions are inside 2.0 dB against that record's own band rms",
+  "reading": "the count of quantifiable speeds is the capability; a single speed that reaches the bar does not establish it, and the per-band column shows whether the failure moves with speed or stays in the same band"
+ },
+ "runs": [
+  {
+   "speed_kmh": 78.68,
+   "hits": 5,
+   "predictions": 8,
+   "quantifiable": false,
+   "bands": [
+    {
+     "seed": 20261030,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 8.551643270965792,
+     "recovered_um": 8.421327213007322,
+     "error_db": -0.1333806762007367,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 8.794304614336074,
+     "recovered_um": 11.117607309151992,
+     "error_db": 2.0361965106213815,
+     "within_gate": false
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 9.222735776865013,
+     "recovered_um": 11.816832009674272,
+     "error_db": 2.1528258978518555,
+     "within_gate": false
+    },
+    {
+     "seed": 20261030,
+     "band": "0.2280-0.3000",
+     "bins": 3,
+     "truth_um": 12.195068068483673,
+     "recovered_um": 13.977859323286243,
+     "error_db": 1.185128731562318,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 8.566377444211536,
+     "recovered_um": 11.17188060442463,
+     "error_db": 2.3065815939653316,
+     "within_gate": false
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 9.573725461423829,
+     "recovered_um": 11.826640436969551,
+     "error_db": 1.835608477115698,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 8.852818157100556,
+     "recovered_um": 9.465466305113688,
+     "error_db": 0.5812094045681766,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.2280-0.3000",
+     "bins": 3,
+     "truth_um": 9.629164381017143,
+     "recovered_um": 11.785499061427702,
+     "error_db": 1.7551875386821636,
+     "within_gate": true
+    }
+   ],
+   "gate_db": 2.0
+  },
+  {
+   "speed_kmh": 79.47,
+   "hits": 6,
+   "predictions": 8,
+   "quantifiable": false,
+   "bands": [
+    {
+     "seed": 20261030,
+     "band": "0.1000-0.1316",
+     "bins": 8,
+     "truth_um": 8.611137304873669,
+     "recovered_um": 9.662131627686827,
+     "error_db": 1.0002487095833579,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 8.789759978512539,
+     "recovered_um": 10.779206523997534,
+     "error_db": 1.7721955376059704,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 9.217111116391552,
+     "recovered_um": 12.461920223469987,
+     "error_db": 2.6198028720429773,
+     "within_gate": false
+    },
+    {
+     "seed": 20261030,
+     "band": "0.2280-0.3000",
+     "bins": 3,
+     "truth_um": 12.187437697215604,
+     "recovered_um": 14.108889862954683,
+     "error_db": 1.2716086940987894,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1000-0.1316",
+     "bins": 8,
+     "truth_um": 8.58536093431898,
+     "recovered_um": 11.38847258508375,
+     "error_db": 2.4541384553093457,
+     "within_gate": false
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 9.572255409715526,
+     "recovered_um": 11.866340353517765,
+     "error_db": 1.866050453224311,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 8.820880412806925,
+     "recovered_um": 9.247042680493385,
+     "error_db": 0.40981855784271926,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.2280-0.3000",
+     "bins": 3,
+     "truth_um": 9.66284118776547,
+     "recovered_um": 11.81707627654736,
+     "error_db": 1.748103939932633,
+     "within_gate": true
+    }
+   ],
+   "gate_db": 2.0
+  },
+  {
+   "speed_kmh": 82.16,
+   "hits": 6,
+   "predictions": 8,
+   "quantifiable": false,
+   "bands": [
+    {
+     "seed": 20261030,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 8.509056369419035,
+     "recovered_um": 8.88524701832588,
+     "error_db": 0.3757621079823147,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 8.713991719295297,
+     "recovered_um": 9.386516443599318,
+     "error_db": 0.6457460479798816,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 9.249267893445777,
+     "recovered_um": 12.791787203278531,
+     "error_db": 2.8164773540965227,
+     "within_gate": false
+    },
+    {
+     "seed": 20261030,
+     "band": "0.2280-0.3000",
+     "bins": 4,
+     "truth_um": 13.029367963265763,
+     "recovered_um": 15.326852028949068,
+     "error_db": 1.4105923077780445,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 7.4044746998263244,
+     "recovered_um": 8.771736720710246,
+     "error_db": 1.4718266907647501,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 9.601709339910851,
+     "recovered_um": 12.185147870475774,
+     "error_db": 2.069644976992097,
+     "within_gate": false
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 8.692147373003541,
+     "recovered_um": 8.467495660204472,
+     "error_db": -0.2274419665167337,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.2280-0.3000",
+     "bins": 4,
+     "truth_um": 10.562997783191909,
+     "recovered_um": 12.351063152194207,
+     "error_db": 1.358343073330831,
+     "within_gate": true
+    }
+   ],
+   "gate_db": 2.0
+  },
+  {
+   "speed_kmh": 88.02,
+   "hits": 6,
+   "predictions": 8,
+   "quantifiable": false,
+   "bands": [
+    {
+     "seed": 20261030,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 8.510636222165399,
+     "recovered_um": 9.28631259326466,
+     "error_db": 0.7576254241241754,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 8.728692493539816,
+     "recovered_um": 9.247848813590064,
+     "error_db": 0.5018305466410953,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 9.252352727010864,
+     "recovered_um": 12.5627824735561,
+     "error_db": 2.6566731792466185,
+     "within_gate": false
+    },
+    {
+     "seed": 20261030,
+     "band": "0.2280-0.3000",
+     "bins": 4,
+     "truth_um": 13.015568167256836,
+     "recovered_um": 15.865222537098704,
+     "error_db": 1.7196607427332613,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 7.314361809483056,
+     "recovered_um": 7.582643470223742,
+     "error_db": 0.3128839421791105,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 9.602882259710928,
+     "recovered_um": 12.845967067882224,
+     "error_db": 2.5273040054864433,
+     "within_gate": false
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 8.753351607559383,
+     "recovered_um": 7.808973304926127,
+     "error_db": -0.9916087102764305,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.2280-0.3000",
+     "bins": 4,
+     "truth_um": 10.508930480563778,
+     "recovered_um": 12.897815771405208,
+     "error_db": 1.7791530048153923,
+     "within_gate": true
+    }
+   ],
+   "gate_db": 2.0
+  },
+  {
+   "speed_kmh": 88.16,
+   "hits": 6,
+   "predictions": 8,
+   "quantifiable": false,
+   "bands": [
+    {
+     "seed": 20261030,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 8.483023317856185,
+     "recovered_um": 9.623353100567684,
+     "error_db": 1.0955152092848535,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 8.797938609743486,
+     "recovered_um": 9.35048202627873,
+     "error_db": 0.52906145027138,
+     "within_gate": true
+    },
+    {
+     "seed": 20261030,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 9.203392215274913,
+     "recovered_um": 12.532111111095501,
+     "error_db": 2.6815261249950373,
+     "within_gate": false
+    },
+    {
+     "seed": 20261030,
+     "band": "0.2280-0.3000",
+     "bins": 4,
+     "truth_um": 13.015756937737834,
+     "recovered_um": 15.851605945344755,
+     "error_db": 1.712076757852725,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1000-0.1316",
+     "bins": 7,
+     "truth_um": 7.205603192492852,
+     "recovered_um": 7.463721379540688,
+     "error_db": 0.3057015338038862,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1316-0.1732",
+     "bins": 5,
+     "truth_um": 9.56522696521545,
+     "recovered_um": 12.790825260613024,
+     "error_db": 2.52406572904893,
+     "within_gate": false
+    },
+    {
+     "seed": 20261031,
+     "band": "0.1732-0.2280",
+     "bins": 4,
+     "truth_um": 8.794789893942221,
+     "recovered_um": 7.835762516517117,
+     "error_db": -1.0028840722872538,
+     "within_gate": true
+    },
+    {
+     "seed": 20261031,
+     "band": "0.2280-0.3000",
+     "bins": 4,
+     "truth_um": 10.543711986235026,
+     "recovered_um": 12.927777953262874,
+     "error_db": 1.7706069985190032,
+     "within_gate": true
+    }
+   ],
+   "gate_db": 2.0
+  }
+ ]
+}

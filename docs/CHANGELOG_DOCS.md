@@ -4776,3 +4776,12 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   不是求解器精度。
 * 文档 `docs/CURVE_LATERAL_CAPABILITY_2026-10-28.md` 新增 §6b（表）、§6c（结论）；归档
   `reports/curve_capability_2026-10-28/tilt_sensitivity.json`；`tests/test_curve_lateral_capability.py` 扩到 **8 项**。
+* **第 200 轮补记（§6d/§6e）**：把座好的状态逐项拆开，得到两条新事实：
+  ① 净横向力几乎**全部来自蠕滑**（`Ft·t_y` 左右同号 +247.3/+249.6 → 净 +497 N），法向项左右反号、
+  净和只剩 +36.8 N，所以"倾角承担 54 %"只在单接触口径成立；
+  ② `slip_lat = travel × q[yaw]` 被钉住（直接调 `evaluate_contact` 得 0.00000000，`evaluate` 内给
+  −0.01115896，差值恰为 `22.222 × 0.000502`），**不是伪蠕滑，是座自己解的冲角**。
+  由此给出系数关系 `F_lat ~ f11·f22·κ·b²·v/k_yaw ≈ 2.9 kN`（实测净 2.1 kN），
+  并解释"两个系数一起乘 10 更早失败"（`f11` 也乘 10 → `yaw` 到 5 mrad → 转过量压轮缘）；
+  按 Kalker 量级（`f11 ≈ 3.5e6 N`、`f22 ≈ 2.5e6 N`）该式给 ~70 kN 并被 `μN` 截住——
+  预注册的下一个实验（需授权）是把两个系数各自回到 Kalker 量级、保留饱和模型。

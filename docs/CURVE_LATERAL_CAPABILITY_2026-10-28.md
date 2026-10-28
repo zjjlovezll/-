@@ -166,3 +166,46 @@ PYTHONPATH=src python -X utf8 scripts/s43_running_equilibrium.py --capability   
 产物：`../scratch/s43/frame_equilibrium_R1100_t30.json`（几何）、
 `../scratch/s43/frame_equilibrium_R1100_t30_result.json`（含 51 行 `capability`）。
 归档副本：`reports/curve_capability_2026-10-28/capability.json`。
+
+## 6d 横向力到底由哪一项给：逐项分解（直接调用 `evaluate_contact` 对照）
+
+上一节的"倾角给 54 %"只在**单接触**口径下成立；按左右成对求和，法向分量几乎完全抵消。
+把座好的状态逐项拆开（`scratch/slip_terms.py`、`scratch/slip_direct.py`）：
+
+```
+axle1_left : lever_y -0.70732 lever_z -0.42982 normal (+0.02497,+0.99969) tangent (+0.99969,-0.02497)
+             Fy +1755.9 N = N*n_y +1508.7 + Ft*t_y +247.3      Ft +247.3 N
+axle1_right: lever_y +0.79823 lever_z -0.42982 normal (-0.02497,+0.99969) tangent (+0.99969,+0.02497)
+             Fy -1222.3 N = N*n_y -1471.9 + Ft*t_y +249.6      Ft +249.6 N
+```
+
+- 法向项 `N·n_y` 左右**反号**（+1 508.7 / −1 471.9），净和只剩 +36.8 N；
+- 蠕滑项 `Ft·t_y` 左右**同号**（+247.3 / +249.6），净和 +497 N；
+- 所以**净横向力几乎全部来自蠕滑**，倾角只改变载荷分配。
+
+`slip_lat` 的来源也钉住了：直接调 `evaluate_contact`（roll=0、spin=v/r、attack=0）得
+`slip_lat = 0.00000000`，而 `evaluate` 内部同一接触给 `−0.01115896`——差值正是
+`creep_attack_velocity_m_s = travel × q[yaw]`，`q[yaw] = −0.502 mrad`（座的 yaw 解），
+`22.222 × 0.000502 = 0.01116 m/s` ✓。**不是伪蠕滑，是座自己选的冲角。**
+
+## 6e 系数标度：`f22` 比 Kalker 量级低 5 倍，而"两个一起乘 10"必然失败（这条把 L13 用上了）
+
+按 §6d 的链条：`yaw` 由**纵蠕滑偶**平衡悬架 `k_yaw` 决定（`f11·v·κ·b` 的力矩 ≈ 1.02 kN·m ÷ 1.96e6
+= 0.52 mrad ✓ 实测 0.502），横向力再由 `f22·(v·yaw)/v = f22·yaw` 给出：
+
+```
+F_lat,net  ~  f11 * f22 * kappa * b^2 * v / k_yaw
+我们的值      1e6 x 5e5 x 9.09e-4 x 0.556 x 22.22 / 1.96e6  ~  2.9 kN   （实测净 +2.1 kN）
+Kalker 量级  f11 ~ 3.5e6 N, f22 ~ 2.5e6 N（60 kN 轮载、a/b ~ 0.3 的椭圆的线性蠕滑系数）
+             -> F_lat,net ~ 70 kN，且会被 mu*N = 23.9 kN/接触 的饱和截住
+```
+
+这就解释了此前那次"两个系数一起乘 10 反而更早失败"（行程 2.05 m vs 4.53 m）：
+`f11` 也乘了 10，纵蠕滑偶变 10 倍、`yaw` 被推到 5 mrad 量级，轮对**转过量**直接压上轮缘——
+失败的是**偏转平衡**，不是横向力量级。**只放大横向而那一个 5 倍是不够的，两个系数必须各自回到
+Kalker 量级并带 `mu·N` 饱和**（L13：CONTACT/FASTSIM/Polach 都按 `mu·N` 归一）。
+
+预注册的下一步（需授权，属改接触律参数）：`f11 = 3.5e6`、`f22 = 2.5e6`、保留
+`tangential_model = sditt_cubic_saturation`，其余不动；判据 = 0.34 s 内 8/8 轮着地、每轮
+∈[0.625,1.6]×、`sum Fy` ≥ 0.9× 需求、七门全过；**若仍失败**则曲线项维持降级并把
+"系数标定不足以救"作为结论写死。

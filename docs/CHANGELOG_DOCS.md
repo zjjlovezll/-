@@ -1785,6 +1785,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [A3_MULTIPATCH_2026-10-22.md](A3_MULTIPATCH_2026-10-22.md) | A3 同步多斑 + 局部弹性分配 —— 实测：**前提不成立，局部分配已经存在** |
 | [AGENT_TOOL_LAYER_2026-10-22.md](AGENT_TOOL_LAYER_2026-10-22.md) | Velch AI 调用层设计（Agent Tool Layer，2026-10-22） |
 | [AI_INTERFACE_ARCHITECTURE_2026-10-22.md](AI_INTERFACE_ARCHITECTURE_2026-10-22.md) | Velch 软件分层与 AI 接口架构（设计草案） |
+| [ALIGNMENT_CONVENTIONS_2026-10-28.md](ALIGNMENT_CONVENTIONS_2026-10-28.md) | 物理层审查：线形、蠕滑、离心力、超高，一共四处手性 |
 | [ARCHITECTURE_2026-10-21.md](ARCHITECTURE_2026-10-21.md) | Velch 架构收口与 Simpack 2021x 对标（2026-10-21） |
 | [ASSESSMENT_2026-10-20.md](ASSESSMENT_2026-10-20.md) | 标准评价指标（assess）：把仿真输出变成可判读的结论 |
 | [AUDIT_FIXES_2026-10-26.md](AUDIT_FIXES_2026-10-26.md) | 2026-10-26 只读审查的七个缺陷与修法 |
@@ -4848,3 +4849,26 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   不得引用这些帧的 8/8 与载荷比。判据已写进文档：`|lever_y|` 必须落在该里程的轨头区间内。
 - 文档 `docs/CURVE_LATERAL_SIGN_2026-10-28.md`（六节：诊断开关、四次实测、为什么藏了这么久、
   当前状态含 B045、下一轮判据、复算命令）。
+
+## 第 203 轮（2026-10-28）线形成为唯一事实源：曲率、离心力与超高从同一个对象导出
+
+- 新模块 `src/velch/alignment.py`：`Alignment`（`curvature_1_per_m` 带符号、站表曲率、`curvature_at`、
+  `lateral_force_n`、`has_line`、`legacy_equivalent_straight`）与 `alignment_for(case)`。约定只写一次：
+  `κ > 0` ⇒ 中心在 +y ⇒ 惯性力 `−m v² κ`；外侧（−y）抬高 ⇒ 重力分量 `+m g sinθ`。
+  参照量是 `contact.slip_x` 的 `−κ v lever_y`（它本来就是对的）。
+- **离心力改为从线形导出**：`evaluate` 的体力项改为 `self.alignment.lateral_force_n(...)`（逐刚体按**自身里程**取曲率）；
+  `curve_radius_m` 而无线形的旧算例走 `legacy_equivalent_straight`，算式与浮点次序原样保留 ⇒ 归档数字不动。
+- **作用-反力门改为读"实际施加值"**：`evaluate` 记录 `curve_lateral_applied_n`，门读它。第一版门自己重算了
+  一次，把曲率取在**里程 0**（线形从 30 m 才开始，那里是直线段）⇒ 台账读到 `0.000 N`，门误报失败；
+  这与"同一件事写两遍"是同一类缺陷，已用注释写清。
+- **超高手性修正（B046，当前惰性）**：几何路由原来把**内侧**轨抬高（实测 `axle*_right +54.799 mm`、
+  `axle*_left −53.721 mm`，而 κ>0 时外侧是 −y），且车体侧滚 `+theta` 也向内侧倾。改为 `outer = "right" not in id`
+  与 `roll −= theta`。几何路由仍在加载期拒绝 `curve_cant_m ≠ 0`，所以本轮没有任何数的改变。
+- **实测**（R=1100 m、80 km/h、`--curvature-force`、符号由线形给出、无 `--curve-sign` 标志）：
+  `seat 1.022e-07 N`、0.34 s **1701 帧 7/7 门**、最大侵入 **78.40 µm**（此前错符号 120.51 µm、
+  手翻符号 102.79 µm）、峰值 0.99–1.36×、末帧 `sum Fy +11 691.2 N（+53.5 %）`、转移 `+30 152 N`。
+  仍未达到 `|sum Fy| ≥ 0.9 × 需求` ⇒ **曲线项继续降级**；0.60 s 的判据是"不随时间增长"，正在复算。
+- 物理层审查成文：`docs/ALIGNMENT_CONVENTIONS_2026-10-28.md`（九节：约定、B044、蠕滑同源、B046、
+  力路由与线形路由的超高不能混用、无稳态的四组证据、Kalker 尺度下单斑力够用、七项确认无需改动、判据与复算）。
+- 测试 `tests/test_alignment_conventions.py` **7 项**（线形曲率符号、惯性力背离中心、超高指向抬高轨、
+  旧半径算式逐位相等、直线为零、按算例内容选线形、含 NaN 的站表被拒绝）。

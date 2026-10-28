@@ -139,7 +139,13 @@ class VehicleDynamics:
         # numbers cannot move.  This is the term that lets a wheelset steer: the two contact
         # points of one axle then travel different arc lengths, exactly as they do in reality.
         radius = getattr(case.run, "curve_radius_m", None)
-        self._curvature_1_per_m = 0.0 if not radius else 1.0 / float(radius)
+        # One object decides where the line is and which way it bends; the creep term and the
+        # body force both read it, so they cannot disagree about handedness.  The curvature is
+        # taken from the line when the case carries one -- for ``y = s^2/(2R)`` that is exactly
+        # ``+1/R``, the same number the radius route used, so only the *force* sign moves.
+        from .alignment import alignment_for
+        self.alignment = alignment_for(case)
+        self._curvature_1_per_m = float(self.alignment.curvature_1_per_m) if radius else 0.0
 
         # The topology decides the state vector: which bodies exist, what each carries, and
         # in which order.  With no node table it reproduces the frozen 35-slot layout.
@@ -203,6 +209,29 @@ class VehicleDynamics:
         """The travel speed as a function of time: the one source for ``v(t)`` and ``x(t)``."""
 
         return self._schedule
+
+    def cant_sin_theta(self) -> float:
+        """``sin(theta)`` of the cant plane: the raised rail is the outside one, at ``-y``."""
+        cant = float(getattr(self.case.run, "curve_cant_m", 0.0) or 0.0)
+        gauge = 2.0 * abs(float(self.case.wheels[0].lateral_offset_m)) if self.case.wheels else 1.5
+        return cant / gauge if gauge else 0.0
+
+    def curve_lateral_force_n(self, speed_m_s: float,
+                              station_m: float = 0.0) -> float:
+        """Total lateral body force at one station.
+
+        A diagnostic: the *gate* reads ``curve_lateral_applied_n``, which ``evaluate`` records at
+        each body's own station, because a single station cannot represent a line whose curvature
+        starts part-way along the run (station zero is the straight approach, where this returns
+        exactly zero).
+        """
+        sign = float(getattr(self.case.run, "curve_lateral_sign", 1.0))
+        sin_theta = self.cant_sin_theta()
+        gravity = float(self.case.vehicle.gravity_m_s2)
+        return sign * sum(
+            self.alignment.lateral_force_n(body.mass_kg, speed_m_s, gravity, sin_theta,
+                                           station_m=station_m)
+            for body in self.topology.bodies if "y" in body.dof)
 
     def speed_at(self, t_s: float) -> float:
         """Signed travel speed at ``t_s``, in m/s."""
@@ -345,10 +374,12 @@ class VehicleDynamics:
         def placement(rail_index: int, x_m: float) -> tuple[float, float, float]:
             s = _arc_parameter_m(run, x_m)
             # The centre of ``y(s) = s^2/(2R)`` is at +y, so the OUTER rail is the one on the -y
-            # side and it is that one that is raised.  Getting this backwards cants the track
-            # against the vehicle, and the seat then cannot balance the lateral force (measured:
-            # 43 kN on ``wheelset4.y`` with the sign reversed).
-            outer = "right" in str(rails[rail_index].id).lower()
+            # side -- the rail the solver labels ``left`` -- and it is that one that is raised.
+            # Measured with the labels the other way round: the right (inner) rail came out at
+            # +54.799 mm and the left (outer) at -53.721 mm, i.e. the track was canted *against*
+            # the curve; a canted line then reads as "one side unloaded", which is how a wrong
+            # side hides as a convergence failure rather than as a sign error.
+            outer = "right" not in str(rails[rail_index].id).lower()
             return s * s / (2.0 * radius), (rise if outer else -rise), s / radius
 
         return placement
@@ -374,6 +405,10 @@ class VehicleDynamics:
         # *geometry* route the track itself is curved and the plane is tilted (rise + roll +
         # surface rotation), so the rails supply the centripetal force and no body force is added:
         # adding it there double-counts both terms and the seat had no solution because of it.
+        #: What the curving branch of this very evaluation added, so the action-reaction gate
+        #: reads the applied number instead of restating the expression (a restated force can
+        #: disagree with the applied one about the sign of the curve, and did).
+        self.curve_lateral_applied_n = 0.0
         if curve and self.placement_enabled and not _placement_enabled(self.case.run):
             speed = abs(self.speed_at(t_s))
             cant = float(getattr(self.case.run, "curve_cant_m", 0.0) or 0.0)
@@ -382,15 +417,17 @@ class VehicleDynamics:
             for body in self.topology.bodies:
                 if "y" not in body.dof:
                     continue
-                # Outward is +y *on the force route*, which is the convention every existing case
-                # was measured with; the cant component points inward, so the two subtract.  On a
-                # station-table curve the line ``y = s^2 / (2R)`` turns towards +y, so its centre
-                # sits at +y and the inertia force on the vehicle points towards -y -- hence
-                # ``run.curve_lateral_sign``, whose default keeps every existing case bit-identical.
+                # One expression, derived from the line itself (see ``alignment.py``): with
+                # ``kappa > 0`` the centre sits at +y, so the inertia force points towards -y and
+                # the raised outside rail (-y) adds +y.  ``curve_lateral_sign`` stays as a
+                # diagnostic multiplier and defaults to the value every archived case used.
                 sign = float(getattr(self.case.run, "curve_lateral_sign", 1.0))
-                lateral = sign * body.mass_kg * (speed * speed / curve
-                                 - cfg.gravity_m_s2 * sin_theta)
+                lateral = sign * self.alignment.lateral_force_n(
+                    body.mass_kg, speed, cfg.gravity_m_s2, sin_theta,
+                    station_m=(self.x_at(t_s) + _body_offset_m(self.case, self.topology, body, q))
+                    if self.alignment.has_line else 0.0)
                 force[self.topology.require(body.id, "y")] += lateral
+                self.curve_lateral_applied_n += float(lateral)
         if self.spin_control:
             radius = float(cfg.nominal_wheel_radius_m)
             target = self.speed_at(t_s) / radius
@@ -1210,6 +1247,12 @@ def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
     # roll the wheel stays level while the rail rotates: the wheel then meets the high rail on the
     # flange root, where the profile slope is of order one, and the contact-slope guard stops the
     # run at the first step (measured: R = 1100 m, 107 mm cant, x = 70 m).
+    #
+    # The sign follows the same convention as ``_curve_placement``: with ``kappa > 0`` the raised
+    # rail is the OUTER one at ``-y``, so the vehicle leans towards ``+y`` and the roll is
+    # ``-theta``.  Positive roll raises the ``+y`` wheels (measured: +0.0717 rad moved the right
+    # wheel up 53.5 mm), so ``+theta`` would lean the body *into* the curve while the track leans
+    # out of it -- both halves of the same mirror error.
     cant = float(getattr(case.run, "curve_cant_m", 0.0) or 0.0)
     half_gauge = abs(float(case.wheels[0].lateral_offset_m)) if case.wheels else 0.75
     theta = 0.0 if half_gauge == 0.0 else math.asin(max(-1.0, min(1.0, cant / (2.0 * half_gauge))))
@@ -1221,7 +1264,7 @@ def _place_on_alignment(case: VehicleCase, dynamics: VehicleDynamics,
         if "yaw" in body.dof:
             placed[topology.require(body.id, "yaw")] += math.atan(s / radius)
         if theta and "roll" in body.dof:
-            placed[topology.require(body.id, "roll")] += theta
+            placed[topology.require(body.id, "roll")] -= theta
     return placed
 
 
@@ -1740,16 +1783,11 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     # placed on the arc and ``evaluate`` adds no lateral force, so adding m v^2/R to the balance
     # here made a curved run fail this gate by exactly 34.2 kN while every force was accounted for
     # (measured, R = 1100 m at 100 km/h: the only failing gate out of seven).
-    curve_lateral_n = 0.0
-    curve_radius = getattr(run, "curve_radius_m", None)
-    if curve_radius and not _placement_enabled(run):
-        speed = abs(float(cfg.travel_speed_m_s))
-        cant = float(getattr(run, "curve_cant_m", 0.0) or 0.0)
-        gauge = 2.0 * abs(float(case.wheels[0].lateral_offset_m)) if case.wheels else 1.5
-        sin_theta = cant / gauge if gauge else 0.0
-        curve_lateral_n = float(getattr(run, "curve_lateral_sign", 1.0)) \
-            * sum(body.mass_kg for body in dynamics.topology.bodies if "y" in body.dof) \
-            * (speed * speed / curve_radius - cfg.gravity_m_s2 * sin_theta)
+    #
+    # The value is *recorded* by ``evaluate`` rather than recomputed here: a gate that restates
+    # the force in its own words can disagree with the applied one about the sign of the curve,
+    # and the first version of this fix did exactly that (it evaluated the curvature at station
+    # zero, which on a line that starts at 30 m is the straight approach, and read 0 N).
     # The loop below already calls evaluate() on every accepted state for the gates; that call
     # *is* the right-hand side, so acceleration is force/mass with no finite difference.
     acceleration_channels = _acceleration_channels(dynamics)
@@ -1765,6 +1803,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                                   for index, _body, _axis in acceleration_channels])
         contact_history.append(contacts)
         energies.append(dynamics.mechanical_energy_j(position, velocity, contacts))
+        curve_lateral_n = float(getattr(dynamics, "curve_lateral_applied_n", 0.0))
         if case.track_kind in {"rigid", "local_compliant", "two_layer", "layered"}:
             # Every body's lateral and vertical coordinates, wherever the topology put them.
             topology = dynamics.topology

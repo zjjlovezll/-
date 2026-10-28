@@ -1819,6 +1819,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CURVE_COROTATING_FRAME_2026-10-28.md](CURVE_COROTATING_FRAME_2026-10-28.md) | 曲线：站表路线 + 帧的横向加速度，以及为什么它现在还不能引用 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
 | [CURVE_LATERAL_CAPABILITY_2026-10-28.md](CURVE_LATERAL_CAPABILITY_2026-10-28.md) | 曲线缺口到底是不是"算法不够好"：把接触能提供多少横向力量出来 |
+| [CURVE_LATERAL_RESTORING_2026-10-28.md](CURVE_LATERAL_RESTORING_2026-10-28.md) | 横向回复刚度：模型不是「没有回复」，而是硬了 927 倍（2026-10-28，第 206 轮） |
 | [CURVE_LATERAL_SIGN_2026-10-28.md](CURVE_LATERAL_SIGN_2026-10-28.md) | 曲线工况的离心力符号：一个符号翻转把净横向力从 −78 % 变成 +69 % |
 | [CURVE_PATH_RATE_DEFECT_2026-10-28.md](CURVE_PATH_RATE_DEFECT_2026-10-28.md) | 曲股工况为什么跑不过 81 m：路线的横向速率被当成了横向蠕滑 |
 | [CURVE_QUASISTATIC_SEAT_2026-10-28.md](CURVE_QUASISTATIC_SEAT_2026-10-28.md) | 曲股能不能"坐"出一个静态平衡？——滚动静平衡实验（否定结论） |
@@ -4921,3 +4922,36 @@ Kalker 尺度是迄今最接近的一次（0.34 s 86.8 %、峰值 1.06–1.58× 
 
 新增 `scripts/s46_hunting_stability.py`、`docs/CURVE_TILTED_FRAME_2026-10-28.md`、
 `tests/test_hunting_stability.py` 4 项、`s32 --cant`。
+
+### 第 206 轮：横向回复刚度——不是"没有回复"，而是硬了 927 倍（B047）
+
+第 205 轮把 1.0 s 的越界归因于"整车横向没有静态回复项"。那是一个**假设**，本轮把它写成预注册判据
+再量：`RESTORING BLIND`（`k_force < 0.2·k_grav`）/ `RESTORING PRESENT`（0.5–2×）/ `RESTORING STIFF`（>2×）。
+
+`scripts/s48_lateral_restoring.py` 在座实状态上把整车横移 −2…+2 mm，每个点只重解竖向行
+（所以 `ΣN ≡ 1.000×` 车重），读 `ΣFy`、`M_yaw`、左右载荷差与两轮滚动半径差：
+
+| 偏移 | ΣFy (N) | 转移 (N) | r_L−r_R (µm) |
+|---|---|---|---|
+| −2.0 mm | +12 472.5 | +453 284.2 | +95.6 |
+| −0.5 mm | +4 471.4 | +122 028.5 | +15.7 |
+| **0** | **+2 090.7** | **+2 581.6** | 0.0 |
+| +0.5 mm | −296.7 | −116 894.8 | −15.7 |
+| +2.0 mm | −8 688.8 | −450 562.5 | −95.6 |
+
+`k_force = +5 404.5 kN/m`、`k_yaw = +145.8 kN·m/m`、**`k_transfer = 239 712 kN/m = 240 kN/mm`**、
+`λ_eff = +0.0210`（1:48）、`k_grav = W/4·λ/r = 5.83 kN/m` ⇒ **`k_force/k_grav = 927`，落在
+`RESTORING STIFF`：回复存在、符号正确，但机制错了三个数量级**。细扫（±0.6 mm、0.1 mm 步）
+`k_force +4 926.5`、`k_transfer +233 666`，转移随偏移连续单调、无跳变，所以不是接触分支跳变的假象。
+
+它一次解释了三件事：① 第 204 轮的带内上限 8 169.6 N 就是 `0.0210·W = 10 023 N` 的 **81 %**
+（两个独立测量互相解释）；② 第 205 轮 1.0 s 的 `+152 849 N` 转移只对应 **0.64 mm** 走位——
+车没有跑掉，它走了不到一毫米就把一侧卸空；③ 需求 2 662 N 在 **−0.15 mm** 处即满足
+（−0.2 mm：2 978.7 N、转移 40.9 kN、份额约 1.09×），所以带内稳态存在，但容许窗口只有 **±0.9 mm**。
+
+**B047 登记**：横向定位由 65.47 µm 的 Hertz 压入深度配一个冻结的 1:48 接触角决定（240 kN/mm），
+真实轮对由锥度 + 蠕滑定位（5.83 kN/m，软 927 倍）。它是第 203 轮"倾角冻结"的直接后果：
+倾角不动 ⇒ 横向力只能借法向力再分配 ⇒ 刚度必然是 Hertz 量级。修法与 B045 同根。
+
+新增 `scripts/s48_lateral_restoring.py`、`docs/CURVE_LATERAL_RESTORING_2026-10-28.md`、
+`tests/test_lateral_restoring.py` 4 项（上限即转移界、超高把需求压到界内、927 倍、0.64 mm 走位）。

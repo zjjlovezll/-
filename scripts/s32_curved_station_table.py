@@ -49,7 +49,8 @@ def y_route(x: np.ndarray | float, tangent_m: float, radius_m: float):
 
 def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
           duration_s: float, run_at_m: float, seat_at_m: float,
-          curvature_force: bool = False) -> Path:
+          curvature_force: bool = False,
+          primary_lateral_damping: tuple[float, float] | None = None) -> Path:
     raw = json.loads((data_root.case_dir() / "case_A_final_law.json").read_text(encoding="utf-8"))
     raw.pop("initial_state", None)
     raw["case_id"] = f"curved_station_table_R{radius_m:.0f}"
@@ -79,6 +80,18 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
         "y_m": [float(value) for value in y_route(path_stations, tangent_m, radius_m)],
     }
     raw["vehicle"]["travel_speed_m_s"] = SPEED_KMH / 3.6
+    if primary_lateral_damping is not None:
+        # The inline vehicle carries `c_y = 0` and `c_yaw = 0`, so the lateral and yaw modes are
+        # damped only by the creep law.  A real bogie has an axle-box arm bushing and a lateral
+        # damper; this option exists to *measure* whether any plausible value settles the curve,
+        # and the emitted case records the value so the run cannot be quoted without it.
+        c_y, c_yaw = (float(value) for value in primary_lateral_damping)
+        raw["vehicle"]["primary"]["c_y_n_s_m"] = c_y
+        raw["vehicle"]["primary"]["c_yaw_nm_s_rad"] = c_yaw
+        raw["purpose_detail"] = (raw["purpose_detail"] +
+                                 f" Primary lateral damping {c_y:.3e} N.s/m and yaw damping "
+                                 f"{c_yaw:.3e} N.m.s/rad are added to this synthetic case only; "
+                                 "the inline baseline keeps zero.")
     raw["run"].update({
         "x_start_m": run_at_m,
         "seat_x_start_m": seat_at_m,
@@ -100,7 +113,9 @@ def build(*, radius_m: float, tangent_m: float, step_m: float, span_m: float,
         # the creep was removed, the +-v kappa b arc-length difference comes with it.
         raw["run"]["curve_radius_m"] = float(radius_m)
     OUT.mkdir(parents=True, exist_ok=True)
-    path = OUT / f"case_curved_R{radius_m:.0f}_t{tangent_m:.0f}.json"
+    tag = "" if primary_lateral_damping is None else (
+        f"_cy{primary_lateral_damping[0]:.0e}_cyaw{primary_lateral_damping[1]:.0e}")
+    path = OUT / f"case_curved_R{radius_m:.0f}_t{tangent_m:.0f}{tag}.json"
     path.write_text(json.dumps(raw, indent=1), encoding="utf-8")
     return path
 
@@ -133,13 +148,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--span", type=float, default=150.0)
     parser.add_argument("--run-at", type=float, default=30.0)
     parser.add_argument("--seat-at", type=float, default=30.0)
+    parser.add_argument("--primary-damping", nargs=2, type=float, default=None,
+                        metavar=("C_Y", "C_YAW"),
+                        help="add primary lateral (N.s/m) and yaw (N.m.s/rad) damping to this "
+                             "synthetic case only, to test whether the curve settles")
     parser.add_argument("--curvature-force", action="store_true",
                         help="add the frame's fictitious m v^2/R (curving load) to the station-table route")
     args = parser.parse_args(argv)
 
     path = build(radius_m=args.radius, tangent_m=args.tangent, step_m=args.step, span_m=args.span,
                  duration_s=args.duration, run_at_m=args.run_at, seat_at_m=args.seat_at,
-                 curvature_force=args.curvature_force)
+                 curvature_force=args.curvature_force,
+                 primary_lateral_damping=(None if args.primary_damping is None
+                                          else tuple(args.primary_damping)))
     case = load_vehicle_case(path)
     print(f"case {path.name}: R {args.radius:.0f} m, tangent {args.tangent:.0f} m, "
           f"{len(case.rails)} rails, path {len(case.path.stations_s_m)} points, "

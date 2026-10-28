@@ -1,0 +1,143 @@
+{
+ "version": "synthetic-straight-bands-1",
+ "record": "synthetic: straight route, random band-limited record, seeds [20261030, 20261031]",
+ "layers": [
+  {
+   "name": "L0_admission",
+   "status": "passed",
+   "metrics": {
+    "route": "straight",
+    "speed_kmh": 70.3206,
+    "patch_m": [
+     42.5,
+     45.5
+    ],
+    "step_m": 0.0025,
+    "fade_m": 0.05,
+    "channel": "axle1_z_acc_m_per_s2",
+    "bands": 4,
+    "rms_per_band_um": 8.0,
+    "total_rms_um": {
+     "20261030": 16.5775090506602,
+     "20261031": 15.487065481931431
+    },
+    "crest_factor": {
+     "20261030": 2.2784559339312684,
+     "20261031": 3.045736375867649
+    },
+    "calibration_class": {
+     "harmonic_count": 24,
+     "band_edges_m": [
+      0.1,
+      0.3
+     ],
+     "rms_um": 8.0,
+     "crest_factor": 3.045736375867649
+    }
+   },
+   "notes": "the record is generated, so there is no measurement admission to make; the numbers here describe the class the operator is calibrated on",
+   "evidence": []
+  },
+  {
+   "name": "L1_registration",
+   "status": "skipped",
+   "metrics": {},
+   "notes": "one synthetic channel against one rail: there is no second channel to register",
+   "evidence": []
+  },
+  {
+   "name": "L2_calibration",
+   "status": "passed",
+   "metrics": {
+    "same_class_hits": 6,
+    "tone_class_hits": 3,
+    "predictions": 8,
+    "tone_over_record_median": [
+     1.555,
+     1.142,
+     1.676,
+     1.776
+    ],
+    "tone_amplitude_sweep_spread": 0.0017,
+    "calibration_class": {
+     "harmonic_count": 24,
+     "band_edges_m": [
+      0.1,
+      0.3
+     ],
+     "rms_um": 8.0,
+     "crest_factor": 3.045736375867649
+    }
+   },
+   "notes": "same-class 6 of 8, tone 3 of 8 at the same bins; the tone transfer is 1.1-1.8x larger, and an eight-fold tone amplitude change moves |H| by 0.17 %, so the gap is the multi-harmonic composition and not the amplitude",
+   "evidence": []
+  },
+  {
+   "name": "L3_inversion",
+   "status": "passed",
+   "metrics": {
+    "estimator": "record-calibrated, same class",
+    "band_hit_rate": 0.75,
+    "band_errors_db": [
+     0.024159913403920753,
+     0.3066146254974336,
+     0.22233544667316546,
+     0.3915431028093801,
+     1.9855466813401745,
+     2.0895347274258054,
+     0.7602222058122081,
+     2.1698532204311736
+    ],
+    "tone_band_errors_db": [
+     -4.295530649727037,
+     -1.5025030573911464,
+     -4.612096010229539,
+     -5.945352171795106,
+     -1.444723861890385,
+     -3.6151933251330375,
+     -0.7587037466794665,
+     -3.286885856994253
+    ],
+    "calibration_class": {
+     "harmonic_count": 24,
+     "band_edges_m": [
+      0.1,
+      0.3
+     ],
+     "rms_um": 8.0,
+     "crest_factor": 3.045736375867649
+    }
+   },
+   "notes": "the layer inverts inside its declared class; whether 6 of 8 meets the criterion is the acceptance layer's call, not this one's",
+   "evidence": []
+  },
+  {
+   "name": "L4_uncertainty",
+   "status": "skipped",
+   "metrics": {},
+   "notes": "no held-out coverage: two test seeds are the whole sample, so a coverage number would be a claim about the sample rather than about the estimator",
+   "evidence": []
+  },
+  {
+   "name": "L5_acceptance",
+   "status": "failed",
+   "metrics": {
+    "detected": false,
+    "bands": 8,
+    "within_gate": 6,
+    "criterion_bands": 8,
+    "gate_db": 2.0
+   },
+   "notes": "6 of 8 bands inside 2 dB: below the 8 of 8 the criterion asks for, so no measurement claim follows",
+   "evidence": []
+  }
+ ],
+ "measurement_validation_status": "not_evaluated",
+ "measurement_validation_meaning": "no acceptance layer has run; nothing about the measurement may be claimed",
+ "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
+ "degradation": [
+  "amplitude claims are class-limited: the same-class operator reaches 6 of 8, the tone-calibrated one 3 of 8, and a 24-harmonic record measured 1.14-1.78 in |H| away from a pure tone at the same rms -- an amplitude number is only meaningful with its calibration class attached",
+  "0.1000-0.1732 m (142-195 Hz) is degraded: round 192 measured a 5.3-7.6x gain spread there, with mean penetration leaving the 65.47 um static value",
+  "no uncertainty layer: L4 needs a held-out set this route does not have, so no +/- sigma is quoted"
+ ]
+}

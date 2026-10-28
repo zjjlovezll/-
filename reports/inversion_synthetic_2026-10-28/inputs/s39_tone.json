@@ -1,0 +1,118 @@
+{
+  "route": "straight",
+  "speed_kmh": 70.3206,
+  "rms_um": 8.0,
+  "tone_um": 2.5,
+  "calibration_seed": 20261029,
+  "test_seeds": [
+    20261030,
+    20261031
+  ],
+  "gate_db": 2.0,
+  "tests": [
+    {
+      "seed": 20261030,
+      "bands": [
+        {
+          "band": "0.1000-0.1316",
+          "bins": 7,
+          "truth_um": 8.540105700094063,
+          "recovered_um": 5.208188730141245,
+          "error_db": -4.295530649727037,
+          "within_gate": false
+        },
+        {
+          "band": "0.1316-0.1732",
+          "bins": 5,
+          "truth_um": 8.808027769168298,
+          "recovered_um": 7.408896405091123,
+          "error_db": -1.5025030573911464,
+          "within_gate": true
+        },
+        {
+          "band": "0.1732-0.2280",
+          "bins": 4,
+          "truth_um": 9.217804096171223,
+          "recovered_um": 5.420291876357465,
+          "error_db": -4.612096010229539,
+          "within_gate": false
+        },
+        {
+          "band": "0.2280-0.3000",
+          "bins": 3,
+          "truth_um": 12.201035430504549,
+          "recovered_um": 6.153597408778601,
+          "error_db": -5.945352171795106,
+          "within_gate": false
+        }
+      ]
+    },
+    {
+      "seed": 20261031,
+      "bands": [
+        {
+          "band": "0.1000-0.1316",
+          "bins": 7,
+          "truth_um": 8.555047277073875,
+          "recovered_um": 7.244129756879862,
+          "error_db": -1.444723861890385,
+          "within_gate": true
+        },
+        {
+          "band": "0.1316-0.1732",
+          "bins": 5,
+          "truth_um": 9.56645939631867,
+          "recovered_um": 6.309450918115608,
+          "error_db": -3.6151933251330375,
+          "within_gate": false
+        },
+        {
+          "band": "0.1732-0.2280",
+          "bins": 4,
+          "truth_um": 8.882653362116317,
+          "recovered_um": 8.139683665740092,
+          "error_db": -0.7587037466794665,
+          "within_gate": true
+        },
+        {
+          "band": "0.2280-0.3000",
+          "bins": 3,
+          "truth_um": 9.606359874962244,
+          "recovered_um": 6.5798282769387635,
+          "error_db": -3.286885856994253,
+          "within_gate": false
+        }
+      ]
+    }
+  ],
+  "hits": 3,
+  "predictions": 8,
+  "sign_flips": [],
+  "verdict": "degraded",
+  "excursion_sweep": {
+    "frequency_hz": 129.87012987012977,
+    "samples": [
+      {
+        "peak_um": 2.5,
+        "H": 581713.3073967578,
+        "mean_penetration_um": 65.46124029349403
+      },
+      {
+        "peak_um": 6.0,
+        "H": 581782.4672083643,
+        "mean_penetration_um": 65.44028848924462
+      },
+      {
+        "peak_um": 12.0,
+        "H": 582130.6540562089,
+        "mean_penetration_um": 65.36575416146547
+      },
+      {
+        "peak_um": 20.0,
+        "H": 582826.7982835355,
+        "mean_penetration_um": 65.18720535827264
+      }
+    ],
+    "record_H": 542221.9895302946
+  }
+}

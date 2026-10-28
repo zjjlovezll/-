@@ -1,0 +1,116 @@
+{
+  "route": "straight",
+  "speed_kmh": 70.3206,
+  "rms_um": 8.0,
+  "calibration_seed": 20261029,
+  "test_seeds": [
+    20261030,
+    20261031
+  ],
+  "gate_db": 2.0,
+  "energy_fraction": 0.99,
+  "tests": [
+    {
+      "seed": 20261030,
+      "bands": [
+        {
+          "band": "0.1000-0.1316",
+          "bins": 7,
+          "truth_um": 8.540105700094063,
+          "recovered_um": 8.563893180859965,
+          "error_db": 0.024159913403920753,
+          "within_gate": true,
+          "scalar_recovered_um": 6.969629942428424,
+          "scalar_error_db": -1.7650705283190449,
+          "scalar_within_gate": true
+        },
+        {
+          "band": "0.1316-0.1732",
+          "bins": 5,
+          "truth_um": 8.808027769168298,
+          "recovered_um": 9.124506952762976,
+          "error_db": 0.3066146254974336,
+          "within_gate": true,
+          "scalar_recovered_um": 8.552797088699307,
+          "scalar_error_db": -0.2554101292543903,
+          "scalar_within_gate": true
+        },
+        {
+          "band": "0.1732-0.2280",
+          "bins": 4,
+          "truth_um": 9.217804096171223,
+          "recovered_um": 9.456800913170635,
+          "error_db": 0.22233544667316546,
+          "within_gate": true,
+          "scalar_recovered_um": 9.745261577778665,
+          "scalar_error_db": 0.48332053625551175,
+          "scalar_within_gate": true
+        },
+        {
+          "band": "0.2280-0.3000",
+          "bins": 3,
+          "truth_um": 12.201035430504549,
+          "recovered_um": 12.763619340620084,
+          "error_db": 0.3915431028093801,
+          "within_gate": true,
+          "scalar_recovered_um": 12.849291402862228,
+          "scalar_error_db": 0.44964980222849904,
+          "scalar_within_gate": true
+        }
+      ]
+    },
+    {
+      "seed": 20261031,
+      "bands": [
+        {
+          "band": "0.1000-0.1316",
+          "bins": 7,
+          "truth_um": 8.555047277073875,
+          "recovered_um": 10.752259763862378,
+          "error_db": 1.9855466813401745,
+          "within_gate": true,
+          "scalar_recovered_um": 12.25412825763139,
+          "scalar_error_db": 3.1212001533026013,
+          "scalar_within_gate": false
+        },
+        {
+          "band": "0.1316-0.1732",
+          "bins": 5,
+          "truth_um": 9.56645939631867,
+          "recovered_um": 12.16824565917678,
+          "error_db": 2.0895347274258054,
+          "within_gate": false,
+          "scalar_recovered_um": 9.918259984014474,
+          "scalar_error_db": 0.31368511167264906,
+          "scalar_within_gate": true
+        },
+        {
+          "band": "0.1732-0.2280",
+          "bins": 4,
+          "truth_um": 8.882653362116317,
+          "recovered_um": 9.695134195633026,
+          "error_db": 0.7602222058122081,
+          "within_gate": true,
+          "scalar_recovered_um": 8.205115989307394,
+          "scalar_error_db": -0.6891597951651868,
+          "scalar_within_gate": true
+        },
+        {
+          "band": "0.2280-0.3000",
+          "bins": 3,
+          "truth_um": 9.606359874962244,
+          "recovered_um": 12.332511049223728,
+          "error_db": 2.1698532204311736,
+          "within_gate": false,
+          "scalar_recovered_um": 12.62411465755487,
+          "scalar_error_db": 2.3728415622771566,
+          "scalar_within_gate": false
+        }
+      ]
+    }
+  ],
+  "spectral_hits": 6,
+  "scalar_hits": 6,
+  "predictions": 8,
+  "verdict": "degraded"
+}

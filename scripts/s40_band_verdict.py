@@ -31,10 +31,18 @@ import numpy as np
 from velch.inverse.verdict import LayerResult, Verdict, calibration_class, write_table
 
 SCRATCH = Path("../scratch")
-SAME_CLASS = SCRATCH / "s38" / "spectral.json"
-TONE_CLASS = SCRATCH / "s39" / "tone.json"
 OUT_DIR = Path("reports/inversion_synthetic_2026-10-28")
 BAND_COLUMNS = ["seed", "band", "estimator", "truth_um", "recovered_um", "error_db", "within_gate"]
+
+
+def source(name: str, fallback: str) -> Path:
+    """The scratch path if the run is still on disk, else the copy kept in the report directory.
+
+    ``reports/`` is ignored by git, so a clean checkout has no scratch directory; the two input JSONs are
+    therefore committed beside the verdict they produce and this function prefers whichever exists.
+    """
+    primary = SCRATCH / name
+    return primary if primary.exists() else OUT_DIR / "inputs" / fallback
 
 
 def load(path: Path) -> dict:
@@ -68,8 +76,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=OUT_DIR)
     args = parser.parse_args(argv)
 
-    same = load(SAME_CLASS)
-    tone = load(TONE_CLASS)
+    same = load(source("s38/spectral.json", "s38_spectral.json"))
+    tone = load(source("s39/tone.json", "s39_tone.json"))
     if same["test_seeds"] != tone["test_seeds"] or same["speed_kmh"] != tone["speed_kmh"]:
         raise SystemExit("the two runs do not share seeds or speed; the comparison would not be paired")
 

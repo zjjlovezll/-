@@ -4673,4 +4673,7 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   峰值因数 **2.278 / 3.046**（归种子决定，**不属于谱类常量**，故谱类里存的是标定记录的实测值）。
 - 新增 `tests/test_verdict_calibration_class.py` **9 项**（缺谱类被拒且文案点名缺哪几个字段、
   完整谱类可写入 JSON、部分谱类被拒、`failed` 层不受限、四类非法谱类值被拒、派生状态未被破坏）。
+- 可复算性补丁：`reports/` 被 `.gitignore` 忽略、两个源 JSON 原本只在 `../scratch`，因此
+  `reports/inversion_synthetic_2026-10-28/inputs/` 保留副本（`git add -f` 入库），`s40` 优先读 scratch、
+  读不到读该副本；把 scratch 挪走后重跑输出逐项相同（已实测）。
 - 文档 `docs/BAND_CLAIM_CLASS_2026-10-28.md`（6 节）。

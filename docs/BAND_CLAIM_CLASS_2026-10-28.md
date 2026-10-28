@@ -62,6 +62,10 @@ measurement_validation_status = not_evaluated
 `bands.csv` 16 行 = 2 种子 × 4 带 × 2 估计子，列 `seed, band, estimator, truth_um, recovered_um,
 error_db, within_gate`。
 
+**可复算性**：`reports/` 被 `.gitignore` 忽略，而两个源 JSON 原本只在 `../scratch` 里，所以
+`reports/inversion_synthetic_2026-10-28/inputs/` 保留了它们的副本，脚本优先读 scratch、读不到就读这份。
+把 scratch 挪走后重跑，输出逐项相同（已实测）。
+
 ## 3 谱类的实测值（不是设定值）
 
 | 量 | 实测 |
@@ -97,6 +101,6 @@ error_db, within_gate`。
 ## 6 复算
 
 ```bash
-PYTHONPATH=src python -X utf8 scripts/s40_band_verdict.py     # 读 s38/s39 的两个 JSON
+PYTHONPATH=src python -X utf8 scripts/s40_band_verdict.py     # 读 s38/s39 的两个 JSON（scratch 或 inputs/）
 PYTHONPATH=src python -X utf8 -m pytest tests/test_verdict_calibration_class.py -q
 ```

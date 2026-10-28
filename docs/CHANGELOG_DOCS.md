@@ -1846,6 +1846,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
 | [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |
+| [LOWERING_VALUE_TRUTH_2026-10-29.md](LOWERING_VALUE_TRUTH_2026-10-29.md) | 用「降低值」做反演验证：想法成立，但真值不在现有几何数据里（2026-10-29，第 207 轮） |
 | [MEASURED_MULTIPASS_2026-10-28.md](MEASURED_MULTIPASS_2026-10-28.md) | 四次过车 × 六个区段：单次 3–4/6，融合 6/6 |
 | [MEASURED_VALIDATION_2026-10-21.md](MEASURED_VALIDATION_2026-10-21.md) | 实测数据接入验证（2026-10-21） |
 | [MEASURED_VALIDATION_2026-10-26.md](MEASURED_VALIDATION_2026-10-26.md) | 实测数据第一次验证：26 mm 波磨，声学 5/6、轴箱 3/6 |
@@ -1947,6 +1948,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md](TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md) | 任务书：柔性轮对嵌入 + 反演链路（2026-10-25 夜） |
 | [TASKBOOK_INVERSION_NIGHT_2026-10-26.md](TASKBOOK_INVERSION_NIGHT_2026-10-26.md) | 任务书：长波与短波不平顺反演，以及问题到底出在哪里（2026-10-26 夜） |
 | [TASKBOOK_SHORTWAVE_INVERSION_2026-10-23.md](TASKBOOK_SHORTWAVE_INVERSION_2026-10-23.md) | 任务书：短波轨面反演（2026-10-23 拟定，待批准后执行） |
+| [TASKBOOK_TURNOUT_SOFTWARE_2026-10-29.md](TASKBOOK_TURNOUT_SOFTWARE_2026-10-29.md) | 道岔动力学软件：剩余开发任务书（2026-10-29） |
 | [TONE_CALIBRATION_2026-10-28.md](TONE_CALIBRATION_2026-10-28.md) | 单音标定 3/8：不是"传递测不准"，是"多音不满足叠加" |
 | [TRACK_IRREGULARITY_2026-10-23.md](TRACK_IRREGULARITY_2026-10-23.md) | 轨道不平顺进求解器（0.4.31 前的功能层，2026-10-23） |
 | [TWO_POINT_CONTACT_2026-10-28.md](TWO_POINT_CONTACT_2026-10-28.md) | 两点接触：把接触算法补齐，并量清它对曲线能力的影响 |
@@ -4955,3 +4957,31 @@ Kalker 尺度是迄今最接近的一次（0.34 s 86.8 %、峰值 1.06–1.58× 
 
 新增 `scripts/s48_lateral_restoring.py`、`docs/CURVE_LATERAL_RESTORING_2026-10-28.md`、
 `tests/test_lateral_restoring.py` 4 项（上限即转移界、超高把需求压到界内、927 倍、0.64 mm 走位）。
+
+### 第 207 轮：降低值能当反演真值，但真值不在断面数据里
+
+用户提出用**尖轨/心轨降低值**做零对照验证（零不平顺算例 → 反演 → 看能否还原设计降低值）。
+这条思路成立，而且比 `.tre` 探针更硬：真值来自设计，不是我们写进去的波磨。本轮先把
+"真值到底在不在数据里"量清楚（`scripts/s49_design_lowering.py`）。
+
+两套设计集都在 `G:\研究生\SDITT-RW-FT-250728\SDITT-RW-FT-250728\WRProfile-07(009)-1_18`：
+`07(009)-*`（站位 40–153 mm）与 `CN18-*`（12.5–250 mm），五族断面（`zjg` 直尖轨、`qjg` 曲尖轨、
+`qjbg` 曲基本轨、`zgyg` 翼轨、`cxg` 心轨）加一张「里程 → 断面文件」表，表尾还带角色切换
+（`zjg_zgyg` 在 105 m 处指向 `zgyg-...-cxg-71.3.txt`）。
+
+但**降低值不在断面里**：四族断面冠部与平轨之差只有 **−0.019 … +0.000 mm**（1001 点、y 步长
+0.072 mm 的量级，是离散化噪声）。`CN18` 更直接——尖轨尖端 `CN18-jg-0` 是一片 **4.0 mm 宽的薄片**
+（y −37.196…−33.209 mm），冠部 **+23.000 mm**，与基本轨 `CN18-qjbg-R` 的 **+23.000 mm** 完全齐平。
+
+所以降低值是**装配时给薄片加的竖向偏移**，属设计表/铺设图，不在这批断面文件里。这带来一条
+必须写清的分界：若降低值由我们按设计表写入算例，则它验证的是"转移链 + 估计器"（与 `.tre` 真值
+同类）；若要它成为独立于我们输入的真值，必须先拿到那张设计表，而当前断面**恰好不含它**——
+这一点对验证有利。
+
+顺带查实一件更硬的事：`case_diverging_R1100.json` 的 19 001 个站位全部指向**同一个平轨断面**，
+只有 `y_offset_m` 在变，所以**没有尖轨、没有心轨、没有翼轨，也没有任何竖向道岔几何**
+（此前测到 `dz/ds ≡ 0` 不是 NaN 缺陷，是几何本来如此）。因此"反演降低值"目前连被反演的对象
+都不存在，P1 的第一步是建几何，不是反演。
+
+新增 `scripts/s49_design_lowering.py`、`docs/LOWERING_VALUE_TRUTH_2026-10-29.md`（含预注册判据：
+定位 ≤ 5 m、幅值 ±2 dB、尖轨尖端与心轨鼻端不得互换、零对照落回本底、`freeze_baseline` UNCHANGED）。

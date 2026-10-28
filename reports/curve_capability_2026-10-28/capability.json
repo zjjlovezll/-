@@ -1,0 +1,571 @@
+{
+ "case": "frame_equilibrium_R1100_t30.json",
+ "radius_m": 1100.0,
+ "speed_kmh": 80.0,
+ "creep_scale": 1.0,
+ "demand_n": 21842.42424242424,
+ "seat_residual_n": 1.021544449031353e-07,
+ "unbalanced_lateral_rows_n": [
+  1332.7558738944526,
+  4553.034174186883,
+  1.028865881380625e-11,
+  1330.2170526207058,
+  2455.3884536352707,
+  -4.774847184307873e-12,
+  1312.0679767534284,
+  230.13009526507813,
+  5.201172825763933e-12,
+  1312.0679767534284,
+  230.13009526507813,
+  5.201172825763933e-12,
+  1481.4814814814813,
+  0.0,
+  -1981.625562662221,
+  1481.4814814814813,
+  0.0,
+  -2032.6795928604545,
+  15683.052749719414,
+  0.0,
+  0.0
+ ],
+ "frame_residual_n": 8412.389050474045,
+ "cond": 15045.76743640913,
+ "barrier_hits": 0,
+ "sum_normal_n": 477450.73523146706,
+ "sum_fy_n": -1391.3328485939112,
+ "wheel_ratios": [
+  1.0669066733421522,
+  1.054127676444606,
+  1.0045565792190954,
+  1.0200926847073621,
+  0.9339620221489141,
+  0.9464124507232478,
+  0.9959923575988626,
+  0.9805430865634222
+ ],
+ "wheel_y_mm": [
+  -0.8221217476301104,
+  -2.583910453037876,
+  -1.1068493226124947,
+  -2.9384202965192054
+ ],
+ "wheel_yaw_mrad": [
+  0.45463725468576854,
+  0.7270842100498713,
+  0.3760419232563369,
+  0.8316683275567479
+ ],
+ "verdict": "NOT FOUND",
+ "capability": [
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -4.0,
+   "sum_fy_n": 20343.17803519321,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0018153275020154,
+   "in_band": false,
+   "max_penetration_m": 0.00010600829031026154,
+   "vertical_residual_n": 6.164191290736198e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -3.5,
+   "sum_fy_n": 18713.160341899224,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0015358961765513,
+   "in_band": false,
+   "max_penetration_m": 0.00010584385008420286,
+   "vertical_residual_n": 3.271270543336868e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -3.0,
+   "sum_fy_n": 17066.220373611697,
+   "ratio_min": 0.0,
+   "ratio_max": 2.001276499192413,
+   "in_band": false,
+   "max_penetration_m": 0.00010212565568474274,
+   "vertical_residual_n": 6.81757228448987e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -2.5,
+   "sum_fy_n": 15419.454953705328,
+   "ratio_min": 0.0,
+   "ratio_max": 2.001041564097995,
+   "in_band": false,
+   "max_penetration_m": 0.00010592910901294203,
+   "vertical_residual_n": 1.4551915228366852e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -2.0,
+   "sum_fy_n": 12472.469690536502,
+   "ratio_min": 0.047243800688704186,
+   "ratio_max": 1.953303233952494,
+   "in_band": false,
+   "max_penetration_m": 0.00010552174935714133,
+   "vertical_residual_n": 5.6405951909255236e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -1.5,
+   "sum_fy_n": 10280.957174825531,
+   "ratio_min": 0.18594007979132868,
+   "ratio_max": 1.8145398699098518,
+   "in_band": false,
+   "max_penetration_m": 9.299152163585383e-05,
+   "vertical_residual_n": 5.854781193193048e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -1.0,
+   "sum_fy_n": 7874.269582755007,
+   "ratio_min": 0.4511786256901921,
+   "ratio_max": 1.549375006033405,
+   "in_band": false,
+   "max_penetration_m": 8.504190200432589e-05,
+   "vertical_residual_n": 8.634742698632181e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": -0.5,
+   "sum_fy_n": 4471.442258660986,
+   "ratio_min": 0.7378192648996966,
+   "ratio_max": 1.262751041381947,
+   "in_band": true,
+   "max_penetration_m": 7.681682327069525e-05,
+   "vertical_residual_n": 7.387279765680432e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 0.0,
+   "sum_fy_n": 2090.700350280152,
+   "ratio_min": 0.9879549319253643,
+   "ratio_max": 1.0126664842458,
+   "in_band": true,
+   "max_penetration_m": 6.550150911414804e-05,
+   "vertical_residual_n": 1.021544449031353e-07
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 0.5,
+   "sum_fy_n": -296.65267745523647,
+   "ratio_min": 0.7499335009639629,
+   "ratio_max": 1.2506546469643292,
+   "in_band": true,
+   "max_penetration_m": 7.697633441388481e-05,
+   "vertical_residual_n": 6.362097337841988e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 1.0,
+   "sum_fy_n": -3729.448878645233,
+   "ratio_min": 0.4617076430098954,
+   "ratio_max": 1.5388563257468613,
+   "in_band": false,
+   "max_penetration_m": 8.534679585709322e-05,
+   "vertical_residual_n": 8.553615771234035e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 1.5,
+   "sum_fy_n": -6223.983898111671,
+   "ratio_min": 0.19375305557333042,
+   "ratio_max": 1.8067462167220583,
+   "in_band": false,
+   "max_penetration_m": 9.34365432091353e-05,
+   "vertical_residual_n": 5.852780304849148e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 2.0,
+   "sum_fy_n": -8688.767239352275,
+   "ratio_min": 0.05320882759859839,
+   "ratio_max": 1.9473104194383604,
+   "in_band": false,
+   "max_penetration_m": 0.00010619137895642882,
+   "vertical_residual_n": 6.628397386521101e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 2.5,
+   "sum_fy_n": -13380.82216871402,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0007849269434463,
+   "in_band": false,
+   "max_penetration_m": 0.00010704868812073893,
+   "vertical_residual_n": 5.57483872398734e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 3.0,
+   "sum_fy_n": -15027.315112287417,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0009905282649143,
+   "in_band": false,
+   "max_penetration_m": 0.00010333423967111021,
+   "vertical_residual_n": 6.037589628249407e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 3.5,
+   "sum_fy_n": -16673.996782801343,
+   "ratio_min": 0.0,
+   "ratio_max": 2.001220418848286,
+   "in_band": false,
+   "max_penetration_m": 0.00010725407999669743,
+   "vertical_residual_n": 5.2939867600798613e-08
+  },
+  {
+   "attack_mrad": 0.0,
+   "offset_mm": 4.0,
+   "sum_fy_n": -18303.775467159474,
+   "ratio_min": 0.0,
+   "ratio_max": 2.001470806018226,
+   "in_band": false,
+   "max_penetration_m": 0.00010750488896898094,
+   "vertical_residual_n": 4.649336915463209e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -4.0,
+   "sum_fy_n": 18348.85812722176,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0014772505397365,
+   "in_band": false,
+   "max_penetration_m": 0.00010599635753730793,
+   "vertical_residual_n": 5.667970981448889e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -3.5,
+   "sum_fy_n": 16720.461963771955,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0012265339145685,
+   "in_band": false,
+   "max_penetration_m": 0.00010583294638327855,
+   "vertical_residual_n": 2.4068867787718773e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -3.0,
+   "sum_fy_n": 15075.661592466582,
+   "ratio_min": 0.0,
+   "ratio_max": 2.000996180645731,
+   "in_band": false,
+   "max_penetration_m": 0.00010211612159372465,
+   "vertical_residual_n": 8.248025551438332e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -2.5,
+   "sum_fy_n": 13430.69253758412,
+   "ratio_min": 0.0,
+   "ratio_max": 2.000790194999782,
+   "in_band": false,
+   "max_penetration_m": 0.00010592024014793764,
+   "vertical_residual_n": 6.222398951649666e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -2.0,
+   "sum_fy_n": 8652.777971113708,
+   "ratio_min": 0.0472429752227084,
+   "ratio_max": 1.9533006403232516,
+   "in_band": false,
+   "max_penetration_m": 0.00010552174851132457,
+   "vertical_residual_n": 7.377229849225841e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -1.5,
+   "sum_fy_n": 6347.145002968452,
+   "ratio_min": 0.18594858947708295,
+   "ratio_max": 1.8145578459233884,
+   "in_band": false,
+   "max_penetration_m": 9.299214835552298e-05,
+   "vertical_residual_n": 7.353628461714834e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -1.0,
+   "sum_fy_n": 3915.541442121912,
+   "ratio_min": 0.451184235413186,
+   "ratio_max": 1.5493831683407024,
+   "in_band": false,
+   "max_penetration_m": 8.50422062692975e-05,
+   "vertical_residual_n": 4.950197762809694e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": -0.5,
+   "sum_fy_n": 510.6327661076298,
+   "ratio_min": 0.7378281437826548,
+   "ratio_max": 1.2627614200078774,
+   "in_band": true,
+   "max_penetration_m": 7.681724885254863e-05,
+   "vertical_residual_n": 3.392051439732313e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 0.0,
+   "sum_fy_n": -1866.717609808356,
+   "ratio_min": 0.9879558817426752,
+   "ratio_max": 1.0126674578207333,
+   "in_band": true,
+   "max_penetration_m": 6.550155109612739e-05,
+   "vertical_residual_n": 7.569178706035018e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 0.5,
+   "sum_fy_n": -4245.36353473279,
+   "ratio_min": 0.7499265212126857,
+   "ratio_max": 1.2506466926457631,
+   "in_band": true,
+   "max_penetration_m": 7.697600197132457e-05,
+   "vertical_residual_n": 7.795460987836123e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 1.0,
+   "sum_fy_n": -7651.824202526753,
+   "ratio_min": 0.4617045078418222,
+   "ratio_max": 1.538851881544905,
+   "in_band": false,
+   "max_penetration_m": 8.53466217554415e-05,
+   "vertical_residual_n": 5.883339326828718e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 1.5,
+   "sum_fy_n": -10054.534313353855,
+   "ratio_min": 0.19374867688537406,
+   "ratio_max": 1.8067372508539554,
+   "in_band": false,
+   "max_penetration_m": 9.343620451207597e-05,
+   "vertical_residual_n": 7.08096195012331e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 2.0,
+   "sum_fy_n": -12134.00925776342,
+   "ratio_min": 0.05322032577122527,
+   "ratio_max": 1.9473445418022566,
+   "in_band": false,
+   "max_penetration_m": 0.0001061923904129844,
+   "vertical_residual_n": 6.00994098931551e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 2.5,
+   "sum_fy_n": -15373.599809627764,
+   "ratio_min": 0.0,
+   "ratio_max": 2.001036749663653,
+   "in_band": false,
+   "max_penetration_m": 0.00010705766915398681,
+   "vertical_residual_n": 8.908682502806187e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 3.0,
+   "sum_fy_n": -17018.826431919388,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0012709211837687,
+   "in_band": false,
+   "max_penetration_m": 0.00010334389160184283,
+   "vertical_residual_n": 4.3059117160737514e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 3.5,
+   "sum_fy_n": -18663.87387867823,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0015292784410246,
+   "in_band": false,
+   "max_penetration_m": 0.00010726511381704155,
+   "vertical_residual_n": 3.525929059833288e-08
+  },
+  {
+   "attack_mrad": 1.0,
+   "offset_mm": 4.0,
+   "sum_fy_n": -20292.501085779302,
+   "ratio_min": 0.0,
+   "ratio_max": 2.001807866062589,
+   "in_band": false,
+   "max_penetration_m": 0.00010751695683845922,
+   "vertical_residual_n": 4.364119376987219e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -4.0,
+   "sum_fy_n": 16361.829834644557,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0011404618161874,
+   "in_band": false,
+   "max_penetration_m": 0.00010598446653653146,
+   "vertical_residual_n": 5.00440364703536e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -3.5,
+   "sum_fy_n": 14734.308122328217,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0009182305260897,
+   "in_band": false,
+   "max_penetration_m": 0.00010582207695992926,
+   "vertical_residual_n": 6.455229595303535e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -3.0,
+   "sum_fy_n": 13090.797244203459,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0007166970806938,
+   "in_band": false,
+   "max_penetration_m": 0.00010210661360845108,
+   "vertical_residual_n": 7.933704182505608e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -2.5,
+   "sum_fy_n": 11447.051949133687,
+   "ratio_min": 0.0,
+   "ratio_max": 2.000539499270314,
+   "in_band": false,
+   "max_penetration_m": 0.00010591139316168963,
+   "vertical_residual_n": 5.960464477539063e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -2.0,
+   "sum_fy_n": 5179.405254635879,
+   "ratio_min": 0.04723317611814483,
+   "ratio_max": 1.9532698502915584,
+   "in_band": false,
+   "max_penetration_m": 0.00010552083374936724,
+   "vertical_residual_n": 1.1075644579250367e-07
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -1.5,
+   "sum_fy_n": 2512.3994543305485,
+   "ratio_min": 0.18595396382675136,
+   "ratio_max": 1.8145691986857722,
+   "in_band": false,
+   "max_penetration_m": 9.299255596626404e-05,
+   "vertical_residual_n": 6.671325536444783e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -1.0,
+   "sum_fy_n": 1.8973965013738052,
+   "ratio_min": 0.4511883833106724,
+   "ratio_max": 1.5493892036375725,
+   "in_band": false,
+   "max_penetration_m": 8.504243329632275e-05,
+   "vertical_residual_n": 5.4551492212340236e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": -0.5,
+   "sum_fy_n": -3420.029592365532,
+   "ratio_min": 0.7378361885422391,
+   "ratio_max": 1.2627708236062916,
+   "in_band": true,
+   "max_penetration_m": 7.681763433371921e-05,
+   "vertical_residual_n": 6.913614924997091e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 0.0,
+   "sum_fy_n": -5798.507539786403,
+   "ratio_min": 0.9879563812858854,
+   "ratio_max": 1.0126679698589196,
+   "in_band": true,
+   "max_penetration_m": 6.550157317596174e-05,
+   "vertical_residual_n": 4.7337380237877376e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 0.5,
+   "sum_fy_n": -8169.616717371652,
+   "ratio_min": 0.7499194603428057,
+   "ratio_max": 1.25063864587425,
+   "in_band": true,
+   "max_penetration_m": 7.697566704869705e-05,
+   "vertical_residual_n": 7.552444003522396e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 1.0,
+   "sum_fy_n": -11546.443687201801,
+   "ratio_min": 0.46170165677562214,
+   "ratio_max": 1.538847840061508,
+   "in_band": false,
+   "max_penetration_m": 8.534646413452813e-05,
+   "vertical_residual_n": 9.081850294023752e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 1.5,
+   "sum_fy_n": -13837.70142566371,
+   "ratio_min": 0.19374535138370505,
+   "ratio_max": 1.8067304414709355,
+   "in_band": false,
+   "max_penetration_m": 9.343594193111029e-05,
+   "vertical_residual_n": 5.560286808758974e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 2.0,
+   "sum_fy_n": -15463.508867374703,
+   "ratio_min": 0.05323450502197406,
+   "ratio_max": 1.9473866175146577,
+   "in_band": false,
+   "max_penetration_m": 0.00010619368132698815,
+   "vertical_residual_n": 6.041955202817917e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 2.5,
+   "sum_fy_n": -17359.559149488727,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0012877121451087,
+   "in_band": false,
+   "max_penetration_m": 0.00010706661932292509,
+   "vertical_residual_n": 3.4313416108489037e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 3.0,
+   "sum_fy_n": -19004.251129767836,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0015504580895387,
+   "in_band": false,
+   "max_penetration_m": 0.00010335351376527483,
+   "vertical_residual_n": 3.2421667128801346e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 3.5,
+   "sum_fy_n": -20648.415802826676,
+   "ratio_min": 0.0,
+   "ratio_max": 2.001837310304377,
+   "in_band": false,
+   "max_penetration_m": 0.0001072761176040538,
+   "vertical_residual_n": 4.4077751226723194e-08
+  },
+  {
+   "attack_mrad": 2.0,
+   "offset_mm": 4.0,
+   "sum_fy_n": -22276.35826774992,
+   "ratio_min": 0.0,
+   "ratio_max": 2.0021441009564667,
+   "in_band": false,
+   "max_penetration_m": 0.00010752899455871303,
+   "vertical_residual_n": 6.123445928096771e-08
+  }
+ ]
+}

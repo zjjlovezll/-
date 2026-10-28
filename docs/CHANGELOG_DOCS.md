@@ -1817,6 +1817,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CURVE_CANT_DECISION_2026-10-27.md](CURVE_CANT_DECISION_2026-10-27.md) | ADR：几何路由上的超高，为什么仍然拒绝 |
 | [CURVE_COROTATING_FRAME_2026-10-28.md](CURVE_COROTATING_FRAME_2026-10-28.md) | 曲线：站表路线 + 帧的横向加速度，以及为什么它现在还不能引用 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
+| [CURVE_LATERAL_CAPABILITY_2026-10-28.md](CURVE_LATERAL_CAPABILITY_2026-10-28.md) | 曲线缺口到底是不是"算法不够好"：把接触能提供多少横向力量出来 |
 | [CURVE_PATH_RATE_DEFECT_2026-10-28.md](CURVE_PATH_RATE_DEFECT_2026-10-28.md) | 曲股工况为什么跑不过 81 m：路线的横向速率被当成了横向蠕滑 |
 | [CURVE_QUASISTATIC_SEAT_2026-10-28.md](CURVE_QUASISTATIC_SEAT_2026-10-28.md) | 曲股能不能"坐"出一个静态平衡？——滚动静平衡实验（否定结论） |
 | [CURVE_RAIL_GEOMETRY_2026-10-28.md](CURVE_RAIL_GEOMETRY_2026-10-28.md) | 曲股右轨的站位表不是一条一致的轨道几何（B041） |
@@ -4732,3 +4733,29 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
   `summarise` 读两个种子共 8 条预测、per-band 计数跨所有速度累加、四个常量被钉住）。
 * 文档 `docs/SPEED_SWEEP_2026-10-28.md`（8 节）；产物 `reports/inversion_synthetic_2026-10-28/speed_sweep.json`
   （含每条预测与预注册判据）。
+
+## 第 199 轮（2026-10-28）曲线缺口是物理边界还是算法不够：把横向力能力量出来
+
+* 用户问「曲线跑不了会不会是算法不够好」。把问题改写成可直接量的形式：**八轮仍在轨顶、载荷仍在验收带内时，
+  接触最多能提供多少横向力**？需求 `m v²/R = 21 842.4 N`（R = 1100 m、80 km/h、48 654 kg）。
+* 新增 `scripts/s43_running_equilibrium.py`：`--curvature-force` 的站位表工况（既有线路几何、又有体力项，
+  且 `_placement_enabled` 为假所以不会被放置两次）；`solve_frame_equilibrium`（y/roll/yaw 入未知量，
+  9 个种子，中心差分雅可比，SVD 取 cond）；`capability_sweep`（指定轮对横移 −4…+4 mm 与冲角 0/1/2 mrad，
+  每个几何重解竖向行，读接触自己的净横向力）；`table` 打印每轨 `N / 比 / pen / lever_y / n_y:n_z / slip_lat / Fy`。
+* **框架平衡不存在**：今天的座残差 1.022e-07 N、八轨 0.988–1.013×、`sum N` 1.000×，但**它不解的横向行最大 15 683.1 N**；
+  把 y/roll/yaw 一起放开后 9 个种子全部 `xtol`，最好 `|r|max 8.4124e+03 N`（cond 1.505e+04），
+  `sum Fy −1 391.3 N`（−6.4 % 需求），轮对 `y −0.822…−2.938 mm`、`yaw 0.455…0.832 mrad` → `NOT FOUND`。
+* **验收带内的横向力上限 = 8 169.6 N = 需求的 37.4 %**（冲角 +2 mrad、横移 +0.5 mm、每轮 0.750–1.251、侵入 76.98 µm）；
+  带内能出现的横移只有 −0.5 / 0 / +0.5 mm 三个点。
+* **需求只在整侧卸载时出现**：+4 mm / +2 mrad 给 −22 276.4 N（102 %），但比值 **0.000–2.002**、
+  因 `sum N` 仍为 1.000× 重量故 `4×0 + 4×2.002`，即四个轮子完全离轨、另四个承担两倍。
+* 物理对照：真实载荷转移 `ΔP = F·h/b = 21 842.4×1.5/0.7465 ≈ 43.9 kN` → 0.63×…1.37×（**在带内**）；
+  模型要到需求必须 ±59.66 kN，**是物理值的 2.7 倍**。带内单位载荷横向产出 1.7 %，需求要 4.6 %。
+* 因此这一轮能说：曲线缺口**不是反演算法**（反演尚未开始）、**也不是**"把 `f22` 调大"（`--creep-scale 10` 更早失败），
+  而是"无超高 R=1100 m / 80 km/h 上，‘八轮着地且在带内’与‘提供 21.8 kN’互斥"。
+  **不能**说：接触平面倾角为什么固定在 ±0.0250——这必须用"不同横移下 `n_y/n_z` 与 `lever_y` 的演化"独立测量，
+  若该斜率能把带内上限抬到 ≥1.0× 需求，则"带内不可能"被推翻，要改的是接触几何而不只是超高。
+* 新增 `tests/test_curve_lateral_capability.py` **5 项**（需求值、座留下的横向残差、带内上限落在 30–45 %、
+  到需求的点必须整侧卸载且另一侧 ≈2.00×、带内横移窗口 ≤1 mm），读取归档
+  `reports/curve_capability_2026-10-28/capability.json`；结论一旦变化测试会红，不允许静默继承。
+* 文档 `docs/CURVE_LATERAL_CAPABILITY_2026-10-28.md`（7 节，含预注册的下一步三行判据）。

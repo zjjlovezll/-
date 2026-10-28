@@ -1813,6 +1813,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [CURVE_ALIGNMENT_VELOCITY_2026-10-28.md](CURVE_ALIGNMENT_VELOCITY_2026-10-28.md) | 曲线：把路线自己的横向速度装回去，以及为什么几何路由仍然拿不住这条曲线 |
 | [CURVE_APPROACH_DECISIONS_2026-10-27.md](CURVE_APPROACH_DECISIONS_2026-10-27.md) | 曲线走进哪一侧：四条被实测否掉的路，和一条还没被否的 |
 | [CURVE_CANT_DECISION_2026-10-27.md](CURVE_CANT_DECISION_2026-10-27.md) | ADR：几何路由上的超高，为什么仍然拒绝 |
+| [CURVE_COROTATING_FRAME_2026-10-28.md](CURVE_COROTATING_FRAME_2026-10-28.md) | 曲线：站表路线 + 帧的横向加速度，以及为什么它现在还不能引用 |
 | [CURVE_GEOMETRY_2026-10-26.md](CURVE_GEOMETRY_2026-10-26.md) | 曲线：先把"几何"和"力"分开（S1 实测） |
 | [CURVE_PATH_RATE_DEFECT_2026-10-28.md](CURVE_PATH_RATE_DEFECT_2026-10-28.md) | 曲股工况为什么跑不过 81 m：路线的横向速率被当成了横向蠕滑 |
 | [CURVE_QUASISTATIC_SEAT_2026-10-28.md](CURVE_QUASISTATIC_SEAT_2026-10-28.md) | 曲股能不能"坐"出一个静态平衡？——滚动静平衡实验（否定结论） |
@@ -4479,3 +4480,29 @@ vehicle is on the straight line, and the seat settles on one side (measured 4 of
 - 下一步（判据已写死）：把曲线**写进站表**（两侧同源、轨距 1.493、5 mm 站位，`y = s'^2/(2R)`），
   `curve_geometry = false`、座在直股段，另加"允许按站表对齐"的开关；判据 R=1100/80 km/h 跑满 ≥0.34 s、
   八轮 ∈[0.625,1.6]×、`|n_y/n_z| < 0.3`、直向与两条冻结基线逐位不变。
+
+## 第 187 轮：站表路线加回帧的横向加速度——曲线量级第一次出现，但 0.60 s 仍在往外跑
+
+- 起点：上一轮量清了两条路各缺一半（摆置路线要 21.8 kN 而轨顶只给 11.9 kN；站表路线侧向需求为零、
+  `slip_lat` 逐位 0.0000）。这一轮保留站表 + `path` 的几何，把**这一帧自己的横向加速度**以虚设力加回去：
+  `scripts/s32_curved_station_table.py --curvature-force` 只设 `run.curve_radius_m = 1100` 而
+  `curve_geometry` 保持关闭 —— `evaluate` 据此加 `m v²/R`，曲率进蠕滑的 `±vκb` 上一轮已不再门控。
+- **0.34 s：物理量级第一次出现**（`case_A_final_law` 的同源轨、R=1100 m、80 km/h、35 坐标）：
+  座残差 1.022e-07 N、八轮 0.988–1.013×、侵入 65.47–65.50 µm、`slip_lat −0.0112…−0.0115 m/s`；
+  运行 `numerically_checked`、1701 帧、**七门 7/7**、最大侵入 120.51 µm、峰值 1.03–1.37×。
+  最后一帧 **`sum Fy −17 062.8 N` = 需求 21 842.4 N 的 78.1 %**、左右 **250 055 / 225 007 N**
+  （转移 **+25 048 N = 5.2 % 轴重**，左轨更重 = 外轨）、轮对横移 **+7.35…+7.70 mm**、
+  攻角 **−1.775…−2.028 mrad**。站表路线在"横向合力"这一列原来是 0。
+- **0.60 s：不收敛，如实记账**：运行仍 `numerically_checked`、3001 帧、七门 7/7，但最大侵入到
+  **276.26 µm**、峰值到 **2.04×**（`axle2_right 121 719 N`）；最后一帧 `sum Fy −32 997.1 N`
+  （**151 %** 需求）、转移涨到 **+66 811 N**、`axle2_right` 侵入 **198.81 µm**、`lever_y +0.91327`
+  （轮对中心 +0.753、轨顶带仅 ±0.036）——车轮已爬到**轨距角/肩部**；攻角 1.9 → 3.7 mrad，
+  而按 `k_yaw = 1.96e6 N·m/rad` 与蠕滑摇头力矩 ≈1.0 kN·m 估的平衡攻角是 **0.5 mrad** 量级。
+- 两个候选原因（都写进文档）：① 该车一次悬挂 **`c_y_n_s_m = 0`、`c_yaw_nm_s_rad = 0`**，横向与摇头
+  两个模式唯一的耗散来自接触蠕滑；② `creep_stiffness_lateral_n = 5.0e5 N` 比真实 f22（5–8 MN）低一个
+  数量级 —— **但这一条不能动**，那正是硬约束禁止的"提高接触刚度把失败变绿"。
+- 新增 [`docs/CURVE_COROTATING_FRAME_2026-10-28.md`](CURVE_COROTATING_FRAME_2026-10-28.md)、
+  `scripts/s32_curved_station_table.py`（站表曲线 + `path` + `--curvature-force` + 末帧逐轨表）。
+- 下一轮判据先写死：0.34/0.60 s 两窗 `|sum Fy /(m v²/R)| ∈ [0.9,1.1]`、转移在 0.34→0.60 s 变化 <20 %、
+  八轮 ∈[0.625,1.6]×、`|lever_y − ±0.753| < 10 mm`、七门 7/7、`κ=0` 逐位不变、冻结基线 `UNCHANGED`；
+  做不到就如实降级为检出/定位。

@@ -95,25 +95,21 @@ def mixture(level_mm: float, components) -> tuple[IrregularityTrack | None, dict
 
 
 def build_case(*, duration_s: float, name: str) -> Path:
-    raw = json.loads((data_root.case_dir() / "case_A_final_law.json").read_text(encoding="utf-8"))
-    raw["case_id"] = name
-    raw["run"].update({
-        "x_start_m": X_START_M,
-        "seat_x_start_m": X_START_M,
-        "duration_s": duration_s,
-        "output_step_s": 2.0e-4,
-        "max_solver_step_s": 1.0e-4,
-        "curve_radius_m": RADIUS_M,
-        "curve_geometry": True,
-        "align_to_track": True,
-    })
-    raw.pop("curve_cant_m", None)
-    raw["vehicle"]["travel_speed_m_s"] = SPEED_KMH / 3.6
-    raw.pop("initial_state", None)
-    raw.pop("irregularity", None)
-    target = Path(__file__).resolve().parents[2] / "scratch" / "s31" / name
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(raw, indent=1), encoding="utf-8")
+    """A curved route written into the station table (see s32), so no placement moves the rail.
+
+    The `curve_radius_m` + `curve_geometry` route was measured to run out of contact slope after
+    1.20 m of travel on this radius: the crown contact supplies only 11.9 kN of the 21 842 N the
+    curve needs.  With the route in the station table and in `path`, the wheel and the rail are
+    carried along the same line and the curvature reaches the contact only as the `-k v lever_y`
+    term in the longitudinal slip, which is what the co-rotating frame expects.
+    """
+
+    import s32_curved_station_table as station_table
+
+    built = station_table.build(radius_m=RADIUS_M, tangent_m=X_START_M, step_m=0.1, span_m=150.0,
+                                duration_s=duration_s, run_at_m=X_START_M, seat_at_m=X_START_M)
+    target = built.with_name(name)
+    target.write_bytes(built.read_bytes())
     return target
 
 

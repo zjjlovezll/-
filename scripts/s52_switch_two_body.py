@@ -97,12 +97,20 @@ def build(case_path: Path, *, side: str = "right") -> tuple[dict, dict]:
         else:
             stock.append(st)
 
+    # The blade carries the SAME surface as the stock rail, offset down by the design lowering.  Its
+    # own `qjg` sections are narrow slices (`CN18-jg-0` is 4.0 mm wide at the tip), and the longitudinal
+    # derivative between two such slices is undefined over most of the lateral window -- measured as
+    # `ProfileError: longitudinal profile derivative is undefined at the contact point` once the blade
+    # rises to full height and becomes a candidate contact body (round 215).  The lowering is a height
+    # difference, so keeping the narrow section buys nothing for P1 and costs the passage.
     blade_body = []
     for st in blade:
         distance = float(st["s_m"]) - tip_m
         lowered = dict(st)
         lowered["profile"] = dict(
-            st["profile"], z_offset_m=-lowering_mm(distance, schedule) / 1000.0
+            stock_source["profile"],
+            y_offset_m=st["profile"]["y_offset_m"],
+            z_offset_m=-lowering_mm(distance, schedule) / 1000.0,
         )
         blade_body.append(lowered)
 

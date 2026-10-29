@@ -121,6 +121,12 @@ def main() -> int:
         action="store_true",
         help="keep the 72 um crown-height difference between the two section families",
     )
+    parser.add_argument(
+        "--creep-kalker",
+        action="store_true",
+        help="DIAGNOSTIC ONLY: set Kalker-scale creep coefficients (f11 = 3.5e6, f22 = 2.5e6 N) "
+             "instead of the frozen 1.0e6/5.0e5; the frozen cases are not touched",
+    )
     options = parser.parse_args()
 
     out = Path(options.out)
@@ -194,6 +200,17 @@ def main() -> int:
         + " | straight pair: both rail crowns pinned to a constant 1.50649 m gauge (s73)"
     )
     target_path = out / "case_straight_pair.json"
+    if options.creep_kalker:
+        # Round 14 measured the leading wheelset walking 37.77 mm sideways in 10 m on a straight,
+        # symmetrically seated pair (start offset exactly 0.0000 mm), i.e. the lateral state is not
+        # held.  The frozen f22 = 5e5 N gives 500 N per mrad of attack on a 1780 kg wheelset, which
+        # cannot damp that motion; Kalker's f22 for this load is 2.5e6 N.  This flag exists to ask
+        # whether that single number is the cause, and it is stamped so no result can be mistaken
+        # for a frozen case.
+        contact = raw.setdefault("contact", {})
+        contact["creep_stiffness_x_n"] = 3.5e6
+        contact["creep_stiffness_lateral_n"] = 2.5e6
+        raw["purpose_detail"] = str(raw.get("purpose_detail", "")) + " creep_kalker=1"
     target_path.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
     (out / "straight_pair_report.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
     print("wrote", target_path)

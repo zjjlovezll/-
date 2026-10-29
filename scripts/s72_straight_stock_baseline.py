@@ -109,6 +109,27 @@ def main() -> int:
               f"{levers[rail_id]:+10.4f}{peak[rail_id]/1e3:11.3f}")
     print(f"travelled {float(times[-1]) * float(case.vehicle.travel_speed_m_s):.3f} m in {float(times[-1]):.3f} s")
 
+    # Lateral drift series.  A straight pair seated symmetrically can still walk sideways: the
+    # guard at 67.03 m on the *stock* rail (round 13) means the wheel reached flange contact on a
+    # uniform section, so the question is when q[y] starts moving and how fast.  Summary-only output
+    # cannot answer it, which is why this exists.
+    positions = result["positions"] if isinstance(result, dict) else result.positions
+    wheelsets = [body.id for body in dynamics.topology.bodies
+                 if "spin" in body.dof and body.id.startswith("wheelset")]
+    lateral = [(name, int(dynamics.topology.require(name, "y"))) for name in wheelsets]
+    lines = ["t_s," + ",".join(f"{name}_y_m" for name, _i in lateral)]
+    for frame, stamp in enumerate(times):
+        row = [f"{float(stamp):.6f}"]
+        row.extend(f"{float(positions[frame][index]):+.9f}" for _name, index in lateral)
+        lines.append(",".join(row))
+    newline = chr(10)
+    (out / "lateral.csv").write_text(newline.join(lines) + newline, encoding="utf-8")
+    first = [float(positions[0][index]) for _name, index in lateral]
+    last_y = [float(positions[-1][index]) for _name, index in lateral]
+    print("lateral drift (mm): " + ", ".join(
+        f"{(a - b) * 1e3:+.4f}" for a, b in zip(last_y, first)))
+    print("lateral start (mm): " + ", ".join(f"{value * 1e3:+.4f}" for value in first))
+
     (out / "stock_baseline.json").write_text(json.dumps({
         "case": str(target),
         "coordinates": dynamics.dimension,
@@ -119,6 +140,9 @@ def main() -> int:
         "last_lever_y_m": levers,
         "peak_loads_n": peak,
         "even_share_n": EVEN_SHARE_N,
+        "lateral_start_m": first,
+        "lateral_last_m": last_y,
+        "lateral_drift_m": [a - b for a, b in zip(last_y, first)],
     }, indent=1), encoding="utf-8")
     return 0
 

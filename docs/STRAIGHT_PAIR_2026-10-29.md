@@ -52,3 +52,21 @@ PYTHONPATH=src python -X utf8 scripts/s73_straight_pair.py
 PYTHONPATH=src python -X utf8 scripts/s72_straight_stock_baseline.py \
   --case ../scratch/s73/case_s40_run.json --start 40 --duration 0.45 --output-step 5e-4 --out ../scratch/s72
 ```
+
+## 五、跨过尖轨的尝试：1.6 s 在 67.03 m 停在**基本轨**上，不是尖轨上
+
+同一算例从 40 m 跑 1.6 s（应到 75.5 m，即完全越过尖轨区 50.578–57.304）：
+
+```
+velch.solver.SimulationFailure: graph slope limit at axle1_right/right:stock, x=67.0301769 m
+```
+
+两点很关键，都和预期不同：**（1）撞门的是 `right:stock` 基本轨，不是 `right:blade`**；
+**（2）里程 67.03 m 已在尖轨区之外 9.7 m**，说明尖轨降低值本身这一次没有触发斜率门——
+真正触发的是"车在直线上横向漂到轮缘"这一件事。
+
+这一条与 0.45 s 那次读数是自洽的：末帧八轮份额左 1.051 / 1.022 / 1.003 / 1.000、
+右 0.989 / 0.979 / 1.001 / 1.009，**左侧系统性偏高**，说明车轮在 t=0 就不在正中，
+而 `s72` 目前只写汇总、不写时间历程，所以漂移速率还没有被量到（下一步：让 `s72` 落 `axle*_y` 序列）。
+
+因此下一步的顺序被这次失败**改写**了：先量直向横向漂移，再去谈尖轨区与心轨区。

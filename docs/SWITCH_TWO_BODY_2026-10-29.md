@@ -424,3 +424,42 @@ VERDICT: the blade sits below the stock rail by the design lowering
 PYTHONPATH=src python -X utf8 scripts/s30_fix_diverging_gauge.py --gauge 1.50649
 PYTHONPATH=src python -X utf8 scripts/s52_switch_two_body.py     --case ../scratch/s30/case_diverging_gauge.json     --real-sections --blade-datum-mm -0.061     --out ../scratch/s60/case_gauge_real.json
 ```
+
+## 16. 第 0 帧缺陷定位到"对齐从不生效"，但对齐本身还没做对
+
+### 16.1 根因（可执行判断）
+
+`_align_to_track_frame` 的门是 `_placement_enabled(case.run)`，而 `_placement_enabled` 只在
+`curve_placement` / `curve_geometry` 打开时返回真。**道岔的设计线活在站表里、`curve_radius_m` 为空**，
+所以这个门恒假 → 整段 `align_to_track` 是 no-op（与第 20、46 轮"开关打开与关闭读数一位不变"一致）。
+
+实测（真实断面算例，座后、未对齐）：
+
+```
+_gauge_centre @55.0 m: +0.022121 m  slope +0.006972
+_gauge_centre @65.0 m: +0.094720 m  slope +0.013557
+_gauge_centre @66.0 m: +0.108276 m  slope +0.014465
+wheelset1 y after seat: +0.000 mm        ← 本应 +94.7 mm
+座残差 8.175e-08 N
+```
+
+于是首帧把 0.7465 m 处的车轮放到 +0.7465 m，而设计线在它脚下已经横移到 +0.0947 m ——
+这就是 `axle1_right` 在第 0 帧出现 1879 kN 的来源：车轮压在轨距面上，而不是轨头顶。
+
+### 16.2 试着放宽门，结果是**更早**失败
+
+把门改成"采样中心线位移超过 1 mm 也算有线"（站表道岔：55 m 处 22.1 mm；直线辙叉：0.0001 m；
+力路由：轨面本来就是直的），静平衡仍收敛到 8.175e-08 N，但积分**第一步**就报：
+
+```
+velch.solver.SimulationFailure: graph slope limit at axle1_right/right:stock, x=65.0084398 m
+```
+
+即：**只把刚体横向平移对不齐**。同一构架两根轴相距 10 m，设计线在 axle1（65 m）处 +0.0947 m、
+axle2（57.5 m）处 +0.0437 m，相差 **72.6 mm**；而站表把曲线编码成"每站整条断面横向平移、断面不转"，
+所以按中心线平移后再由 `yaw = 0`（B042）去接触，轮与轨的相对姿态仍然错。
+
+**改动已 `git checkout` 回退**（不留一个未验证的行为改变），数字记在这里。下一步只有这一个实验：
+在对齐后的状态上打印 65.008 m 处的 `wheel_y`、右轨冠 y、`n_y/n_z`，判定是"横向还没对齐"还是
+"断面没有随切线旋转"。前者改放置，后者要把站表断面按当地切线旋转——与 §15 的几何无关，
+几何已经 0.000 mm。

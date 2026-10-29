@@ -73,7 +73,10 @@ def lowering_mm(distance_from_tip_m: float, schedule) -> float:
     return float(np.interp(max(distance_from_tip_m, 0.0), distances, values, right=0.0))
 
 
-def build(case_path: Path, *, side: str = "right") -> tuple[dict, dict]:
+def build(
+    case_path: Path, *, side: str = "right", real_sections: bool = False,
+    blade_datum_mm: float = 0.0,
+) -> tuple[dict, dict]:
     raw = json.loads(case_path.read_text(encoding="utf-8"))
     schedule = blade_schedule()
     template = next(block for block in raw["rail_templates"] if block.get("id") == side)
@@ -107,11 +110,21 @@ def build(case_path: Path, *, side: str = "right") -> tuple[dict, dict]:
     for st in blade:
         distance = float(st["s_m"]) - tip_m
         lowered = dict(st)
-        lowered["profile"] = dict(
-            stock_source["profile"],
-            y_offset_m=st["profile"]["y_offset_m"],
-            z_offset_m=-lowering_mm(distance, schedule) / 1000.0,
-        )
+        if real_sections:
+            # Keep the station's own `zjg`/`qjg` section (head width 3 mm at the tip, 72 mm at full
+            # section) and only shift it down by the design lowering.  These are the drawn sections;
+            # the stock-copy branch below exists because a narrow slice leaves the longitudinal
+            # derivative undefined over part of the wheel's lateral window (see the comment above).
+            lowered["profile"] = dict(
+                st["profile"],
+                z_offset_m=(blade_datum_mm - lowering_mm(distance, schedule)) / 1000.0,
+            )
+        else:
+            lowered["profile"] = dict(
+                stock_source["profile"],
+                y_offset_m=st["profile"]["y_offset_m"],
+                z_offset_m=-lowering_mm(distance, schedule) / 1000.0,
+            )
         blade_body.append(lowered)
 
     template.pop("stations", None)
@@ -166,9 +179,17 @@ def main() -> int:
     parser.add_argument("--case", type=Path, default=DEFAULT_CASE)
     parser.add_argument("--side", default="right")
     parser.add_argument("--out", type=Path, default=None)
+    parser.add_argument("--blade-datum-mm", type=float, default=0.0,
+                        help="raise the blade sections by this much so a zero design lowering "
+                             "puts the blade crown level with the stock crown")
+    parser.add_argument("--real-sections", action="store_true",
+                        help="keep each blade station's own drawn section instead of copying the stock rail")
     args = parser.parse_args()
 
-    raw, detail = build(args.case, side=args.side)
+    raw, detail = build(
+        args.case, side=args.side, real_sections=args.real_sections,
+        blade_datum_mm=args.blade_datum_mm,
+    )
     out = args.out or (HERE.parent / "scratch" / "s52" / "case_two_body_switch.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     raw["case_id"] = f"{raw.get('case_id', 'case')}_twobody_{args.side}"

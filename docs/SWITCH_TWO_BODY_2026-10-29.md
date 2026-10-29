@@ -362,3 +362,65 @@ PYTHONPATH=src python -X utf8 scripts/s57_blade_gap_vs_lateral.py
 
 **边界**：静态表用的是坐好的、只改横移的状态（无竖向速度、无轨下沉）；所以它给的是**几何下界**，动态首触
 一定不晚于它。§11 的 68.152 m 与 §14 的 68.80 m 之差（0.65 m）就是动态项的规模，这一项尚未被单独测量。
+
+## 15. 真实设计断面：尖轨按它自己的断面载入，几何对上了，但分担比还不能引用
+
+### 15.1 为什么必须换
+
+`s52` 一直把尖轨体的断面**复制成基本轨**（第 215 轮：窄切片让 `_station_derivative` 抛
+`ProfileError: longitudinal profile derivative is undefined at the contact point`）。这等于假设两者同高，
+而设计表说的恰恰是尖轨比基本轨低 23 mm → 0。用替代断面去量"尖轨什么时候开始分担"，
+结果只能反映基本轨的几何。
+
+### 15.2 三处改动
+
+| 项 | 内容 |
+|---|---|
+| `--real-sections` | 尖轨体保留原站位的 `zjg-*` / `qjg-*` 断面，不再复制基本轨 |
+| `--blade-datum-mm` | 覆盖断面共用的 `crown_datum_m`（单位 mm）。实测需要 **−0.061**：两族断面在 §12 的 z 采样极点不同，差 0.061 mm，不抵消就会在 68.92 m 处让尖轨高 0.060 mm |
+| 算例输入 | 先用 B041 的轨距修正 `scripts/s30_fix_diverging_gauge.py --gauge 1.50649` 生成 `scratch/s30/case_diverging_gauge.json`，再在其上建两体表 |
+
+### 15.3 几何校验（`--real-sections` 后逐站打印）
+
+```
+  mileage   stock crown   blade crown     gap     design   residual
+     60.95      +0.072     -22.927      23.000   23.000    +0.000
+     62.94      +0.072      -7.183       7.255    7.255    +0.000
+     64.94      +0.072      -2.179       2.251    2.252    -0.000
+     66.93      +0.072      -0.824       0.896    0.896    -0.000
+     68.92      +0.072      +0.073      -0.000    0.000    +0.000
+     70.92      +0.072      +0.073      -0.000    0.000    +0.000
+worst |(gap - datum) - design| = 0.000 mm
+VERDICT: the blade sits below the stock rail by the design lowering
+```
+
+**这是软件第一次拥有真实的下压几何**：八个站位全部对上设计表，误差 0.000 mm。同时也说明第 215 轮那个
+`ProfileError` 的原因不是"断面太窄"，而是**没有给断面自己的横向基准**——`--real-sections` 用
+`y_offset_m` 把每族断面的左缘放到同一基准上之后，窄切片可以正常求导。
+
+### 15.4 载入与积分
+
+| 项 | 实测 |
+|---|---|
+| 坐标 / 轨 / 体 | 51 / 8 / **10**（右轨 4 个轴位各含 stock+blade） |
+| 静平衡 | `8.282e-08 N` |
+| 0.10 s 积分（80 km/h，`align_to_track` 开，`x_start 55`，座 45） | **7/7 门全过** |
+| 各轮法向力（t ≥ 0.01 s） | 左 56.4–76.1 kN，其余右轨 59.4–93.0 kN，`axle1_right` 合计 0–72.7 kN 振荡 |
+
+### 15.5 但第 0 帧仍然是荒谬值 —— 分担比与首触里程暂不可引用
+
+同一次运行的第 0 帧：`axle1_right` 合计 **1879.34 kN（31.5× 均分）**、另一条右轨 **758.49 kN**，
+而 t = 0.01 s 起立刻回到物理量级。这不是尖轨的物理，是**首帧的状态与几何不同步**（座在直线帧上求解，
+首帧按曲线几何求值）。所以：
+
+* 尖轨分担比、首触里程**暂不可引用**；
+* 第 218 轮的 68.152 m / 0.065 kN 与第 220 轮的 68.80 m 都建立在对尖轨断面做了替代的那份算例上，
+  正式判定要等第 0 帧问题修掉后，在**真实断面**上重测；
+* P1 判据（含 `q[y]`、竖向速度、轨下沉的三项式）不变，几何项已按 0.000 mm 标定。
+
+### 15.6 复算
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/s30_fix_diverging_gauge.py --gauge 1.50649
+PYTHONPATH=src python -X utf8 scripts/s52_switch_two_body.py     --case ../scratch/s30/case_diverging_gauge.json     --real-sections --blade-datum-mm -0.061     --out ../scratch/s60/case_gauge_real.json
+```

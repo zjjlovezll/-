@@ -1944,6 +1944,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |
 | [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |
 | [STAGE_B_SURROGATE_2026-10-21.md](STAGE_B_SURROGATE_2026-10-21.md) | B 阶段：可微代理与保险丝 2026-10-21 |
+| [STRAIGHT_BLADE_SEAT_2026-10-29.md](STRAIGHT_BLADE_SEAT_2026-10-29.md) | 直向尖轨降低值反演：静平衡能坐住，时程走不出 53.74 m |
 | [STRAIGHT_RANDOM_SPEED_2026-10-28.md](STRAIGHT_RANDOM_SPEED_2026-10-28.md) | 直向过岔 + 随机速度：波磨反演的六段判定（第 6 门的直向半边） |
 | [SWITCH_TWO_BODY_2026-10-29.md](SWITCH_TWO_BODY_2026-10-29.md) | 把降低值装进算例：双体尖轨区（2026-10-29，第 213 轮） |
 | [TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md](TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md) | 任务书：用轴箱加速度反演钢轨型面不平顺（2026-10-23 22:40 → 2026-10-24 10:00） |

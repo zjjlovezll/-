@@ -178,3 +178,33 @@
   `f22·slip/v` 与 Polach/FASTSIM 的饱和曲线；若两者在 11 mm/s 与 44 mm/s 处相差 10 倍以上，
   则**必须**换模型（这是物理，不是调参）。**仍不得**靠提高 `f22` 把曲线变绿（已实测更早失败）。
 - **没有改变什么**：不提供数值算据；且注意 FASTSIM/Polach 仍是**近似**，接触斑形状要用 L12 的几何。
+
+## L14 道岔里"多根钢轨各自是独立体"该怎么组合（组合断面 → 分体 + 接触转移）
+
+- **问题**：图纸里的 `JG_* / XG_* / YG_*` 是"基本轨+尖轨""翼轨+心轨"的**组合断面**（一条连续上表面，
+  中间 V 形轮缘槽）。而在动力学模型里，基本轨与尖轨是**两根各自受扣件支承的轨**，轮载要在两者之间转移。
+  该按"一个变截面体"还是"两个独立体 + 接触转移"来做？
+- **来源**：
+  - *Effect of the vertical relative motion of stock/switch rails on wheel–rail contact mechanics in switch panel
+    of railway turnout*（Advances in Mechanical Engineering, 2018；以 **CN60-1100-1:18** 高速道岔为对象）
+    — https://doi.org/10.1177/1687814018790659
+  - *Further evidence that the counteracting lateral contact forces during the switch and crossing transitions
+    are a kinematic phenomenon*（Chalmers 报告全文）
+    — https://publications.lib.chalmers.se/records/fulltext/193610/193610.pdf
+  - *Implementation of variable cross-section curved beam in train-turnout dynamic interactions*
+    （Int. J. Mech. Sci., 2024）
+    — https://www.sciencedirect.com/science/article/pii/S0020740324007033
+  - 道岔钢轨组合三维实体建模（尖轨-基本轨、心轨-翼轨组合）专利 CN111339648B
+    — https://patentimages.storage.googleapis.com/0e/47/2c/e3f81786fd82be/CN111339648B.pdf
+  - 道岔断面随长度变化、左右轨不同的建模讨论（力学学报 2005）
+    — https://pubs.cstam.org.cn/data/article/lxxb/preview/pdf/2005-369.pdf
+- **它给了什么**：① 基本轨与尖轨之间有**竖向相对运动**，而且这个相对运动**改变接触力学**
+  ⇒ 两者必须能各自竖移（各自一条竖向自由度 + 各自扣件刚度），不能并成一个刚体；
+  ② 道岔转换区的**反向横向接触力是运动学现象**（接触点从一根轨换到另一根轨时几何上的必然），
+  不是外加法向力 —— 这一条直接解释了我们 B045/B047 里看到的"左右反向"；
+  ③ 另一条路是**变截面曲梁**（A、I 沿里程变），这正是 Abaqus 那份直向道岔模型的做法
+  （每站 A=4.988e-3、I11=1.23e-5 等），但它不解决"两根轨各自支承"的接触转移。
+- **它改变了什么**：把"组合断面怎么进模型"固定为 —— **按 V 形槽把组合断面劈成两条各自独立的轨体**
+  （各带自己的 `y_window_m` 与里程窗口），轮载按"谁最深谁承载"转移；
+  降低值就是两个 crown 的高差（图纸读出 14.000 mm → 0），**不需要**再写一条 z 偏移表。
+- **没有改变什么**：不给任何数值判据；也不允许用"把两根轨并成一根"来消掉接触转移的困难。

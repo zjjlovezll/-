@@ -75,7 +75,7 @@ def lowering_mm(distance_from_tip_m: float, schedule) -> float:
 
 def build(
     case_path: Path, *, side: str = "right", real_sections: bool = False,
-    blade_datum_mm: float = 0.0,
+    blade_datum_mm: float = 0.0, lowering_scale: float = 1.0,
 ) -> tuple[dict, dict]:
     raw = json.loads(case_path.read_text(encoding="utf-8"))
     schedule = blade_schedule()
@@ -117,13 +117,13 @@ def build(
             # derivative undefined over part of the wheel's lateral window (see the comment above).
             lowered["profile"] = dict(
                 st["profile"],
-                z_offset_m=(blade_datum_mm - lowering_mm(distance, schedule)) / 1000.0,
+                z_offset_m=(blade_datum_mm - lowering_scale * lowering_mm(distance, schedule)) / 1000.0,
             )
         else:
             lowered["profile"] = dict(
                 stock_source["profile"],
                 y_offset_m=st["profile"]["y_offset_m"],
-                z_offset_m=-lowering_mm(distance, schedule) / 1000.0,
+                z_offset_m=-lowering_scale * lowering_mm(distance, schedule) / 1000.0,
             )
         blade_body.append(lowered)
 
@@ -182,20 +182,24 @@ def main() -> int:
     parser.add_argument("--blade-datum-mm", type=float, default=0.0,
                         help="raise the blade sections by this much so a zero design lowering "
                              "puts the blade crown level with the stock crown")
+    parser.add_argument("--lowering-scale", type=float, default=1.0,
+                        help="multiply the design lowering; 1.0 is the design value, other values "
+                             "exist only to test what a lowering inversion can resolve")
     parser.add_argument("--real-sections", action="store_true",
                         help="keep each blade station's own drawn section instead of copying the stock rail")
     args = parser.parse_args()
 
     raw, detail = build(
         args.case, side=args.side, real_sections=args.real_sections,
-        blade_datum_mm=args.blade_datum_mm,
+        blade_datum_mm=args.blade_datum_mm, lowering_scale=args.lowering_scale,
     )
     out = args.out or (HERE.parent / "scratch" / "s52" / "case_two_body_switch.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     raw["case_id"] = f"{raw.get('case_id', 'case')}_twobody_{args.side}"
     raw["purpose_detail"] = (
         f"{raw.get('purpose_detail', '')} | two-body switch zone on the {args.side} side: stock body "
-        f"plus blade body lowered by the 07(009) design table (23 mm at the tip, zero at 7.304 m)"
+        f"plus blade body lowered by the 07(009) design table (23 mm at the tip, zero at 7.304 m), "
+        f"scale {args.lowering_scale:.3f}"
     ).strip(" |")
     out.write_text(json.dumps(raw), encoding="utf-8")
 

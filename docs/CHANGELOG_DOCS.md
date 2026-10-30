@@ -1775,6 +1775,25 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 238 轮 — 最终任务书：把"精度 90%"改写成可判定门，并把四件模型装进一个算例
+
+用户下达最终目标（反演尖/心轨走行面、与 PRR 拟合面逐点对照、精度 ≥90% 验证算法、再扩展到随机与波磨）。本轮只做三件事：写任务书、核实现状、把待批准项摆到桌面上。新增 [TASKBOOK_FINAL_GOAL_2026-10-31.md](TASKBOOK_FINAL_GOAL_2026-10-31.md)。
+
+**核实现状（我逐字段读的，不是转述）**
+
+- `vehicles/turnouts/CN60-1100-1_18/cases/straight.json`：`track_dynamics = local_compliant`（柔性轨）、7 体车辆（carbody 34934 / bogie 3300 / wheelset 1780，**刚性轮对**）、右轨 3 body（stock 76 / blade 161 / frog 65 站）。
+- `run = {x_start_m 40.0, duration_s 0.02}` ⇒ 只走 **0.44 m**，而尖轨区起点 **50.578 m**、预注册首触 **68.16 m** ⇒ **现有道岔算例从未走到尖轨**。
+- 全仓 `velch-vehicle-v2` 扫描：完备车辆（`CRH380A_M_axlebox`，86 坐标）**没有任何算例**；柔性轮对只在 12 站合成几何的 `examples/portable/case_flexible.json` 里 ⇒ **"完备车辆 + 柔性轮对 + 柔性轨道 + 真道岔几何"四者从未同时出现**。
+- `contact.effective_radius_m = 0.02` 在 `stiffness_policy = local_circular` 下仍留在算例里（B048 只改了策略，字段没删）⇒ 读数陷阱。
+
+**"精度 ≥90%" 在物理上没有判别力**：14.94 mm 的 10 % = **1.49 mm**，是静侵入 65.4661 µm 的 **23 倍**——把尖轨面做错 1.5 mm，相对门照样通过。因此任务书把主门定为**绝对误差**：Ω_obs 上 p95 ≤ **1/3 静侵入 ≈ 22 µm**，并配 G-LOC（首触里程 ≤ ±0.2 m）、G-COV（覆盖率）、G-NULL（降低值置 0 须回本底）；相对值只作逐 2 mm 分档报告。
+
+**自证陷阱写进任务书**：反演面与"自建正演面"比是自证（零注入恒等 100 %），故证据分 A（数字闭环，只许标 `numerically_checked`）/ B（留出站，只写内插能力）/ C（独立真值，才许写"验证算法"）三级；C 级数据今天不存在。
+
+**另外两条硬事实**：单次通过只能观测接触斑扫过的窄带（10–20 mm），故反演对象改为 **`z(s,y)|Ω_obs`**（Ω_obs 由 `history.csv` 的 `lever_y` 统计生成，不许估算）；全三维面用逐列有限差分不可行——1 s 仿真 **707 s**、161 站雅可比 **94 h/次迭代**，只能走准静态 + 代理模型。
+
+**待批准三项**（任务书 §10）：Ω_obs 定义（接触带面 vs 全平面）、主门用绝对误差、C 级真值（≥3 区段轨面实测）。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -1954,6 +1973,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [STRAIGHT_RANDOM_SPEED_2026-10-28.md](STRAIGHT_RANDOM_SPEED_2026-10-28.md) | 直向过岔 + 随机速度：波磨反演的六段判定（第 6 门的直向半边） |
 | [SWITCH_TWO_BODY_2026-10-29.md](SWITCH_TWO_BODY_2026-10-29.md) | 把降低值装进算例：双体尖轨区（2026-10-29，第 213 轮） |
 | [TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md](TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md) | 任务书：用轴箱加速度反演钢轨型面不平顺（2026-10-23 22:40 → 2026-10-24 10:00） |
+| [TASKBOOK_FINAL_GOAL_2026-10-31.md](TASKBOOK_FINAL_GOAL_2026-10-31.md) | 最终任务书：反演道岔结构不平顺（尖轨/心轨走行面）2026-10-31 |
 | [TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md](TASKBOOK_FLEXIBLE_WHEELSET_NIGHT_2026-10-25.md) | 任务书：柔性轮对嵌入 + 反演链路（2026-10-25 夜） |
 | [TASKBOOK_INVERSION_NIGHT_2026-10-26.md](TASKBOOK_INVERSION_NIGHT_2026-10-26.md) | 任务书：长波与短波不平顺反演，以及问题到底出在哪里（2026-10-26 夜） |
 | [TASKBOOK_SHORTWAVE_INVERSION_2026-10-23.md](TASKBOOK_SHORTWAVE_INVERSION_2026-10-23.md) | 任务书：短波轨面反演（2026-10-23 拟定，待批准后执行） |

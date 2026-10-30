@@ -10,9 +10,9 @@
     "straight_rigid": {
       "coordinates": 0,
       "duration_s": 0.02,
-      "seconds": 3.498,
-      "history_sha256": "06928c9db944796d7d159b730a49b6ba07e37d93233aaaad98eb28fc8de5d2e1",
-      "history_bytes": 167762,
+      "seconds": 7.904,
+      "history_sha256": "295809cb24c8e24bd90701eec2bebf6fe1687d31d9dc8d7b5b536f00e995d0db",
+      "history_bytes": 165972,
       "result_status": "numerically_checked",
       "gates": {
         "solver_completed": true,
@@ -27,9 +27,9 @@
     "straight_flexible": {
       "coordinates": 0,
       "duration_s": 0.02,
-      "seconds": 130.352,
-      "history_sha256": "ab81290f5924c3a5ec2017949ed791e562f6b5135981ae3a6a76c52855a35fe9",
-      "history_bytes": 212771,
+      "seconds": 5.16,
+      "history_sha256": "7b1daef7e80664acda345c7a171efe4ac41fc574ff74332c4447ba72d953d2b2",
+      "history_bytes": 211050,
       "result_status": "numerically_checked",
       "gates": {
         "solver_completed": true,

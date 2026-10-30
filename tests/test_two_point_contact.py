@@ -34,7 +34,7 @@ pytestmark = pytest.mark.corpus
 
 CASE = case_dir() / "case_A_plain.json"
 ORACLE_CONTACT_N = 59_680.5769
-ORACLE_VERTICAL_M = -0.4628e-3
+ORACLE_VERTICAL_M = -3.3057783604e-04  # B048: fitted stiffness, 65.4661 um at 59 680.5769 N
 
 
 def _seated(*, two_point: bool):

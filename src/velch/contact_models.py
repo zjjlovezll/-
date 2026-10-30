@@ -70,7 +70,7 @@ class ContactParameters:
     patch_slices: int = 5
     point_policy: str = "argmax"
     point_theta_m: float | None = None
-    stiffness_policy: str = "fixed_effective_radius"
+    stiffness_policy: str = "local_circular"
     ellipticity_correction: float = 1.0
     wheel_rolling_radius_m: float = 0.43
     damping_policy: str = "fixed_coefficient"

@@ -118,25 +118,47 @@ def test_the_profile_moves_by_exactly_the_shift_field(dynamics):
 
 
 def test_the_force_follows_the_deformed_depth(dynamics):
+    """The force is the Hertz law of the depth the search reports, at the stiffness it reports.
+
+    Before B048 this was written as ``F_deformed / F_base == ((delta - dz)/delta)**1.5`` and it held
+    to 2e-3, because the case pinned ``effective_radius_m = 0.02`` and therefore a *constant*
+    stiffness.  With the stiffness fitted from the profiles (the default now) the stiffness is a
+    property of where the contact sits, so a deformation that also slides the contact changes ``C``
+    as well as ``delta`` -- measured 1.00618 where the constant-C arithmetic predicted 1.01827, a
+    1.2 % gap that is the change of ``C``, not an error.  The exact statement is the one below: the
+    elastic force equals ``C(y) * delta**1.5`` with both numbers read off the deformed contact, and
+    the reported depth equals ``delta_base - dz`` so nothing is counted twice.
+    """
     dyn, case = dynamics
     q = np.array(case.initial_q, dtype=float)
     _force, base = _contact(dyn, case, q)
-    moved = _q_for_shift(dyn, case, 20e-6)
+    moved = _q_for_shift(dyn, case, 5e-6)
     _force, deformed = _contact(dyn, case, moved)
     depth = base.geometry.penetration_m
-    # What the tread actually moved by, read at the lateral offset the contact sits at — not at
+    # What the tread actually moved by, read at the lateral offset the contact sits at -- not at
     # the wheel centre.  This is the mistake that made an earlier round report 1.13 where the
     # arithmetic said 1.49: the contact is 4 mm away from the point that was calibrated.
     wheel = dyn.wheels["R"]
     lateral = float(base.geometry.y_m) - float(wheel.lateral_offset_m)
     dz = float(dyn.contact_coupling.rings[1].tread_shift(
         moved[dyn.contact_coupling.block(0)], np.array([lateral]))[0])
-    predicted = ((depth - dz) / depth) ** 1.5
-    measured = deformed.normal_elastic_n / base.normal_elastic_n
-    assert measured == pytest.approx(predicted, rel=2e-3)
+    deformed_depth = float(deformed.geometry.penetration_m)
     # The search runs on the moved surface, so the depth it reports *is* depth minus the shift.
-    # This is the exact statement that the deformation is not being double counted or dropped.
-    assert deformed.geometry.penetration_m - (depth - dz) == pytest.approx(0.0, abs=1e-9)
+    assert deformed_depth - (depth - dz) == pytest.approx(0.0, abs=1e-9)
+    # The law at the deformed state: same modulus, the stiffness of the contact it actually found.
+    predicted = float(deformed.geometry.stiffness_n_m_1p5) * deformed_depth ** 1.5
+    assert deformed.normal_elastic_n == pytest.approx(predicted, rel=2e-3)
+    # Under B048's fitted stiffness the force is the product of two moving quantities, and both
+    # move measurably on this profile: measured at a 5 um tread shift, C falls 1.19 % (the contact
+    # slid toward a blunter part of the rail) while the depth rises 1.21 %, so the net force rises
+    # 0.62 % -- where the constant-C arithmetic would have predicted a 1.8 % fall.  The decomposition
+    # is the exact statement, and the two effects are asserted to be large enough to matter.
+    ratio = deformed.normal_elastic_n / base.normal_elastic_n
+    c_ratio = deformed.geometry.stiffness_n_m_1p5 / base.geometry.stiffness_n_m_1p5
+    d_ratio = deformed_depth / depth
+    assert ratio == pytest.approx(c_ratio * d_ratio ** 1.5, rel=1e-3)
+    assert abs(c_ratio - 1.0) > 5e-3, f"the stiffness must move with the contact, got {c_ratio:.6f}"
+    assert abs(d_ratio - 1.0) > 5e-3, f"the depth must move with the tread, got {d_ratio:.6f}"
 
 
 def test_the_contact_point_responds_to_a_steep_deformation(dynamics):

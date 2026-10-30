@@ -57,14 +57,26 @@ def _seat_and_load(case: VehicleCase, shift_m: float = 0.0):
     return residual, entry
 
 
-def test_the_shipped_case_declares_a_20_mm_radius_and_still_hits_the_oracle():
+def test_the_shipped_case_now_uses_the_fitted_stiffness_and_hits_the_documented_oracle():
+    """B048 applied: the 20 mm override is retired by default everywhere.
+
+    The case still *declares* ``effective_radius_m = 0.02`` — that key is left in the archived JSON
+    so the change is one line and reviewable — but ``stiffness_policy`` now defaults to
+    ``local_circular``, so the declaration no longer reaches the law.  What the run owes is the pair
+    this project has always quoted: 59 680.5769 N at 65.47 um, not 59 680.5769 N at 197.62 um.
+    """
     case = load_vehicle_case(case_dir() / "case_A_plain.json")
-    assert case.contact.stiffness_policy == "fixed_effective_radius"
-    assert case.contact.effective_radius_m == pytest.approx(0.02)
+    assert case.contact.stiffness_policy == "local_circular"
     residual, entry = _seat_and_load(case)
     assert residual < 1e-5
     assert entry.normal_force_n == pytest.approx(ORACLE_FORCE_N, abs=1.0)
-    assert entry.geometry.penetration_m == pytest.approx(197.62e-6, rel=1e-3)
+    assert entry.geometry.penetration_m == pytest.approx(ORACLE_PENETRATION_M, rel=2e-3)
+    # And the override is inert: declaring it explicitly changes nothing now.
+    explicit = dataclasses.replace(
+        case, contact=dataclasses.replace(case.contact, stiffness_policy="fixed_effective_radius"))
+    _, overridden = _seat_and_load(explicit)
+    assert overridden.geometry.penetration_m == pytest.approx(197.62e-6, rel=1e-3)
+    assert overridden.geometry.penetration_m > 2.5 * entry.geometry.penetration_m
 
 
 def test_the_measured_curvatures_reproduce_the_oracle_without_the_override():

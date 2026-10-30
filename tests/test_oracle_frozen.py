@@ -30,7 +30,13 @@ pytestmark = pytest.mark.corpus
 CASE = case_dir() / "case_A_plain.json"
 
 ORACLE_CONTACT_N = 59_680.577
-ORACLE_VERTICAL_M = -0.4628e-3
+#: B048: with the stiffness fitted from the profiles (the default since the 20 mm override was
+#: retired) the same 59 680.5769 N sits at **65.4661 um** of penetration, which is the number this
+#: project has always quoted, and the body rides 132 um higher than under the 20 mm law
+#: (-3.3057783604e-04 instead of -4.628e-4).  The force is untouched; only the depth under it moved,
+#: because 20 mm was twelve times sharper than the wheel/rail pair the case actually carries
+#: (R* = 0.5501 m measured at the contact).
+ORACLE_VERTICAL_M = -3.3057783604e-04
 STATIC_RESIDUAL_TOLERANCE_N = 1.0e-6
 
 

@@ -1592,7 +1592,7 @@ def _load_per_wheel(rails, loads) -> dict[tuple[int, str], float]:
 
 
 def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,
-                              rounds: int = 12) -> np.ndarray:
+                              rounds: int = 20) -> np.ndarray:
     """Put the modal coordinates where the static contact force holds them.
 
     A flexible wheelset started at ``q = 0`` is a wheel whose tread has not yet been pressed in
@@ -1604,7 +1604,9 @@ def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.nd
     The static state is the fixed point of ``K q = Phi^T f(q)``.  ``evaluate`` already returns
     ``force[modal] = Q(q) - K q`` at zero velocity, so ``K^-1 Q = q + K^-1 force[modal]`` and one
     pass is a fixed-point iteration whose contraction is the tread compliance times the contact
-    stiffness (about 0.5 for this wheelset).  Twelve passes leave the residual near 2e-4, and the
+    stiffness -- about 0.755 per pass once the stiffness is fitted from the profiles (B048 made
+    the contact stiffer, which is why twelve passes stopped reaching the target and twenty do),
+    and the
     caller alternates them with the vertical equilibrium so wheel height and tread deflection are
     consistent with each other rather than each solved against the other's stale value.
     """

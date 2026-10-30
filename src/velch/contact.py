@@ -80,7 +80,7 @@ def find_graph_contact(
     patch_slices: int = 5,
     point_policy: str = "argmax",
     point_theta_m: float | None = None,
-    stiffness_policy: str = "fixed_effective_radius",
+    stiffness_policy: str = "local_circular",
     effective_modulus_pa: float | None = None,
     effective_radius_m: float | None = None,
     ellipticity_correction: float = 1.0,

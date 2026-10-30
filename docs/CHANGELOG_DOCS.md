@@ -1832,6 +1832,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
+| [EFFECTIVE_RADIUS_RETIRED_2026-10-30.md](EFFECTIVE_RADIUS_RETIRED_2026-10-30.md) | 20 mm 等效半径退役：模型终于在自己写的 oracle 上运行（B048，选项 A） |
 | [ELEMENT_CATALOGUE_2026-10-23.md](ELEMENT_CATALOGUE_2026-10-23.md) | 元件目录与 Simpack 对照 |
 | [EVIDENCE_MAP.md](EVIDENCE_MAP.md) | 证据地图：这一版凭什么可以说「可以发布」 |
 | [FLEXIBLE_WHEELSET_PORT_2026-10-24.md](FLEXIBLE_WHEELSET_PORT_2026-10-24.md) | 柔性轮对移植：SDITT 的数据契约与我们的落点（2026-10-24） |
@@ -5329,3 +5330,12 @@ P1 全靠一条映射（表里「距 FSR」= `里程 − 50 m`，且点名断面
 ### 第 236 轮 — B048：直向算例的 20 mm 等效半径把横向做硬了 12 倍
 
 `case_A_plain.json` 声明 `effective_radius_m = 0.02`，而断面拟合给出 `R_wheel 1273.65 mm / R_rail 295.27 mm`、`R* = 0.5501 m`。换成按曲率的 `local_circular`：贯入 197.62 → **65.47 µm**（正是冻结 oracle）、法向力同为 59.681 kN、横移 1/2/4 mm 卸载到 32.6 / 7.7 / **0 kN**。结论：竖向标定**不需要**那个 20 mm 覆盖；横向的症结是注册（轮心到轨冠 6.8 mm），不是法向律。另更正上一轮"软 1100 倍"为单位错误（实测 389.6 kN/mm vs 模型 453 kN/mm，差 14 %）；并确认 `find_strip_contact` 不在生产路径上（只有 `find_graph_contact`），因此"候选 3 窗口"结构上测不到。
+
+### 第 237 轮 — 20 mm 等效半径退役（B048，选项 A）
+
+`stiffness_policy` 默认改为 `local_circular`（三处签名），`_settle_modal_coordinates` 的
+`rounds` 12→20（让步因子 0.755/次）。实测：力 59 680.57685863 N 不变、贯入 197.62 → **65.4661 µm**
+（正是文档 oracle）、`R* = 0.55010 m`、轮对高 132 µm。五个测试文件同步（`ORACLE_VERTICAL_M`
+改为 `-3.3057783604e-04`；模态力律改写为按实测 C 与实测深度，因为 C 现在随接触位置变）。基线
+重新冻结：`straight_rigid 295809cb24c8e24b`、`straight_flexible 7b1daef7e80664ac`。
+未解决：横向注册（1 mm 卸载 45 %）、B045。

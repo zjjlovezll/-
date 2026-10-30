@@ -1775,6 +1775,53 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 239 轮 — M0 关闭：尖轨降低值被注入了第二遍（B049），逐体归属本身是对的
+
+M0 的两条硬门用一次运行同时判定，结论是**归属门通过、几何门失败**——而失败的样子（尖轨在埋深 13 mm 处顶起 1.08 MN）先被误读成"归属记错"，最后定位到建库脚本把设计降低值写了两遍。新增 [BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md](BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md)。
+
+**M0-1 逐体归属：通过，而且是逐位相等**
+
+`scripts/s97_body_attribution.py` 在运行期间接管 `versus.merge_contact_responses` 与 `BODY_CONTACT_HOOK`，按调用序号把"各体之和"与"合轨总力"配对。0.85 s / 1701 帧 / **912 928 对**，`max |sum(bodies) − merged| / merged = 0.000e+00`（门 1e-9）。⇒ 历史上那条"尖轨在 50.627 m 就吃到 69.69 kN"**不是**归属记账错。
+
+**M0-2 几何门：失败，1 079 365 N**
+
+`tests/test_body_attribution.py` 把前轴放到 51.978 m（尖轨区内 1.4 m）断言尖轨不承载，实测 `axle1_right: the blade carries 1079365.53873064 N while it is still millimetres down`（18× 均分）。逐站读冠（`max(z)`，`z` 向上为正）后原因清楚：**52 m 处尖轨比基本轨高 3.313 mm**，车轮真骑在尖轨上。
+
+**根因 B049：降低值在断面里，建库又加了一遍**
+
+站表实测 `z_offset_m = 0.01494`（按 3 mm 宽插值到 14.94 mm）+ `z_sign = −1`，而断面本身已经含降低值：
+
+| 断面 | `z_offset_m` | 冠 `max(z)` | 相对基本轨 +0.072 |
+|---|---|---|---|
+| `zjg-…-3`（3 mm 宽） | **0** | **−14.935 mm** | **−15.007**（设计 14.94 ✔） |
+| `zjg-…-3` | +0.01494 | +0.005 | −0.067（被抬到齐平） |
+| `zjg-…-30` | **0** | −1.159 | −1.231（设计 1.16 ✔） |
+| `zjg-…-72` | **0** | +0.094 | +0.022（设计 −0.09 ✔） |
+
+`s85_db_case.py` 的 `with_lowering()` 依据的注释读的是 `min(z)`（断面底边），才得出"抄过来与基本轨齐平、需补偏移"的错误结论。修法：删 `BLADE_LOWERING_MM` / `blade_lowering_m()` / `with_lowering()`（连同只服务它的 `numpy` 顶层导入），尖轨站表原样装载、`z_offset_m = 0`；重建 `cases/straight.json`（139 kB）与 `cases/diverging.json`（141 kB），站数不变（left 76 / stock 76 / blade 161 / frog 65）。
+
+**修后几何（`max(z)` 判据）**：尖端 **−15.007 mm**、首触（gap = 65.4661 µm）**57.733 m**、冠齐平 **58.423 m**、全程最多高过基本轨 **+0.021 mm**。五种"尖轨何时到走行面"的读法并存（断面首触 57.733 / 断面齐平 58.423 / SDITT 里程表 57.019 / 宽度插值 64.9 / 旧预注册 68.16），旧预注册被断面几何否掉 10 m——这条留给 M3 仲裁。
+
+**修后 0.85 s 运行（206 s 墙钟、1701 帧、七门 7/7）**
+
+```
+axle1_right blade 首载 58.128 m（1.018 kN）峰值 41.72 kN @ 59.731 m
+axle2_right blade 首载 58.127 m（1.014 kN）峰值 41.67 kN @ 59.731 m
+axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处降到 19.27 kN
+```
+尖轨首载比断面首触晚 **+0.395 m**（1 kN 检测门在 6.4 m 坡道上的必然结果），59.731 m 处 **67.6 % 载荷已转移到尖轨**——这正是后续要反演的观测量。
+
+**新增工具与守卫**
+
+- `scripts/s98_m0_verdict.py`：纯几何先算（5 mm 步长、`flush` 取**第一个** gap ≥ 0，不再用全局 `argmin(|gap|)`——坡道后两冠在几十微米内摆动会把最小值骗到 71.003 m），再读运行并落 `scratch/s98/m0_verdict.json`。
+- `scripts/s99_run_archive.py`：代理模型数据的唯一入口，`run_id` 只由输入（route / 速度 / 时长 / 步长 / case sha256）决定，落 `series.npz`（含 `accelerations (n,31)`，`axle1_z_acc` 是主观测量）、`meta.json`、`manifest.json`、`index.jsonl`。
+- `conftest.py`（根级，新建）：本机 `%TEMP%\pytest-of-<user>` 已坏死（`os.listdir`、`icacls`、`rename` 全部 WinError 5），`tmp_path` 在 fixture 阶段直接 PermissionError，`tests/test_assets.py` 5 项全 ERROR——与代码无关。守卫在 `tmp_path_factory` 解析 base 之前探测该目录，不可列就把 `PYTEST_DEBUG_TEMPROOT` 指到 `scratch/pytest_tmp`。修后 `test_assets` 6 passed。
+- 测试：`tests/test_body_attribution.py` 4 项（逐体之和、钩子逐体、埋深不承载、B049 几何回归）；`tests/test_run_archive.py` 3 项。合计与 `test_assets` 一起 **13 passed in 4.85 s**。
+
+**影响面**：`cases/*.json` 摘要已变，`scratch/s86/*` 与 `s87` 的 −10.03 / −17.53 m 读数作废；求解器与冻结物理未动（七门 7/7、`freeze_baseline --check` 复核）。
+
+**本轮成本实测**：0.01 s 仿真 2.2 s 墙钟、0.85 s 206 s ⇒ **≈240 s / 模拟秒**（含座椅）。
+
 ### 第 238 轮 — 最终任务书：把"精度 90%"改写成可判定门，并把四件模型装进一个算例
 
 用户下达最终目标（反演尖/心轨走行面、与 PRR 拟合面逐点对照、精度 ≥90% 验证算法、再扩展到随机与波磨）。本轮只做三件事：写任务书、核实现状、把待批准项摆到桌面上。新增 [TASKBOOK_FINAL_GOAL_2026-10-31.md](TASKBOOK_FINAL_GOAL_2026-10-31.md)。
@@ -1816,6 +1863,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [BAND_CAPABILITY_2026-10-26.md](BAND_CAPABILITY_2026-10-26.md) | 分带反演能力表：修掉三处测量错误之后 |
 | [BAND_CLAIM_CLASS_2026-10-28.md](BAND_CLAIM_CLASS_2026-10-28.md) | 带幅值必须带"标定谱类"：从约定变成构造约束 |
 | [bench_toolchain_design.md](bench_toolchain_design.md) | Velch 性能基准与剖析工具链（v1 最小可用设计） |
+| [BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md](BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md) | 设计降低值被注入两次：尖轨比基本轨高 3.3 mm（B049） |
 | [BUGS.md](BUGS.md) | 缺陷账本（BUGS） |
 | [CAPABILITY_INVENTORY_2026-10-20.md](CAPABILITY_INVENTORY_2026-10-20.md) | 能力清单：现在的 Velch 到底准备好了什么（2026-10-20） |
 | [COMPUTE_BUDGET_2026-10-19.md](COMPUTE_BUDGET_2026-10-19.md) | Velch 计算效率：与 Simpack 的同工况对比、热点归因与提速路线 |

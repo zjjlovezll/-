@@ -1927,6 +1927,7 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 | [S7D_DISPLACEMENT_2026-10-24.md](S7D_DISPLACEMENT_2026-10-24.md) | S7d：车体↔轴箱相对位移能救 2 m 带吗——不能，而且否掉它的数字解释了文献为什么能 |
 | [S7E_LONGWAVE_2026-10-24.md](S7E_LONGWAVE_2026-10-24.md) | S7e：长波段（20 m / 40 m）上相对位移真的带信号了——可它买不到精度 |
 | [SAME_MODEL_COMPARISON_2026-10-22.md](SAME_MODEL_COMPARISON_2026-10-22.md) | 同模型效率对比：为什么不能直接吃 SDITT 的 6204 阶，以及怎么才算公平 |
+| [SDITT_LINES_READER_2026-10-30.md](SDITT_LINES_READER_2026-10-30.md) | 照 SDITT 的做法读三条轨线：降低值全在断面里（2026-10-30） |
 | [SDITT_TRACK_PROFILE_USAGE_2026-10-30.md](SDITT_TRACK_PROFILE_USAGE_2026-10-30.md) | SDITT 是怎么用这套道岔轨道的（第 224 轮，学习而非猜） |
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |
@@ -5290,3 +5291,6 @@ P1 全靠一条映射（表里「距 FSR」= `里程 − 50 m`，且点名断面
 ### 第 226 轮 — 用"最平的一段"证明断面方向，并给出新文件名的图
 
 不依赖任何外部约定：**走行面是轮廓里最平的部分**。`zjg-72` 有 **86 点**近水平段落在 `z ≈ −0.06 mm`，`zjg-30` 的 3 点水平段在 `+1.16 mm`，`zjg-3` 的 2 点在 `+14.94 mm` ⇒ `z` 向下为正、轨顶在 0，两处降低值成立。另记：整个语料里最高的断面就是 **23.14 mm**（只有轨头），所以图里永远看不到轨腰与轨底。新增 `scripts/s80_orientation_check.py`（可复算判据）与 `scratch/s80_orientation_verified.png`（新文件名，避开浏览器缓存）。
+### 第 227 轮 — 照 SDITT 读三条轨线：降低值在断面里，起点预注册为 57.019 / 104.395 m
+
+解析 `07(009)-Mileage` 的三张表（76 / 161 / 68 行，按 stem 索引 697 个断面，0 缺失），读出冠高：基本轨全程 −0.07 mm；尖轨从 +14.94 mm（50.578 m）爬到齐平 **57.019 m**；长心轨从 +13.70 mm（103.280 m）爬到 **104.395 m**。与旧算例"图纸表 + 侵入阈值"推出的 68.15 m 差 11.1 m，原因量化（图纸 23 mm@0 宽度 vs 几何 14.94 mm@3 mm 宽度）并留待零不平顺运行裁决。新增 `scripts/s81_sditt_lines.py`、`docs/SDITT_LINES_READER_2026-10-30.md`。

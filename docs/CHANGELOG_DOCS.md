@@ -2077,6 +2077,25 @@ the same estimator gives +13.7 % on the peak and p95 15.1 um (0.23 x the static 
 peak 0.14 m from truth. Recorded for M7: parametrise by amplitude (solve for z inside the contact
 model) instead of tabulating one amplitude's samples, and keep masking frames where the blade carries
 nothing -- those are unobserved, not zero.
+## Round 252 - three estimators for one bump, and why one pass cannot give its amplitude (M5 step 3)
+
+Added `scripts/s114_parametric_split.py`, `docs/THREE_ESTIMATORS_2026-10-31.md` and
+`tests/test_parametric_split.py`. Two further estimators are tested against the same three known bumps
+and the same pre-registered gates:
+
+  T  monotone table (round 251)      in range: peak +13.7 %, p95 15.0 um, station 0.14 m
+                                     out of range: clamps (76.5 / 101.7 for 100 / 200 um)
+  P  two-parameter tanh, leave-one-out   extends past its samples but inverts badly near sigma = 1:
+                                     peaks 127.6 / 217.5 / 227.1 um for 50 / 100 / 200 um -- 0/3 folds pass
+  S  zero-parameter transfer station   z = d(s*): 21.2 / 36.9 / 60.4 um against 48.6 / 93.0 / 167.8 um
+
+The single number behind all three failures: the gap at which the load halves is 27.4 / 56.1 / 107.4 um
+below flush for the three amplitudes, i.e. it moves, because the stock is being unloaded at the same time
+(round 250: its zero-force frames go 0 / 37 / 161). So the split is not a function of the gap alone and
+any sigma = f(u) estimator is mis-specified once the bump unloads the stock. Recorded for M7: put the
+contact/load-transfer model inside the inversion, and treat a single pass as one transfer-station
+equation -- the ensemble of >= 3 lateral offsets that M4's arithmetic already demanded is also what the
+amplitude needs.
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2274,6 +2293,7 @@ nothing -- those are unobserved, not zero.
 | [TASKBOOK_INVERSION_NIGHT_2026-10-26.md](TASKBOOK_INVERSION_NIGHT_2026-10-26.md) | 任务书：长波与短波不平顺反演，以及问题到底出在哪里（2026-10-26 夜） |
 | [TASKBOOK_SHORTWAVE_INVERSION_2026-10-23.md](TASKBOOK_SHORTWAVE_INVERSION_2026-10-23.md) | 任务书：短波轨面反演（2026-10-23 拟定，待批准后执行） |
 | [TASKBOOK_TURNOUT_SOFTWARE_2026-10-29.md](TASKBOOK_TURNOUT_SOFTWARE_2026-10-29.md) | 道岔动力学软件：剩余开发任务书（2026-10-29） |
+| [THREE_ESTIMATORS_2026-10-31.md](THREE_ESTIMATORS_2026-10-31.md) | Three estimators for one bump, and why one pass cannot give its amplitude (M5, step 3) |
 | [THREE_LINE_CASE_2026-10-30.md](THREE_LINE_CASE_2026-10-30.md) | 照 SDITT 组三条线算例：几何装得进，座椅卡在左右基准（2026-10-30） |
 | [TONE_CALIBRATION_2026-10-28.md](TONE_CALIBRATION_2026-10-28.md) | 单音标定 3/8：不是"传递测不准"，是"多音不满足叠加" |
 | [TRACK_IRREGULARITY_2026-10-23.md](TRACK_IRREGULARITY_2026-10-23.md) | 轨道不平顺进求解器（0.4.31 前的功能层，2026-10-23） |

@@ -1,0 +1,90 @@
+{
+ "model": "sigma = 0.5*(1 - tanh((u-u0)/w)), u = d - z",
+ "gates": {
+  "relative_limit": 0.02,
+  "absolute_limit_m": 2.2e-05,
+  "station_limit_m": 0.2,
+  "floor_m": 0.0005,
+  "calibration_share": 0.5
+ },
+ "rows": [
+  {
+   "held_out_um": 50.0,
+   "calibration_um": [
+    100.0,
+    200.0
+   ],
+   "u0_um": -10.72633115068381,
+   "w_um": 80.43108790357493,
+   "peak_true_m": 4.9999999999999996e-05,
+   "peak_estimate_m": 0.00012757795944407345,
+   "relative_error": 0.15515591888814692,
+   "p95_error_m": 6.638506287587048e-05,
+   "peak_station_m": 58.51111111111111,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": true,
+   "estimated_frames": 436
+  },
+  {
+   "held_out_um": 100.0,
+   "calibration_um": [
+    50.0,
+    200.0
+   ],
+   "u0_um": -10.41257006647817,
+   "w_um": 68.86165843382555,
+   "peak_true_m": 9.999999999999999e-05,
+   "peak_estimate_m": 0.00021751497839072616,
+   "relative_error": 0.23502995678145233,
+   "p95_error_m": 3.408100616843359e-05,
+   "peak_station_m": 58.71111111111111,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": false,
+   "estimated_frames": 440
+  },
+  {
+   "held_out_um": 200.0,
+   "calibration_um": [
+    50.0,
+    100.0
+   ],
+   "u0_um": -15.2439970898287,
+   "w_um": 44.434972563419805,
+   "peak_true_m": 0.00019999999999999998,
+   "peak_estimate_m": 0.00022705804427158407,
+   "relative_error": 0.05411608854316818,
+   "p95_error_m": 8.66120605016072e-05,
+   "peak_station_m": 58.022222222222226,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": false,
+   "estimated_frames": 339
+  }
+ ],
+ "transfer_station": [
+  {
+   "amplitude_um": 50.0,
+   "station_m": 58.21111111111111,
+   "z_estimate_m": 2.1172945326278635e-05,
+   "z_true_m": 4.857188926132726e-05,
+   "error_m": -2.7398943935048626e-05
+  },
+  {
+   "amplitude_um": 100.0,
+   "station_m": 58.044444444444444,
+   "z_estimate_m": 3.6904722222222156e-05,
+   "z_true_m": 9.30475691054787e-05,
+   "error_m": -5.614284688325655e-05
+  },
+  {
+   "amplitude_um": 200.0,
+   "station_m": 57.78888888888889,
+   "z_estimate_m": 6.043461279461233e-05,
+   "z_true_m": 0.00016779355360308312,
+   "error_m": -0.00010735894080847079
+  }
+ ],
+ "verdict": "0/3 held-out amplitudes meet the absolute gate, none of the folds meets all three"
+}

@@ -198,6 +198,17 @@ class RunSettings:
     vehicle placed once cannot seat on both: measured 4 of 8 wheels carrying load at
     30 m until the seat is restricted to the through group.
     """
+    seat_lateral: bool = False
+    """Also put each wheelset where its own net lateral force vanishes.
+
+    The vertical seat solves ``z`` only.  On a *flexible* wheelset the tread deflects
+    asymmetrically -- measured on the one-set turnout case at 80 km/h: left contact tilt
+    ``+0.024782`` against right ``-0.021744``, so the seated state carries a net ``+736.5 N``
+    (per axle ``+184 N``) and the whole vehicle walks ``+0.73 mm`` in 0.40 s with zero initial
+    lateral velocity.  The equilibrium is a scalar problem *per wheelset* (find ``y`` with
+    ``F_y = 0``), which this flag solves after the vertical/modal seat.  Off by default so every
+    frozen baseline keeps its numbers bit for bit.
+    """
     curve_geometry: bool = False
     # Place the vehicle on the sampled track's own centreline and tangent.  A turnout's diverging
     # route is curved through its station table, not through curve_radius_m, so without this the

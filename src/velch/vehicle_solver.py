@@ -1645,6 +1645,63 @@ def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.nd
     return settled
 
 
+def _seat_lateral(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,
+                  *, tolerance_n: float = 1.0, max_iterations: int = 12,
+                  probe_m: float = 2.0e-4) -> tuple[np.ndarray, float]:
+    """Put every wheelset where its own net lateral contact force vanishes.
+
+    ``_seat`` solves ``z`` only, so a wheelset whose two contacts tilt by different amounts starts
+    with a net lateral force and walks sideways.  Measured on the one-set turnout case (flexible
+    wheelset, 80 km/h, zero initial lateral velocity and yaw): left tilt ``+0.024766`` against
+    right ``-0.021802``, net ``+717.88 N``, drift ``+0.73 mm`` in 0.40 s.
+
+    Two limits are measured and are why the flag is opt-in and off:
+
+    * one unknown (``y``) converges to ``0.2 N``, but the modal settle that follows restores
+      ``+1217 N`` -- the tread deflection and the lateral position are coupled, and alternating
+      them does not contract;
+    * adding ``roll`` as a second unknown is not a probe at fixed ``z``: rolling a wheelset by
+      ``0.2 mrad`` lifts one wheel off the rail (4 of 8 contacts), and the resulting 2x2 Newton
+      diverges to ``y = -4.6 mm`` with a ``6.2e4 N`` residual.
+
+    The lateral force itself is mostly a *sampling* artifact of the 282-point wheel profile:
+    resampling the same geometry 4x drops it to ``+238.11 N`` (see ``s101 --wheel-density``).  Use
+    that first; this routine is kept because it is the measured check that ``y`` alone is not the
+    missing unknown.
+    """
+    state = np.array(q, dtype=float)
+    axles = sorted({rail.axle_index for rail in case.rails})
+    indices = np.array([dynamics.topology.require(f"wheelset{index + 1}", "y") for index in axles])
+
+    def residuals(candidate: np.ndarray) -> np.ndarray:
+        # The contact search carries a seed/hysteresis memory, so two evaluations at different
+        # ``y`` are not two samples of the same function unless the memory is put back.
+        snapshot = dynamics.snapshot_contact_state()
+        try:
+            _, contacts = dynamics.evaluate(0.0, candidate, v)
+            force = np.zeros(len(axles))
+            for rail in case.rails:
+                response = contacts[rail.id]
+                if response.active:
+                    force[axles.index(rail.axle_index)] += float(response.wheel_force_y_n)
+            return force
+        finally:
+            dynamics.restore_contact_state(snapshot)
+
+    current = residuals(state)
+    for _iteration in range(max_iterations):
+        if float(np.max(np.abs(current))) <= tolerance_n:
+            break
+        trial = state.copy()
+        trial[indices] += probe_m
+        slope = (residuals(trial) - current) / probe_m
+        safe = np.where(np.abs(slope) > 1.0, slope, 1.0)
+        step = np.clip(np.where(np.abs(slope) > 1.0, -current / safe, 0.0), -2.0e-3, 2.0e-3)
+        state[indices] += step
+        current = residuals(state)
+    return state, float(np.max(np.abs(current)))
+
+
 def travel_mileage_m(case: VehicleCase, t_s: float) -> float:
     """Mileage of the vehicle reference point at ``t_s``, for anything written to disk.
 
@@ -1773,6 +1830,16 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         for _round in range(2):
             q = _settle_modal_coordinates(dynamics, q, v)
             q, static_residual_n = _seat(case, dynamics, q, v)
+        # The lateral seat is the third static unknown.  The flexible tread deflects by different
+        # amounts on the two sides (tilt +0.024782 / -0.021744), so a state seated in z alone
+        # carries +736.5 N and translates +0.73 mm in 0.40 s.  Solving it changes the load split,
+        # which changes the tread deflection, which changes the lateral force -- hence the same
+        # alternation as the modal rounds.
+        if bool(getattr(case.run, "seat_lateral", False)):
+            for _round in range(2):
+                q, _lateral_residual_n = _seat_lateral(case, dynamics, q, v)
+                q = _settle_modal_coordinates(dynamics, q, v)
+                q, static_residual_n = _seat(case, dynamics, q, v)
     # The opt-in alignment is applied *after* the seat: the vehicle stands on the equivalent
     # straight first, then it is set on the design line it is about to run along.  Applying it
     # before the seat put the wheels 45 mm beside straight rails.

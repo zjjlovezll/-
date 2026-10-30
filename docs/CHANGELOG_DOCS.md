@@ -1775,6 +1775,38 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 246 轮 — 横向力不是蠕滑：切向严格为零，67 % 是轮对采样的阶梯（B050）
+
+第 245 轮把 +718.4 N 净横向力归给"切向/蠕滑贡献不对称"。本轮直接把它量了，**归因错了**，并顺手把 M2 的漂移砍到 0.10 mm。新增 `scripts/s107_lateral_creep.py`、`scripts/s108_lateral_seat.py`、[LATERAL_FORCE_SAMPLING_2026-10-31.md](LATERAL_FORCE_SAMPLING_2026-10-31.md)；`s101_one_set_case.py` 新增 `--wheel-density` 与 `--seat-lateral`；`s106_lateral_drift.py` 不再钉死旧 run id。
+
+**切向严格为零**：座椅态逐轨打印，八个接触 `slip_lateral = 0.000000`、`tang = Fy − N·n_y = 0.00 N`，`Fy` 与 `N·n_y` 逐位相等（左 +1490.40、右 −1310.80）。所以净 +718.38 N **全部**是左倾角 `+0.024766` 比右 `-0.021802` 大 0.002965（12 %），不是蠕滑推的。复刻 `_integrate_vehicle` 的初始状态（`_seat` → 2×(`_settle_modal_coordinates` + `_seat`)）后归档 t=0 帧被逐位复现。
+
+**也不是座椅没做完**：交替 0…8 轮，净力 `-0.00 → +668.54 → +718.37 → … → +737.78 N` 单调收敛，固定点在 +737.8 N。
+
+**67 % 是采样（B050）**：把 `LMA.prw`（282 点、点距 0.5 mm）沿原折线共线加密——几何一字不改——再座椅：
+
+| 采样 | 点数 | tilt 和 | 净力 | 每轴 |
+|---|---|---|---|---|
+| 1× | 282 | +0.002963 | **+717.88 N** | +179.47 |
+| 4× | 1 128 | +0.000967 | **+238.11 N** | +59.53 |
+| 10× | 2 820 | +0.000965 | +237.87 N | +59.47 |
+| 40× | 11 280 | +0.000966 | +238.01 N | +59.50 |
+
+**4× 之后收敛**，所以 480 N 是"接触搜索取最深采样点"把倾角量化成 0.004 台阶造成的假力；两侧落点相距 0.1 mm 正好跨在台阶两侧。
+
+**横向平衡不是加一个标量方程**：`_seat_lateral`（只解 `y`）内部收敛到 0.208 N，但随后的模态沉降把倾角差拉回 `+0.005246`、净力回 **+1216.92 N**；交替 6 轮 `y` 涨到 +1.04 mm、残差在 −457…+846 N 跳。加 `roll` 更糟：固定 `z` 下 `±0.2 mrad` 就抬起一侧车轮（8 个接触剩 4 个，净力 +33 342/−32 232 N），2×2 牛顿发散到 `y = −4.6 mm`、残差 6.2e4 N。⇒ `(y, roll)` 必须**与竖向座椅一起解**，本轮不硬塞。
+
+**时程验证**：规范算例改用 4× 车轮（`LMA_x4.prw`，不动 `LMA.prw`——51 坐标基线用的是它），0.40 s、80 km/h：
+
+| 算例 | wheelset1..4 漂移 (mm) | 斜率 (mm/s) | 七门 |
+|---|---|---|---|
+| 282 点（`8886e594`） | +0.7128 / +0.7305 / +0.6947 / +0.6937 | 1.73–1.83 | 7/7 |
+| **1 128 点（`fcd6f093`）** | **+0.0946 / +0.0999 / +0.0977 / +0.0976** | **0.24–0.25** | 7/7 |
+
+**7.3 倍**。预注册门照实报：`L1a` ≤1.0 mm **PASS（0.0999）**、`L1b` 不得单调 **FAIL（仍单调）**、`L2` 同号 **PASS（4/4）**；另报更紧的 `|dy| ≤ 0.1 mm` = **0.0999 mm 压线**。所以只能说"67 % 是采样假力、已消掉，剩余 0.10 mm 与 238 N 同源"，不能说"漂移已解决"。
+
+**测试**：`tests/test_wheel_sampling.py` 3 项（4× 点全部落在原折线上、偏差 ≤1e-6；规范算例指向 `LMA_x4.prw` 且 `run.seat_lateral` 缺省关闭；最新一组模型的 0.40 s 漂移 ≤0.25 mm），0.95 s 全过。`freeze_baseline --check` = **UNCHANGED**（`295809cb24c8e24b` / `7b1daef7e80664ac`）。
+
 ### 第 245 轮 — M2 时程：整车横向游走 0.73 mm / 0.40 s，源头是 +718 N 净横向力
 
 B047 退役后 M2 只剩时程问题。本轮**不新跑仿真**，只读已归档的 0.40 s 运行（801 帧、七门 7/7），并补上归档缺的一列。新增 `scripts/s106_lateral_drift.py`、[LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md)。
@@ -2029,6 +2061,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |
 | [INVERSION_VERDICT_2026-10-28.md](INVERSION_VERDICT_2026-10-28.md) | 实测反演的判定页（L0–L5） |
 | [LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md) | M2 时程：整车横向游走 0.73 mm/0.40 s，源头是 +718 N 的净横向力（2026-10-31） |
+| [LATERAL_FORCE_SAMPLING_2026-10-31.md](LATERAL_FORCE_SAMPLING_2026-10-31.md) | 横向力的来源：不是蠕滑，是采样的阶梯（B050） |
 | [LATERAL_REGISTRATION_BASELINE_2026-10-31.md](LATERAL_REGISTRATION_BASELINE_2026-10-31.md) | 横向注册的当前基线（M2 第一步）：对"最完备的车"重新量一遍，结果比旧数更糟 |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |

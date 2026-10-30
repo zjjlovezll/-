@@ -41,17 +41,63 @@ OUT = ROOT / "vehicles/turnouts/CN60-1100-1_18/cases/straight_one_set.json"
 VEHICLE_REF = "lib:CRH380A_M_axlebox.json"
 MODES_REF = "lib:modes/CRH3C_wheelset_fe.json"
 AXLES = (1, 2, 3, 4)
+LIB = ROOT / "vehicles" / "turnouts" / "CN60-1100-1_18" / "sections"
+WHEEL_SOURCE = LIB / "LMA.prw"
+
+
+def densify_wheel(copies: int) -> str:
+    """Write ``LMA_x<copies>.prw``: the same wheel, sampled ``copies`` times more finely.
+
+    The contact search takes the deepest *sample* of the profile, so the contact tilt is a step
+    function of the lateral position with a step set by the sampling distance.  Measured on the
+    one-set case (282 points, 0.5 mm): the two contacts tilt ``+0.024766`` and ``-0.021802`` and
+    the seated state carries ``+717.88 N``; at 4x the same geometry gives ``-0.023800`` and
+    ``+238.11 N``; 10x and 40x give ``+237.87`` and ``+238.01`` N, i.e. it converges.  The points
+    are added along the original polyline, so the *geometry* is unchanged -- only the sampling.
+
+    A new file rather than an edit of ``LMA.prw``: that file feeds the 51-coordinate cases whose
+    history is frozen, and a finer sampling would move their numbers.
+    """
+    if copies <= 1:
+        return "lib:turnouts/CN60-1100-1_18/sections/LMA.prw"
+    target = LIB / f"LMA_x{copies}.prw"
+    if not target.exists():
+        lines = WHEEL_SOURCE.read_text(encoding="utf-8", errors="ignore").splitlines()
+        start = next(i for i, ln in enumerate(lines) if ln.strip().startswith("point.begin"))
+        end = next(i for i, ln in enumerate(lines) if ln.strip().startswith("point.end"))
+        points = []
+        for ln in lines[start + 1:end]:
+            fields = ln.split("!")[0].split()
+            if len(fields) >= 2:
+                try:
+                    points.append((float(fields[0]), float(fields[1])))
+                except ValueError:
+                    continue
+        data = np.array(points, dtype=float)
+        arc = np.concatenate(([0.0], np.cumsum(np.hypot(np.diff(data[:, 0]), np.diff(data[:, 1])))))
+        grid = np.linspace(0.0, arc[-1], copies * len(data))
+        dense = np.column_stack((np.interp(grid, arc, data[:, 0]), np.interp(grid, arc, data[:, 1])))
+        body = [f"      {y:+.9e}   {z:+.9e}" for y, z in dense]
+        target.write_text(chr(10).join(lines[:start + 1] + body + lines[end:]) + chr(10),
+                          encoding="utf-8")
+    return f"lib:turnouts/CN60-1100-1_18/sections/LMA_x{copies}.prw"
 
 
 def build(base: pathlib.Path = BASE, vehicle_ref: str = VEHICLE_REF,
           modes_ref: str = MODES_REF, flexible: bool = True,
-          duration_s: float | None = None, speed_kmh: float = 80.0) -> dict:
+          duration_s: float | None = None, speed_kmh: float = 80.0,
+          wheel_density: int = 1, seat_lateral: bool = False) -> dict:
     raw = json.loads(base.read_text(encoding="utf-8"))
     case = copy.deepcopy(raw)
     if "vehicle" not in case:
         raise SystemExit(f"{base}: the base case has no 'vehicle' block to replace")
     case.pop("vehicle")
     case["vehicle_ref"] = vehicle_ref
+    if wheel_density > 1:
+        wheel_file = densify_wheel(wheel_density)
+        for wheel in case.get("wheels", []):
+            wheel["profile"]["file"] = wheel_file
+            wheel["profile"]["format"] = "prr"
     if flexible:
         case["flexible_wheelset"] = {"source": "file", "file": modes_ref,
                                      "axles": list(AXLES)}
@@ -76,6 +122,12 @@ def build(base: pathlib.Path = BASE, vehicle_ref: str = VEHICLE_REF,
     # which keeps one definition of the car and no duplicated scalar.
     run = dict(case["run"])
     run["speed_profile"] = {"constant": {"speed_kmh": float(speed_kmh)}}
+    if seat_lateral:
+        # The vertical seat solves z only; a flexible tread then tilts differently on the two
+        # sides (+0.024782 / -0.021744) and the vehicle walks 0.73 mm in 0.40 s.  The lateral and
+        # roll equilibrium is the third static unknown, and it is opt-in because every frozen
+        # baseline was measured without it.
+        run["seat_lateral"] = True
     if duration_s is not None:
         run["duration_s"] = float(duration_s)
     case["run"] = run
@@ -160,6 +212,12 @@ def main() -> int:
     ap.add_argument("--speed-kmh", type=float, default=80.0,
                     help="running speed written into run.speed_profile (override with --speed-kmh)")
     ap.add_argument("--dry", action="store_true", help="write the case, load it, print the dimension")
+    ap.add_argument("--wheel-density", type=int, default=1,
+                    help="sample the wheel profile N times more finely (geometry unchanged); "
+                         "282 points makes the right contact tilt quantised and adds a spurious "
+                         "net lateral force, measured 717.88 N at 1x against 238.11 N at 4x")
+    ap.add_argument("--seat-lateral", action="store_true",
+                    help="also solve each wheelset's lateral/roll static equilibrium")
     ap.add_argument("--seat", action="store_true", help="static vertical equilibrium + per-rail loads")
     ap.add_argument("--archive", action="store_true",
                     help="run it through scripts/s99_run_archive.py so the data is kept")
@@ -167,7 +225,8 @@ def main() -> int:
 
     case = build(args.base, args.vehicle_ref, args.modes,
                  flexible=not args.rigid_wheelsets, duration_s=args.duration,
-                 speed_kmh=args.speed_kmh)
+                 speed_kmh=args.speed_kmh, wheel_density=args.wheel_density,
+                 seat_lateral=args.seat_lateral)
     info = describe(case)
     for key, value in info.items():
         print(f"{key}: {value}")

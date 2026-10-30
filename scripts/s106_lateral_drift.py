@@ -30,7 +30,11 @@ from velch.vehicle import load_vehicle_case
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RUNS = ROOT.parent / "scratch" / "runs"
 CASE = ROOT / "vehicles" / "turnouts" / "CN60-1100-1_18" / "cases" / "straight_one_set.json"
-DEFAULT_RUN = "straight_one_set-080.00kmh-0.4000s-500us-8886e594"
+DEFAULT_RUN = None
+"""No pinned run id.  It used to point at the pre-densification case, and then a new run of the same
+duration silently read the old one -- the drift came back 0.7305 mm when the current case gives
+0.0999 mm.  The default is now "the latest one-set run of at least 0.40 s" from ``index.jsonl``.
+"""
 OUT = ROOT.parent / "scratch" / "s106"
 HOLD_TOL_M = 1.0e-3
 
@@ -49,8 +53,7 @@ def main() -> int:
     ap.add_argument("--run-id", default=None)
     ap.add_argument("--write", action="store_true")
     args = ap.parse_args()
-    run_dir = RUNS / args.run_id if args.run_id else (RUNS / DEFAULT_RUN if (RUNS / DEFAULT_RUN).is_dir()
-                                                      else latest_run())
+    run_dir = RUNS / args.run_id if args.run_id else latest_run()
     data = np.load(run_dir / "series.npz")
     meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
 

@@ -31,7 +31,13 @@ pytestmark = pytest.mark.corpus
 def measured():
     from velch.vehicle import load_vehicle_case
 
-    run_id = region.latest_one_set_run()
+    # Recompute the run the stored report was made from, not merely the newest 0.40 s+ run: a later
+    # run at another duration would make this test compare two different passes.
+    report = region.OUT / "obs_region.json"
+    if report.is_file():
+        run_id = json.loads(report.read_text(encoding="utf-8"))["run_id"]
+    else:
+        run_id = region.latest_one_set_run()
     run_dir = region.RUNS / run_id
     meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
     data = np.load(run_dir / "series.npz")

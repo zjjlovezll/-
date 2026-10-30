@@ -2045,6 +2045,19 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
   三条偏移的算术被钉住。`4 passed in 0.55 s`。
 - 文档 `docs/OBSERVED_REGION_2026-10-31.md`；任务书 §十一 M4 行与新增 §十八。
 
+## Round 250 - the forward operator on a known surface bump (M5 step 1)
+
+Added `scripts/s112_surface_sensitivity.py` and `docs/SURFACE_SENSITIVITY_2026-10-31.md`. A Gaussian
+bump (50/100/200 um, sigma 1.2 m at 58.5 m) on the blade body's stations was run through the canonical
+one-set case four times (0.60 s, 80 km/h, 1201 frames, 7/7 gates each). The axle-box response is
+visible (29-84 % of the baseline's own peak), localised to the bumped rail (L/R 0.14-0.18) and to the
+bumped station (peak within 1.0 m), but **not monotone**: the gain is 0.01273 -> 0.01859 -> 0.00924
+(m/s^2)/um. The reason is a branch switch, not a gain: the stock body drops out for 0 / 37 / 161 of
+the 314 crossing frames while the blade maximum goes 59.5 -> 61.5 -> 62.1 kN, and the static
+penetration is 63.70 um, so the linear regime ends at about 0.8 of it. Consequence recorded for M7:
+acceleration is the localiser, the per-body load split is the amplitude carrier. The run index now
+carries `notes` so a training set can be built from it without opening every `meta.json`.
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2233,6 +2246,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [STRAIGHT_LATERAL_B047_2026-10-29.md](STRAIGHT_LATERAL_B047_2026-10-29.md) | 直向横向：起点偏移是零，漂移是 B047（横向定位刚度 ~10³ 倍） |
 | [STRAIGHT_PAIR_2026-10-29.md](STRAIGHT_PAIR_2026-10-29.md) | 直向刚性算例：四个缺陷，一段 10 m 的干净运行 |
 | [STRAIGHT_RANDOM_SPEED_2026-10-28.md](STRAIGHT_RANDOM_SPEED_2026-10-28.md) | 直向过岔 + 随机速度：波磨反演的六段判定（第 6 门的直向半边） |
+| [SURFACE_SENSITIVITY_2026-10-31.md](SURFACE_SENSITIVITY_2026-10-31.md) | The forward operator's answer to a known surface bump (M5, step 1) |
 | [SWITCH_TWO_BODY_2026-10-29.md](SWITCH_TWO_BODY_2026-10-29.md) | 把降低值装进算例：双体尖轨区（2026-10-29，第 213 轮） |
 | [TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md](TASKBOOK_AXLEBOX_INVERSION_2026-10-23.md) | 任务书：用轴箱加速度反演钢轨型面不平顺（2026-10-23 22:40 → 2026-10-24 10:00） |
 | [TASKBOOK_FINAL_GOAL_2026-10-31.md](TASKBOOK_FINAL_GOAL_2026-10-31.md) | 最终任务书：反演道岔结构不平顺（尖轨/心轨走行面）2026-10-31 |

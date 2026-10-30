@@ -265,6 +265,9 @@ def main() -> int:
         "frames": int(arrays["times"].size),
         "gates": meta["gates"],
         "case_sha256": case_digest,
+        # The index is how a training set gets built later, so the note that says which campaign a
+        # run belongs to has to live here too; reading meta.json for every row would be worse.
+        "notes": dict(meta.get("notes", {})),
         "wall_s": wall_s,
         "path": str(out),
     })

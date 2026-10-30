@@ -1,0 +1,95 @@
+{
+ "baseline": "straight_one_set-080.00kmh-0.6000s-500us-55d6fd49",
+ "baseline_peak": 2.2063255837245497,
+ "bump": {
+  "centre_m": 58.5,
+  "sigma_m": 1.2
+ },
+ "rows": [
+  {
+   "amplitude_um": 50.0,
+   "peak_right": 0.6367127433870517,
+   "peak_left": 0.11672920098339151,
+   "peak_station_m": 58.544444444444444,
+   "rms_window": 0.2333046306687706,
+   "peak_gain_per_um": 0.012734254867741036,
+   "rms_gain_per_um": 0.004666092613375412,
+   "left_over_right": 0.18333102673968774,
+   "visible_fraction": 0.2885851245545556,
+   "branch": {
+    "frames": 314,
+    "stock": {
+     "min_kN": 0.3836869687023587,
+     "max_kN": 60.11345885895607,
+     "zero_frames": 0
+    },
+    "blade": {
+     "min_kN": 0.0,
+     "max_kN": 59.465334754588596,
+     "zero_frames": 82
+    }
+   },
+   "run_id": "one_set_bump050.0um-080.00kmh-0.6000s-500us-20295a3d"
+  },
+  {
+   "amplitude_um": 100.0,
+   "peak_right": 1.8586268160540547,
+   "peak_left": 0.26817188742376147,
+   "peak_station_m": 59.13333333333333,
+   "rms_window": 0.5927991246653372,
+   "peak_gain_per_um": 0.018586268160540546,
+   "rms_gain_per_um": 0.005927991246653373,
+   "left_over_right": 0.1442849554883223,
+   "visible_fraction": 0.8424082237746903,
+   "branch": {
+    "frames": 314,
+    "stock": {
+     "min_kN": 0.0,
+     "max_kN": 60.11345885895607,
+     "zero_frames": 37
+    },
+    "blade": {
+     "min_kN": 0.0,
+     "max_kN": 61.539417925067454,
+     "zero_frames": 68
+    }
+   },
+   "run_id": "one_set_bump100.0um-080.00kmh-0.6000s-500us-cad4db6b"
+  },
+  {
+   "amplitude_um": 200.0,
+   "peak_right": 1.8470126299081995,
+   "peak_left": 0.29647478039341535,
+   "peak_station_m": 59.5,
+   "rms_window": 0.6211873584291193,
+   "peak_gain_per_um": 0.009235063149540998,
+   "rms_gain_per_um": 0.0031059367921455966,
+   "left_over_right": 0.16051583816627762,
+   "visible_fraction": 0.8371441837655775,
+   "branch": {
+    "frames": 314,
+    "stock": {
+     "min_kN": 0.0,
+     "max_kN": 60.11345885895607,
+     "zero_frames": 161
+    },
+    "blade": {
+     "min_kN": 0.0,
+     "max_kN": 62.130905777143404,
+     "zero_frames": 46
+    }
+   },
+   "run_id": "one_set_bump200.0um-080.00kmh-0.6000s-500us-28051835"
+  }
+ ],
+ "monotone": false,
+ "peak_gain_spread": 2.012576184870411,
+ "linear_regime_amplitudes_um": [
+  50.0
+ ],
+ "linear_regime_spread": null,
+ "localised_side": true,
+ "localised_station": true,
+ "visible": true,
+ "verdict": "the forward operator answers a known surface bump, on the bumped rail and at the bumped station, but only monotonically while the stock keeps carrying the wheel"
+}

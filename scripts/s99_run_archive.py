@@ -146,6 +146,34 @@ def main() -> int:
             normals.append(float(response.normal_force_n) if response is not None and response.active else 0.0)
         normal[index] = normals
     arrays["normal_force_n"] = normal
+    # The merged rail force cannot answer "how much is on the blade", which is the observable the
+    # turnout inversion is built on, so the per-body split travels with the run.
+    # The merged rail force cannot answer "how much is on the blade", which is the observable the
+    # turnout inversion is built on, so the per-body split travels with the run.  Names come from
+    # ``result.body_ids``: only the bodies active at a station report, so the ids cannot be
+    # reconstructed from the rail's declared body list.
+    history = getattr(result, "body_contacts", None) or ()
+    id_history = getattr(result, "body_ids", None) or ()
+    if len(history) != len(id_history):
+        raise SystemExit(f"{len(history)} response frames but {len(id_history)} id frames")
+    body_labels: list[str] = []
+    for frame_ids in id_history:
+        for rail_id, names in frame_ids.items():
+            for name in names:
+                label = f"{rail_id}/{name}"
+                if label not in body_labels:
+                    body_labels.append(label)
+    body_normal = np.zeros((len(frames), len(body_labels)))
+    column_of = {label: index for index, label in enumerate(body_labels)}
+    for row, (frame, frame_ids) in enumerate(zip(history, id_history)):
+        for rail_id, responses in frame.items():
+            names = frame_ids.get(rail_id, ())
+            if len(names) != len(responses):
+                raise SystemExit(f"{rail_id}: {len(responses)} responses for {len(names)} body ids")
+            for name, response in zip(names, responses):
+                if response.active:
+                    body_normal[row, column_of[f"{rail_id}/{name}"]] = float(response.normal_force_n)
+    arrays["body_normal_force_n"] = body_normal
     np.savez_compressed(out / "series.npz", **arrays)
 
     notes: dict[str, str] = {}
@@ -175,6 +203,7 @@ def main() -> int:
         "frames": int(arrays["times"].size),
         "dimension": int(arrays["positions"].shape[1]),
         "rail_ids": rail_ids,
+        "body_labels": body_labels,
         "acceleration_names": list(getattr(result, "acceleration_names", ()) or ()),
         "gates": {str(k): bool(v) for k, v in gates.items()},
         "wall_s": wall_s,
@@ -189,7 +218,8 @@ def main() -> int:
         "case": str(case_path),
         "case_sha256": case_digest,
         "products": {name: sha256_of(out / name) for name in ("series.npz", "meta.json")},
-        "python_notes": "positions/velocities/accelerations are SI; normal_force_n columns follow rail_ids",
+        "python_notes": "positions/velocities/accelerations are SI; normal_force_n columns follow "
+                         "rail_ids, body_normal_force_n columns follow body_labels",
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + chr(10),
                                       encoding="utf-8")

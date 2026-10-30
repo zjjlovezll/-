@@ -185,3 +185,32 @@ def test_the_drawn_blade_starts_14_94_mm_below_the_stock_and_rises_to_flush(seat
     assert worst_mm <= 0.2, (
         f"the blade stands {worst_mm:+.3f} mm above the stock at {worst_at:.2f} m; "
         "a lowered blade can never be the higher of the two inside its ramp")
+
+
+def test_the_body_ids_name_the_entries_they_belong_to(seated) -> None:
+    """The run archive writes one column per body, so the names must line up with the responses.
+
+    Only the bodies active at that station report -- at 50.0 m the blade's table has not started, so
+    the right rail returns one entry and the rail's declared three are not the answer.  That is why
+    the ids travel beside the responses instead of being reconstructed from the case.
+    """
+    case, dynamics, state, velocity, speed, _residual = seated
+    declared = {rail.id: {body.id for body in rail.contact_bodies} for rail in case.rails}
+
+    for station in (case.run.x_start_m + case.vehicle.axle_offsets_m[0], FLUSH_STATION_M):
+        t_s = _time_for_front_axle(case, speed, station)
+        dynamics.evaluate(t_s, state, velocity)
+        ids = dynamics.body_ids
+        responses = dynamics.body_contacts
+        assert set(ids) == set(responses), "the id map and the response map name different rails"
+        for rail_id, names in ids.items():
+            assert len(names) == len(responses[rail_id]), (
+                f"{rail_id}: {len(names)} names for {len(responses[rail_id])} responses")
+            assert set(names) <= declared[rail_id], (
+                f"{rail_id}: ids {sorted(names)} are not all bodies the rail carries")
+
+    dynamics.evaluate(_time_for_front_axle(case, speed, FLUSH_STATION_M), state, velocity)
+    live = [(rail_id, names) for rail_id, names in dynamics.body_ids.items()
+            if len(names) > 1
+            and sum(1 for item in dynamics.body_contacts[rail_id] if item.active) > 1]
+    assert live, "no station reported two live bodies, so the column naming proved nothing"

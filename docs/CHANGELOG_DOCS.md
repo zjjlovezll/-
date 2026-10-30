@@ -1775,6 +1775,39 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 240 轮 — 40–100 km/h 四次过岔：尖轨首载里程只动 5.6 mm
+
+按用户 2026-10-31 的指令（可重复跑、数据必须留存供代理模型、多组速度），本轮把"跑一次看一个数"换成**数据契约 + 四速度采集 + 第一个消费者**。新增 [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md)。
+
+**先补上逐体力，否则这批数据测不了降低值**：合并后的轨级力是各体之和，"有多少载荷在尖轨上"在合并里就消失了。`VehicleResult` 因此新增 `body_contacts`（逐帧、按 `rail_id → (ContactResponse, ...)` 的逐体拆分，与 `contacts` 同一次 `evaluate`，不额外算 RHS）与 `body_ids`（**同序**体名）。为什么体名必须单独存：`_evaluate_patch` 只把 `active_at(x)` 的体算进结果，50.0 m 处右轨只报 `stock`，而站表声明三个体——**体名无法从轨反推**。`series.npz` 多出 `body_normal_force_n` 列块，`meta.json` 记 `body_labels`；整列求和与 `normal_force_n` **逐位相等**（0.01 s 冒烟两处都是 `10022035.036756517`）。
+
+**采集**：`scripts/s99_run_archive.py` 四个速度，route `straight`，`campaign=blade-lowering-2026-10-31`，全部七门 7/7：
+
+| 速度 (km/h) | 时长 (s) | 帧数 | 墙钟 (s) |
+|---|---|---|---|
+| 40 | 1.80 | 3601 | 428.7 |
+| 60 | 1.20 | 2401 | 288.4 |
+| 80 | 0.90 | 1801 | 218.1 |
+| 100 | 0.72 | 1441 | 173.7 |
+
+**消费者的读数**（`scripts/s100_speed_campaign.py`，几何基准由 s98 独立给出：首触 57.733 m、齐平 58.423 m）：
+
+| 速度 | 输出一格 (mm) | 前轴首载 (m) | 相对几何首触 | 前轴峰值 (kN) | 峰值里程 (m) |
+|---|---|---|---|---|---|
+| 40 | 5.56 | 58.106 | +0.373 | 41.48 | 59.728 |
+| 60 | 8.33 | 58.108 | +0.375 | 41.40 | 59.725 |
+| 80 | 11.11 | 58.111 | +0.378 | 41.35 | 59.722 |
+| 100 | 13.89 | 58.111 | +0.378 | 41.37 | 59.722 |
+
+**能说**：首载里程散布 **5.6 mm**、峰值散布 **0.13 kN（0.3 %）** ⇒ 在这个速度带里降低值定位对速度不敏感，一次标定可跨速度搬。
+**不能说**：那 **+0.37 m** 的差不是噪声（1 kN 检测门 + 弹性鼓形坡道）；s97 用钩子在求解器内部时刻读同一算例给 **58.128 m**，故真值应写 **58.11–58.13 m** 并注明分辨率；"5.6 mm 不变"是**在输出网格之内**不变，要 ±1 mm 得用亚帧读数或 1e-4 输出步长（未做）；只测直向、刚性轮对、单一进场点。本轮**不做幅值反演**。
+
+**修掉的两个自己的错**：初版把四个轴的 blade 列相加当"一轴力"，读出 81.9 kN，被 `stock@peak = 156.8 kN`（= 2.6× 均分）当场顶出来；初版还从 case JSON 里找 `vehicle.axle_offsets_m`，而它并不存储（由 `bogie_half_spacing_m` 与 `wheelbase_m` 推出：`+a+b, +a−b, −a+b, −a−b`），改走 `load_vehicle_case`。
+
+**测试**：`tests/test_body_attribution.py` 增第 5 项，把"体名必须与逐体响应同序、且只含该轨真的挂着的体"钉住（`5 passed in 1.08 s`）。
+
+**成本**：40/60/80/100 合计 **1109 s** 墙钟，单位 **≈240 s / 模拟秒**（含座椅）。
+
 ### 第 239 轮 — M0 关闭：尖轨降低值被注入了第二遍（B049），逐体归属本身是对的
 
 M0 的两条硬门用一次运行同时判定，结论是**归属门通过、几何门失败**——而失败的样子（尖轨在埋深 13 mm 处顶起 1.08 MN）先被误读成"归属记错"，最后定位到建库脚本把设计降低值写了两遍。新增 [BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md](BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md)。
@@ -2011,6 +2044,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [SPECTRAL_BANDS_2026-10-28.md](SPECTRAL_BANDS_2026-10-28.md) | 频率分辨反演：6/8 —— 但这一轮真正的结论是"真值的定义比估算子更重要" |
 | [SPECTRUM_SOURCE_2026-10-21.md](SPECTRUM_SOURCE_2026-10-21.md) | 153.85 Hz 是什么：速度标定实验 |
 | [SPEED_2026-10-20.md](SPEED_2026-10-20.md) | 提速：先量再改（2026-10-20） |
+| [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md) | 尖轨降低值的速度谱：40–100 km/h 四次过岔，首载里程只动 5.6 mm |
 | [SPEED_SWEEP_2026-10-28.md](SPEED_SWEEP_2026-10-28.md) | Five drawn speeds: the straight-route amplitude claim is one band wide, not six-of-eight |
 | [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |
 | [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |

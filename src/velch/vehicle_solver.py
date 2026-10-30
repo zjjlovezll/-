@@ -99,6 +99,14 @@ class VehicleResult:
     #: exactly how a table ends up with one more column than it has values.
     accelerations: np.ndarray | None = None
     acceleration_names: tuple[str, ...] = ()
+    #: Per-body split of each frame's contact, keyed by rail id then body id.  The merged
+    #: ``contacts`` entry sums the bodies, so the one quantity a turnout inversion needs -- how
+    #: much of the load sits on the blade versus the stock -- is not recoverable from it.  Same
+    #: frame, same ``evaluate`` call, so this adds no right-hand side.
+    body_contacts: list[dict[str, tuple[ContactResponse, ...]]] | None = None
+    #: Per frame, the body id behind each entry of ``body_contacts`` (same rail, same order).  Only
+    #: bodies active at that station report, so the names cannot be recovered from the rail.
+    body_ids: list[dict[str, tuple[str, ...]]] | None = None
 
 
 #: Time constant of the wheel-spin servo, seconds.  Slow enough for DOP853 at
@@ -200,6 +208,10 @@ class VehicleDynamics:
         # threaded path so that pooled evaluations stay order independent.
         self._contact_seed: dict[tuple[int, str], float] = {}
         self._body_cache: dict[str, tuple[ContactResponse, ...]] = {}
+        #: Body ids in the same order as ``_body_cache``, so a consumer can name the columns.
+        #: Only the bodies that are active at that station report, which is why the id list
+        #: cannot be reconstructed from the rail's declaration alone.
+        self._body_id_cache: dict[str, tuple[str, ...]] = {}
         # Consecutive evaluations in which a held rail seed found no contact.
         self._seed_misses: dict[int, int] = {}
         # Evaluation age per rail patch, used to schedule the exhaustive re-check.
@@ -495,6 +507,7 @@ class VehicleDynamics:
             if overlap > 0.0 and len(body_results) > 1:
                 body_results = deduplicate_contacts(body_results, overlap)
             self._body_cache[rail.id] = tuple(item[2] for item in body_results)
+            self._body_id_cache[rail.id] = tuple(item[0] for item in body_results)
             contacts[rail.id] = merge_contact_responses(self._body_cache[rail.id])
             # Observation hook: `evaluate` merges the bodies of a rail into one response, which is
             # what the wheel feels but hides which body carries it.  A turnout switch keeps a stock
@@ -965,6 +978,12 @@ class VehicleDynamics:
         """
         return dict(self._body_cache)
 
+    @property
+    def body_ids(self) -> dict[str, tuple[str, ...]]:
+        """Which body each ``body_contacts`` entry belongs to, in the same order."""
+
+        return dict(self._body_id_cache)
+
     def close(self) -> None:
         if self._pool is not None:
             self._pool.shutdown(wait=True)
@@ -994,6 +1013,7 @@ class VehicleDynamics:
             "age": dict(self._contact_age),
             "active": dict(self._active_body),
             "body": dict(self._body_cache),
+            "body_ids": dict(self._body_id_cache),
             "misses": dict(self._seed_misses),
         }
 
@@ -1002,6 +1022,7 @@ class VehicleDynamics:
         self._contact_age = dict(snapshot["age"])  # type: ignore[arg-type]
         self._active_body = dict(snapshot["active"])  # type: ignore[arg-type]
         self._body_cache = dict(snapshot["body"])  # type: ignore[arg-type]
+        self._body_id_cache = dict(snapshot.get("body_ids", {}))  # type: ignore[arg-type]
         self._seed_misses = dict(snapshot["misses"])  # type: ignore[arg-type]
 
     def derivative_pure(self, t_s: float, state: np.ndarray) -> np.ndarray:
@@ -1819,6 +1840,8 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         _acceleration_name(f"{_column_prefix(body)}_{_state_suffix(body, axis)}")
         for _index, body, axis in acceleration_channels)
     acceleration_rows: list[list[float]] = []
+    body_history: list[dict[str, tuple[ContactResponse, ...]]] = []
+    body_id_history: list[dict[str, tuple[str, ...]]] = []
     for t, position, velocity in zip(times, positions, velocities):
         force, contacts = dynamics.evaluate(float(t), position, velocity)
         # Inertia lives in mass[index] for the rotation coordinates; body.mass_kg is only right
@@ -1826,6 +1849,10 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         acceleration_rows.append([float(force[index]) / float(dynamics.mass[index])
                                   for index, _body, _axis in acceleration_channels])
         contact_history.append(contacts)
+        # The call above just refreshed ``_body_cache``, so this is the same frame's per-body
+        # split, not a second evaluation.
+        body_history.append(dict(dynamics.body_contacts))
+        body_id_history.append(dict(dynamics.body_ids))
         energies.append(dynamics.mechanical_energy_j(position, velocity, contacts))
         curve_lateral_n = float(getattr(dynamics, "curve_lateral_applied_n", 0.0))
         if case.track_kind in {"rigid", "local_compliant", "two_layer", "layered"}:
@@ -1987,7 +2014,8 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     accelerations = (np.asarray(acceleration_rows, dtype=float)
                      if acceleration_rows else None)
     return VehicleResult(times, positions, velocities, contact_history, summary,
-                         accelerations=accelerations, acceleration_names=acceleration_names)
+                         accelerations=accelerations, acceleration_names=acceleration_names,
+                         body_contacts=body_history, body_ids=body_id_history)
 
 
 _COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",

@@ -107,10 +107,17 @@ def test_bounded_search_actually_writes_memory() -> None:
 
 
 def test_snapshot_keys_cover_every_writable_map() -> None:
+    """Every map ``evaluate`` writes must be in the snapshot, and the set is closed on purpose.
+
+    This asserts an exact set so that adding a writable map fails here instead of silently making
+    ``derivative_pure`` depend on call order.  ``body_ids`` joined when the run archive started
+    recording per-body columns: the ids are written by the same loop as ``body`` and are just as
+    stateful, so they have to be restored with it.
+    """
     dynamics, _, _ = _dynamics(False)
     try:
         keys = set(dynamics.snapshot_contact_state())
-        assert keys == {"seed", "age", "active", "body", "misses"}
+        assert keys == {"seed", "age", "active", "body", "body_ids", "misses"}
     finally:
         dynamics.close()
 

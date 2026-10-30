@@ -10,6 +10,8 @@ lowering lives in the section geometry rather than in a z-offset table.
 from __future__ import annotations
 
 import argparse
+
+import numpy as np
 import json
 import pathlib
 import shutil
@@ -121,6 +123,40 @@ def carry_onto_the_arc(stations: list[dict]) -> None:
         profile["y_offset_m"] = float(profile["y_offset_m"]) + y_route_m(float(item["s_m"]))
 
 
+# The drawn blade sections are standalone profiles with their own crown at the datum, so a station
+# copied verbatim runs *level* with the stock rail instead of below it -- measured at 55 m: blade crown
+# -22.713 mm against the stock -23.019 mm, i.e. 0.306 mm ABOVE, where the design asks for it to be
+# below.  The lowering therefore has to be carried as a per-station z offset, and the only place it is
+# written down is the drawing's own width/lowering relation: 3 mm -> 14.94 mm, 30 mm -> 1.16 mm,
+# 72 mm -> -0.09 mm below the stock crown (docs/TURNOUT_PROFILE_ATLAS_2026-10-30.md, plateau
+# decomposition of the combined outlines).  Interpolating in width keeps the relation monotone, which
+# is what the geometry requires: a wider blade must never sit *lower* than a narrower one.
+BLADE_LOWERING_MM = ((3.0, 14.94), (30.0, 1.16), (72.0, -0.09))
+
+
+def blade_lowering_m(file_name: str) -> float | None:
+    """Design lowering of a blade station in metres (z positive downwards), by its width in the name."""
+    stem = pathlib.Path(file_name).stem
+    if "zjg" not in stem or "zgyg" in stem:
+        return None
+    tail = stem.rsplit("-", 1)[-1]
+    try:
+        width_mm = float(tail)
+    except ValueError:
+        return None
+    widths = [item[0] for item in BLADE_LOWERING_MM]
+    lowers = [item[1] for item in BLADE_LOWERING_MM]
+    return float(np.interp(width_mm, widths, lowers)) / 1000.0
+
+
+def with_lowering(item: dict, file_name: str) -> dict:
+    """Carry the design lowering as a downward z offset on that station alone."""
+    lowering = blade_lowering_m(file_name)
+    if lowering is not None:
+        item["profile"]["z_offset_m"] = float(lowering)
+    return item
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="load and seat the case after writing it")
@@ -155,7 +191,7 @@ def main() -> int:
         {
             "id": "blade",
             "stations": [
-                station(m, f, side=1, y_sign=1, tag="bl")
+                with_lowering(station(m, f, side=1, y_sign=1, tag="bl"), f)
                 for m, f in blade_rows
                 if 50.578 <= m <= 104.419
             ],

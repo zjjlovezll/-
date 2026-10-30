@@ -109,3 +109,39 @@ PYTHONPATH=src python -X utf8 scripts/s85_db_case.py --seat       # 座椅（当
 
 ## 5. 下一步（一条测量）
 
+## 4f、座椅解决了：轨冠在轮心外侧 **13.0 mm**（我上一轮的"13.2 mm 是错误"是错的）
+
+把轨冠相对轮心的偏置做成参数、每点跑**真座椅**：
+
+| 偏置 | 座椅 | 八轮份额 |
+|---|---|---|
+| 12.0 mm | r = 1.15e-07 N | **1.000–1.000** |
+| 12.8 mm | 6.89e-08 N | 1.000–1.000 |
+| 13.4 mm | 3.11e-08 N | 1.000–1.000 |
+| 13.7 mm | 1.10e-07 N | 1.000–1.000 |
+
+窗口 **≥ 1.7 mm 且平坦**（总力恒为 **477.4 kN**），所以这是**几何**而不是调参：1:40 轨顶 + LMA 踏面的
+接触点本来就在轨冠内侧约 13 mm。我先前"把两侧冠对称放到 ±746.5 mm"的规则把轮子压到外侧肩部，
+才会在 50 m 触发斜率门。**旧算例的 13.7 mm 是对的，我的"13.2 mm 基准错误"结论撤回。**
+
+## 4g、直向已跑通并落盘
+
+`scripts/s86_run_baseline.py --route straight --duration 0.20`：
+
+```
+straight: frames 401  gates 7/7
+data -> ../scratch/s86/straight_0.20s/{series.npz, summary.json}
+```
+
+七门全 True（`solver_completed / finite_states_and_forces / vertical_preload_residual /
+penetration_within_case_limit / friction_bound / no_edge_limited_active_contact /
+translational_action_reaction`）。
+
+## 4h、曲向为什么还不能用这套算例跑
+
+直向算例的**每一站都引用同一份基本轨断面**（`jbg-20200418-R.txt`），所以横向是直的；
+曲股线路的横向在**逐里程断面文件**里（旧 `case_diverging_R1100` 用的 `Profile_Mileage_JBG.prr`），
+或在本库尚未启用的 `qjg_cgyg` 表里。用现在这份算例去"跑曲向"只会凭空造一条线路，
+所以 `s86_run_baseline.py --route diverging` **直接拒绝**并说明原因。
+下一步是从 `qjg_cgyg` 表建第二条线（含 R=1100 m 的逐站横向），再与直向共用同一套车辆和降低值。
+

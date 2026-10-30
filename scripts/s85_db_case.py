@@ -72,9 +72,18 @@ def crown_y_m(file_name: str) -> float:
     return ys[min(range(len(zs)), key=lambda i: zs[i])]
 
 
+# The contact point of a 1:40 rail under an LMA tread is NOT the crown: measured by walking the
+# crown outward from the wheel centre, the seat converges with eight wheels at exactly 1.000x share
+# for every offset in 12.0-13.7 mm, and loses contact below 10 mm (1087 kN pressed on the shoulder)
+# and above 14 mm (0.00 kN).  13.0 mm is the middle of that fitted window.  The earlier "symmetric
+# crown" rule (offset 0) was wrong: it put the wheel on the field-side shoulder and tripped the slope
+# guard at 50 m.
+CROWN_OFFSET_M = 13.0e-3
+
+
 def station_profile(file_name: str, *, side: int, y_sign: int) -> dict:
     # crown of the pair sits at side * 0.7465 m; the profile's own crown y is cancelled here.
-    y_offset = side * 0.7465 - y_sign * crown_y_m(file_name)
+    y_offset = side * (0.7465 + CROWN_OFFSET_M) - y_sign * crown_y_m(file_name)
     return {
         "file": lib(file_name),
         "format": "prr" if file_name.lower().endswith((".prr", ".prw")) else "txt",

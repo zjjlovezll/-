@@ -65,14 +65,16 @@ def main() -> int:
         order = np.argsort(y)
         axes[1].plot(y[order] * 1e3, z[order] * 1e3, linewidth=1.0, label=name)
 
+    # z grows DOWNWARD in these files (crown at 0, the section's bottom edge at ~+23), so the axes
+    # must be inverted or the rail head reads as an upside-down cup.
     axes[0].set_xlim(-60, 120)
-    axes[0].set_ylim(-20, 30)
+    axes[0].set_ylim(30, -20)
     axes[1].set_xlim(-45, 10)
-    axes[1].set_ylim(-5, 25)
+    axes[1].set_ylim(25, -5)
     for axis, title in zip(axes, ("SDITT sections: full view", "gauge corner / crown")):
         axis.grid(alpha=0.3)
         axis.set_xlabel("y (mm)")
-        axis.set_ylabel("z (mm, downward positive)")
+        axis.set_ylabel("z (mm, downward positive -- axis inverted so the crown is up)")
         axis.legend(fontsize=7)
         axis.set_title(title)
     figure.tight_layout()

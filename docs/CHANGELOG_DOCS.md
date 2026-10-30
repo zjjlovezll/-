@@ -1775,6 +1775,20 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 245 轮 — M2 时程：整车横向游走 0.73 mm / 0.40 s，源头是 +718 N 净横向力
+
+B047 退役后 M2 只剩时程问题。本轮**不新跑仿真**，只读已归档的 0.40 s 运行（801 帧、七门 7/7），并补上归档缺的一列。新增 `scripts/s106_lateral_drift.py`、[LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md)。
+
+**四个轮对一起走，不是转向架失稳**：`wheelset1..4` 在 0.40 s 内漂移 **+0.7128 / +0.7305 / +0.6947 / +0.6937 mm**，同号、极差 **0.037 mm（5 %）**、斜率 1.73–1.83 mm/s。⇒ 这是**整车横向平移**；历史第 235 轮"导向轮对横向游走"的说法要按这条改口径。
+
+**预注册门要诚实报**：`L1a` 幅值 0.7305 mm ≤ 1 mm **PASS**；`L1b` 不得单调漂移 **FAIL**（0 → +0.73 mm 单调）；`L2` 力—位移同号 **不可测**——`series.npz` 里没有 `wheel_force_y_n`，只有法向力。**判不了不是我分析得不够，是数据契约缺一列。**
+
+**补通道**：`s99_run_archive.py` 新增 `lateral_force_n`（帧 × 轨，取 `response.wheel_force_y_n`，非承载帧记 0），`meta.json` 的 `python_notes` 同步列序。0.01 s 冒烟 `(21, 8)`：四条左轨 **+1490.4 N**、四条右轨 **−1310.8 N**，净和 **+718.4 N**。
+
+**这解释了整条链**：① 左轨 `N·n_y = 60.15 kN × 0.02458 = +1478 N`、右轨 −1478 N 本该抵消，实测差 14 % ⇒ 两侧**切向/蠕滑贡献不对称**（左 +12 N、右 +167 N）；② `a = 718.4 / 49 040 = 0.0146 m/s²`，0.40 s 自由加速 `½at² = 1.17 mm`，实测 0.73 mm（差额被 `3.0e7 N/m` 一系横向刚度吸收）；③ 外推 1.6 s 给 **18.7 mm**——足以把轮对推到轨距角并触发 `graph slope limit`，与历史 1.6 s 在 `x=67.03 m` 的失败点自洽。
+
+**下一轮判据（写死）**：三个候选——A 轮断面未按侧镜像（查 `wheel_profile(side, y_sign)` 四处调用参数）、B 踏面左右不对称（把右轨镜像后 `|lever−冠|` 左右差应从 0.10 mm 降到 ≤0.02 mm）、C 蠕滑不对称（打印 spin 符号与两侧蠕滑）。验收：座椅态 `|净 ΣFy| ≤ 20 N`、0.40 s 内 `|dy| ≤ 0.1 mm` 且不单调、冻结基线 UNCHANGED、不新增任何容差。
+
 ### 第 244 轮 — 条带宽度不是原因（0.05 %），B047 的两条读数退役
 
 第 243 轮把"接触落在冠顶 2 mm 内"判成写错的门；本轮把 M2 剩下的两条候选一并了结：**条带积分是不是把阻抗放大的元凶**，以及 **B047 那句"硬 927 倍"到底在比什么**。新增 `scripts/s105_strip_convergence.py`、[B047_RETIREMENT_2026-10-31.md](B047_RETIREMENT_2026-10-31.md)；任务书 §十一 追加 M1/M2 关闭表。
@@ -2014,6 +2028,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |
 | [INVERSION_VERDICT_2026-10-28.md](INVERSION_VERDICT_2026-10-28.md) | 实测反演的判定页（L0–L5） |
+| [LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md) | M2 时程：整车横向游走 0.73 mm/0.40 s，源头是 +718 N 的净横向力（2026-10-31） |
 | [LATERAL_REGISTRATION_BASELINE_2026-10-31.md](LATERAL_REGISTRATION_BASELINE_2026-10-31.md) | 横向注册的当前基线（M2 第一步）：对"最完备的车"重新量一遍，结果比旧数更糟 |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |

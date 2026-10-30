@@ -153,13 +153,22 @@ def main() -> int:
     frames = result.contacts or []
     rail_ids = list(frames[0]) if frames else []
     normal = np.zeros((len(frames), len(rail_ids)))
+    # The lateral force is what any statement about drift has to be checked against, and it cannot be
+    # reconstructed after the fact: script s106 could only read the normal-force split from an archived
+    # run, so its sign-agreement gate was untestable.  Store it with the run.
+    lateral = np.zeros((len(frames), len(rail_ids)))
     for index, frame in enumerate(frames):
         normals = []
+        laterals = []
         for rail in rail_ids:
             response = frame.get(rail)
-            normals.append(float(response.normal_force_n) if response is not None and response.active else 0.0)
+            live = response is not None and response.active
+            normals.append(float(response.normal_force_n) if live else 0.0)
+            laterals.append(float(response.wheel_force_y_n) if live else 0.0)
         normal[index] = normals
+        lateral[index] = laterals
     arrays["normal_force_n"] = normal
+    arrays["lateral_force_n"] = lateral
     # The merged rail force cannot answer "how much is on the blade", which is the observable the
     # turnout inversion is built on, so the per-body split travels with the run.
     # The merged rail force cannot answer "how much is on the blade", which is the observable the
@@ -232,8 +241,8 @@ def main() -> int:
         "case": str(case_path),
         "case_sha256": case_digest,
         "products": {name: sha256_of(out / name) for name in ("series.npz", "meta.json")},
-        "python_notes": "positions/velocities/accelerations are SI; normal_force_n columns follow "
-                         "rail_ids, body_normal_force_n columns follow body_labels",
+        "python_notes": "positions/velocities/accelerations are SI; normal_force_n and lateral_force_n columns "
+                         "follow rail_ids, body_normal_force_n columns follow body_labels",
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + chr(10),
                                       encoding="utf-8")

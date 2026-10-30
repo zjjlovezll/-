@@ -25,17 +25,18 @@ import numpy as np
 from velch.vehicle import load_vehicle_case
 from velch.vehicle_solver import simulate_vehicle
 
-CASE = pathlib.Path("vehicles/turnouts/CN60-1100-1_18/cases/straight.json")
+CASES = {
+    "straight": pathlib.Path("vehicles/turnouts/CN60-1100-1_18/cases/straight.json"),
+    "diverging": pathlib.Path("vehicles/turnouts/CN60-1100-1_18/cases/diverging.json"),
+}
 OUT_ROOT = pathlib.Path("../scratch/s86")
 
 
 def run(route: str, duration_s: float, output_step_s: float) -> pathlib.Path:
-    if route != "straight":
-        raise SystemExit(
-            "the database has no diverging geometry yet: the route lateral comes from the per-mileage "
-            "profile files, not from the single stock section this case repeats. Build that line first."
-        )
-    case = load_vehicle_case(CASE)
+    # Both routes now come from the same database: the diverging case carries the same three rail
+    # bodies, with every right-side station displaced by y = (s - 50.578)^2 / (2 * 1100.75) and
+    # `curve_radius_m` set so the body force exists.  Built by scripts/s85_db_case.py --route diverging.
+    case = load_vehicle_case(CASES[route])
     case = dataclasses.replace(
         case, run=dataclasses.replace(case.run, duration_s=duration_s, output_step_s=output_step_s)
     )

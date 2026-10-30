@@ -102,10 +102,30 @@ def station(mileage: float, file_name: str, *, side: int, y_sign: int, tag: str)
     }
 
 
+# The 18-turnout diverging route: R = 1100.75 m, tangent at the blade point (50.578 m).  Every
+# right-side station is carried to its own mileage on that arc, exactly like the through route is
+# straight -- the two lines share the sketch datum at 50.578 m, so no second datum is invented.
+DIVERGING_RADIUS_M = 1100.75
+DIVERGING_TANGENT_M = 50.578
+
+
+def y_route_m(mileage_m: float) -> float:
+    if mileage_m <= DIVERGING_TANGENT_M:
+        return 0.0
+    return (mileage_m - DIVERGING_TANGENT_M) ** 2 / (2.0 * DIVERGING_RADIUS_M)
+
+
+def carry_onto_the_arc(stations: list[dict]) -> None:
+    for item in stations:
+        profile = item["profile"]
+        profile["y_offset_m"] = float(profile["y_offset_m"]) + y_route_m(float(item["s_m"]))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="load and seat the case after writing it")
     ap.add_argument("--seat", action="store_true")
+    ap.add_argument("--route", choices=("straight", "diverging"), default="straight")
     args = ap.parse_args()
 
     wheel_source = Path(r"G:\研究生\动力学\CRH380A_纯刚性模型\database\database\wheel_rail_profiles\LMA.prw")
@@ -147,6 +167,10 @@ def main() -> int:
             ],
         },
     ]
+    if args.route == "diverging":
+        carry_onto_the_arc(right_stock)
+        for body in right_bodies:
+            carry_onto_the_arc(body["stations"])
     right = {
         "id": "right",
         "wheel_id": "R",
@@ -173,7 +197,7 @@ def main() -> int:
         )
     )
     case = dict(base)
-    case["case_id"] = "turnout_cn60_1100_straight"
+    case["case_id"] = f"turnout_cn60_1100_{args.route}"
     case["purpose_detail"] = (
         "Baseline straight route of CN60-1100-1:18 from the local turnout DB. Right rail carries "
         "two extra bodies so the design lowering (blade 14.94 mm, point rail 13.70 mm) is section "
@@ -210,7 +234,14 @@ def main() -> int:
         "maximum_penetration_m": 0.003,
         "maximum_abs_contact_slope": 1.0,
     }
-    out = DB / "cases" / "straight.json"
+    if args.route == "diverging":
+        case["run"]["curve_radius_m"] = DIVERGING_RADIUS_M
+        case["run"]["curve_origin_m"] = DIVERGING_TANGENT_M
+        case["purpose_detail"] += (
+            " Diverging route: the right line rides y = (s-50.578)^2/(2*1100.75) and the run carries"
+            " curve_radius_m so the body force exists."
+        )
+    out = DB / "cases" / f"{args.route}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(case, ensure_ascii=False, indent=1) + chr(10)
     out.write_text(payload, encoding="utf-8", newline=chr(10))
@@ -239,13 +270,19 @@ def main() -> int:
         _ = dynamics.evaluate(0.0, seated, np.zeros(dynamics.dimension))
         print(f"seat residual {residual:.3e} N")
         for rail_id, entry in dynamics.body_contacts.items():
-            for body_id, response in entry.items():
-                geometry = response.geometry
-                pen = getattr(geometry, "penetration_m", float("nan")) if geometry else float("nan")
-                print(
-                    f"  {rail_id:12s} {body_id:8s} N {response.normal_force_n/1e3:8.2f} kN  "
-                    f"pen {pen*1e6:8.2f} um"
-                )
+            items = entry.items() if hasattr(entry, "items") else ((None, entry),)
+            for body_id, response in items:
+                responses = response if isinstance(response, tuple) else (response,)
+                for one in responses:
+                    if one is None:
+                        continue
+                    geometry = one.geometry
+                    pen = getattr(geometry, "penetration_m", float("nan")) if geometry else float("nan")
+                    label = body_id if body_id is not None else getattr(one, "body_id", "main")
+                    print(
+                        f"  {rail_id:12s} {str(label):8s} N {one.normal_force_n/1e3:8.2f} kN  "
+                        f"pen {pen*1e6:8.2f} um"
+                    )
     return 0
 
 

@@ -2029,6 +2029,22 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
   `docs/LOWERING_READING_ARBITRATION_2026-10-31.md`、任务书 §11 M3 行。
 * 只读几何，不涉及求解器；`freeze_baseline --check` 仍 UNCHANGED。
 
+### 第 249 轮（2026-10-31）一次过车只能看见一条带：Omega_obs 覆盖率 25.7 %
+
+- `scripts/s99_run_archive.py` 归档接触点与接触带半宽（`contact_lateral_m` / `contact_half_width_m`，
+  无接触帧为 NaN），重跑 0.40 s：`straight_one_set-080.00kmh-0.4000s-500us-55d6fd49`，801 帧、七门 7/7。
+- `scripts/s111_obs_region.py`：把"整个三维面"变成可判定的数。单元 = 0.2 m 站位 × 1 mm 横向（相对该站
+  基本轨冠）；`Omega_obs` = 至少一个接触斑覆盖的单元；`Omega_design` = 冠下 `HEAD_DEPTH` 内的走行面单元，
+  **只统计运行真的走过的站位**（没走到不是横向漏测，否则覆盖率随运行时长变化）。
+- 实测（一组模型、80 km/h、0.40 s）：接触带中位宽度 **16.0 mm**（14–17 mm），头宽在冠下 1 mm 处 **37.15 mm**、
+  5 mm 处 **61.46 mm**；覆盖率 **41.7 %（1 mm）/ 32.8 %（2 mm）/ 25.7 %（5 mm，主口径）/ 22.9 %（10 mm）**，
+  逐轨 24.3–27.0 %。预注册判定 **contact band only**：结果里不得使用"面"这个词。
+- 由此得到的算术：要覆盖 90 %，`ceil(0.9 × 37.15 / 16.0) = 3`，即**至少三条不同横向偏移的过车**；
+  同一位置跑十次仍是 42 %。精度必须与覆盖率并列报。
+- `tests/test_obs_region.py` 4 项：带宽中位数 16.0 mm、主口径覆盖率 0.257、覆盖率随分母深度单调不增、
+  三条偏移的算术被钉住。`4 passed in 0.55 s`。
+- 文档 `docs/OBSERVED_REGION_2026-10-31.md`；任务书 §十一 M4 行与新增 §十八。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2118,6 +2134,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [MEASUREMENT_CAPABILITY_2026-10-27.md](MEASUREMENT_CAPABILITY_2026-10-27.md) | 实测侧能力声明（2026-10-27） |
 | [NONLINEAR_ELEMENTS_2026-10-23.md](NONLINEAR_ELEMENTS_2026-10-23.md) | 非线性力元 |
 | [OBSERVATION_LAYER_2026-10-20.md](OBSERVATION_LAYER_2026-10-20.md) | 观测量层：仿真对仿真 + 实测对模型（2026-10-20） |
+| [OBSERVED_REGION_2026-10-31.md](OBSERVED_REGION_2026-10-31.md) | 一次过车只能看见一条带，不是一张面（M4：Ω_obs 与覆盖率） |
 | [OMA_MEASURED_2026-10-27.md](OMA_MEASURED_2026-10-27.md) | 运行模态识别（SSI-FCM）接到实测：算法通过，实测上不收敛 |
 | [ONBOARDING_2026-10-21.md](ONBOARDING_2026-10-21.md) | 新增车体 / 新增道岔的接入指南 |
 | [ONE_SET_CASE_2026-10-31.md](ONE_SET_CASE_2026-10-31.md) | 一组模型装进同一算例：完备车辆 + 柔性轮对 + 柔性轨道 + 真道岔几何（M1） |

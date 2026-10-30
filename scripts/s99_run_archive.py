@@ -157,20 +157,30 @@ def main() -> int:
     # reconstructed after the fact: script s106 could only read the normal-force split from an archived
     # run, so its sign-agreement gate was untestable.  Store it with the run.
     lateral = np.zeros((len(frames), len(rail_ids)))
+    # Which part of the rail head was actually measured is the whole content of the observed region:
+    # a wheel that runs along one lateral offset never sees the rest of the surface, and that cannot
+    # be reconstructed after the fact.  Store the contact point and the band half width, with NaN
+    # where no contact was alive (the gap is information; zero would read as a contact at y = 0).
+    contact_y = np.full((len(frames), len(rail_ids)), np.nan)
+    contact_b = np.full((len(frames), len(rail_ids)), np.nan)
     for index, frame in enumerate(frames):
         normals = []
         laterals = []
-        for rail in rail_ids:
+        for column, rail in enumerate(rail_ids):
             response = frame.get(rail)
             live = response is not None and response.active
+            geometry = response.geometry if live else None
             normals.append(float(response.normal_force_n) if live else 0.0)
             laterals.append(float(response.wheel_force_y_n) if live else 0.0)
+            if geometry is not None:
+                contact_y[index, column] = float(geometry.y_m)
+                contact_b[index, column] = float(geometry.half_width_m)
         normal[index] = normals
         lateral[index] = laterals
     arrays["normal_force_n"] = normal
     arrays["lateral_force_n"] = lateral
-    # The merged rail force cannot answer "how much is on the blade", which is the observable the
-    # turnout inversion is built on, so the per-body split travels with the run.
+    arrays["contact_lateral_m"] = contact_y
+    arrays["contact_half_width_m"] = contact_b
     # The merged rail force cannot answer "how much is on the blade", which is the observable the
     # turnout inversion is built on, so the per-body split travels with the run.  Names come from
     # ``result.body_ids``: only the bodies active at a station report, so the ids cannot be

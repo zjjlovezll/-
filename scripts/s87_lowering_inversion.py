@@ -95,17 +95,27 @@ def to_mileage(case, times: np.ndarray, axle_offset_m: float) -> np.ndarray:
 
 
 def axle_offsets(case) -> dict[str, float]:
-    """Longitudinal position of each axle relative to the vehicle centre, from the case itself.
+    """Longitudinal position of each axle relative to the vehicle centre.
 
-    Measured, not assumed: the first version took `case.wheels[i].axle_offset_m`, which does not
-    exist, and silently fell back to the *lateral* offsets (+-0.7465 m) -- the onset then came out at
-    48.128 m against a predicted 68.16 m, a 20 m error that looked like a physics failure and was
-    only a mislabelled axle.  `axle_offsets_m` is the quantity the contact search itself uses.
+    Neither `case.wheels[i].axle_offset_m` nor `case.axle_offsets_m` exists (the first version fell
+    back to the *lateral* offsets and mislabelled every axle, reporting an onset at 48.128 m against
+    a predicted 68.16 m).  The authoritative source is `_body_offset_m`, the same function the curve
+    placement uses, so the hook series and the geometry cannot disagree about which axle is where.
     """
-    offsets = tuple(float(value) for value in getattr(case, "axle_offsets_m", ()) or ())
+    from velch.vehicle_solver import VehicleDynamics, _body_offset_m
+
+    dynamics = VehicleDynamics(case)
+    offsets: dict[str, float] = {}
+    for index, body in enumerate(dynamics.topology.bodies):
+        if not str(getattr(body, "id", "")).startswith("wheelset"):
+            continue
+        axle = str(body.id).removeprefix("wheelset")
+        offsets[f"axle{axle}"] = float(
+            _body_offset_m(case, dynamics.topology, body, np.zeros(dynamics.dimension))
+        )
     if not offsets:
-        raise SystemExit("case carries no axle_offsets_m; cannot label the hook series by axle")
-    return {f"axle{index + 1}": value for index, value in enumerate(offsets)}
+        raise SystemExit("no wheelset bodies; cannot label the hook series by axle")
+    return offsets
 
 
 def onset(stations: np.ndarray, forces: np.ndarray, *, threshold_n: float, hold: int = 3) -> float:

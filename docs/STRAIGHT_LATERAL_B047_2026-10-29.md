@@ -186,3 +186,49 @@ PYTHONPATH=src python -X utf8 scripts/s76_normal_law.py
 PYTHONPATH=src python -X utf8 scripts/s76b_lateral_hold.py --duration 0.20
 PYTHONPATH=src python -X utf8 scripts/s77_kalker_drift.py --duration 0.60
 ```
+
+## 二e、候选 1 被否证、候选 2 被否证、候选 3 的探针没生效（本轮）
+
+**候选 1（基准错位）——否证。** 座椅后把每个轮对横移 0/1/2/4 mm，读 `axle1_left`：
+
+| 横移 (mm) | `lever_y` (mm) | 贯入 (µm) | 法向 (kN) |
+|---|---|---|---|
+| 0 | −752.774 | 197.62 | 59.68 |
+| 1 | −753.774 | 172.63 | 48.73 |
+| 2 | −754.774 | 147.64 | 38.54 |
+| 4 | −756.774 | 97.65 | 20.73 |
+
+`d(lever_y)/d(shift) = −1.0000 m/m` —— **接触点与车轮 1:1 一起走**，所以 `_absolute_arrays` 的
+基准不一致不成立。同时 `d(贯入)/d(y) = −25.0 µm/mm`、`d(法向)/d(y) = −9.74 kN/mm`。
+
+**候选 2（钉在轨面某个固定特征）——否证。** `scripts/s92_window_or_argmin.py` 打印：
+
+```
+rail_crown_mm            -789.560        ← 轨面 z 最小点
+lever_y_mm               -752.774
+lever_minus_crown_mm     +36.787         ← 离"最高点"37 mm
+lever_local_wheel_mm     -6.274          ← 在车轮断面上，踏面内
+on_tread                 True
+pinned_to_rail_crown     False
+```
+
+接触点落在**车轮踏面**（距轮心 6.3 mm），既没钉在轨面最高点，也没落在轮缘。
+
+**但这一行顺带否掉了另一个前提**：轨面 `z` 最小值那点的局部曲率半径是 **−0.1 mm**（一个尖角），
+不是冠。也就是说"轨面最高点"在存下来的断面里是一个**角**，不是 300 mm 的走行面；前面用
+`argmin(z)` 当"轨冠"的所有推算（包括冠距、`lever−crown`）都必须换成"在接触点处拟合曲率"。
+在接触点处拟合得到的是 **299.6 mm**，那才是真正的走行面。
+
+**候选 3（搜索窗 1 mm）——探针没生效。** 把 `patch_window_m` 从 1 mm 改成 10 mm、把
+`strip_dy_m` 从 0.25 mm 改成 0.10 mm，两种改法的三行读数**与基准逐位相同**
+（197.62 / 172.63 / 147.64 / 97.65 µm，`−24.9904 µm/mm`）。同一个数字到 6 位小数不变，
+说明 `dataclasses.replace(base, contact=contact)` **没有传进求解器实际用的那本 law**，
+所以"窗口不是原因"这个结论**不能**由此得出——这是探针的接线错误，不是物理结果。
+
+**最后一个算术要更正。** 300 mm 冠上 `dδ/dy = y/R`，在 y = 2 mm 处是 **6.7 µm/mm**（不是我在
+报告里写的"理论 1666.7"——那个式子算成了 `1/(2R)` 的量纲错误）。实测 25.0 µm/mm 仍是它的
+**3.7 倍**，这个差异仍然待解释。
+
+**下一轮的唯一动作**：先证明 law 覆盖真的生效（在 `VehicleDynamics` 里打印实际用的
+`patch_window_m`/`strip_dy_m`），再做窗口/带宽收敛；否则任何"窗口无关"的结论都是假的。
+

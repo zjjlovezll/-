@@ -1,0 +1,67 @@
+{
+ "model": "F = C*max(0,p)^1.5 per body, common wheel height, stock clips at zero",
+ "frozen_c": 112670000000.0,
+ "gates": {
+  "relative_limit": 0.02,
+  "absolute_limit_m": 2.2e-05,
+  "station_limit_m": 0.2,
+  "floor_m": 0.0005
+ },
+ "rows": [
+  {
+   "held_out_um": 50.0,
+   "calibration_um": [
+    100.0,
+    200.0
+   ],
+   "c_stock": 47040617714.91211,
+   "c_blade": 40330900588.303925,
+   "peak_true_m": 4.9999999999999996e-05,
+   "peak_estimate_m": 0.00010275871092268318,
+   "relative_error": 0.10551742184536637,
+   "p95_error_m": 6.351297082413645e-05,
+   "peak_station_m": 58.51111111111111,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": true,
+   "estimated_frames": 488
+  },
+  {
+   "held_out_um": 100.0,
+   "calibration_um": [
+    50.0,
+    200.0
+   ],
+   "c_stock": 54264071147.656,
+   "c_blade": 46125736955.14315,
+   "peak_true_m": 9.999999999999999e-05,
+   "peak_estimate_m": 0.00012968575225875848,
+   "relative_error": 0.059371504517516965,
+   "p95_error_m": 8.856251262002687e-05,
+   "peak_station_m": 58.28888888888889,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": false,
+   "estimated_frames": 465
+  },
+  {
+   "held_out_um": 200.0,
+   "calibration_um": [
+    50.0,
+    100.0
+   ],
+   "c_stock": 127555249365.15764,
+   "c_blade": 79981473248.37616,
+   "peak_true_m": 0.00019999999999999998,
+   "peak_estimate_m": 0.00012171747895981381,
+   "relative_error": 0.15656504208037234,
+   "p95_error_m": 0.00011386921765422688,
+   "peak_station_m": 58.022222222222226,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": false,
+   "estimated_frames": 363
+  }
+ ],
+ "verdict": "the model-based inversion passes all three gates on 0/3 held-out amplitudes"
+}

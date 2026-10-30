@@ -2096,6 +2096,33 @@ any sigma = f(u) estimator is mis-specified once the bump unloads the stock. Rec
 contact/load-transfer model inside the inversion, and treat a single pass as one transfer-station
 equation -- the ensemble of >= 3 lateral offsets that M4's arithmetic already demanded is also what the
 amplitude needs.
+## Round 253 - the contact model inside the inversion, and the physics it still lacks (M5 step 4)
+
+Added `scripts/s115_model_inversion.py`, `docs/MODEL_BASED_INVERSION_2026-10-31.md` and
+`tests/test_model_inversion.py`. Round 252's prescription was to stop tabulating one amplitude's samples
+and solve for the surface inside a forward model of the split. That model is now in: each body carries
+`F = C * max(0, penetration) ** 1.5`, the common wheel height is solved so the two forces add to the
+measured axle load, and the stock clips at zero (the branch). Inversion is a root find per frame; the two
+stiffnesses are fitted on two amplitudes and applied to the third.
+
+  fold   calibration      C_stock          C_blade      held out  peak_true  peak_est  p95 (um)  at s
+         (100, 200)       4.704e10         4.033e10     50        50.0      102.8     63.5    58.51
+         (50, 200)        5.426e10         4.613e10     100      100.0      129.7     88.6    58.29
+         (50, 100)        1.276e11         7.998e10     200      200.0      121.7    113.9    58.02
+
+0/3 folds pass all three gates. The fitted stiffnesses are physical (the frozen contact stiffness is
+1.1267e11 N/m^1.5), which is the useful part: the model is not absurd, it **compresses the amplitude
+scale** -- 50 um reads 102.8, 200 um reads 121.7 -- and the fold that only sees small amplitudes fits a
+softer C (4.7e10) than the fold that sees both large ones (1.28e11).
+
+The missing physics is named rather than absorbed: the canonical case is `local_compliant`, so **both
+bodies sink by tens of micrometres under load, of the same order as the bump**, and that sink is not in
+the model. It also explains the C drift, because the sink depends on the load. Four estimator families
+now fail with four different modes (table, tanh, transfer station, contact model), localisation works in
+all of them (<= 0.52 m), and the conclusion is about the measurement: one pass of one axle does not
+determine the bump amplitude. The ensemble of >= 3 lateral offsets is the mechanism, and its forward
+model must carry both bodies' support compliance.
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2184,6 +2211,7 @@ amplitude needs.
 | [MEASURED_VALIDATION_2026-10-21.md](MEASURED_VALIDATION_2026-10-21.md) | 实测数据接入验证（2026-10-21） |
 | [MEASURED_VALIDATION_2026-10-26.md](MEASURED_VALIDATION_2026-10-26.md) | 实测数据第一次验证：26 mm 波磨，声学 5/6、轴箱 3/6 |
 | [MEASUREMENT_CAPABILITY_2026-10-27.md](MEASUREMENT_CAPABILITY_2026-10-27.md) | 实测侧能力声明（2026-10-27） |
+| [MODEL_BASED_INVERSION_2026-10-31.md](MODEL_BASED_INVERSION_2026-10-31.md) | Putting the contact model inside the inversion (M5, step 4) |
 | [NONLINEAR_ELEMENTS_2026-10-23.md](NONLINEAR_ELEMENTS_2026-10-23.md) | 非线性力元 |
 | [OBSERVATION_LAYER_2026-10-20.md](OBSERVATION_LAYER_2026-10-20.md) | 观测量层：仿真对仿真 + 实测对模型（2026-10-20） |
 | [OBSERVED_REGION_2026-10-31.md](OBSERVED_REGION_2026-10-31.md) | 一次过车只能看见一条带，不是一张面（M4：Ω_obs 与覆盖率） |

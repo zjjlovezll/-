@@ -7,6 +7,8 @@ switched body.
 """
 from __future__ import annotations
 
+from typing import Callable
+
 import math
 from dataclasses import replace
 
@@ -519,6 +521,20 @@ def _strip_functional_partials(
     )
 
 
+#: Optional collector for one patch's strip table.
+#:
+#: ``strip_integral`` integrates the plane-strain line load over every engaged strip and
+#: then reports a single equivalent penetration, so the engaged band itself is invisible
+#: to callers.  Diagnostics need it: SDITT keeps the two apart explicitly
+#: (``NF_STRIPES_230623.m``: the virtual penetration region, then the strip sum), and the
+#: B047 investigation needed four rounds to establish that a 2 mm lateral shift changes the
+#: *number* of engaged strips as much as their depth.  The hook receives the grid (m), the
+#: strip depth (m), the engaged mask, the strip spacing (m) and the resulting force (N) for
+#: one patch.  Left as ``None`` the code path is unchanged, which the frozen-static test
+#: pins.
+STRIP_DIAGNOSTIC: "Callable[[float, np.ndarray, np.ndarray, np.ndarray, float, float], None] | None" = None
+
+
 def find_strip_contact(
     wheel_profile: GraphProfile,
     rail_sample: ProfileSample,
@@ -645,6 +661,9 @@ def find_strip_contact(
     if total <= 0.0:
         return None
     force = 0.25 * math.pi * effective_modulus_pa * total
+    if STRIP_DIAGNOSTIC is not None:
+        STRIP_DIAGNOSTIC(float(center_y_m) if center_y_m is not None else float("nan"),
+                         grid, depth, engaged, step, force)
     y_c = float(np.sum(grid * weights) / np.sum(weights))
     index = int(np.argmax(depth))
     if abs(grid[index] - y_c) > 0.25 * step:

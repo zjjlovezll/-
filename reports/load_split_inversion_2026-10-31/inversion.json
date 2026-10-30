@@ -1,0 +1,63 @@
+{
+ "baseline": "straight_one_set-080.00kmh-0.6000s-500us-55d6fd49",
+ "calibration_um": 50.0,
+ "bump": {
+  "centre_m": 58.5,
+  "sigma_m": 1.2
+ },
+ "gates": {
+  "relative_limit": 0.02,
+  "floor_m": 0.0005,
+  "absolute_limit_m": 2.2e-05,
+  "station_limit_m": 0.2,
+  "window_fraction": 0.1
+ },
+ "rows": [
+  {
+   "amplitude_um": 50.0,
+   "run_id": "one_set_bump050.0um-080.00kmh-0.6000s-500us-20295a3d",
+   "peak_true_m": 4.9999999999999996e-05,
+   "peak_estimate_m": 5.68498822539527e-05,
+   "relative_error": 0.013699764507905405,
+   "p95_error_m": 1.5051741875497526e-05,
+   "max_error_m": 2.311019714999674e-05,
+   "peak_station_m": 58.355555555555554,
+   "gate_relative": true,
+   "gate_absolute": true,
+   "gate_station": true,
+   "window_frames": 282,
+   "observed_frames": 486
+  },
+  {
+   "amplitude_um": 100.0,
+   "run_id": "one_set_bump100.0um-080.00kmh-0.6000s-500us-cad4db6b",
+   "peak_true_m": 9.999999999999999e-05,
+   "peak_estimate_m": 7.653346361909862e-05,
+   "relative_error": 0.046933072761802745,
+   "p95_error_m": 4.894644853071065e-05,
+   "max_error_m": 6.194208641490096e-05,
+   "peak_station_m": 58.24444444444444,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": false,
+   "window_frames": 296,
+   "observed_frames": 500
+  },
+  {
+   "amplitude_um": 200.0,
+   "run_id": "one_set_bump200.0um-080.00kmh-0.6000s-500us-28051835",
+   "peak_true_m": 0.00019999999999999998,
+   "peak_estimate_m": 0.00010171784903769122,
+   "relative_error": 0.19656430192461752,
+   "p95_error_m": 0.00014749873816273035,
+   "max_error_m": 0.00016159546631193785,
+   "peak_station_m": 57.977777777777774,
+   "gate_relative": false,
+   "gate_absolute": false,
+   "gate_station": false,
+   "window_frames": 318,
+   "observed_frames": 522
+  }
+ ],
+ "verdict": "the load split does not meet all three gates on the held-out amplitudes"
+}

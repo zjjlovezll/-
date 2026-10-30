@@ -2058,6 +2058,25 @@ penetration is 63.70 um, so the linear regime ends at about 0.8 of it. Consequen
 acceleration is the localiser, the per-body load split is the amplitude carrier. The run index now
 carries `notes` so a training set can be built from it without opening every `meta.json`.
 
+## Round 251 - inverting the bump out of the load split (M5 step 2)
+
+Added `scripts/s113_profile_inversion.py`, `docs/LOAD_SPLIT_INVERSION_2026-10-31.md` and
+`tests/test_load_split_inversion.py`. The split between the two bodies of the right rail
+(`blade/(stock+blade)`, median-filtered over 0.20 m) is inverted through a monotone table fitted on the
+50 um run only, and applied to the two amplitudes it never saw.
+
+  amplitude   peak_true   peak_est   rel err   p95 |e|   peak at   gates
+       50 um       50.0       56.8    0.0137     15.0      58.36   pass/pass/pass
+      100 um      100.0       76.5    0.0469     49.0      58.24   fail/fail/fail
+      200 um      200.0      101.7    0.1966    147.5      57.98   fail/fail/fail
+
+Hold-out verdict: fails. The reason is an extrapolation failure of the calibration set, not silence of
+the observable: the table spans u in [-58.6, +14169] um because a 50 um bump never closes the gap
+further, while a 100/200 um bump drives u to -109/-209 um where the estimator clamps. Inside the range
+the same estimator gives +13.7 % on the peak and p95 15.1 um (0.23 x the static penetration), with the
+peak 0.14 m from truth. Recorded for M7: parametrise by amplitude (solve for z inside the contact
+model) instead of tabulating one amplitude's samples, and keep masking frames where the blade carries
+nothing -- those are unobserved, not zero.
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2136,6 +2155,7 @@ carries `notes` so a training set can be built from it without opening every `me
 | [LATERAL_SEAT_JOINT_2026-10-31.md](LATERAL_SEAT_JOINT_2026-10-31.md) | 横向座椅联立：链条一起解，还是逐个轮对解？（B051） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
+| [LOAD_SPLIT_INVERSION_2026-10-31.md](LOAD_SPLIT_INVERSION_2026-10-31.md) | Inverting the bump out of the load split (M5, step 2) |
 | [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |
 | [LOWERING_INVERSION_2026-10-29.md](LOWERING_INVERSION_2026-10-29.md) | 降低值反演：尖轨能定位、幅值不可辨识；心轨降低值本来就在几何里 |
 | [LOWERING_KNOB_2026-10-29.md](LOWERING_KNOB_2026-10-29.md) | 降低值旋钮可用，但两条刚性路线都卡在同一处站表拼接 |

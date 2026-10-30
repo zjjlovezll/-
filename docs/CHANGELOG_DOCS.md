@@ -1988,6 +1988,29 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 
 **待批准三项**（任务书 §10）：Ω_obs 定义（接触带面 vs 全平面）、主门用绝对误差、C 级真值（≥3 区段轨面实测）。
 
+## 第 247 轮：横向座椅联立 —— 净横向力 +238 → +44.75 N，但平衡点是平谷
+
+* 先量为什么"只解轮对 `y`"无效：`wheelset1.y` 偏移 0.6 µm 让该行广义力变 121 N ⇒ 轮对与轴箱之间
+  是 **2.0e8 N/m**；两个连接件在座椅位置各给 **−29.611 N**，合计抵掉该轮净横向力。第 5 轮那次
+  "只挪 0.296 µm、净力 +236.88 N"由此解释。
+* 改为**整链联立**：`run.seat_lateral` 时把 15 个体的 `y` 与 `roll` 全部追加进最小二乘
+  （23 → **53** 未知量），解完再做一次竖向抛光。
+* 实测（234 维一组模型、80 km/h）：净横向力 **+238.11 → +44.75 N**、每轴最差 **+59.53 → +11.19 N**、
+  倾角和 **+9.67e-4 → +1.42e-4**、份额 0.999–1.001、残差 5.009e-02 → **9.859e-08 N**、墙钟 4.5 s。
+  预注册四门：G1 PASS / **G2 视路径（11.19 过、另一次 21.12 不过）** / G3 PASS / G4 PASS。
+* **平谷**：交替"模态沉降 ↔ 联立座椅"7 轮，`y` 在 **+1.70 与 −0.31 mm** 间跳，净力 42–112 N，
+  第 5 轮座椅不收敛 ⇒ "使净横向力为零的 `y`"是病态目标，不该当交付判据。
+* 0.40 s 时程（`straight_one_set-080.00kmh-0.4000s-500us-55d6fd49`，4× 车轮 + 横向座椅，801 帧、7/7）：
+  起始 y **−0.4088 mm**、漂移 **0.1345 / 0.1413 / 0.1226 / 0.1215 mm**，方向**朝平衡点**（与载荷不平衡
+  4/4 同号）。同尺子的无横向座椅那档是 0.0999 mm —— 量级略大，但性质从"一路走开"变成"收敛到平衡点"。
+  **M2 的 `|Δy| ≤ 0.05 mm` 两档都没过，如实记为未达标。**
+* 交付：`src/velch/vehicle_solver.py`（联立未知量 + 分档容差 `_SEAT_LATERAL_TOLERANCE = 20 N` + 竖向抛光 +
+  `VELCH_SEAT_DEBUG`）、`scripts/s108_lateral_seat.py`、`scripts/s109_lateral_stiffness.py`、
+  `tests/test_lateral_seat_joint.py` 4 项、`docs/LATERAL_SEAT_JOINT_2026-10-31.md`。
+  规范算例 `straight_one_set.json` 现在带 `seat_lateral: true`（座椅 +1.6 s，换来倾斜对称与收敛方向）。
+* `freeze_baseline --check` **UNCHANGED**（`295809cb24c8e24b` / `7b1daef7e80664ac`）——默认关闭，
+  竖向路径逐位不变。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2063,6 +2086,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md) | M2 时程：整车横向游走 0.73 mm/0.40 s，源头是 +718 N 的净横向力（2026-10-31） |
 | [LATERAL_FORCE_SAMPLING_2026-10-31.md](LATERAL_FORCE_SAMPLING_2026-10-31.md) | 横向力的来源：不是蠕滑，是采样的阶梯（B050） |
 | [LATERAL_REGISTRATION_BASELINE_2026-10-31.md](LATERAL_REGISTRATION_BASELINE_2026-10-31.md) | 横向注册的当前基线（M2 第一步）：对"最完备的车"重新量一遍，结果比旧数更糟 |
+| [LATERAL_SEAT_JOINT_2026-10-31.md](LATERAL_SEAT_JOINT_2026-10-31.md) | 横向座椅联立：链条一起解，还是逐个轮对解？（B051） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
 | [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |

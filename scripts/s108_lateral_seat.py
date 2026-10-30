@@ -29,7 +29,7 @@ import time
 import numpy as np
 
 from velch.vehicle import load_vehicle_case
-from velch.vehicle_solver import VehicleDynamics, _seat, _seat_lateral, _settle_modal_coordinates
+from velch.vehicle_solver import VehicleDynamics, _seat, _settle_modal_coordinates
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CASE = ROOT / "vehicles" / "turnouts" / "CN60-1100-1_18" / "cases" / "straight_one_set.json"
@@ -53,13 +53,11 @@ def seated(case, lateral: bool):
             q = _settle_modal_coordinates(dynamics, q, v)
             q, residual = _seat(case, dynamics, q, v)
             q = np.asarray(q, dtype=float)
-        lateral_residual = float("nan")
-        if lateral:
-            for _round in range(2):
-                q, lateral_residual = _seat_lateral(case, dynamics, q, v)
-                q = _settle_modal_coordinates(dynamics, q, v)
-                q, residual = _seat(case, dynamics, q, v)
-                q = np.asarray(q, dtype=float)
+        # ``seat_lateral`` now adds the wheelset ``y`` and ``roll`` to the *same* least-squares
+        # problem, so each ``_seat`` above already solves the lateral equilibrium.  The separate
+        # ``_seat_lateral`` pass this script used to drive is kept only as the probe that measured
+        # why a second pass cannot work (0.21 N undone to 1216.92 N by the modal settle).
+        lateral_residual = residual
         wall = time.perf_counter() - start
         _, contacts = dynamics.evaluate(0.0, q, v)
         rows = []

@@ -5589,7 +5589,8 @@
    "constant": {
     "speed_kmh": 80.0
    }
-  }
+  },
+  "seat_lateral": true
  },
  "vehicle_ref": "lib:CRH380A_M_axlebox.json",
  "flexible_wheelset": {

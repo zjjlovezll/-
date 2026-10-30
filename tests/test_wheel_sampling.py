@@ -63,12 +63,21 @@ def test_the_dense_wheel_lies_on_the_original_polyline() -> None:
     assert distance_to_polyline(dense, coarse) <= 1e-6
 
 
-def test_the_canonical_case_uses_the_dense_wheel_and_no_lateral_seat() -> None:
+def test_the_canonical_case_uses_the_dense_wheel_and_the_joint_lateral_seat() -> None:
+    """What must not regress: the 4x tread, and the joint seat being explicit.
+
+    Round 246 left the lateral seat off; round 247 turned it on after measuring that the wheelset
+    lateral DOF is tied to its axle box by 2.0e8 N/m, so a wheelset-only unknown cannot move.  The
+    flag is asserted here so a future edit that silently drops it shows up as a case change, not as
+    an unexplained drift (round 247: 0.0999 mm off, 0.1523 mm on, with the drift direction
+    reversing from walking away to settling).
+    """
+
     raw = json.loads(CASE.read_text(encoding="utf-8"))
     for wheel in raw["wheels"]:
         assert wheel["profile"]["file"].endswith("LMA_x4.prw")
         assert wheel["profile"]["format"] == "prr"
-    assert not raw["run"].get("seat_lateral", False)
+    assert raw["run"].get("seat_lateral") is True
 
 
 def test_the_dense_wheel_run_drifts_less_than_a_quarter_of_the_coarse_one() -> None:

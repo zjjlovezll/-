@@ -9,6 +9,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -117,6 +118,13 @@ SPIN_TIME_CONSTANT_S = 2.0e-3
 # The residual is `force / 1e5` and the acceptance test is `max |residual| * 1e5 <= 0.1` N,
 # so 1.0 is a 1e8 N barrier: far above any real residual, and unmistakably rejected.
 _SEAT_BARRIER_RESIDUAL = 1.0
+# Acceptance tolerance for the lateral rows of a joint seat (``run.seat_lateral``), in N for the
+# wheelset lateral force and in N*m for its roll moment.  The vertical rows keep their own 0.1 N
+# limit: a lateral force of 20 N over four axles is 5 N per axle, which moves the vehicle by
+# 5/2.6e6 = 2e-6 m per second of free acceleration -- two orders below the 0.10 mm drift that the
+# 4x wheel sampling already leaves, so it is not the residual that decides the drift any more.
+# Pre-registered in the docstring of ``scripts/s108_lateral_seat.py``.
+_SEAT_LATERAL_TOLERANCE = 20.0
 
 
 class VehicleDynamics:
@@ -1385,6 +1393,20 @@ def _seat(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray,
         # when the seat starts from the coordinate origin instead.
         q = _align_to_track_frame(case, dynamics, q)
     try:
+        if bool(getattr(case.run, "seat_lateral", False)):
+            # Joint lateral + vertical solve, then a vertical polish at the held placement.  The
+            # joint rows trade a vertical residual against the stiff lateral columns: measured
+            # 5.009e-02 N left over (shares 0.999..1.001, net lateral +44.75 N), while the
+            # vertical-only routine closes the same state to 4e-08 N from that start.  Holding y
+            # and roll and re-solving z is the fixed point the modal settle already uses; it is
+            # not a second lateral pass (that one measured 0.21 N -> 1216.92 N and is retired).
+            q, lateral_error = _static_vertical_equilibrium(case, dynamics, q, v)
+            object.__setattr__(case.run, "seat_lateral", False)
+            try:
+                q, vertical_error = _static_vertical_equilibrium(case, dynamics, q, v)
+            finally:
+                object.__setattr__(case.run, "seat_lateral", True)
+            return q, vertical_error
         return _static_vertical_equilibrium(case, dynamics, q, v)
     finally:
         dynamics.track.placement = placement
@@ -1482,6 +1504,36 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
     wheel_rows = [topology.require(body.id, "z") for body in topology.wheelsets()]
     bogie_rows = [topology.require(body.id, "z") for body in topology.bogies()]
 
+    # The lateral half of the static state is opt-in, and it is a *joint* solve rather than a
+    # second pass.  Measured on the one-set turnout case (flexible wheelset, 80 km/h): seated in z
+    # alone, the two contacts tilt +0.024766 and -0.021802 and the state carries +718 N of net
+    # lateral force, so the vehicle walks 0.10 mm in 0.40 s.  Solving y on its own converges to
+    # 0.21 N and is then undone by the modal settle (+1217 N), and rolling the wheelset at fixed z
+    # lifts a wheel off the rail (4 of 8 contacts at 0.2 mrad), so neither is a valid separate
+    # pass.  Here y and roll become rows of the same least-squares problem as z: the residual the
+    # solver already reads for a coordinate *is* its generalized force, so the lateral force and
+    # the roll moment arrive as residuals without another code path.
+    lateral_rows: list[int] = []
+    roll_rows: list[int] = []
+    if bool(getattr(case.run, "seat_lateral", False)):
+        # Every body, not only the wheelsets.  Measured on the one-set case (234 dim, 15 bodies):
+        # a wheelset's lateral DOF is tied to its axle box by a 2.0e8 N/m element (perturbing
+        # wheelset1.y by 0.6 um swings the row by 121 N, and two connectors supply -29.611 N each
+        # at the seated y = +0.296 um), so solving wheelset y alone only absorbs 59 N of the 238 N
+        # -- the force is passed up the suspension and nothing moves.  The lateral equilibrium is
+        # a property of the whole chain: wheelsets, axle boxes, bogies and the car body together,
+        # which is also why the vehicle walks as one piece instead of hunting.
+        for body in topology.bodies:
+            if "y" in body.dof:
+                lateral_rows.append(topology.require(body.id, "y"))
+            if "roll" in body.dof:
+                roll_rows.append(topology.require(body.id, "roll"))
+        indices = list(indices) + lateral_rows + roll_rows
+    vertical_count = len(indices) - len(lateral_rows) - len(roll_rows)
+    if os.environ.get("VELCH_SEAT_DEBUG"):
+        print(f"[seat] unknowns {len(indices)} vertical {vertical_count} "
+              f"lateral {len(lateral_rows)} roll {len(roll_rows)}")
+
     box_rows = [topology.require(body.id, "z") for body in topology.bodies
                 if body.kind == "axlebox"]
     seeds: list[np.ndarray] = [q[indices].copy()]
@@ -1548,11 +1600,29 @@ def _static_vertical_equilibrium(case: VehicleCase, dynamics: VehicleDynamics,
         # the Jacobian has a near-null direction.  ``hybr`` requires a square system and its
         # pivoting decides the outcome — the same equations converge in one layout and report
         # "no progress" in another purely because the rows are numbered differently.
+        # The joint seat needs more iterations than the vertical one: 53 unknowns instead of 23,
+        # and the wheelset lateral row is 2.0e8 N/m against 1.4e6 N/m for its vertical row, so the
+        # trust region is decided by the stiff columns.  Measured: with 800 nfev the joint solve
+        # stops 0.05 N short on the vertical rows (shares 0.999..1.001, net lateral +44.75 N);
+        # measured again with ``x_scale="jac"``: every seed wanders to millimetres and the seat
+        # fails outright, because the car body's y and roll are only anchored through the
+        # secondary springs.  So the vertical-only path keeps its historical call bit for bit and
+        # the joint path only gets more iterations.
         solved = least_squares(residual, seed, method="trf", xtol=1e-12, ftol=1e-12,
-                               gtol=1e-12, max_nfev=800)
-        error_n = float(np.max(np.abs(residual(solved.x))) * 1e5)
+                               gtol=1e-12, max_nfev=3000 if lateral_rows or roll_rows else 800)
+        raw = np.abs(residual(solved.x)) * 1e5
+        vertical_error = float(np.max(raw[:vertical_count]))
+        lateral_error = float(np.max(raw[vertical_count:])) if lateral_rows or roll_rows else 0.0
+        if os.environ.get("VELCH_SEAT_DEBUG"):
+            print(f"[seat] seed vertical {np.max(raw[:vertical_count]):.3e} "
+                  f"lateral {np.max(raw[vertical_count:]) if len(raw) > vertical_count else 0.0:.3e} "
+                  f"y {solved.x[vertical_count:vertical_count + len(lateral_rows)] * 1e3} mm")
+        error_n = vertical_error
         last_message = str(solved.message)
-        if not np.all(np.isfinite(solved.x)) or error_n > 0.1:
+        # Two tolerances, because the rows are different quantities: a vertical force in N and a
+        # roll moment in N*m.  Both are pre-registered in the docstring of ``s108_lateral_seat``.
+        if (not np.all(np.isfinite(solved.x)) or vertical_error > 0.1
+                or lateral_error > _SEAT_LATERAL_TOLERANCE):
             continue
         trial = base.copy()
         trial[indices] = solved.x
@@ -1830,16 +1900,12 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         for _round in range(2):
             q = _settle_modal_coordinates(dynamics, q, v)
             q, static_residual_n = _seat(case, dynamics, q, v)
-        # The lateral seat is the third static unknown.  The flexible tread deflects by different
-        # amounts on the two sides (tilt +0.024782 / -0.021744), so a state seated in z alone
-        # carries +736.5 N and translates +0.73 mm in 0.40 s.  Solving it changes the load split,
-        # which changes the tread deflection, which changes the lateral force -- hence the same
-        # alternation as the modal rounds.
-        if bool(getattr(case.run, "seat_lateral", False)):
-            for _round in range(2):
-                q, _lateral_residual_n = _seat_lateral(case, dynamics, q, v)
-                q = _settle_modal_coordinates(dynamics, q, v)
-                q, static_residual_n = _seat(case, dynamics, q, v)
+        # The lateral seat used to run here as a separate pass.  It is now a row of the same
+        # problem (``_static_vertical_equilibrium`` adds the wheelset ``y`` and ``roll`` when
+        # ``run.seat_lateral`` is set), because solving y on its own converged to 0.21 N and the
+        # modal settle put 1216.92 N straight back, and rolling the wheelset at fixed z lifted a
+        # wheel off the rail.  ``_seat_lateral`` is kept as the probe that measured those two
+        # failures; nothing on the integrate path calls it any more.
     # The opt-in alignment is applied *after* the seat: the vehicle stands on the equivalent
     # straight first, then it is set on the design line it is about to run along.  Applying it
     # before the seat put the wheels 45 mm beside straight rails.

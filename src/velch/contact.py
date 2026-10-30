@@ -313,8 +313,26 @@ def evaluate_contact(
         damping = math.copysign(min(abs(damping), cap), damping)
     normal = max(0.0, elastic + damping)
     reference_speed = max(abs(travel_speed_m_s), law.reference_speed_floor_m_s)
-    linear_x = -law.creep_stiffness_x_n * slip_x / reference_speed
-    linear_lateral = -law.creep_stiffness_lateral_n * slip_lateral / reference_speed
+    stiffness_x = law.creep_stiffness_x_n
+    stiffness_lateral = law.creep_stiffness_lateral_n
+    if law.creep_stiffness_from_patch:
+        # Kalker's linear theory puts the creep coefficients on the contact ellipse:
+        # f11 = 2 E* a b C11 and f22 = 2 E* a b C22, with a the semi-axis along rolling and b the
+        # lateral one.  `half_width_m` is the lateral semi-axis the contact search already
+        # measured, and a comes from the circular-equivalent Hertz relation at the same load, so
+        # the pair is consistent with the normal force actually being carried.  The shape
+        # factors are Kalker's circular values (nu = 0.3): C11 = 0.98, C22 = 0.99.  Ellipticity
+        # dependence of C11/C22 is NOT included yet, and there is still no spin term.
+        modulus = law.effective_modulus_pa
+        radius = g.radius_star_m if g.radius_star_m > 0.0 else law.effective_radius_m
+        if modulus > 0.0 and radius > 0.0 and g.half_width_m > 0.0 and normal > 0.0:
+            half_a = (3.0 * normal * radius / (4.0 * modulus)) ** (1.0 / 3.0)
+            half_b = g.half_width_m
+            area = math.pi * half_a * half_b
+            stiffness_x = 2.0 * modulus * area / math.pi * law.creep_shape_x
+            stiffness_lateral = 2.0 * modulus * area / math.pi * law.creep_shape_lateral
+    linear_x = -stiffness_x * slip_x / reference_speed
+    linear_lateral = -stiffness_lateral * slip_lateral / reference_speed
     force_x, force_t = saturate_creep_force(linear_x, linear_lateral,
                                             law.friction_coefficient, normal)
     force_y = normal * g.normal_y + force_t * g.tangent_y

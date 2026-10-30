@@ -64,6 +64,7 @@ class ContactParameters:
     friction_coefficient: float
     creep_stiffness_x_n: float
     creep_stiffness_lateral_n: float
+
     reference_speed_floor_m_s: float
     patch_half_width_m: float = 0.0
     patch_slices: int = 5
@@ -85,6 +86,13 @@ class ContactParameters:
     strip_min_depth_m: float = 0.0
     strip_half_width_m: float | None = None
     strip_center_policy: str = "deepest"
+    #: When true the creep coefficients are recomputed from the measured contact ellipse
+    #: (``f11 = 2 E* a b C11``) instead of being taken from the constants above.  Off by default so
+    #: every archived run keeps the coefficients it was measured with.
+    creep_stiffness_from_patch: bool = False
+    #: Kalker's circular shape factors (nu = 0.3).  Ellipticity dependence is not implemented.
+    creep_shape_x: float = 0.98
+    creep_shape_lateral: float = 0.99
     curvature_policy: str = "window"
 
     def __post_init__(self) -> None:

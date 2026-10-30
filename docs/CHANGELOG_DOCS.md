@@ -1775,6 +1775,20 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 243 轮 — 冠偏移扫描：五档全不成立，并查出"接触落在冠顶 2 mm 内"这条门本身是错的
+
+第 242 轮把 B047 的根因指向 `scripts/s85_db_case.py:81` 的 `CROWN_OFFSET_M = 13.0e-3`（一个在 35 坐标车上拟合的常数）。本轮按预注册的四条门去重拟它：`CROWN_OFFSET_M ∈ {13, 10, 8, 4, 0}` mm 各建一个**变体**算例（做法是把每站 `y_offset_m` 平移 `±(offset−13) mm`，落在 `scratch/s104/`，**规范算例不被覆盖、`s85` 不改**），每个变体座椅后横移 −3…+3 mm 共 7 档只求值。新增 `scripts/s104_crown_offset_sweep.py` 与 [CROWN_OFFSET_SWEEP_2026-10-31.md](CROWN_OFFSET_SWEEP_2026-10-31.md)。
+
+**结果：五档全部不成立**（预注册判据写死在脚本 docstring 里，运行前就定好）：13.0 mm 档座椅 6.93e-09 N、八轮 1.00–1.00，但 `|lever−冠| = 8.03/−7.93 mm`（门 ≤2 mm）、`d(lever_y)/dy = −0.0016`（门 [0.5,1]）、`k_lat = −2640.7 kN/mm`（门 10–100）、±3 mm 脱空；10.0 mm 档更差（10.58 mm、−0.0025、−6637.2）；8.0 mm 档再差（13.22 mm、−0.0034、−52090.0）；4.0 mm 档**座椅即触发** `graph slope limit at axle1_left/left:main, x=50 m`；0.0 mm 档**座椅不收敛**（`gtol`）。脚本末行按预注册给 `VERDICT: no offset satisfies all four -- the registration is not a constant to re-fit`。
+
+**机制（绝对位置）**：冠偏移 13 → 10 → 8 mm 时，左冠从 −759.602 移到 −756.602、−754.602，而接触点从 −751.573 移到 **−746.024**、**−741.379**——**接触点比轨动得更快**（3 mm 换来 5.58 mm，2 mm 再换来 4.65 mm），并伴随倾角 0.02458 → 0.03325 → 0.04988 与横向"刚度" −2641 → −6637 → −52090 kN/mm（**19.7 倍**）。所以接触位置由**两侧斜率相等**这个条件决定：把轨往轮平面里挪，车轮只能拿自己更陡的一段去配平。→ 注册**不是**一个可以重拟的常数。
+
+**这一轮真正查出的错是我自己的门**：第 2 条门"接触落在冠顶 2 mm 内"在几何上不可能满足——`1:40` 踏面（s = 0.025）压在 300 mm 冠上，斜率相等点距冠顶 `R·s = 7.5 mm`；实测 8.03 mm、倾角 0.02458（比 0.025 低 1.7 %，0.66 mm 残差说明接触处局部半径约 327 mm 而非名义 300）。更要紧的是**冻结基线自己就不满足这条门**（座态倾角 0.02458 ≈ 2.5 % 锥度、接触距冠 8 mm），所以这条门判的不是模型而是我的写法。按"不许看过结果改阈值"，处理方式是**保留原判 + 另立一条门并写明它为什么必须另立**：`tangent`（`|lever−冠| ∈ [R·s−2, R·s+2] mm` 且 `| |tilt| − s | ≤ 0.005`）。按这条门 13.0 mm 档**通过**，10.0/8.0 两档不通过（倾角已不是 1:40 在接触）。两条判定并列写进文档，原门作废记录保留。
+
+**判据修正（下一轮，先写死）**：M2 要修的不是接触点位置（位置由斜率相等定、倾角与冻结基线一致），而是**接触阻抗**。做条带宽度收敛 `strip_dy_m ∈ {5e-4, 2.5e-4, 1e-4}`，三档各座椅 + ±1 mm 横移：三档 `dN/dy` 相对变化 ≤5 % ⇒ 不是条带离散化；若随 `strip_dy` 单调显著变化 ⇒ 是条带积分，改它（不动接触刚度、不动容差）。无论哪种，冻结基线必须 UNCHANGED。
+
+**测试**：`tests/test_crown_tangent.py` 3 项（接触落在 `R·s` ±2 mm 内；倾角符号朝内且模值在 0.025 ±0.005；`R·s` 随冠半径缩放——0.02 m 冠给 0.5 mm），1.36 s 全过。写这两项时我自己也错了两次：`crown_y` 取了 `max(z)`（那是高度不是位置，要 `y[argmax(z)]`），倾角符号写成 `side*tilt`（实测左右都朝内，是 `−side`）——都由断言当场顶出来。
+
 ### 第 242 轮 — 横向注册在规范算例上重测：接触内移 8.0 mm、`d(lever_y)/dy = −0.0016`、`k_lat = −2827 kN/mm`
 
 B047 的三句描述（"硬 927 倍"、"倾角冻结"、"内移 16.7 mm"）全部出自 `effective_radius_m = 0.02` 还在生效的年代，而等效半径直接决定 `dδ/dy`；B048 退役了它，所以那批数不再是当前模型的数。本轮用**规范算例**（234 坐标的一 组模型）把横向注册重测一遍。新增 [LATERAL_REGISTRATION_BASELINE_2026-10-31.md](LATERAL_REGISTRATION_BASELINE_2026-10-31.md) 与 `scripts/s103_lateral_registration.py`。
@@ -1943,6 +1957,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [COVERAGE_HELDOUT_2026-10-28.md](COVERAGE_HELDOUT_2026-10-28.md) | Held-out coverage, and why the measured verdict had to be made reproducible first |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
+| [CROWN_OFFSET_SWEEP_2026-10-31.md](CROWN_OFFSET_SWEEP_2026-10-31.md) | M2 第一轮：冠偏移扫描——四条门无一成立（2026-10-31） |
 | [CURVE_ALIGNMENT_VELOCITY_2026-10-28.md](CURVE_ALIGNMENT_VELOCITY_2026-10-28.md) | 曲线：把路线自己的横向速度装回去，以及为什么几何路由仍然拿不住这条曲线 |
 | [CURVE_APPROACH_DECISIONS_2026-10-27.md](CURVE_APPROACH_DECISIONS_2026-10-27.md) | 曲线走进哪一侧：四条被实测否掉的路，和一条还没被否的 |
 | [CURVE_CANT_DECISION_2026-10-27.md](CURVE_CANT_DECISION_2026-10-27.md) | ADR：几何路由上的超高，为什么仍然拒绝 |

@@ -1,0 +1,1816 @@
+{
+  "schema_version": "velch-turnout-db-v1",
+  "id": "CN60-1100-1_18",
+  "name": "18 号单开道岔 CN60-1100-1:18（直向基准）",
+  "number": 18,
+  "curve_radius_m": 1100.0,
+  "lateral_speed_limit_kmh": 80.0,
+  "gauge_m": 1.435,
+  "rows": {
+    "qjbg": {
+      "table": "07(009)-Mileage-qjbg.txt",
+      "note": "only revision; 76 stations 0.000-1000.0 m",
+      "stations": 76,
+      "mileage_range_m": [
+        0.0,
+        1000.0
+      ],
+      "section_files": 74
+    },
+    "zjg_zgyg": {
+      "table": "07(009)-Mileage-zjg_zgyg_250722.txt",
+      "note": "latest of three; 160 stations 50.578-104.419 m (blade 3-72 mm, then wing rail)",
+      "stations": 161,
+      "mileage_range_m": [
+        50.578,
+        104.419
+      ],
+      "section_files": 157
+    },
+    "cxg": {
+      "table": "07(009)-Mileage-cxg-250801.txt",
+      "note": "latest; 66 stations 103.280-116.440 m (point rail 12.5-72 mm)",
+      "stations": 67,
+      "mileage_range_m": [
+        103.28,
+        1000.0
+      ],
+      "section_files": 64
+    }
+  },
+  "sections": {
+    "07(009)-qjbg-20200418-0.txt": {
+      "file": "07(009)-qjbg-20200418-0.txt",
+      "bytes": 27027,
+      "sha256": "5e847ce25cf63c250d03345b4bc05ce3f1722645361d044b002a966e03b42025",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-0.txt"
+    },
+    "07(009)-qjbg-20200418-1.txt": {
+      "file": "07(009)-qjbg-20200418-1.txt",
+      "bytes": 27027,
+      "sha256": "cece8c45f316e9a1eeee08e5767ca4348fff5d5218e6ec4a32ee45f5b02092b1",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-1.txt"
+    },
+    "07(009)-qjbg-20200418-10.txt": {
+      "file": "07(009)-qjbg-20200418-10.txt",
+      "bytes": 27027,
+      "sha256": "d53dfea1eb20d44bd9462f4895b66091b707e0af4b5db3f4d078b547a860ef6c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-10.txt"
+    },
+    "07(009)-qjbg-20200418-11.txt": {
+      "file": "07(009)-qjbg-20200418-11.txt",
+      "bytes": 27027,
+      "sha256": "26dc2e5a0a30271ad7072991dae04d91931b557de3699340a776538a28c74a0b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-11.txt"
+    },
+    "07(009)-qjbg-20200418-12.txt": {
+      "file": "07(009)-qjbg-20200418-12.txt",
+      "bytes": 27027,
+      "sha256": "ab8c2dc8d88883a5f51cb6246321921d4bf18aefbcdd56f6d5c19b55016b944b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-12.txt"
+    },
+    "07(009)-qjbg-20200418-13.txt": {
+      "file": "07(009)-qjbg-20200418-13.txt",
+      "bytes": 27027,
+      "sha256": "1fb53e60d2c6e8c14a212b57255c0fdabde5e78350597fca40bf3ca36d5ef944",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-13.txt"
+    },
+    "07(009)-qjbg-20200418-14.txt": {
+      "file": "07(009)-qjbg-20200418-14.txt",
+      "bytes": 27027,
+      "sha256": "c63117ff16946485d42f9a03a685d5ddbac52ed93bfc9aa12449af0acab9add2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-14.txt"
+    },
+    "07(009)-qjbg-20200418-15.txt": {
+      "file": "07(009)-qjbg-20200418-15.txt",
+      "bytes": 27027,
+      "sha256": "72080e022cc0f1eddbdad8d5b045302dafb7f80aca4557c569d7ba45204d43ae",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-15.txt"
+    },
+    "07(009)-qjbg-20200418-16.txt": {
+      "file": "07(009)-qjbg-20200418-16.txt",
+      "bytes": 27027,
+      "sha256": "5f3b40cae80118e96c9f71d28e3d5263576a7b115362d56eb2684564213ba57b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-16.txt"
+    },
+    "07(009)-qjbg-20200418-17.txt": {
+      "file": "07(009)-qjbg-20200418-17.txt",
+      "bytes": 27027,
+      "sha256": "220c09dc99ae3d7009d7c848bc521e6dba0ef4c39ee5f6f2d0dc7ea58b49752d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-17.txt"
+    },
+    "07(009)-qjbg-20200418-18.txt": {
+      "file": "07(009)-qjbg-20200418-18.txt",
+      "bytes": 27027,
+      "sha256": "0264aed0c4686eeeba995d62087de6e2291b3be926fd7b6fc6b3f6e09d8f3a21",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-18.txt"
+    },
+    "07(009)-qjbg-20200418-19.txt": {
+      "file": "07(009)-qjbg-20200418-19.txt",
+      "bytes": 27027,
+      "sha256": "2e581f4c7affa92e8b15d571c9b92498f6b3204536754453a18d70c333307e88",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-19.txt"
+    },
+    "07(009)-qjbg-20200418-2.txt": {
+      "file": "07(009)-qjbg-20200418-2.txt",
+      "bytes": 27027,
+      "sha256": "4bd9caca408874fd61f7162ad0cf825b7909bec501643fddfe6ab59ad0718731",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-2.txt"
+    },
+    "07(009)-qjbg-20200418-20.txt": {
+      "file": "07(009)-qjbg-20200418-20.txt",
+      "bytes": 27027,
+      "sha256": "1d590e7a4132026811fbd0904310c73c2d330dfbed87c8d21620a8965b5e2ca0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-20.txt"
+    },
+    "07(009)-qjbg-20200418-21.txt": {
+      "file": "07(009)-qjbg-20200418-21.txt",
+      "bytes": 27027,
+      "sha256": "49d957a085a98685d921a9069ddabf87d811835fbcbd3392b47f1626ae5cc9bb",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-21.txt"
+    },
+    "07(009)-qjbg-20200418-22.txt": {
+      "file": "07(009)-qjbg-20200418-22.txt",
+      "bytes": 27027,
+      "sha256": "35838a65b35aa347336e6bdaaf904cf97fde5180090dd78f6886fb4480d5970c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-22.txt"
+    },
+    "07(009)-qjbg-20200418-23.txt": {
+      "file": "07(009)-qjbg-20200418-23.txt",
+      "bytes": 27027,
+      "sha256": "6adeeacfdaef8a24ca8fea19287d7dbfe866e57db5a40233909f4515549775ba",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-23.txt"
+    },
+    "07(009)-qjbg-20200418-24.txt": {
+      "file": "07(009)-qjbg-20200418-24.txt",
+      "bytes": 27027,
+      "sha256": "4893d84c4f728ac9b1b9e277ab96144244e6796b4717eec6fc8b24ac6c282eea",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-24.txt"
+    },
+    "07(009)-qjbg-20200418-25.txt": {
+      "file": "07(009)-qjbg-20200418-25.txt",
+      "bytes": 27027,
+      "sha256": "d31c44b254807248964741d0de702e58aab7981f2fb8cb9564351ab2608b8646",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-25.txt"
+    },
+    "07(009)-qjbg-20200418-26.txt": {
+      "file": "07(009)-qjbg-20200418-26.txt",
+      "bytes": 27027,
+      "sha256": "93ae29e639c9e88fbe533d5c9a59806889e2f2d907bda30176df8198b22a5ba4",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-26.txt"
+    },
+    "07(009)-qjbg-20200418-27.txt": {
+      "file": "07(009)-qjbg-20200418-27.txt",
+      "bytes": 27027,
+      "sha256": "0f16d750bfa8647fd4b23a1e57dba1cd682b0bf7cc4897b7ec2a3982818e99c0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-27.txt"
+    },
+    "07(009)-qjbg-20200418-28.txt": {
+      "file": "07(009)-qjbg-20200418-28.txt",
+      "bytes": 27027,
+      "sha256": "24e449a9408c48804d47dcf35224f9a3d570d4a21fda28aa5f8e0401f4c7a904",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-28.txt"
+    },
+    "07(009)-qjbg-20200418-29.txt": {
+      "file": "07(009)-qjbg-20200418-29.txt",
+      "bytes": 27027,
+      "sha256": "afc6289c34334e5ace0c47fcc5cfedac990f8f5f779f43e162b78aee443a6b76",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-29.txt"
+    },
+    "07(009)-qjbg-20200418-3.txt": {
+      "file": "07(009)-qjbg-20200418-3.txt",
+      "bytes": 27027,
+      "sha256": "b3d6279528819e28e99ec9f967cdf09c07992235fdc11d718472e552a2a4318d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-3.txt"
+    },
+    "07(009)-qjbg-20200418-30.txt": {
+      "file": "07(009)-qjbg-20200418-30.txt",
+      "bytes": 27027,
+      "sha256": "c2a5172faa77ccccc2fad2b7de4b4d39eb3525ebeb294488e1b8f5ba8689e776",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-30.txt"
+    },
+    "07(009)-qjbg-20200418-31.txt": {
+      "file": "07(009)-qjbg-20200418-31.txt",
+      "bytes": 27027,
+      "sha256": "da0853e8eecc2450ccf67a41561f561e51f2352d2838c8d7257d3f48e6905611",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-31.txt"
+    },
+    "07(009)-qjbg-20200418-32.txt": {
+      "file": "07(009)-qjbg-20200418-32.txt",
+      "bytes": 27027,
+      "sha256": "006de28f1e95b69f740ccee790740a568d977839489187f64ea32a4bec4004e3",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-32.txt"
+    },
+    "07(009)-qjbg-20200418-33.txt": {
+      "file": "07(009)-qjbg-20200418-33.txt",
+      "bytes": 27027,
+      "sha256": "dc113855ee9a86d2050bf706d50cdca5edb18f7d921dfbfb6e906482523e84b7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-33.txt"
+    },
+    "07(009)-qjbg-20200418-34.txt": {
+      "file": "07(009)-qjbg-20200418-34.txt",
+      "bytes": 27027,
+      "sha256": "c65219e361322d6ec61254ef7875689658b3c886e9afb0c61c3f9719bfabb51f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-34.txt"
+    },
+    "07(009)-qjbg-20200418-35.txt": {
+      "file": "07(009)-qjbg-20200418-35.txt",
+      "bytes": 27027,
+      "sha256": "47bedf2edaec01a601a882d0f2d6bcb2be547fdd0c125b4b3db27ff9b2bcb986",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-35.txt"
+    },
+    "07(009)-qjbg-20200418-36.txt": {
+      "file": "07(009)-qjbg-20200418-36.txt",
+      "bytes": 27027,
+      "sha256": "3b82dae6db9902b43aec76e66be9f2d36ba1eebbf7153396dc42102b11e3d911",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-36.txt"
+    },
+    "07(009)-qjbg-20200418-37.txt": {
+      "file": "07(009)-qjbg-20200418-37.txt",
+      "bytes": 27027,
+      "sha256": "ecf6c169c5937134d9426147aae47ecfe9cf915cf49b4d0fa391362ebeb04e3a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-37.txt"
+    },
+    "07(009)-qjbg-20200418-38.txt": {
+      "file": "07(009)-qjbg-20200418-38.txt",
+      "bytes": 27027,
+      "sha256": "f7e052bcff4a8874e47e4da2cf8204e97e7f599642f5ffbe71647f8e4cdd2caa",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-38.txt"
+    },
+    "07(009)-qjbg-20200418-39.txt": {
+      "file": "07(009)-qjbg-20200418-39.txt",
+      "bytes": 27027,
+      "sha256": "3dc641db6f08dfa61de3b2b6deaff2c7ff373785da0bc036ce31a4b14c9c40c6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-39.txt"
+    },
+    "07(009)-qjbg-20200418-4.txt": {
+      "file": "07(009)-qjbg-20200418-4.txt",
+      "bytes": 27027,
+      "sha256": "cde5249bc9ef48b3db0516fb97388ca1c5a3db988a24f87d6a79055129ea42c5",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-4.txt"
+    },
+    "07(009)-qjbg-20200418-40.txt": {
+      "file": "07(009)-qjbg-20200418-40.txt",
+      "bytes": 27027,
+      "sha256": "4b083b15f05263c215903151f508c1297d375513b245d15bc972304f2f59119f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-40.txt"
+    },
+    "07(009)-qjbg-20200418-41.txt": {
+      "file": "07(009)-qjbg-20200418-41.txt",
+      "bytes": 27027,
+      "sha256": "5f6a7c2c0f649f1b90b92f025771c8a8976e12c99589fac302f20633a668a4f4",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-41.txt"
+    },
+    "07(009)-qjbg-20200418-42.txt": {
+      "file": "07(009)-qjbg-20200418-42.txt",
+      "bytes": 27027,
+      "sha256": "5a6e7aa53d4cecd64e883398b28d63b569fac2dec1649aeafa1b5323fd14d4e5",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-42.txt"
+    },
+    "07(009)-qjbg-20200418-43.txt": {
+      "file": "07(009)-qjbg-20200418-43.txt",
+      "bytes": 27027,
+      "sha256": "f38cbc4edcf60d5c46bef860ac01f3323950e941a43d07d1ddc80d11ae6ab24a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-43.txt"
+    },
+    "07(009)-qjbg-20200418-44.txt": {
+      "file": "07(009)-qjbg-20200418-44.txt",
+      "bytes": 27027,
+      "sha256": "0ad0bc322013ab9511bc172bdb2647f7b87e0db86e935bbce322b7e3c54c36d5",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-44.txt"
+    },
+    "07(009)-qjbg-20200418-45.txt": {
+      "file": "07(009)-qjbg-20200418-45.txt",
+      "bytes": 27027,
+      "sha256": "2eb0182c18014f617d41f31f9415c1c4205ce8af53a6fd955f93ff9705f33a7f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-45.txt"
+    },
+    "07(009)-qjbg-20200418-46.txt": {
+      "file": "07(009)-qjbg-20200418-46.txt",
+      "bytes": 27027,
+      "sha256": "324d853e2abe947b27bbb29ce28ea80abbd648d45682ee99d337f129164bf81d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-46.txt"
+    },
+    "07(009)-qjbg-20200418-47.txt": {
+      "file": "07(009)-qjbg-20200418-47.txt",
+      "bytes": 27027,
+      "sha256": "b76c9eab72f3fc183641a1ea81ef806ce79d13db99128bd4746dd8ca75b56089",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-47.txt"
+    },
+    "07(009)-qjbg-20200418-48.txt": {
+      "file": "07(009)-qjbg-20200418-48.txt",
+      "bytes": 27027,
+      "sha256": "49a6ecb466bd6aee2e6c76165d16ebc15c8cae5e0991fffa5ac09add2cdfbfcd",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-48.txt"
+    },
+    "07(009)-qjbg-20200418-49.txt": {
+      "file": "07(009)-qjbg-20200418-49.txt",
+      "bytes": 27027,
+      "sha256": "7a4fa9755aae0ac5e707b286ae234b98c6cc808f381b435c56b5e0906a3a9f7a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-49.txt"
+    },
+    "07(009)-qjbg-20200418-5.txt": {
+      "file": "07(009)-qjbg-20200418-5.txt",
+      "bytes": 27027,
+      "sha256": "959449302e0a3ac75d6a75db1a042e5ea2c8060462fd6110f07109529c5a9a3e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-5.txt"
+    },
+    "07(009)-qjbg-20200418-50.txt": {
+      "file": "07(009)-qjbg-20200418-50.txt",
+      "bytes": 27027,
+      "sha256": "fcfa9ed612b5b0dcf06a297807817840d9387b1a6719d2526fb31f822aefec4c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-50.txt"
+    },
+    "07(009)-qjbg-20200418-51.txt": {
+      "file": "07(009)-qjbg-20200418-51.txt",
+      "bytes": 27027,
+      "sha256": "fad7a8296841f7d3e79d15b4b87d9fbf32a1489647b1d9eac0777ed72448d405",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-51.txt"
+    },
+    "07(009)-qjbg-20200418-52.txt": {
+      "file": "07(009)-qjbg-20200418-52.txt",
+      "bytes": 27027,
+      "sha256": "f10fa42db54c1375a935cf0168c57a35b43d460733b573af8f5492cabd4cb952",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-52.txt"
+    },
+    "07(009)-qjbg-20200418-53.txt": {
+      "file": "07(009)-qjbg-20200418-53.txt",
+      "bytes": 27027,
+      "sha256": "205daf0d47b78607e7d282d59f004233b3c496f82214105960055ba8782f10de",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-53.txt"
+    },
+    "07(009)-qjbg-20200418-54.txt": {
+      "file": "07(009)-qjbg-20200418-54.txt",
+      "bytes": 27027,
+      "sha256": "73e5303c48b02f63980235484b0c6364226ca8f73ea4c33ea126bc8180d405d4",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-54.txt"
+    },
+    "07(009)-qjbg-20200418-55.txt": {
+      "file": "07(009)-qjbg-20200418-55.txt",
+      "bytes": 27027,
+      "sha256": "55dfeef59d6adaf074ac28dff022783452d0b9010a59d4f3f4fe3ae91ddaee49",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-55.txt"
+    },
+    "07(009)-qjbg-20200418-56.txt": {
+      "file": "07(009)-qjbg-20200418-56.txt",
+      "bytes": 27027,
+      "sha256": "4f613cb4e026b5aa022b790af07bc6121415b1c48d3d3a701342b346a292806b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-56.txt"
+    },
+    "07(009)-qjbg-20200418-57.txt": {
+      "file": "07(009)-qjbg-20200418-57.txt",
+      "bytes": 27027,
+      "sha256": "d318b506f579a870ebffbc8a6429d5d6a8879c23c1d05d25dda5e3ba95fddcb4",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-57.txt"
+    },
+    "07(009)-qjbg-20200418-58.txt": {
+      "file": "07(009)-qjbg-20200418-58.txt",
+      "bytes": 27027,
+      "sha256": "da86d404d0a451b88475c83cf19f92a36aa78e71dbf4320d1fd48ddf8370ccaf",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-58.txt"
+    },
+    "07(009)-qjbg-20200418-59.txt": {
+      "file": "07(009)-qjbg-20200418-59.txt",
+      "bytes": 27027,
+      "sha256": "7a58509ccbea408f53cf2e4c1d95764e3dd1dc46f537e0829b2b5d5abfcbe394",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-59.txt"
+    },
+    "07(009)-qjbg-20200418-6.txt": {
+      "file": "07(009)-qjbg-20200418-6.txt",
+      "bytes": 27027,
+      "sha256": "7bceee35ce971091b8c3e48ecacbc409ef0cbe40d1d9dfcde367d210ef29f4e5",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-6.txt"
+    },
+    "07(009)-qjbg-20200418-60.txt": {
+      "file": "07(009)-qjbg-20200418-60.txt",
+      "bytes": 27027,
+      "sha256": "a56a540fc9a8b470f8d02d6ebb34bc067d21e2b84e94a8db30906127d1856390",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-60.txt"
+    },
+    "07(009)-qjbg-20200418-61.txt": {
+      "file": "07(009)-qjbg-20200418-61.txt",
+      "bytes": 27027,
+      "sha256": "a55c99f7e39af3219b83d6362e39026be03ee4168c4ac42aef312ed6113b0fb3",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-61.txt"
+    },
+    "07(009)-qjbg-20200418-62.txt": {
+      "file": "07(009)-qjbg-20200418-62.txt",
+      "bytes": 27027,
+      "sha256": "b8a517b84e3331a1d84dedf98891bc5c619b0214dab9dda803bb8b51f5014d0e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-62.txt"
+    },
+    "07(009)-qjbg-20200418-63.txt": {
+      "file": "07(009)-qjbg-20200418-63.txt",
+      "bytes": 27027,
+      "sha256": "537cd12d4450280d45b3150ee34e261dcadaf37bb9393890534cbfbaf7566fd2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-63.txt"
+    },
+    "07(009)-qjbg-20200418-64.txt": {
+      "file": "07(009)-qjbg-20200418-64.txt",
+      "bytes": 27027,
+      "sha256": "87190392801d06103995544e64a7f5a74949eea20ff38ca06dfd8edbf87e31c1",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-64.txt"
+    },
+    "07(009)-qjbg-20200418-65.txt": {
+      "file": "07(009)-qjbg-20200418-65.txt",
+      "bytes": 27027,
+      "sha256": "13d486cdd8f57d731039d9725e67fb9ff84a0b902987cea32bb5edd662709bcb",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-65.txt"
+    },
+    "07(009)-qjbg-20200418-66.txt": {
+      "file": "07(009)-qjbg-20200418-66.txt",
+      "bytes": 27027,
+      "sha256": "75d704c9069cf7ef287a94348fce39ff25871cd3354ee4122b9877ada3405168",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-66.txt"
+    },
+    "07(009)-qjbg-20200418-67.txt": {
+      "file": "07(009)-qjbg-20200418-67.txt",
+      "bytes": 27027,
+      "sha256": "585580fc5156cb882c13505eb22c8d0e009cb477aecc2129962939d24d9fac2f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-67.txt"
+    },
+    "07(009)-qjbg-20200418-68.txt": {
+      "file": "07(009)-qjbg-20200418-68.txt",
+      "bytes": 27027,
+      "sha256": "d6827451bc9ef127fc6b22a927ec76a98e15d152e5661b495657d3f5f6b1a43d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-68.txt"
+    },
+    "07(009)-qjbg-20200418-69.txt": {
+      "file": "07(009)-qjbg-20200418-69.txt",
+      "bytes": 27027,
+      "sha256": "2a11c06d17299f6cf6988f694ced97ca770e605397662b91d3a6b3c4ebb1291a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-69.txt"
+    },
+    "07(009)-qjbg-20200418-7.txt": {
+      "file": "07(009)-qjbg-20200418-7.txt",
+      "bytes": 27027,
+      "sha256": "0cdfa4ca4c769cf539525487ef4ab0babeb4e2e1f37251cbba0f87a824af01f8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-7.txt"
+    },
+    "07(009)-qjbg-20200418-70.txt": {
+      "file": "07(009)-qjbg-20200418-70.txt",
+      "bytes": 27027,
+      "sha256": "26ef6a590a6b69beb39b0f269dc3417090eb9c72d83da8924f526906c6649d86",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-70.txt"
+    },
+    "07(009)-qjbg-20200418-71.txt": {
+      "file": "07(009)-qjbg-20200418-71.txt",
+      "bytes": 27027,
+      "sha256": "dc9f184fcab8e9a3985ec46c7209a3fd87afde1af5db31f97585fdbbbab6d1e7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-71.txt"
+    },
+    "07(009)-qjbg-20200418-72.txt": {
+      "file": "07(009)-qjbg-20200418-72.txt",
+      "bytes": 27027,
+      "sha256": "70623944ed27b7ac3e7d0a3084af75559caf896f62287d7f40aeee591f111c6f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-72.txt"
+    },
+    "07(009)-qjbg-20200418-8.txt": {
+      "file": "07(009)-qjbg-20200418-8.txt",
+      "bytes": 27027,
+      "sha256": "c04cd207cc223e672f0ec20c97c81f27319ab25cbebb603750556d69f28eeefa",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-8.txt"
+    },
+    "07(009)-qjbg-20200418-9.txt": {
+      "file": "07(009)-qjbg-20200418-9.txt",
+      "bytes": 27027,
+      "sha256": "ad9df51eb72d626b04798af82af090b92b2cad15f95ff161301702ac8affb7c4",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-qjbg-20200418\\07(009)-qjbg-20200418-9.txt"
+    },
+    "jbg-20200418-R.txt": {
+      "file": "jbg-20200418-R.txt",
+      "bytes": 27027,
+      "sha256": "5e847ce25cf63c250d03345b4bc05ce3f1722645361d044b002a966e03b42025",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\jbg-20200418-R.txt"
+    },
+    "07(009)-zgyg-20250720-100.txt": {
+      "file": "07(009)-zgyg-20250720-100.txt",
+      "bytes": 27027,
+      "sha256": "0a979fb80dc440aa68869c6bc60a73e496b0d34a0ca63506f15f3866dcce58de",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-100.txt"
+    },
+    "07(009)-zgyg-20250720-101.txt": {
+      "file": "07(009)-zgyg-20250720-101.txt",
+      "bytes": 27027,
+      "sha256": "6efebb33a5e1c2a3698099e519c3ada1ce143e3263a7a2730ca6b3488e278f53",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-101.txt"
+    },
+    "07(009)-zgyg-20250720-102.txt": {
+      "file": "07(009)-zgyg-20250720-102.txt",
+      "bytes": 27027,
+      "sha256": "e51c0cc36776115698d5a13e8bb35049450f348c93a76341add36376c43151ee",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-102.txt"
+    },
+    "07(009)-zgyg-20250720-103.txt": {
+      "file": "07(009)-zgyg-20250720-103.txt",
+      "bytes": 27027,
+      "sha256": "f190f3f2bd68f103c093b7b16549cdc0ac5640f74492a5391ca5aaa2215d3c7b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-103.txt"
+    },
+    "07(009)-zgyg-20250720-104.txt": {
+      "file": "07(009)-zgyg-20250720-104.txt",
+      "bytes": 27027,
+      "sha256": "b01f8e65758c32f07ed0c89775946b13a9e2a12be33cfed29a1032fcd48932d9",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-104.txt"
+    },
+    "07(009)-zgyg-20250720-105.txt": {
+      "file": "07(009)-zgyg-20250720-105.txt",
+      "bytes": 27027,
+      "sha256": "960bb0db28998bd4d0459398c6be7637a980357ccf217c8e5b3c724fde87128a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-105.txt"
+    },
+    "07(009)-zgyg-20250720-106.txt": {
+      "file": "07(009)-zgyg-20250720-106.txt",
+      "bytes": 27027,
+      "sha256": "7c0d4c14507d4dc8ea16da44ed696e0d210601aca1af49fd03a704eb087ae82d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-106.txt"
+    },
+    "07(009)-zgyg-20250720-107.txt": {
+      "file": "07(009)-zgyg-20250720-107.txt",
+      "bytes": 27027,
+      "sha256": "cd507649fcf63337db1f40bdfb30638f3f5c6f111682ecdeff2bd5ccf98ff75e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-107.txt"
+    },
+    "07(009)-zgyg-20250720-108.txt": {
+      "file": "07(009)-zgyg-20250720-108.txt",
+      "bytes": 27027,
+      "sha256": "7ac1ebeed331d0975bf8103b14a5c1403d224b0cf06dbb0f95e685a15d5a484f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-108.txt"
+    },
+    "07(009)-zgyg-20250720-109.txt": {
+      "file": "07(009)-zgyg-20250720-109.txt",
+      "bytes": 27027,
+      "sha256": "180135837badf5695e7c896c2e1171a3f0721e8dd7d301790c55745ad8d4cd74",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-109.txt"
+    },
+    "07(009)-zgyg-20250720-110.97.txt": {
+      "file": "07(009)-zgyg-20250720-110.97.txt",
+      "bytes": 27027,
+      "sha256": "a4b67241ca504ab15575b2bc8872c4f83d50da9fb165eb79343b42207ddafea8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-110.97.txt"
+    },
+    "07(009)-zgyg-20250720-110.txt": {
+      "file": "07(009)-zgyg-20250720-110.txt",
+      "bytes": 27027,
+      "sha256": "8df185614f138577521af8056da2a442e0266e75b256d691545c0b6233100bef",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-110.txt"
+    },
+    "07(009)-zgyg-20250720-71.txt": {
+      "file": "07(009)-zgyg-20250720-71.txt",
+      "bytes": 27027,
+      "sha256": "a27898cbce3e181bc9be0fcb244d32b4bc4896eb106c2ada830200084651c2a0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-71.txt"
+    },
+    "07(009)-zgyg-20250720-72.txt": {
+      "file": "07(009)-zgyg-20250720-72.txt",
+      "bytes": 27027,
+      "sha256": "30316362ed7e32b4c9aaa71b811d05923e5ddf4663ae3a5ece56306cbe46409e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-72.txt"
+    },
+    "07(009)-zgyg-20250720-73.txt": {
+      "file": "07(009)-zgyg-20250720-73.txt",
+      "bytes": 27027,
+      "sha256": "35fc66c7adfe66bb37f6113efc8b07f2e91ca8dfbc1c4b4f651cb19311e59189",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-73.txt"
+    },
+    "07(009)-zgyg-20250720-74.txt": {
+      "file": "07(009)-zgyg-20250720-74.txt",
+      "bytes": 27027,
+      "sha256": "9d0c485d7ad00123d1ae1eb6b10f6d7c27f4050cc57a8b53eeb94eeb2199b5bb",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-74.txt"
+    },
+    "07(009)-zgyg-20250720-75.txt": {
+      "file": "07(009)-zgyg-20250720-75.txt",
+      "bytes": 27027,
+      "sha256": "613a7d6c4f9bfd54490127358ee86c7eec625af543152d43fd2c4caf7c72c33f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-75.txt"
+    },
+    "07(009)-zgyg-20250720-76.txt": {
+      "file": "07(009)-zgyg-20250720-76.txt",
+      "bytes": 27027,
+      "sha256": "089c95b2f12f87b6fd9c67a15606a26f0b740e280b8fa6f6e514bdec038dab05",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-76.txt"
+    },
+    "07(009)-zgyg-20250720-77.txt": {
+      "file": "07(009)-zgyg-20250720-77.txt",
+      "bytes": 27027,
+      "sha256": "d81114d9b2ce5353d9f44c51756e84e24cc29d567b927ce12879b7a7740de5ce",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-77.txt"
+    },
+    "07(009)-zgyg-20250720-78.txt": {
+      "file": "07(009)-zgyg-20250720-78.txt",
+      "bytes": 27027,
+      "sha256": "290260bb8f21fd64d15aa9f84c4b8329b575d2aaba215f24f97f197c3630d25d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-78.txt"
+    },
+    "07(009)-zgyg-20250720-79.txt": {
+      "file": "07(009)-zgyg-20250720-79.txt",
+      "bytes": 27027,
+      "sha256": "457c1ebc10e4dbf2fd5c73fb9178fb8ce3ef7a9647ca2b93d08c40919045ab1d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-79.txt"
+    },
+    "07(009)-zgyg-20250720-80.txt": {
+      "file": "07(009)-zgyg-20250720-80.txt",
+      "bytes": 27027,
+      "sha256": "110a0f64f883f661b6ae9f62f22268769d425f712d54a12fe55f254a51221728",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-80.txt"
+    },
+    "07(009)-zgyg-20250720-81.txt": {
+      "file": "07(009)-zgyg-20250720-81.txt",
+      "bytes": 27027,
+      "sha256": "d1c25d529f8f6cddf2d6c0748a9390e4f996c15b1fa03dcf0d52d3311cc91424",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-81.txt"
+    },
+    "07(009)-zgyg-20250720-82.txt": {
+      "file": "07(009)-zgyg-20250720-82.txt",
+      "bytes": 27027,
+      "sha256": "6a4891393b7065cf3c01e2a51959c62cbbf05fdd722c510ac2eaad0154bf1dde",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-82.txt"
+    },
+    "07(009)-zgyg-20250720-83.txt": {
+      "file": "07(009)-zgyg-20250720-83.txt",
+      "bytes": 27027,
+      "sha256": "6c1fc1f1db31d8faefb99b3a46fd8b6d5187f5b51cb8ed1de1c4f2c2fc229836",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-83.txt"
+    },
+    "07(009)-zgyg-20250720-84.txt": {
+      "file": "07(009)-zgyg-20250720-84.txt",
+      "bytes": 27027,
+      "sha256": "99b3440cb680e74542eee952f0e68cd3b867754a66c4c5dc3f73676bbf753169",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-84.txt"
+    },
+    "07(009)-zgyg-20250720-85.txt": {
+      "file": "07(009)-zgyg-20250720-85.txt",
+      "bytes": 27027,
+      "sha256": "dd6588a67b91850adff41783ee96adfc741e99750d321be4dbac4770f3cc1aa9",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-85.txt"
+    },
+    "07(009)-zgyg-20250720-86.txt": {
+      "file": "07(009)-zgyg-20250720-86.txt",
+      "bytes": 27027,
+      "sha256": "29c592515c13e666a27e4498411df07ae55c91d60ac87edcbf8cdaa7c1cfdad3",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-86.txt"
+    },
+    "07(009)-zgyg-20250720-87.txt": {
+      "file": "07(009)-zgyg-20250720-87.txt",
+      "bytes": 27027,
+      "sha256": "15235a6e462a26cab328143e667817dd93c400390904740b82a8a88b16f52e9d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-87.txt"
+    },
+    "07(009)-zgyg-20250720-88.txt": {
+      "file": "07(009)-zgyg-20250720-88.txt",
+      "bytes": 27027,
+      "sha256": "bac4c23a6c30c63596c2b380299d981a433800f17aab66a373e198156c7caec6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-88.txt"
+    },
+    "07(009)-zgyg-20250720-89.txt": {
+      "file": "07(009)-zgyg-20250720-89.txt",
+      "bytes": 27027,
+      "sha256": "fd76343f92c86992bb47fe444d3cb5e9a076dceb94ee618ec60469c80a21c1b5",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-89.txt"
+    },
+    "07(009)-zgyg-20250720-90.75.txt": {
+      "file": "07(009)-zgyg-20250720-90.75.txt",
+      "bytes": 27027,
+      "sha256": "ba79ff70b78d8e87f1f535a309575653bb1b19594d64140774763621540c4c97",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-90.75.txt"
+    },
+    "07(009)-zgyg-20250720-90.txt": {
+      "file": "07(009)-zgyg-20250720-90.txt",
+      "bytes": 27027,
+      "sha256": "2ce05703097052daac22202bdc5a0a3d7b4c733d9e7da17469ba9925e627c48f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-90.txt"
+    },
+    "07(009)-zgyg-20250720-91.txt": {
+      "file": "07(009)-zgyg-20250720-91.txt",
+      "bytes": 27027,
+      "sha256": "404a3fb394436c60d0f1d2f867869a9f857d722bff91615e9e663547ea00dfd2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-91.txt"
+    },
+    "07(009)-zgyg-20250720-92.txt": {
+      "file": "07(009)-zgyg-20250720-92.txt",
+      "bytes": 27027,
+      "sha256": "ec4745064434675eaa18e0d229fd677a472e21d931fc412e75cc09514b31b925",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-92.txt"
+    },
+    "07(009)-zgyg-20250720-93.txt": {
+      "file": "07(009)-zgyg-20250720-93.txt",
+      "bytes": 27027,
+      "sha256": "cb8cca8aedbf1893bdfde40dfceb9a17ffbb4e2af080940598c00d8d54b2d810",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-93.txt"
+    },
+    "07(009)-zgyg-20250720-94.txt": {
+      "file": "07(009)-zgyg-20250720-94.txt",
+      "bytes": 27027,
+      "sha256": "732afea63963213be2c913a02d2d15b832241f1df41be30eec86d41129a6bae0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-94.txt"
+    },
+    "07(009)-zgyg-20250720-95.txt": {
+      "file": "07(009)-zgyg-20250720-95.txt",
+      "bytes": 27027,
+      "sha256": "f36981ee23eccf9d07045cbe4e3c33e283dc1a98d3927332bef85d7058987694",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-95.txt"
+    },
+    "07(009)-zgyg-20250720-96.txt": {
+      "file": "07(009)-zgyg-20250720-96.txt",
+      "bytes": 27027,
+      "sha256": "612bdcbc3fb9e8004dc4923d2cf89aa023fa02ccec1c87605bb19ec3b46bb532",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-96.txt"
+    },
+    "07(009)-zgyg-20250720-97.txt": {
+      "file": "07(009)-zgyg-20250720-97.txt",
+      "bytes": 27027,
+      "sha256": "36e2695adb837329039ea683b7f0fd72d6c78b2889bc5ba06f564dbcc5c250e5",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-97.txt"
+    },
+    "07(009)-zgyg-20250720-98.txt": {
+      "file": "07(009)-zgyg-20250720-98.txt",
+      "bytes": 27027,
+      "sha256": "f02a66cbd6486b3f1ce1d84e2e812eb1cf91fb9a73ddb2788595b55ef27cb99e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-98.txt"
+    },
+    "07(009)-zgyg-20250720-99.txt": {
+      "file": "07(009)-zgyg-20250720-99.txt",
+      "bytes": 27027,
+      "sha256": "42e762dc8e3816aac6bb5f180e0cdd164dc3bb3a1e8365059da4a1fb2f5acc94",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250720\\07(009)-zgyg-20250720-99.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-10.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-10.txt",
+      "bytes": 27027,
+      "sha256": "11ecf4a17aa887e699accdd1cfe7728db5ce0544aeed4662f8c38c30a4ef1ce6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-10.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-11.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-11.txt",
+      "bytes": 27027,
+      "sha256": "3a22d565a5da00926a0fa3860fe19ea3adfece5ae516731f12a93cffb0026bb6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-11.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-12.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-12.txt",
+      "bytes": 27027,
+      "sha256": "3e157da56ec7ece9154dd8adfca30d3116e671f70c479dd643c0fe1216ed86e3",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-12.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-13.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-13.txt",
+      "bytes": 27027,
+      "sha256": "413b36f7c716819d23903b6805785dfb0d2b2d07d1fb84d9b1e0bcfca06f4a7b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-13.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-14.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-14.txt",
+      "bytes": 27027,
+      "sha256": "cf2758dafc7a0d79b7e0265109f847a37613c04ad62fb9f325d91aae852746ff",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-14.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-15.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-15.txt",
+      "bytes": 27027,
+      "sha256": "02aea7cd17736d04fe64e7d192c5b8eb1f246d2f7f71bb88eabf1aa999b8d2de",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-15.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-16.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-16.txt",
+      "bytes": 27027,
+      "sha256": "61320634462d89aec43b7381aaab98e80ae3b17ca8e30452eb91ae388d5d44d0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-16.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-17.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-17.txt",
+      "bytes": 27027,
+      "sha256": "07041f5f08d2564b49e12b7fb9985c7d16af23e3c1ea6b6c22f755b62a9d6594",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-17.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-18.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-18.txt",
+      "bytes": 27027,
+      "sha256": "587da1ef6ca2809f8e5ae71c2661f86bd7a1218031dec43068c401f8ad531055",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-18.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-19.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-19.txt",
+      "bytes": 27027,
+      "sha256": "948b9f578c8bccae36ecca5a49cce62a714908557dd6dec91a93fe326d4e76a8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-19.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-20.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-20.txt",
+      "bytes": 27027,
+      "sha256": "b86429eb2a32724f1695592d9263d013ea4ea83492315ab51d93b3e82d8cfd0a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-20.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-21.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-21.txt",
+      "bytes": 27027,
+      "sha256": "d2714c5ce87367238cc88f355bc6a7e9556e757b3d6ef1b23f7bae58e3c93138",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-21.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-22.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-22.txt",
+      "bytes": 27027,
+      "sha256": "be217a15763a059bd1b7326d0eddea1e9b4745cf64771344007118ebea47907e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-22.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-23.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-23.txt",
+      "bytes": 27027,
+      "sha256": "2d0f64b3bdf9d6b7490fa77f561d4cc3c3aebb0b8c58eb87b1ec44d38fb4242e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-23.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-24.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-24.txt",
+      "bytes": 27027,
+      "sha256": "353d3379ac361064de9251497da328de8ae9cc0d7f6d3e484ab048ee618e4233",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-24.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-25.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-25.txt",
+      "bytes": 27027,
+      "sha256": "c64feedae6574fecba05ff87392d804630e2343e14b79e1e41f4e5267664c041",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-25.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-26.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-26.txt",
+      "bytes": 27027,
+      "sha256": "58ebb681843694a718a6f9682a6f925ea879065b6e0ba51827dfae569c24749f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-26.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-27.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-27.txt",
+      "bytes": 27027,
+      "sha256": "2f58b88cac2b9ec2e8884e325b584dccec31cf35a5ec74d457a0132a29b72786",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-27.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-28.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-28.txt",
+      "bytes": 27027,
+      "sha256": "d4025e4e4cf56989cdfe8dc3e5f5a883bafd4ea77f2830e2d9935893445bf509",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-28.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-29.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-29.txt",
+      "bytes": 27027,
+      "sha256": "721b2e4562ffbfaa6023e5e7b387efdf78e42fe66e88a84f576689b6716e78a6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-29.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-30.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-30.txt",
+      "bytes": 27027,
+      "sha256": "beb8b6b6f7953fd04dd76ced76530355fc162400514e6442983323e9676a38fb",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-30.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-31.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-31.txt",
+      "bytes": 27027,
+      "sha256": "b95b2809c5d96382b2e6533d45b931f5eb059b6555a58d884d6a58914f4630a7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-31.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-32.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-32.txt",
+      "bytes": 27027,
+      "sha256": "ea07776d07d68206fb9d57cc2b979228145e0d20db93b22deb56b422322d3a31",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-32.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-33.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-33.txt",
+      "bytes": 27027,
+      "sha256": "6a4a5f8bc6b5bda3342922e0d0e2294af283e99ca1a1ec0696239bdb8aa71bf8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-33.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-34.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-34.txt",
+      "bytes": 27027,
+      "sha256": "255c46c8d3220acbd7a249f4ecf45eceaef6a88fdb1eb8d93022d645deb80e6a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-34.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-35.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-35.txt",
+      "bytes": 27027,
+      "sha256": "995f96c5bc0ea28d01fc6a46750a0fe2a1b60ba91aef4f2d8b0eb8fce88415df",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-35.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-36.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-36.txt",
+      "bytes": 27027,
+      "sha256": "3ff95876dafd477da127c717e35832c5dd8c3e0e6c5b5ca2578a5c835dadd968",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-36.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-37.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-37.txt",
+      "bytes": 27027,
+      "sha256": "232d838825be54f0bcc3263373879eb8a20d30792bdd6513446b8a90fd8dddb8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-37.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-38.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-38.txt",
+      "bytes": 27027,
+      "sha256": "4d86c782912ca5e13ad0327e0705456f86da42f23c7d965faf0eb285156a433d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-38.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-39.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-39.txt",
+      "bytes": 27027,
+      "sha256": "ea8f339d0c70094bc15a6ed37ebf07522713b4902c808eaaaf03db4464622698",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-39.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-40.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-40.txt",
+      "bytes": 27027,
+      "sha256": "1b020629c18817d617b9dd20b71acbd13895793ba75fc8443f687c251d1add11",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-40.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-41.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-41.txt",
+      "bytes": 27027,
+      "sha256": "9fa1115357d88157ac8d8bdeafe20a1cbeb6bfd368b023fe7ed54ebcd6108e95",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-41.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-42.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-42.txt",
+      "bytes": 27027,
+      "sha256": "1975a15e21a21b4d8b2f17171f39649c3775c7d19fac0b509539ed33f612ef44",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-42.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-43.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-43.txt",
+      "bytes": 27027,
+      "sha256": "03c96fc5e30bc532d6ada16c62e1112a99017dc67e1878413f4b3285e1f9862c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-43.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-44.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-44.txt",
+      "bytes": 27027,
+      "sha256": "30349720ec62edf2356917cc3db503df0ad0be47540a527fbabf76c0f6d31d7e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-44.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-45.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-45.txt",
+      "bytes": 27027,
+      "sha256": "05b126847ed90e1b7f33a81a082200fb6f4a5e2d7b78bc588e9b9cb190783500",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-45.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-46.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-46.txt",
+      "bytes": 27027,
+      "sha256": "7bf29557b5a3b6408ae58458a15d9a059f605a91bf1fab84d92b8a37aecadbd9",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-46.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-47.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-47.txt",
+      "bytes": 27027,
+      "sha256": "e3f824f189a9269f30d667be97137d538620818d4a365a59a6228116bf834e9f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-47.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-48.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-48.txt",
+      "bytes": 27027,
+      "sha256": "2daf9ac849e906c4e9ef3f43738289c68825a91705d2dc6e4f7d69893b350fc6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-48.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-49.8.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-49.8.txt",
+      "bytes": 27027,
+      "sha256": "be2c9e244012cfe5c3432bfcbe118659044df1ca5d05dcb0b6bf2e1282040235",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-49.8.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-49.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-49.txt",
+      "bytes": 27027,
+      "sha256": "66141d1ddbb62666cdee9ca514d9b82064909f37d20eaa41ad70c0e95b04c844",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-49.txt"
+    },
+    "07(009)-zgyg-20250722-cxg-9.1.txt": {
+      "file": "07(009)-zgyg-20250722-cxg-9.1.txt",
+      "bytes": 27027,
+      "sha256": "dca7b53b54cd6d55a29279100000c5271a27a621638ef2286dfa7846c90e09ac",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zgyg-20250722\\07(009)-zgyg-20250722-cxg-9.1.txt"
+    },
+    "07(009)-zjg-20200418-10.txt": {
+      "file": "07(009)-zjg-20200418-10.txt",
+      "bytes": 27027,
+      "sha256": "3809e972ae48d39fc8e85057b366be78259a2a92cd0b53dc4930d0f0e6bcec17",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-10.txt"
+    },
+    "07(009)-zjg-20200418-11.txt": {
+      "file": "07(009)-zjg-20200418-11.txt",
+      "bytes": 27027,
+      "sha256": "bae00618c9e0ad97882f1b8755e5dd946a82f5fb192e9910f4dad97e9abe3dc6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-11.txt"
+    },
+    "07(009)-zjg-20200418-12.txt": {
+      "file": "07(009)-zjg-20200418-12.txt",
+      "bytes": 27027,
+      "sha256": "4e424944c7bf60eceaefac0a0c47c48dc140b0e2da5b7132b00ede16f1f1fd74",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-12.txt"
+    },
+    "07(009)-zjg-20200418-13.txt": {
+      "file": "07(009)-zjg-20200418-13.txt",
+      "bytes": 27027,
+      "sha256": "c87b064b84b8c3cf905aa05e7fe7c9107cb07d13df0eab30b439824d260f4bdb",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-13.txt"
+    },
+    "07(009)-zjg-20200418-14.txt": {
+      "file": "07(009)-zjg-20200418-14.txt",
+      "bytes": 27027,
+      "sha256": "be7955a1963dec403250d4ae51eddef0fc41665ea7340c16f25fb018bce296b2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-14.txt"
+    },
+    "07(009)-zjg-20200418-15.txt": {
+      "file": "07(009)-zjg-20200418-15.txt",
+      "bytes": 27027,
+      "sha256": "0752a1c51803fcb43d62b59ea3afa601ddb4c56c00ce2e47ccb88f41f7889b4f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-15.txt"
+    },
+    "07(009)-zjg-20200418-16.txt": {
+      "file": "07(009)-zjg-20200418-16.txt",
+      "bytes": 27027,
+      "sha256": "90087fcf6d38243ad35c56d7d260039ba7dfe4692099fc9e344ac26d0e6482f8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-16.txt"
+    },
+    "07(009)-zjg-20200418-17.txt": {
+      "file": "07(009)-zjg-20200418-17.txt",
+      "bytes": 27027,
+      "sha256": "928171de566c74e962f59be7e690e892eb236050a18eb0500dd644ef29f48554",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-17.txt"
+    },
+    "07(009)-zjg-20200418-18.txt": {
+      "file": "07(009)-zjg-20200418-18.txt",
+      "bytes": 27027,
+      "sha256": "f063fe640d0d5e0f90050bb1d47cb51557ce73f0feb4dabdb2e702b84ee35191",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-18.txt"
+    },
+    "07(009)-zjg-20200418-19.txt": {
+      "file": "07(009)-zjg-20200418-19.txt",
+      "bytes": 27027,
+      "sha256": "80a64eb052c37c025195f16f56237f76ef243c1b3470d35970714d24e8ce44b2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-19.txt"
+    },
+    "07(009)-zjg-20200418-20.txt": {
+      "file": "07(009)-zjg-20200418-20.txt",
+      "bytes": 27027,
+      "sha256": "a40934b9b07a8fa78bd012587e5e40950dd973c198bcceb57193de5cb8dd9e1e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-20.txt"
+    },
+    "07(009)-zjg-20200418-21.txt": {
+      "file": "07(009)-zjg-20200418-21.txt",
+      "bytes": 27027,
+      "sha256": "9c7c2fb9b8339cfdd700953258e9c1f246025987cd4ca2ac88eeb33164f01498",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-21.txt"
+    },
+    "07(009)-zjg-20200418-22.txt": {
+      "file": "07(009)-zjg-20200418-22.txt",
+      "bytes": 27027,
+      "sha256": "4e9bf62343bd5420a9b2dea80c0df7dd68e5a8d0b6e9f1d29747a903019c0504",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-22.txt"
+    },
+    "07(009)-zjg-20200418-23.txt": {
+      "file": "07(009)-zjg-20200418-23.txt",
+      "bytes": 27027,
+      "sha256": "ffcb30ca0c0423caddea4a2d814fbddae4c8b3f52d64832c21a655175eac3620",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-23.txt"
+    },
+    "07(009)-zjg-20200418-24.txt": {
+      "file": "07(009)-zjg-20200418-24.txt",
+      "bytes": 27027,
+      "sha256": "3b1d7fc42091396eedccbc12ac81244c8ba21969059500eb98d6e13e3daa5eb0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-24.txt"
+    },
+    "07(009)-zjg-20200418-25.txt": {
+      "file": "07(009)-zjg-20200418-25.txt",
+      "bytes": 27027,
+      "sha256": "a22ac9e70b537f70b656d0af10a6b18ebf93293c82834106217f600d09aac868",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-25.txt"
+    },
+    "07(009)-zjg-20200418-26.txt": {
+      "file": "07(009)-zjg-20200418-26.txt",
+      "bytes": 27027,
+      "sha256": "4f273bc67604bae693143adeb5177fe0a94287c94256301eae3edd559564ea7e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-26.txt"
+    },
+    "07(009)-zjg-20200418-27.4.txt": {
+      "file": "07(009)-zjg-20200418-27.4.txt",
+      "bytes": 27027,
+      "sha256": "4fe01e5ebcd33fc6dbccc67121f0a30991fce1ad073e374130f1575147fdd81f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-27.4.txt"
+    },
+    "07(009)-zjg-20200418-27.txt": {
+      "file": "07(009)-zjg-20200418-27.txt",
+      "bytes": 27027,
+      "sha256": "5e7eb44ade6c87b96703c8bea980f4c2aa27bce8154f1e1982fed8305e36e837",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-27.txt"
+    },
+    "07(009)-zjg-20200418-28.txt": {
+      "file": "07(009)-zjg-20200418-28.txt",
+      "bytes": 27027,
+      "sha256": "cbdc8fd4ee7eaded1b4ad8d5e7dac49ceecbbcdb7c53bf3dcd8a3a40dbbe2f66",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-28.txt"
+    },
+    "07(009)-zjg-20200418-29.txt": {
+      "file": "07(009)-zjg-20200418-29.txt",
+      "bytes": 27027,
+      "sha256": "eb0ddf5f9fd8a3721a45622b832db6a7ca676b8845b2e0182fde64b250664992",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-29.txt"
+    },
+    "07(009)-zjg-20200418-3.txt": {
+      "file": "07(009)-zjg-20200418-3.txt",
+      "bytes": 27027,
+      "sha256": "c713a00cdd9e3fe5e821ae67f1d250a7c17c48a7710b39db6e6db35d9f66556c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-3.txt"
+    },
+    "07(009)-zjg-20200418-30.txt": {
+      "file": "07(009)-zjg-20200418-30.txt",
+      "bytes": 27027,
+      "sha256": "fe6032e16f6cdf8b2ded9d94fdd9057cbb9aa50600a2b8495f1818ea50d925b9",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-30.txt"
+    },
+    "07(009)-zjg-20200418-31.txt": {
+      "file": "07(009)-zjg-20200418-31.txt",
+      "bytes": 27027,
+      "sha256": "89e88e4a15c0f40b3b4ddde931be988c04a7a228a8b0a41bea501d4b194dcc94",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-31.txt"
+    },
+    "07(009)-zjg-20200418-32.txt": {
+      "file": "07(009)-zjg-20200418-32.txt",
+      "bytes": 27027,
+      "sha256": "761220b8f0a576163de5dc606d57fdead6344f10d25abc222cd389af32964f19",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-32.txt"
+    },
+    "07(009)-zjg-20200418-33.txt": {
+      "file": "07(009)-zjg-20200418-33.txt",
+      "bytes": 27027,
+      "sha256": "cfed1bd474d193f97d6efbb3d4cfaa8ca84ac2a514253458567bc5a13e4cd226",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-33.txt"
+    },
+    "07(009)-zjg-20200418-34.txt": {
+      "file": "07(009)-zjg-20200418-34.txt",
+      "bytes": 27027,
+      "sha256": "b102c914eed9dbd91f1562f8290a9b965e603cdeb33a063dec8c05903a5a609f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-34.txt"
+    },
+    "07(009)-zjg-20200418-35.txt": {
+      "file": "07(009)-zjg-20200418-35.txt",
+      "bytes": 27027,
+      "sha256": "3279059ce86b71d69848a3e4a91e4828eb7dd14c0083d04722c755e8ef7932b7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-35.txt"
+    },
+    "07(009)-zjg-20200418-36.txt": {
+      "file": "07(009)-zjg-20200418-36.txt",
+      "bytes": 27027,
+      "sha256": "fdd8b9066b1f3b6849ad9282f24189b13a3f6e36311a5ec1f18ca28c7f69c4d7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-36.txt"
+    },
+    "07(009)-zjg-20200418-37.txt": {
+      "file": "07(009)-zjg-20200418-37.txt",
+      "bytes": 27027,
+      "sha256": "55f504ee8081e46651d3c212179869808a5ab9ef46f371bd484fd3a5014211ff",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-37.txt"
+    },
+    "07(009)-zjg-20200418-38.txt": {
+      "file": "07(009)-zjg-20200418-38.txt",
+      "bytes": 27027,
+      "sha256": "feecaf8a9c3ea1812da6aec058d75b5ffc4522d41774b9c005d39ba75c923566",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-38.txt"
+    },
+    "07(009)-zjg-20200418-39.txt": {
+      "file": "07(009)-zjg-20200418-39.txt",
+      "bytes": 27027,
+      "sha256": "b71baaca39726f0c77e9ec9d642957dbf3aa144b2ff032495f185f93f7350b50",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-39.txt"
+    },
+    "07(009)-zjg-20200418-4.txt": {
+      "file": "07(009)-zjg-20200418-4.txt",
+      "bytes": 27027,
+      "sha256": "19af09c2e5064469b8f884fa60ccc05b1f1558d9872a1aff1a73cf4b5c820e30",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-4.txt"
+    },
+    "07(009)-zjg-20200418-40.txt": {
+      "file": "07(009)-zjg-20200418-40.txt",
+      "bytes": 27027,
+      "sha256": "344f89fe232e62f36b8a1a06b740cf9293bb83d282d0cc8e6e873965c8456024",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-40.txt"
+    },
+    "07(009)-zjg-20200418-41.txt": {
+      "file": "07(009)-zjg-20200418-41.txt",
+      "bytes": 27027,
+      "sha256": "502799226f0bbc3765be88e592af6a575de8330f657f8ad7ec3354c68502450b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-41.txt"
+    },
+    "07(009)-zjg-20200418-42.txt": {
+      "file": "07(009)-zjg-20200418-42.txt",
+      "bytes": 27027,
+      "sha256": "6f5e1d5c77a91cdc3b2071ba40d2bfb34d2f45a91953c81a5997a5e0a2f429c6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-42.txt"
+    },
+    "07(009)-zjg-20200418-43.txt": {
+      "file": "07(009)-zjg-20200418-43.txt",
+      "bytes": 27027,
+      "sha256": "0c97d29bfc3533efe65fbeb8a10c09aae781012b0ae62b729a3fa1fed6fbc423",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-43.txt"
+    },
+    "07(009)-zjg-20200418-44.txt": {
+      "file": "07(009)-zjg-20200418-44.txt",
+      "bytes": 27027,
+      "sha256": "02a371c3c50bfd51aa8dfc18af32a63691066bc3a3011267b3f557ac290e1aca",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-44.txt"
+    },
+    "07(009)-zjg-20200418-45.txt": {
+      "file": "07(009)-zjg-20200418-45.txt",
+      "bytes": 27027,
+      "sha256": "df62a3cd7d2340b38df48371c6b0c8e3e6fbe20d649346f1225a71343e5aed40",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-45.txt"
+    },
+    "07(009)-zjg-20200418-46.txt": {
+      "file": "07(009)-zjg-20200418-46.txt",
+      "bytes": 27027,
+      "sha256": "7583edd1b60f384fba2cdc2c1b11df6abf70d20bc26503c0f9ee1ef9e0df99c7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-46.txt"
+    },
+    "07(009)-zjg-20200418-47.txt": {
+      "file": "07(009)-zjg-20200418-47.txt",
+      "bytes": 27027,
+      "sha256": "8294dd2d96d9287ee2a9d3f5399e09093dcd3b1e444bb43bda22d2512ba76b52",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-47.txt"
+    },
+    "07(009)-zjg-20200418-48.txt": {
+      "file": "07(009)-zjg-20200418-48.txt",
+      "bytes": 27027,
+      "sha256": "2126f6a16feb9a97c225a2fbd83a45d6b1c34fb7819ff5721b2712dd7c6618ef",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-48.txt"
+    },
+    "07(009)-zjg-20200418-49.txt": {
+      "file": "07(009)-zjg-20200418-49.txt",
+      "bytes": 27027,
+      "sha256": "b85b34ef1ed69e340eb47e4bb6c60018190c7debfc983c367c94d16112ea062c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-49.txt"
+    },
+    "07(009)-zjg-20200418-5.txt": {
+      "file": "07(009)-zjg-20200418-5.txt",
+      "bytes": 27027,
+      "sha256": "da47fa8fe2fd969ae28dfcf789826e6dab93b8a8724ea21d997108b796c0df88",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-5.txt"
+    },
+    "07(009)-zjg-20200418-50.txt": {
+      "file": "07(009)-zjg-20200418-50.txt",
+      "bytes": 27027,
+      "sha256": "7c5eed6232d19ac91c1ee262c40d25c4c9dcde8db0d5e55670545ea73e61728c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-50.txt"
+    },
+    "07(009)-zjg-20200418-51.txt": {
+      "file": "07(009)-zjg-20200418-51.txt",
+      "bytes": 27027,
+      "sha256": "5f31b3695890e638933b5e0022c30e24e30b8ddead714aa63aec5eabb8f9be85",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-51.txt"
+    },
+    "07(009)-zjg-20200418-52.txt": {
+      "file": "07(009)-zjg-20200418-52.txt",
+      "bytes": 27027,
+      "sha256": "a463e967c9af1591b595cda365dc62594628a8c18d6fc12bf658f432fd3b24e7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-52.txt"
+    },
+    "07(009)-zjg-20200418-53.txt": {
+      "file": "07(009)-zjg-20200418-53.txt",
+      "bytes": 27027,
+      "sha256": "a278c70bdf227895a981f2b72b37b67f1984c40f6ce68b36dcfd6cbe01176bc6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-53.txt"
+    },
+    "07(009)-zjg-20200418-54.txt": {
+      "file": "07(009)-zjg-20200418-54.txt",
+      "bytes": 27027,
+      "sha256": "c2d8e78722b67ed14bd8dd1ac10f3e211e7fedcc13ecade8f519491606f70286",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-54.txt"
+    },
+    "07(009)-zjg-20200418-55.txt": {
+      "file": "07(009)-zjg-20200418-55.txt",
+      "bytes": 27027,
+      "sha256": "39d384bab91c681c60a7672b0f1b58bf5295375bae174d14b9c0cc8fac9065f9",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-55.txt"
+    },
+    "07(009)-zjg-20200418-56.txt": {
+      "file": "07(009)-zjg-20200418-56.txt",
+      "bytes": 27027,
+      "sha256": "8ba341d74c40d0efe87b70f9a87ca6c9be5cd0ee408e3d727ac89a6991d1d8fe",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-56.txt"
+    },
+    "07(009)-zjg-20200418-57.txt": {
+      "file": "07(009)-zjg-20200418-57.txt",
+      "bytes": 27027,
+      "sha256": "d5be2977bb73d3775393c384900f79e0f111500116c55dc99f742d84623088a2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-57.txt"
+    },
+    "07(009)-zjg-20200418-58.txt": {
+      "file": "07(009)-zjg-20200418-58.txt",
+      "bytes": 27027,
+      "sha256": "314fa65ccb81f7d52b40642e78d9ad6774fc8050828ac71cbef0c68a60775efe",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-58.txt"
+    },
+    "07(009)-zjg-20200418-59.txt": {
+      "file": "07(009)-zjg-20200418-59.txt",
+      "bytes": 27027,
+      "sha256": "58428ecdbf227b363c8a56d5c5b2d0929c63b4a63d5d1366c2e42f299a70c6c3",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-59.txt"
+    },
+    "07(009)-zjg-20200418-6.txt": {
+      "file": "07(009)-zjg-20200418-6.txt",
+      "bytes": 27027,
+      "sha256": "7a6c44647b371d5c12e1d6565c8cd2f6a926a40e960b25c0c2cc99f30ee6748b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-6.txt"
+    },
+    "07(009)-zjg-20200418-60.txt": {
+      "file": "07(009)-zjg-20200418-60.txt",
+      "bytes": 27027,
+      "sha256": "9137b7c7c96a758b4f8811f48b75e4af378e26966a8351bf5099e0ba8000b08e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-60.txt"
+    },
+    "07(009)-zjg-20200418-61.txt": {
+      "file": "07(009)-zjg-20200418-61.txt",
+      "bytes": 27027,
+      "sha256": "ef80ae9ce8ffe4eb4e2271817e2059e3fa7d8f842e661797589995b27fa6bb2f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-61.txt"
+    },
+    "07(009)-zjg-20200418-62.txt": {
+      "file": "07(009)-zjg-20200418-62.txt",
+      "bytes": 27027,
+      "sha256": "ece67c0b989195261e01d681199137b861c0218c924dd84580c1c5f1ed6c3b95",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-62.txt"
+    },
+    "07(009)-zjg-20200418-63.txt": {
+      "file": "07(009)-zjg-20200418-63.txt",
+      "bytes": 27027,
+      "sha256": "155e8634186400c3a956d82ff40e1cda68722efbdc2622dc5303478d1bae81be",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-63.txt"
+    },
+    "07(009)-zjg-20200418-64.txt": {
+      "file": "07(009)-zjg-20200418-64.txt",
+      "bytes": 27027,
+      "sha256": "601256ad3cf661fea0be4bc63f22defcae7be7dc416e49183f4affe626c3d5a0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-64.txt"
+    },
+    "07(009)-zjg-20200418-65.txt": {
+      "file": "07(009)-zjg-20200418-65.txt",
+      "bytes": 27027,
+      "sha256": "7da3d3c5a607a5d8e7905387684e941063401e5bf16cbe64ff5d474a6d5a9e0c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-65.txt"
+    },
+    "07(009)-zjg-20200418-66.txt": {
+      "file": "07(009)-zjg-20200418-66.txt",
+      "bytes": 27027,
+      "sha256": "743686b4cb28afe5c838033477d2c1911d065310c88e28d261d1c9c8a12b4bef",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-66.txt"
+    },
+    "07(009)-zjg-20200418-67.txt": {
+      "file": "07(009)-zjg-20200418-67.txt",
+      "bytes": 27027,
+      "sha256": "3229396d485595fb23e89ada809f69588c6da76b25b32a6f694cd408901ee2be",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-67.txt"
+    },
+    "07(009)-zjg-20200418-68.txt": {
+      "file": "07(009)-zjg-20200418-68.txt",
+      "bytes": 27027,
+      "sha256": "ec90e6aca37aaaaccaf322901281a91b884c13a58ce26cd1ccbb0be5f2e60186",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-68.txt"
+    },
+    "07(009)-zjg-20200418-69.txt": {
+      "file": "07(009)-zjg-20200418-69.txt",
+      "bytes": 27027,
+      "sha256": "6bf1b80d4cebbd6f447e975d3d7f992012670f5e28cac418c3ad96e30e854f9e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-69.txt"
+    },
+    "07(009)-zjg-20200418-7.txt": {
+      "file": "07(009)-zjg-20200418-7.txt",
+      "bytes": 27027,
+      "sha256": "264cbbc062130d95f3fef5ed86ec58559d4345136c87c1dcf05b41ef41a3f8b8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-7.txt"
+    },
+    "07(009)-zjg-20200418-70.txt": {
+      "file": "07(009)-zjg-20200418-70.txt",
+      "bytes": 27027,
+      "sha256": "a4bdf29f13b822c69b1d1af7a2e3c360a436fb401b0e629f6339adc2ef1cd6e8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-70.txt"
+    },
+    "07(009)-zjg-20200418-71.txt": {
+      "file": "07(009)-zjg-20200418-71.txt",
+      "bytes": 27027,
+      "sha256": "384a3eff2a917ee02488fb2b764eef2e91f0b04b2a5e36850e64c1e097465619",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-71.txt"
+    },
+    "07(009)-zjg-20200418-72.2.txt": {
+      "file": "07(009)-zjg-20200418-72.2.txt",
+      "bytes": 27027,
+      "sha256": "a00bf967365ec045c08668a6c0b30a16d96009fbf684271dc125f3f911f43756",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-72.2.txt"
+    },
+    "07(009)-zjg-20200418-72.txt": {
+      "file": "07(009)-zjg-20200418-72.txt",
+      "bytes": 27027,
+      "sha256": "833d4c0e384567ef0e0556df9d5dd0fe3dff3eea19bad9fe998f5c8929280498",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-72.txt"
+    },
+    "07(009)-zjg-20200418-8.txt": {
+      "file": "07(009)-zjg-20200418-8.txt",
+      "bytes": 27027,
+      "sha256": "4412e13db9a67b6fa23b11c2c89568251df723e12f3b330bbc3bd63187309fa2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-8.txt"
+    },
+    "07(009)-zjg-20200418-9.txt": {
+      "file": "07(009)-zjg-20200418-9.txt",
+      "bytes": 27027,
+      "sha256": "2ef335c9d6298183a2a891015aefae0634a39da8bdbe14ab60bc6d1532f0f3a2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-zjg-20200418\\07(009)-zjg-20200418-9.txt"
+    },
+    "07(009)-cxg-20250801-12.5.txt": {
+      "file": "07(009)-cxg-20250801-12.5.txt",
+      "bytes": 27027,
+      "sha256": "a400afe5842139462ffc04b027ce1b81a0a896be97833179460db736685a2780",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-12.5.txt"
+    },
+    "07(009)-cxg-20250801-13.txt": {
+      "file": "07(009)-cxg-20250801-13.txt",
+      "bytes": 27027,
+      "sha256": "fc1bae6a0bd061a063c7e4c8e1289bb8834ca5eff86467db772bdb71054e611b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-13.txt"
+    },
+    "07(009)-cxg-20250801-14.txt": {
+      "file": "07(009)-cxg-20250801-14.txt",
+      "bytes": 27027,
+      "sha256": "f4479f2d6335027f585b2a9f0c66d0500510f6cea263ad8aca070bc273a654cd",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-14.txt"
+    },
+    "07(009)-cxg-20250801-15.txt": {
+      "file": "07(009)-cxg-20250801-15.txt",
+      "bytes": 27027,
+      "sha256": "548ae54705aca200d41c4676dbd042a803797fcfea6c516fbb4ca7384b94ed8d",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-15.txt"
+    },
+    "07(009)-cxg-20250801-16.txt": {
+      "file": "07(009)-cxg-20250801-16.txt",
+      "bytes": 27027,
+      "sha256": "a75f438c3fe6272ae252f0c345d9298cf4b27b09b198fa1c2b58c87a3f8d831e",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-16.txt"
+    },
+    "07(009)-cxg-20250801-17.txt": {
+      "file": "07(009)-cxg-20250801-17.txt",
+      "bytes": 27027,
+      "sha256": "9fc4dd628ac8bb9618985a78d68c99266ea56365bd91ba2508d7207df19343b8",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-17.txt"
+    },
+    "07(009)-cxg-20250801-18.txt": {
+      "file": "07(009)-cxg-20250801-18.txt",
+      "bytes": 27027,
+      "sha256": "376637e3989fa104503e6d7e078bb3db94c61693518db0ea3e6445a47a02856b",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-18.txt"
+    },
+    "07(009)-cxg-20250801-19.txt": {
+      "file": "07(009)-cxg-20250801-19.txt",
+      "bytes": 27027,
+      "sha256": "900cc69b2698db16df80f18900c02bb2d837660a229554abdf57566f47ccb912",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-19.txt"
+    },
+    "07(009)-cxg-20250801-20.txt": {
+      "file": "07(009)-cxg-20250801-20.txt",
+      "bytes": 27027,
+      "sha256": "283b96472a8de049ac46b9212d6c3eaa841f1a69ba752cf44b9700502f40455a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-20.txt"
+    },
+    "07(009)-cxg-20250801-21.txt": {
+      "file": "07(009)-cxg-20250801-21.txt",
+      "bytes": 27027,
+      "sha256": "ef434226e434691f882eae5552412f39239039257f8e65d82539bae2320324e2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-21.txt"
+    },
+    "07(009)-cxg-20250801-22.5.txt": {
+      "file": "07(009)-cxg-20250801-22.5.txt",
+      "bytes": 27027,
+      "sha256": "3ca5d879b4a7b71cb23c57221f41c9102018b4561ae921af451adb7909c50534",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-22.5.txt"
+    },
+    "07(009)-cxg-20250801-22.txt": {
+      "file": "07(009)-cxg-20250801-22.txt",
+      "bytes": 27027,
+      "sha256": "047fdfa4e2e2ae9bc54ceb487678be4543052d6e6675ea8fe8bc6b300530e481",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-22.txt"
+    },
+    "07(009)-cxg-20250801-23.txt": {
+      "file": "07(009)-cxg-20250801-23.txt",
+      "bytes": 27027,
+      "sha256": "34031639f4d899e835fe4b8cffdb56db94b2d8ae55a376e868d6eb93ffc405f9",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-23.txt"
+    },
+    "07(009)-cxg-20250801-24.txt": {
+      "file": "07(009)-cxg-20250801-24.txt",
+      "bytes": 27027,
+      "sha256": "a5a2a1876195e1e094820d4d688513f6e4d86baee93045f460bd3ca769fd7cf1",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-24.txt"
+    },
+    "07(009)-cxg-20250801-25.txt": {
+      "file": "07(009)-cxg-20250801-25.txt",
+      "bytes": 27027,
+      "sha256": "ce21fc039e965bf6a632e1fdcf6ff6690e42b5babe2c0cb3581080c24a210aea",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-25.txt"
+    },
+    "07(009)-cxg-20250801-26.txt": {
+      "file": "07(009)-cxg-20250801-26.txt",
+      "bytes": 27027,
+      "sha256": "e480cbba66d460004b21fed2b3ef78f562606dd383fcac002c2d234a66ebfa04",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-26.txt"
+    },
+    "07(009)-cxg-20250801-27.txt": {
+      "file": "07(009)-cxg-20250801-27.txt",
+      "bytes": 27027,
+      "sha256": "ea7d0e67f941566354e695264197cf119a2a56c5482197ace35ba66a342be487",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-27.txt"
+    },
+    "07(009)-cxg-20250801-28.txt": {
+      "file": "07(009)-cxg-20250801-28.txt",
+      "bytes": 27027,
+      "sha256": "7bf621f96ea99d89465ad5ab5d348259c2268b77348205825f87648f202f1f55",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-28.txt"
+    },
+    "07(009)-cxg-20250801-29.txt": {
+      "file": "07(009)-cxg-20250801-29.txt",
+      "bytes": 27027,
+      "sha256": "d1fcfb55cfa00bbb0b5466b25defe75d93fe9dd8c73d5bc251c8ae1337c4071f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-29.txt"
+    },
+    "07(009)-cxg-20250801-30.txt": {
+      "file": "07(009)-cxg-20250801-30.txt",
+      "bytes": 27027,
+      "sha256": "83ac40eb3557fce1a582d65b95745f40b84cfeb394fd41e27412099311111f81",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-30.txt"
+    },
+    "07(009)-cxg-20250801-31.txt": {
+      "file": "07(009)-cxg-20250801-31.txt",
+      "bytes": 27027,
+      "sha256": "c5e72f1798ee350a06e3cd007424ea99a6a593715e103a3b3393d2540aa05ce4",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-31.txt"
+    },
+    "07(009)-cxg-20250801-32.txt": {
+      "file": "07(009)-cxg-20250801-32.txt",
+      "bytes": 27027,
+      "sha256": "d0a0e6a43381fe74b7ed14439cb6581153114041546288d18e9130370c2d3d48",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-32.txt"
+    },
+    "07(009)-cxg-20250801-33.txt": {
+      "file": "07(009)-cxg-20250801-33.txt",
+      "bytes": 27027,
+      "sha256": "3461ad8e214ffce27c34e03d28cf8b7440427f1c73ade2c31ccf6f9451612fc2",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-33.txt"
+    },
+    "07(009)-cxg-20250801-34.txt": {
+      "file": "07(009)-cxg-20250801-34.txt",
+      "bytes": 27027,
+      "sha256": "eb7cc7e3e95bb96ea6d0f5dffcdadc7d2872f6b5624068257a59d050417d3cfb",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-34.txt"
+    },
+    "07(009)-cxg-20250801-35.txt": {
+      "file": "07(009)-cxg-20250801-35.txt",
+      "bytes": 27027,
+      "sha256": "8f5de168f6c07cf9b3528ae90ee176d4c9ead620d53733281472efa515e5669f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-35.txt"
+    },
+    "07(009)-cxg-20250801-36.txt": {
+      "file": "07(009)-cxg-20250801-36.txt",
+      "bytes": 27027,
+      "sha256": "a727fdf7f9c9ab5cbedf2795c5885cffff54efc7b2af7a5a1faab833bf458d2c",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-36.txt"
+    },
+    "07(009)-cxg-20250801-37.txt": {
+      "file": "07(009)-cxg-20250801-37.txt",
+      "bytes": 27027,
+      "sha256": "4d019ebae5ec6f62d6a7bdbb87f9a7ccb7b674bfd6816c51c313a3718b5078fb",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-37.txt"
+    },
+    "07(009)-cxg-20250801-38.txt": {
+      "file": "07(009)-cxg-20250801-38.txt",
+      "bytes": 27027,
+      "sha256": "01e070f8f891523d1f0c3ca9a151c234e0aabdab31c9febdcdf6741998f5e015",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-38.txt"
+    },
+    "07(009)-cxg-20250801-39.txt": {
+      "file": "07(009)-cxg-20250801-39.txt",
+      "bytes": 27027,
+      "sha256": "506f08c356298780d1bed8c2841cd5bcf438bbd5e46a9079c9f276a41d816208",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-39.txt"
+    },
+    "07(009)-cxg-20250801-40.txt": {
+      "file": "07(009)-cxg-20250801-40.txt",
+      "bytes": 27027,
+      "sha256": "f5f46dd8392562976ce5bfe45d6cd50d8d466a6f7c54fab6ba92399196224a34",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-40.txt"
+    },
+    "07(009)-cxg-20250801-41.txt": {
+      "file": "07(009)-cxg-20250801-41.txt",
+      "bytes": 27027,
+      "sha256": "d92995f109be57837c2d48d6c8e2bd3dc2f434fc18ee74b31c7a2c00914b90de",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-41.txt"
+    },
+    "07(009)-cxg-20250801-42.txt": {
+      "file": "07(009)-cxg-20250801-42.txt",
+      "bytes": 27027,
+      "sha256": "14f390ab4164eb4813ebff3dfcc789f1266dc85dd2a5747e5511651fb486832a",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-42.txt"
+    },
+    "07(009)-cxg-20250801-43.txt": {
+      "file": "07(009)-cxg-20250801-43.txt",
+      "bytes": 27027,
+      "sha256": "04397b2e061b1d396dc9c6ff915f160355116f4249a5969ca6fa4cffe1538727",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-43.txt"
+    },
+    "07(009)-cxg-20250801-44.txt": {
+      "file": "07(009)-cxg-20250801-44.txt",
+      "bytes": 27027,
+      "sha256": "c932b8d13972de780504d3e75e4ff36a1adea3ab3e9d18bd862f6d1dcfcbb47f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-44.txt"
+    },
+    "07(009)-cxg-20250801-45.txt": {
+      "file": "07(009)-cxg-20250801-45.txt",
+      "bytes": 27027,
+      "sha256": "ee7007597e66f10b0e3a1f61684e7c0c4d31ef84e970cf16c45a7bd92cf65103",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-45.txt"
+    },
+    "07(009)-cxg-20250801-46.txt": {
+      "file": "07(009)-cxg-20250801-46.txt",
+      "bytes": 27027,
+      "sha256": "bbc176d76b4903ba392673d91f7967cd2c0892a3ea4a9d1b0cc8c21e5ed7353f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-46.txt"
+    },
+    "07(009)-cxg-20250801-47.txt": {
+      "file": "07(009)-cxg-20250801-47.txt",
+      "bytes": 27027,
+      "sha256": "9e8769ae201f989f906a7594d82ec1be70492f42607e5a23a17cc700faaf98fe",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-47.txt"
+    },
+    "07(009)-cxg-20250801-48.txt": {
+      "file": "07(009)-cxg-20250801-48.txt",
+      "bytes": 27027,
+      "sha256": "994ba276b42d539177c036f6bac3af483407a40448848c32e76915dc4736aee6",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-48.txt"
+    },
+    "07(009)-cxg-20250801-49.txt": {
+      "file": "07(009)-cxg-20250801-49.txt",
+      "bytes": 27027,
+      "sha256": "13f469b44c244b9a7d83d1e3df04598405c69b8ff05c019a84835a3481537e28",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-49.txt"
+    },
+    "07(009)-cxg-20250801-50.txt": {
+      "file": "07(009)-cxg-20250801-50.txt",
+      "bytes": 27027,
+      "sha256": "93d8946534b72b3f5fb58c82b0b4c1e8e8e62b01ef44d560ff7440294a3be589",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-50.txt"
+    },
+    "07(009)-cxg-20250801-51.txt": {
+      "file": "07(009)-cxg-20250801-51.txt",
+      "bytes": 27027,
+      "sha256": "738e63c61b213b9cf6a5847462d5d935020d92fa9d23f9d194b766f546b7d5db",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-51.txt"
+    },
+    "07(009)-cxg-20250801-52.txt": {
+      "file": "07(009)-cxg-20250801-52.txt",
+      "bytes": 27027,
+      "sha256": "38ea9a00d1d068430a004845892eb0396d8655920ef548fda81fd96823378b60",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-52.txt"
+    },
+    "07(009)-cxg-20250801-53.txt": {
+      "file": "07(009)-cxg-20250801-53.txt",
+      "bytes": 27027,
+      "sha256": "035258362372bd5f6b31c838765436eceeb7222333079ec0ba3e75bb678c9767",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-53.txt"
+    },
+    "07(009)-cxg-20250801-54.txt": {
+      "file": "07(009)-cxg-20250801-54.txt",
+      "bytes": 27027,
+      "sha256": "e1bc5db9f7c156a100f317dbe07bfc336806ca9637bc89ad94c8c790a18cab54",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-54.txt"
+    },
+    "07(009)-cxg-20250801-55.txt": {
+      "file": "07(009)-cxg-20250801-55.txt",
+      "bytes": 27027,
+      "sha256": "59d70e475a12cec03fdf9292ac9dde8328e8b2cc08d298fa5df81a85a8b1d992",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-55.txt"
+    },
+    "07(009)-cxg-20250801-56.txt": {
+      "file": "07(009)-cxg-20250801-56.txt",
+      "bytes": 27027,
+      "sha256": "69c5efedacf7da2e9dfb8487e4b45bee14c3947c02a17c5cdea7ff248d916f8f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-56.txt"
+    },
+    "07(009)-cxg-20250801-57.txt": {
+      "file": "07(009)-cxg-20250801-57.txt",
+      "bytes": 27027,
+      "sha256": "c8a030f5a67ee4c3879627aa382d95c7e7b40df2fb1462396fb109b443fa8e0f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-57.txt"
+    },
+    "07(009)-cxg-20250801-58.txt": {
+      "file": "07(009)-cxg-20250801-58.txt",
+      "bytes": 27027,
+      "sha256": "8fa5526d47655988a98a15a40ea1bd6d44f108bae745f1575dbb60439e874483",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-58.txt"
+    },
+    "07(009)-cxg-20250801-59.txt": {
+      "file": "07(009)-cxg-20250801-59.txt",
+      "bytes": 27027,
+      "sha256": "acaef2da7c6dc5506410f295e67ae932f74c6a419d35746821872dfdde7f57b9",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-59.txt"
+    },
+    "07(009)-cxg-20250801-60.txt": {
+      "file": "07(009)-cxg-20250801-60.txt",
+      "bytes": 27027,
+      "sha256": "101cbf5c9cd17af22f3c805e9b8588e6cc5e4f7dd14a5cb8e394bc69d8ed7acf",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-60.txt"
+    },
+    "07(009)-cxg-20250801-61.txt": {
+      "file": "07(009)-cxg-20250801-61.txt",
+      "bytes": 27027,
+      "sha256": "629c0abc04668e3dafd9eb688409d171ccb6b4ad352003c1d561d8d9ff008999",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-61.txt"
+    },
+    "07(009)-cxg-20250801-62.txt": {
+      "file": "07(009)-cxg-20250801-62.txt",
+      "bytes": 27027,
+      "sha256": "7053aefd31b4dbd1bc05dfc9d55020c36fa1ca735a69578b131d307ffaa2dd83",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-62.txt"
+    },
+    "07(009)-cxg-20250801-63.txt": {
+      "file": "07(009)-cxg-20250801-63.txt",
+      "bytes": 27027,
+      "sha256": "59a3fca8d06f8767695e3c9a10faf3125e3320c83f9bb9017e335b288836836f",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-63.txt"
+    },
+    "07(009)-cxg-20250801-64.txt": {
+      "file": "07(009)-cxg-20250801-64.txt",
+      "bytes": 27027,
+      "sha256": "2cd91d7afec63ea219916e60d95474fe3cb5d1d4490963619e2e8075ed8c1d14",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-64.txt"
+    },
+    "07(009)-cxg-20250801-65.txt": {
+      "file": "07(009)-cxg-20250801-65.txt",
+      "bytes": 27027,
+      "sha256": "9a6143575a116a753d52bbebbb3d2ad8a3ec11dd89840b53fa10ba81d13a7149",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-65.txt"
+    },
+    "07(009)-cxg-20250801-66.txt": {
+      "file": "07(009)-cxg-20250801-66.txt",
+      "bytes": 27027,
+      "sha256": "4f45a95f317cec587996f096abea4f2353dba695a82eaf62a1f62dd6b1936d85",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-66.txt"
+    },
+    "07(009)-cxg-20250801-67.txt": {
+      "file": "07(009)-cxg-20250801-67.txt",
+      "bytes": 27027,
+      "sha256": "dfc1673c4aa69b1054ed46b7daad41a2146abf39e91bff510a742f81adb42b59",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-67.txt"
+    },
+    "07(009)-cxg-20250801-68.txt": {
+      "file": "07(009)-cxg-20250801-68.txt",
+      "bytes": 27027,
+      "sha256": "36e553eab15f1ae0acc546c7ee3b9a7fcaf0a4e82a245dbbcb35ed65dc57b3e0",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-68.txt"
+    },
+    "07(009)-cxg-20250801-69.txt": {
+      "file": "07(009)-cxg-20250801-69.txt",
+      "bytes": 27027,
+      "sha256": "d1d8087b18ff10286aac105b200128f83e4dc4412c345c2733eed08dd13dda16",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-69.txt"
+    },
+    "07(009)-cxg-20250801-70.txt": {
+      "file": "07(009)-cxg-20250801-70.txt",
+      "bytes": 27027,
+      "sha256": "1f6f8974c042d742a8d46ff5b5d91bcd135ee15f8acd025c3375bdaadb254935",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-70.txt"
+    },
+    "07(009)-cxg-20250801-71.3.txt": {
+      "file": "07(009)-cxg-20250801-71.3.txt",
+      "bytes": 27027,
+      "sha256": "798db49147b2f89b9ae9874b4857ece4466abf7263639a53b8b236e9d5e508a4",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-71.3.txt"
+    },
+    "07(009)-cxg-20250801-71.txt": {
+      "file": "07(009)-cxg-20250801-71.txt",
+      "bytes": 27027,
+      "sha256": "e40ef74d09a69e88e4c04115958344de72354d0cb6f53604cc01ed807ff16901",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-71.txt"
+    },
+    "07(009)-cxg-20250801-72.2.txt": {
+      "file": "07(009)-cxg-20250801-72.2.txt",
+      "bytes": 27027,
+      "sha256": "a3d58f0f174f0e5c2908737ff449534c14fa518ed2a8febe60e7f968ed8310f7",
+      "source": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-cxg-20250801\\07(009)-cxg-20250801-72.2.txt"
+    }
+  },
+  "section_count": 293,
+  "section_bytes": 7918911,
+  "missing_sections": [],
+  "superseded_tables": {
+    "07(009)-Mileage-zjg_zgyg.txt": "undated master, wider station range; superseded by _250722",
+    "07(009)-Mileage-zjg_zgyg_250720.txt": "superseded by _250722 the next day",
+    "07(009)-Mileage-cxg.txt": "2020-04-22 revision, superseded by cxg-250801",
+    "07(009)-Mileage-qjg_cgyg.txt": "curved-side family (曲尖轨+曲翼轨), needed only for the diverging route"
+  },
+  "provenance": {
+    "source_root": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18",
+    "mileage_folder": "G:\\研究生\\SDITT-RW-FT-250728\\SDITT-RW-FT-250728\\WRProfile-07(009)-1_18\\07(009)-Mileage",
+    "note": "Only the three tables in `rows` are canonical.  The section files are copied verbatim (byte-identical, sha256 recorded) so the case no longer depends on G:."
+  },
+  "status": "geometry_only_not_yet_seated"
+}

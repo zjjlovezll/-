@@ -1775,6 +1775,24 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 241 轮 — 一组模型装进同一算例：234 坐标、八轴箱、柔性轮对、真道岔几何，七门 7/7
+
+任务书 M1 的定义是"把四件东西装进同一个算例并跑通七门"。此前它们分散在四个算例里：**完备车辆**（`CRH380A_M_axlebox`，86 坐标、15 刚体含 8 个轴箱）**没有任何算例**；**柔性轮对**只在 12 站合成几何的 `examples/portable/case_flexible.json`；**柔性轨道 + 真道岔几何**在 `cases/straight.json`，而它挂的是 35 坐标刚性轮对车。新增 [ONE_SET_CASE_2026-10-31.md](ONE_SET_CASE_2026-10-31.md)。
+
+**装配**：`scripts/s101_one_set_case.py` 以 `straight.json` 为底本，把内联车辆换成 `vehicle_ref`（车辆只有一份定义，不复制、不漂移），加 `flexible_wheelset`（`modes/CRH3C_wheelset_fe.json`、四个轴），产物 `cases/straight_one_set.json`。结果 **234 = 86 车 + 16 轨（8×2）+ 132 模态（4×33）**、15 刚体、16 接触体、`local_compliant`。
+
+**为了走到这条路径，修了两个第一次被走到的加载器缺陷**：① `vehicle_ref` 不认识 `lib:`/`case:`/`data:` 前缀（`vehicle_db.load` 把 `lib:...` 当裸文件名按 cwd 解析）⇒ `vehicle.py:423` 先 `resolve_asset`；② `run.speed_profile` 的常量分支写 `raw["vehicle"]["travel_speed_m_s"]`，而 `vehicle_ref` 算例没有 `raw["vehicle"]` ⇒ `KeyError: 'vehicle'` ⇒ 改为先记 `scheduled_speed`、拿到车辆块后 `dict(v, travel_speed_m_s=...)`。对**内联车辆**算例这是等价变换，由冻结基线证明：`straight_rigid 295809cb24c8e24b` / `straight_flexible 7b1daef7e80664ac`，**UNCHANGED**。速度必须由算例声明，否则会继承车辆的线路设计速度 **350 km/h**。
+
+**座椅（G2）**：`dimension 234  seat residual 6.927e-09 N`、八轮各 `1.000×` 均分（`60153.0 N`）、贯入 **63.70 µm**、座椅墙钟 **0.6 s**。贯入不是冻结的 65.4661 µm，因为这款车更重（481 078.5 N / 9.81 = **49 039.8 kg** vs 35 坐标车 48 654 kg）——**51 坐标算例的历史数字不得与本算例混用**。
+
+**积分（G3–G5）**：0.02 s（41 帧、**9.3 s** 墙钟）与 0.40 s（801 帧、**180.0 s**）均 `gates 7/7`。0.40 s 时前轴到 **58.889 m**，越过尖端 50.578 m 与几何首触 57.733 m；尖轨首载 **58.144 m**（比几何首触晚 **+0.411 m**，与 51 坐标算例的 +0.395 m 同源——1 kN 检测门 + 6.4 m 弹性坡道），峰值 **40.77 kN @ 58.589 m**，同一里程基本轨已降到 **19.35 kN**，即右股 **67.8 %** 载荷在尖轨上；整段逐轨份额 **0.966–1.029**（门 [0.625, 1.6]）。
+
+**边界**：只跑直向、80 km/h 一档、单一进场点；这不构成曲线能力，也不含 M2（B047）与 M3（3.3 m 仲裁）的任何结论，目标主门（Ω_obs 上 p95 ≤ 22 µm）尚未开始。14 个声明接触体里只有 **10** 个在本运行中出现（`frog` 在 103 m 之后、`blade` 只在坡道上承载），是几何决定的，不是丢数据。
+
+**成本**：0.02 s = 9.3 s、0.40 s = 180 s、座椅 0.6 s ⇒ 约 **450 s / 模拟秒**（234 维）。
+
+**测试**：`tests/test_one_set_case.py` 5 项（86/15/8 轴箱；四轮对 33 阶模态；维数 = 86+16+132；算例自己声明 80 km/h；右股每轴 stock+blade+frog 且尖端 gap −14.94 ±0.2 mm），0.41 s 全过。`tests/test_run_archive.py` 增 1 项（`--case` 用文件名做标签，两个不同算例不得共用 run_id），4 项全过。
+
 ### 第 240 轮 — 40–100 km/h 四次过岔：尖轨首载里程只动 5.6 mm
 
 按用户 2026-10-31 的指令（可重复跑、数据必须留存供代理模型、多组速度），本轮把"跑一次看一个数"换成**数据契约 + 四速度采集 + 第一个消费者**。新增 [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md)。
@@ -1958,6 +1976,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [OBSERVATION_LAYER_2026-10-20.md](OBSERVATION_LAYER_2026-10-20.md) | 观测量层：仿真对仿真 + 实测对模型（2026-10-20） |
 | [OMA_MEASURED_2026-10-27.md](OMA_MEASURED_2026-10-27.md) | 运行模态识别（SSI-FCM）接到实测：算法通过，实测上不收敛 |
 | [ONBOARDING_2026-10-21.md](ONBOARDING_2026-10-21.md) | 新增车体 / 新增道岔的接入指南 |
+| [ONE_SET_CASE_2026-10-31.md](ONE_SET_CASE_2026-10-31.md) | 一组模型装进同一算例：完备车辆 + 柔性轮对 + 柔性轨道 + 真道岔几何（M1） |
 | [OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md](OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md) | 开源轮轨接触算法调查（2026-10-19） |
 | [PACKAGING_2026-10-22.md](PACKAGING_2026-10-22.md) | 打包与安装包（Windows） |
 | [PARALLEL_AND_SIMPACK_RWP.md](PARALLEL_AND_SIMPACK_RWP.md) | 多核并行、Simpack RWP 机制与 CONTACT 接入 |

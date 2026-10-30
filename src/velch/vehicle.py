@@ -370,10 +370,11 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     # applied at the end of this function would leave the spin at the replaced value and the
     # run would differ in the last bits despite claiming the same speed.
     speed_schedule = None
+    scheduled_speed: float | None = None
     if isinstance(raw.get("run"), dict) and raw["run"].get("speed_profile") is not None:
         speed_schedule = SpeedSchedule.from_spec(raw["run"]["speed_profile"])
         if speed_schedule.is_constant:
-            raw["vehicle"]["travel_speed_m_s"] = speed_schedule.constant_speed_m_s
+            scheduled_speed = speed_schedule.constant_speed_m_s
     # ``case_sha256`` must stay the hash of the file on disk, not of the view built above.
     case_digest = hashlib.sha256(raw_bytes).hexdigest()
     if raw.get("schema_version") != "velch-vehicle-v2":
@@ -420,12 +421,26 @@ def load_vehicle_case(path: str | Path) -> VehicleCase:
     if v is None:
         if reference is None:
             raise ValueError("case must carry either 'vehicle' or 'vehicle_ref'")
+        from .assets import CASE as CASE_PREFIX, DATA as DATA_PREFIX, LIB as LIB_PREFIX
         from .vehicle_db import load as load_vehicle_model
 
+        # ``lib:``/``case:``/``data:`` are how every other reference in a case names a shipped
+        # asset, so ``vehicle_ref`` takes them too. ``vehicle_db.load`` only understands a bare id or
+        # a filesystem path, and a plain relative path would resolve against the *current working
+        # directory* instead of the case -- which is exactly the portability hole the asset
+        # prefixes exist to close.
+        text = str(reference)
+        if text.startswith((LIB_PREFIX, CASE_PREFIX, DATA_PREFIX)):
+            resolved = resolve_asset(text, case_path=target, kind="vehicle model")
+            reference = resolved.path
         model = load_vehicle_model(str(reference))
         v = model.block
         # 把车辆文件也记进 assets：它是这台车唯一的定义，改了就必须让 manifest 校验失败。
         assets[str(model.path)] = hashlib.sha256(model.path.read_bytes()).hexdigest()
+    if scheduled_speed is not None:
+        # Applied to whichever block the car came from: an inline ``vehicle`` (where this used to
+        # mutate ``raw``) or a ``vehicle_ref`` model, which has no ``raw["vehicle"]`` at all.
+        v = dict(v, travel_speed_m_s=scheduled_speed)
     vehicle = vehicle_parameters(v)
     wheels = tuple(Wheel(item["id"], float(item["lateral_offset_m"]),
                          profile(item["profile"], "wheel_lower")) for item in raw["wheels"])

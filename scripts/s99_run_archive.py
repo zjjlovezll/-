@@ -40,6 +40,18 @@ OUT_ROOT = ROOT.parent / "scratch" / "runs"
 INDEX = OUT_ROOT / "index.jsonl"
 
 
+def resolve_case(route: str, case: str | None) -> tuple[pathlib.Path, str]:
+    """Return the case file and the label that goes into ``run_id``.
+
+    ``--route`` keeps the two packaged turnout cases; ``--case`` names any other case and the label
+    becomes its file stem, so a new case cannot silently inherit an old run id.
+    """
+    if case:
+        path = pathlib.Path(case)
+        return path, path.stem
+    return CASES[route], route
+
+
 def sha256_of(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -86,6 +98,8 @@ def write_index(entry: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--route", default="straight", choices=tuple(CASES))
+    ap.add_argument("--case", default=None,
+                    help="explicit case path; its file stem labels the run (e.g. straight_one_set)")
     ap.add_argument("--speed-kmh", type=float, default=None, help="override travel_speed_m_s")
     ap.add_argument("--duration", type=float, default=0.02)
     ap.add_argument("--output-step", type=float, default=5e-4)
@@ -108,12 +122,12 @@ def main() -> int:
         print(f"{len(rows)} run(s) in {INDEX}")
         return 0
 
-    case_path = CASES[args.route]
+    case_path, route = resolve_case(args.route, args.case)
     case_digest = sha256_of(case_path)
     case = load_vehicle_case(case_path)
     speed_kmh = float(args.speed_kmh if args.speed_kmh is not None
                       else case.vehicle.travel_speed_m_s * 3.6)
-    run_id = run_id_for(args.route, speed_kmh, args.duration, args.output_step, case_digest)
+    run_id = run_id_for(route, speed_kmh, args.duration, args.output_step, case_digest)
     out = OUT_ROOT / run_id
     if args.dry:
         print(f"run_id {run_id}\n  case {case_path} ({case_digest[:16]})\n  out  {out}")
@@ -185,7 +199,7 @@ def main() -> int:
 
     meta = {
         "run_id": run_id,
-        "route": args.route,
+        "route": route,
         "case": str(case_path),
         "case_sha256": case_digest,
         "speed_kmh": speed_kmh,
@@ -225,7 +239,7 @@ def main() -> int:
                                       encoding="utf-8")
     write_index({
         "run_id": run_id,
-        "route": args.route,
+        "route": route,
         "speed_kmh": speed_kmh,
         "duration_s": args.duration,
         "output_step_s": args.output_step,

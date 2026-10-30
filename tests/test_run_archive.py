@@ -68,3 +68,23 @@ def test_a_malformed_note_is_refused_rather_than_dropped(archive, tmp_path, monk
                                       "--duration", "0.01", "--note", "no-equals-sign"])
     with pytest.raises(SystemExit):
         archive.main()
+
+
+def test_an_explicit_case_labels_the_run_by_its_file_stem(archive) -> None:
+    """``--case`` must change the run id, or a new case would overwrite an old run."""
+    route = "straight"
+    campaign_path, campaign_label = archive.resolve_case(route, None)
+    assert campaign_path == archive.CASES[route]
+    assert campaign_label == route
+
+    other = "vehicles/turnouts/CN60-1100-1_18/cases/straight_one_set.json"
+    case_path, case_label = archive.resolve_case(route, other)
+    assert case_path == pathlib.Path(other)
+    assert case_label == "straight_one_set"
+
+    digest = "a" * 64
+    ids = {
+        archive.run_id_for(campaign_label, 80.0, 0.02, 5e-4, digest),
+        archive.run_id_for(case_label, 80.0, 0.02, 5e-4, digest),
+    }
+    assert len(ids) == 2, "two different cases must not share a run id"

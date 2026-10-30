@@ -1,0 +1,5605 @@
+{
+ "schema_version": "velch-vehicle-v2",
+ "case_id": "turnout_cn60_1100_straight_one_set",
+ "purpose": "engineering",
+ "purpose_detail": "一组模型：完备车辆（lib:CRH380A_M_axlebox.json，15 体 86 坐标含 8 轴箱）+ 柔性轮对（lib:modes/CRH3C_wheelset_fe.json） + 柔性轨道（local_compliant）+ CN60-1100-1:18 真道岔几何。车辆的唯一定义在 vehicle_ref，轨道与接触块原样继承 straight.json。",
+ "parameter_source": "Simpack text model CRH380A_M_{Carbody,Bogie,Wheelset}.spck subvariables (masses, inertias, suspension stiffness/damping, rail geometry, contact material and friction); rail geometry read-only from diagnostics/crh380a_m_track_catalog.json",
+ "source_evidence": {
+  "simpack_model": "G:\\研究生\\动力学\\CRH380A_纯刚性模型\\database\\database\\mbs_db_substructure\\CRH380A_M_Carbody.spck",
+  "simpack_sha256": "ab291570643d582781bc6ae420df9ffa463f3b186eb2ac50cde318f673f48172",
+  "track_catalog": "F:\\ai道岔状态反演辨识\\Velch\\diagnostics\\crh380a_m_track_catalog.json",
+  "track_catalog_sha256": "f20f8eab42779f5c0d3283279df7ed60047f07c9c810fa2ad976c82b809daa36",
+  "track_catalog_profile_set_sha256": "caf3625fee9d947a3f80280788fad014bb3ed2f8b905a48c7812e5aa486a4bda",
+  "wheel_profile_sha256": "30487008e9e834decc21afc54b97f29b2383c5e372b0446251836cab5f7f9a84",
+  "coincident_stations": [
+   50.578,
+   52.889,
+   57.304,
+   60.963,
+   69.479,
+   78.538,
+   79.131,
+   79.44,
+   80.278,
+   80.911
+  ],
+  "declared_model_limits": [
+   "rigid track: no rail mass, support stiffness or fastener compliance",
+   "single equivalent rail per side per axle: no stock/switch/wing sub-rail split",
+   "hertz_effective_radius normal law is a reduced-order substitute, not Simpack RWP",
+   "no axlebox bodies (Simpack has four 48.2 kg axle guides on stiff joints)",
+   "primary yaw stiffness is not exposed by the .spck; taken from Par_Vehicle_CRH380A_v6.m"
+  ],
+  "derived_from": "vehicles/turnouts/CN60-1100-1_18/cases/straight.json",
+  "vehicle_ref": "lib:CRH380A_M_axlebox.json",
+  "flexible_wheelset": "lib:modes/CRH3C_wheelset_fe.json"
+ },
+ "contact": {
+  "normal_model": "hertz_effective_radius",
+  "damping_model": "delta_half_velocity",
+  "tangential_model": "sditt_cubic_saturation",
+  "effective_modulus_pa": 113932291666.667,
+  "effective_radius_m": 0.02,
+  "normal_damping_n_s_m_1p5": 1000000.0,
+  "friction_coefficient": 0.4,
+  "creep_stiffness_x_n": 1000000.0,
+  "creep_stiffness_lateral_n": 500000.0,
+  "reference_speed_floor_m_s": 0.1,
+  "stiffness_policy": "local_circular",
+  "normal_policy": "strip_integral",
+  "strip_dy_m": 0.0005
+ },
+ "wheels": [
+  {
+   "id": "L",
+   "lateral_offset_m": -0.7465,
+   "profile": {
+    "file": "lib:turnouts/CN60-1100-1_18/sections/LMA.prw",
+    "format": "prr",
+    "units": "m",
+    "y_sign": -1,
+    "z_sign": -1,
+    "z_offset_m": -0.43
+   }
+  },
+  {
+   "id": "R",
+   "lateral_offset_m": 0.7465,
+   "profile": {
+    "file": "lib:turnouts/CN60-1100-1_18/sections/LMA.prw",
+    "format": "prr",
+    "units": "m",
+    "y_sign": 1,
+    "z_sign": -1,
+    "z_offset_m": -0.43
+   }
+  }
+ ],
+ "rail_templates": [
+  {
+   "id": "left",
+   "wheel_id": "L",
+   "mass_y_kg": 120.0,
+   "mass_z_kg": 120.0,
+   "support": {
+    "k_y_n_m": 30000000.0,
+    "c_y_n_s_m": 20000.0,
+    "k_z_n_m": 50000000.0,
+    "c_z_n_s_m": 40000.0
+   },
+   "stations": [
+    {
+     "s_m": 0.0,
+     "id": "lf00000",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7526099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 48.0,
+     "id": "lf00001",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7526099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.0,
+     "id": "lf00002",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-0.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7526099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.192,
+     "id": "lf00003",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-1.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7516099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.383,
+     "id": "lf00004",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-2.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7506099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.575,
+     "id": "lf00005",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-3.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7496099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.768,
+     "id": "lf00006",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-4.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7486099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.961,
+     "id": "lf00007",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-5.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7476099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.154,
+     "id": "lf00008",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-6.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7466099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.346,
+     "id": "lf00009",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-7.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7456099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.539,
+     "id": "lf00010",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-8.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7446099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.732,
+     "id": "lf00011",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-9.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7436099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.925,
+     "id": "lf00012",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-10.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7426099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.118,
+     "id": "lf00013",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-11.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7416099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.31,
+     "id": "lf00014",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-12.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7406099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.503,
+     "id": "lf00015",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-13.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7396099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.696,
+     "id": "lf00016",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-14.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7386099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.889,
+     "id": "lf00017",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-15.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7376099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.082,
+     "id": "lf00018",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-16.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7366099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.274,
+     "id": "lf00019",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-17.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7356099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.467,
+     "id": "lf00020",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-18.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7346099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.659,
+     "id": "lf00021",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-19.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7336099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.852,
+     "id": "lf00022",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-20.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7326099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.044,
+     "id": "lf00023",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-21.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7316099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.237,
+     "id": "lf00024",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-22.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7306099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.429,
+     "id": "lf00025",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-23.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7296099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.622,
+     "id": "lf00026",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-24.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7286099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.814,
+     "id": "lf00027",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-25.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7276099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.007,
+     "id": "lf00028",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-26.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7266099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.201,
+     "id": "lf00029",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-27.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7256099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.396,
+     "id": "lf00030",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-28.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7246099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.583,
+     "id": "lf00031",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-29.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7236099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.761,
+     "id": "lf00032",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-30.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7226099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.933,
+     "id": "lf00033",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-31.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7216099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.099,
+     "id": "lf00034",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-32.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7206099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.259,
+     "id": "lf00035",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-33.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7196099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.416,
+     "id": "lf00036",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-34.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7186099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.569,
+     "id": "lf00037",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-35.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7176099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.72,
+     "id": "lf00038",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-36.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7166099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.869,
+     "id": "lf00039",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-37.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7156099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.017,
+     "id": "lf00040",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-38.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7146099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.161,
+     "id": "lf00041",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-39.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7136099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.304,
+     "id": "lf00042",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-40.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7126099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.444,
+     "id": "lf00043",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-41.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7116099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.582,
+     "id": "lf00044",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-42.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7106099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.718,
+     "id": "lf00045",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-43.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7096099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.852,
+     "id": "lf00046",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-44.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7086099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.984,
+     "id": "lf00047",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-45.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7076099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.113,
+     "id": "lf00048",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-46.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7066099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.241,
+     "id": "lf00049",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-47.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7056099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.367,
+     "id": "lf00050",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-48.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7046099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.491,
+     "id": "lf00051",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-49.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7036099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.614,
+     "id": "lf00052",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-50.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7026099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.735,
+     "id": "lf00053",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-51.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7016099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.854,
+     "id": "lf00054",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-52.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.7006099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.972,
+     "id": "lf00055",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-53.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6996099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.088,
+     "id": "lf00056",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-54.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6986099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.202,
+     "id": "lf00057",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-55.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6976099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.316,
+     "id": "lf00058",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-56.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6966099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.427,
+     "id": "lf00059",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-57.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6956099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.537,
+     "id": "lf00060",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-58.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6946099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.646,
+     "id": "lf00061",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-59.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6936099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.753,
+     "id": "lf00062",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-60.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6926099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.859,
+     "id": "lf00063",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-61.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6916099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.963,
+     "id": "lf00064",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-62.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6906099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.066,
+     "id": "lf00065",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-63.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6896099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.168,
+     "id": "lf00066",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-64.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6886099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.269,
+     "id": "lf00067",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-65.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6876099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.369,
+     "id": "lf00068",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-66.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6866099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.467,
+     "id": "lf00069",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-67.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6856099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.564,
+     "id": "lf00070",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-68.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6846099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.66,
+     "id": "lf00071",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-69.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6836099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.756,
+     "id": "lf00072",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-70.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6826099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.85,
+     "id": "lf00073",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-71.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6816099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.943,
+     "id": "lf00074",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-72.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6806099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 1000.0,
+     "id": "lf00075",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-72.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": -1,
+      "y_offset_m": -0.6806099000000001,
+      "z_sign": -1
+     }
+    }
+   ]
+  },
+  {
+   "id": "right",
+   "wheel_id": "R",
+   "mass_y_kg": 120.0,
+   "mass_z_kg": 120.0,
+   "support": {
+    "k_y_n_m": 30000000.0,
+    "c_y_n_s_m": 20000.0,
+    "k_z_n_m": 50000000.0,
+    "c_z_n_s_m": 40000.0
+   },
+   "stations": [
+    {
+     "s_m": 0.0,
+     "id": "rt00000",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7526099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 48.0,
+     "id": "rt00001",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7526099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.0,
+     "id": "rt00002",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-0.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7526099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.192,
+     "id": "rt00003",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-1.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7516099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.383,
+     "id": "rt00004",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-2.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7506099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.575,
+     "id": "rt00005",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-3.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7496099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.768,
+     "id": "rt00006",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-4.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7486099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 50.961,
+     "id": "rt00007",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-5.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7476099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.154,
+     "id": "rt00008",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-6.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7466099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.346,
+     "id": "rt00009",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-7.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7456099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.539,
+     "id": "rt00010",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-8.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7446099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.732,
+     "id": "rt00011",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-9.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7436099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 51.925,
+     "id": "rt00012",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-10.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7426099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.118,
+     "id": "rt00013",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-11.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7416099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.31,
+     "id": "rt00014",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-12.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7406099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.503,
+     "id": "rt00015",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-13.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7396099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.696,
+     "id": "rt00016",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-14.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7386099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 52.889,
+     "id": "rt00017",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-15.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7376099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.082,
+     "id": "rt00018",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-16.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7366099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.274,
+     "id": "rt00019",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-17.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7356099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.467,
+     "id": "rt00020",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-18.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7346099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.659,
+     "id": "rt00021",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-19.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7336099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 53.852,
+     "id": "rt00022",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-20.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7326099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.044,
+     "id": "rt00023",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-21.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7316099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.237,
+     "id": "rt00024",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-22.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7306099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.429,
+     "id": "rt00025",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-23.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7296099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.622,
+     "id": "rt00026",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-24.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7286099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 54.814,
+     "id": "rt00027",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-25.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7276099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.007,
+     "id": "rt00028",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-26.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7266099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.201,
+     "id": "rt00029",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-27.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7256099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.396,
+     "id": "rt00030",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-28.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7246099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.583,
+     "id": "rt00031",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-29.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7236099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.761,
+     "id": "rt00032",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-30.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7226099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 55.933,
+     "id": "rt00033",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-31.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7216099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.099,
+     "id": "rt00034",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-32.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7206099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.259,
+     "id": "rt00035",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-33.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7196099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.416,
+     "id": "rt00036",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-34.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7186099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.569,
+     "id": "rt00037",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-35.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7176099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.72,
+     "id": "rt00038",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-36.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7166099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 56.869,
+     "id": "rt00039",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-37.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7156099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.017,
+     "id": "rt00040",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-38.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7146099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.161,
+     "id": "rt00041",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-39.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7136099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.304,
+     "id": "rt00042",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-40.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7126099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.444,
+     "id": "rt00043",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-41.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7116099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.582,
+     "id": "rt00044",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-42.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7106099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.718,
+     "id": "rt00045",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-43.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7096099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.852,
+     "id": "rt00046",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-44.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7086099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 57.984,
+     "id": "rt00047",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-45.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7076099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.113,
+     "id": "rt00048",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-46.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7066099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.241,
+     "id": "rt00049",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-47.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7056099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.367,
+     "id": "rt00050",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-48.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7046099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.491,
+     "id": "rt00051",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-49.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7036099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.614,
+     "id": "rt00052",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-50.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7026099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.735,
+     "id": "rt00053",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-51.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7016099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.854,
+     "id": "rt00054",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-52.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.7006099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 58.972,
+     "id": "rt00055",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-53.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6996099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.088,
+     "id": "rt00056",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-54.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6986099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.202,
+     "id": "rt00057",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-55.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6976099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.316,
+     "id": "rt00058",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-56.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6966099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.427,
+     "id": "rt00059",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-57.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6956099,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.537,
+     "id": "rt00060",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-58.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6946099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.646,
+     "id": "rt00061",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-59.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6936099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.753,
+     "id": "rt00062",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-60.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6926099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.859,
+     "id": "rt00063",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-61.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6916099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 59.963,
+     "id": "rt00064",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-62.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6906099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.066,
+     "id": "rt00065",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-63.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6896099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.168,
+     "id": "rt00066",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-64.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6886099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.269,
+     "id": "rt00067",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-65.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6876099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.369,
+     "id": "rt00068",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-66.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6866099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.467,
+     "id": "rt00069",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-67.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6856099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.564,
+     "id": "rt00070",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-68.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6846099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.66,
+     "id": "rt00071",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-69.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6836099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.756,
+     "id": "rt00072",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-70.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6826099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.85,
+     "id": "rt00073",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-71.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6816099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 60.943,
+     "id": "rt00074",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-72.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6806099000000001,
+      "z_sign": -1
+     }
+    },
+    {
+     "s_m": 1000.0,
+     "id": "rt00075",
+     "profile": {
+      "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-72.txt",
+      "format": "txt",
+      "units": "m",
+      "y_sign": 1,
+      "y_offset_m": 0.6806099000000001,
+      "z_sign": -1
+     }
+    }
+   ],
+   "bodies": [
+    {
+     "id": "stock",
+     "stations": [
+      {
+       "s_m": 0.0,
+       "id": "rt00000",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7526099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 48.0,
+       "id": "rt00001",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7526099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.0,
+       "id": "rt00002",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-0.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7526099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.192,
+       "id": "rt00003",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-1.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7516099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.383,
+       "id": "rt00004",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-2.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7506099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.575,
+       "id": "rt00005",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-3.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7496099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.768,
+       "id": "rt00006",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-4.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7486099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.961,
+       "id": "rt00007",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-5.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7476099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.154,
+       "id": "rt00008",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-6.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7466099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.346,
+       "id": "rt00009",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-7.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7456099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.539,
+       "id": "rt00010",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-8.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7446099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.732,
+       "id": "rt00011",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-9.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7436099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.925,
+       "id": "rt00012",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-10.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7426099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.118,
+       "id": "rt00013",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-11.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7416099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.31,
+       "id": "rt00014",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-12.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7406099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.503,
+       "id": "rt00015",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-13.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7396099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.696,
+       "id": "rt00016",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-14.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7386099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.889,
+       "id": "rt00017",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-15.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7376099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.082,
+       "id": "rt00018",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-16.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7366099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.274,
+       "id": "rt00019",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-17.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7356099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.467,
+       "id": "rt00020",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-18.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7346099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.659,
+       "id": "rt00021",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-19.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7336099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.852,
+       "id": "rt00022",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-20.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7326099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.044,
+       "id": "rt00023",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-21.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7316099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.237,
+       "id": "rt00024",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-22.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7306099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.429,
+       "id": "rt00025",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-23.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7296099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.622,
+       "id": "rt00026",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-24.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7286099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.814,
+       "id": "rt00027",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-25.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7276099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.007,
+       "id": "rt00028",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-26.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7266099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.201,
+       "id": "rt00029",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-27.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7256099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.396,
+       "id": "rt00030",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-28.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7246099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.583,
+       "id": "rt00031",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-29.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7236099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.761,
+       "id": "rt00032",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-30.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7226099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.933,
+       "id": "rt00033",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-31.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7216099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.099,
+       "id": "rt00034",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-32.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7206099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.259,
+       "id": "rt00035",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-33.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7196099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.416,
+       "id": "rt00036",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-34.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7186099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.569,
+       "id": "rt00037",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-35.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7176099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.72,
+       "id": "rt00038",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-36.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7166099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.869,
+       "id": "rt00039",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-37.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7156099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.017,
+       "id": "rt00040",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-38.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7146099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.161,
+       "id": "rt00041",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-39.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7136099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.304,
+       "id": "rt00042",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-40.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7126099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.444,
+       "id": "rt00043",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-41.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7116099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.582,
+       "id": "rt00044",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-42.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7106099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.718,
+       "id": "rt00045",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-43.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7096099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.852,
+       "id": "rt00046",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-44.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7086099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.984,
+       "id": "rt00047",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-45.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7076099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.113,
+       "id": "rt00048",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-46.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7066099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.241,
+       "id": "rt00049",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-47.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7056099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.367,
+       "id": "rt00050",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-48.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7046099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.491,
+       "id": "rt00051",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-49.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7036099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.614,
+       "id": "rt00052",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-50.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7026099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.735,
+       "id": "rt00053",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-51.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7016099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.854,
+       "id": "rt00054",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-52.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7006099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.972,
+       "id": "rt00055",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-53.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6996099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.088,
+       "id": "rt00056",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-54.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6986099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.202,
+       "id": "rt00057",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-55.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6976099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.316,
+       "id": "rt00058",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-56.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6966099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.427,
+       "id": "rt00059",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-57.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6956099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.537,
+       "id": "rt00060",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-58.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6946099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.646,
+       "id": "rt00061",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-59.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6936099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.753,
+       "id": "rt00062",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-60.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6926099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.859,
+       "id": "rt00063",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-61.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6916099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.963,
+       "id": "rt00064",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-62.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6906099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.066,
+       "id": "rt00065",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-63.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6896099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.168,
+       "id": "rt00066",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-64.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6886099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.269,
+       "id": "rt00067",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-65.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6876099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.369,
+       "id": "rt00068",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-66.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6866099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.467,
+       "id": "rt00069",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-67.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6856099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.564,
+       "id": "rt00070",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-68.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6846099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.66,
+       "id": "rt00071",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-69.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6836099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.756,
+       "id": "rt00072",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-70.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6826099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.85,
+       "id": "rt00073",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-71.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6816099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.943,
+       "id": "rt00074",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-72.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6806099000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 1000.0,
+       "id": "rt00075",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-qjbg-20200418-72.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.6806099000000001,
+        "z_sign": -1
+       }
+      }
+     ]
+    },
+    {
+     "id": "blade",
+     "stations": [
+      {
+       "s_m": 50.578,
+       "id": "bl00000",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-3.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7930461000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.578,
+       "id": "bl00001",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-3.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7930461000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.771,
+       "id": "bl00002",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-4.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7922815400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 50.963,
+       "id": "bl00003",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-5.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.79151583,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.156,
+       "id": "bl00004",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-6.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7907689000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.348,
+       "id": "bl00005",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-7.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.79000037,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.541,
+       "id": "bl00006",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-8.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7892494600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.734,
+       "id": "bl00007",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-9.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7884782,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 51.926,
+       "id": "bl00008",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-10.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.78772361,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.119,
+       "id": "bl00009",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-11.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7869670000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.312,
+       "id": "bl00010",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-12.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7862253,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.504,
+       "id": "bl00011",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-13.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7854645800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.697,
+       "id": "bl00012",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-14.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.78471824,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 52.889,
+       "id": "bl00013",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-15.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7839855000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.082,
+       "id": "bl00014",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-16.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7830528600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.275,
+       "id": "bl00015",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-17.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7821210300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.467,
+       "id": "bl00016",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-18.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.78117314,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.66,
+       "id": "bl00017",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-19.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7802427300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 53.853,
+       "id": "bl00018",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-20.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7793131400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.045,
+       "id": "bl00019",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-21.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7783661500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.238,
+       "id": "bl00020",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-22.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7774379200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.43,
+       "id": "bl00021",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-23.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7765105900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.623,
+       "id": "bl00022",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-24.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77558424,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 54.816,
+       "id": "bl00023",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-25.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7746386100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.008,
+       "id": "bl00024",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-26.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77371354,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.201,
+       "id": "bl00025",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-27.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7727683700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.277,
+       "id": "bl00026",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-27.4.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7724116000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.389,
+       "id": "bl00027",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-28.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7718246000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.572,
+       "id": "bl00028",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-29.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7708462700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.749,
+       "id": "bl00029",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-30.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76988891,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 55.921,
+       "id": "bl00030",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-31.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7689104800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.089,
+       "id": "bl00031",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-32.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76795294,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.253,
+       "id": "bl00032",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-33.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7669744300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.413,
+       "id": "bl00033",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-34.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7659959100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.569,
+       "id": "bl00034",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-35.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7650379,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.722,
+       "id": "bl00035",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-36.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7640592,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 56.872,
+       "id": "bl00036",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-37.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7630805,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.019,
+       "id": "bl00037",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-38.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7621018,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.163,
+       "id": "bl00038",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-39.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7611434400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.304,
+       "id": "bl00039",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-40.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7601647,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.443,
+       "id": "bl00040",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-41.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75916278,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.579,
+       "id": "bl00041",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-42.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7581810600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.714,
+       "id": "bl00042",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-43.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75717909,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.846,
+       "id": "bl00043",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-44.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75617712,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 57.976,
+       "id": "bl00044",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-45.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75517515,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.104,
+       "id": "bl00045",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-46.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7541731800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.23,
+       "id": "bl00046",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-47.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7531712100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.354,
+       "id": "bl00047",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-48.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75218914,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.477,
+       "id": "bl00048",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-49.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75201035,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.598,
+       "id": "bl00049",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-50.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519793,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.718,
+       "id": "bl00050",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-51.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7532878100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.836,
+       "id": "bl00051",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-52.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7538081400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 58.952,
+       "id": "bl00052",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-53.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7537490800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.067,
+       "id": "bl00053",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-54.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7534632600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.181,
+       "id": "bl00054",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-55.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7529383000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.293,
+       "id": "bl00055",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-56.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75242576,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.405,
+       "id": "bl00056",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-57.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7520597000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.514,
+       "id": "bl00057",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-58.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75198264,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.623,
+       "id": "bl00058",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-59.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519303300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.731,
+       "id": "bl00059",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-60.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519030000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.837,
+       "id": "bl00060",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-61.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75215328,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 59.943,
+       "id": "bl00061",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-62.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7518595200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.047,
+       "id": "bl00062",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-63.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75202316,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.15,
+       "id": "bl00063",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-64.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7520680000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.252,
+       "id": "bl00064",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-65.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.354,
+       "id": "bl00065",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-66.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.454,
+       "id": "bl00066",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-67.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.554,
+       "id": "bl00067",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-68.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.652,
+       "id": "bl00068",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-69.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.75,
+       "id": "bl00069",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-70.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.847,
+       "id": "bl00070",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-71.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.943,
+       "id": "bl00071",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-72.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 60.962,
+       "id": "bl00072",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-72.2.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 70.848,
+       "id": "bl00073",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zjg-20200418-72.2.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519745000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 70.998,
+       "id": "bl00074",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7526099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 80.0,
+       "id": "bl00075",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7526099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 90.0,
+       "id": "bl00076",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/jbg-20200418-R.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7526099,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 96.05,
+       "id": "bl00077",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-71.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7525359,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 96.377,
+       "id": "bl00078",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-72.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519363800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 96.703,
+       "id": "bl00079",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-73.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75102416,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 97.03,
+       "id": "bl00080",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-74.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7504233600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 97.357,
+       "id": "bl00081",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-75.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7498217800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 97.684,
+       "id": "bl00082",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-76.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7492195100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 98.01,
+       "id": "bl00083",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-77.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74861637,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 98.337,
+       "id": "bl00084",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-78.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74801245,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 98.664,
+       "id": "bl00085",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-79.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7473043600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 98.991,
+       "id": "bl00086",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-80.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7465957000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 99.317,
+       "id": "bl00087",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-81.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7460928800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 99.644,
+       "id": "bl00088",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-82.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7453828100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 99.971,
+       "id": "bl00089",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-83.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7446722100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 100.298,
+       "id": "bl00090",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-84.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7441668300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 100.624,
+       "id": "bl00091",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-85.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7435577400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 100.951,
+       "id": "bl00092",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-86.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74284512,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 101.278,
+       "id": "bl00093",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-87.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7422344900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 101.604,
+       "id": "bl00094",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-88.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7416231700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 101.931,
+       "id": "bl00095",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-89.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7409086300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.258,
+       "id": "bl00096",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-90.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74029588,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.503,
+       "id": "bl00097",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-90.75.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.511,
+       "id": "bl00098",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-91.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.543,
+       "id": "bl00099",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-92.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.575,
+       "id": "bl00100",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-93.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.607,
+       "id": "bl00101",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-94.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.639,
+       "id": "bl00102",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-95.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.67,
+       "id": "bl00103",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-96.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.702,
+       "id": "bl00104",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-97.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.734,
+       "id": "bl00105",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-98.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.766,
+       "id": "bl00106",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-99.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.798,
+       "id": "bl00107",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-100.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.83,
+       "id": "bl00108",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-101.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.862,
+       "id": "bl00109",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-102.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.894,
+       "id": "bl00110",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-103.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.926,
+       "id": "bl00111",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-104.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.958,
+       "id": "bl00112",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-105.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 102.989,
+       "id": "bl00113",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-106.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.021,
+       "id": "bl00114",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-107.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.053,
+       "id": "bl00115",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-108.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.085,
+       "id": "bl00116",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-109.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.117,
+       "id": "bl00117",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-110.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.148,
+       "id": "bl00118",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250720-110.97.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7554739,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.176,
+       "id": "bl00119",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-9.1.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7525144,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.203,
+       "id": "bl00120",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-10.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519558100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.234,
+       "id": "bl00121",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-11.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7513351500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.265,
+       "id": "bl00122",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-12.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7507145000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.295,
+       "id": "bl00123",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-13.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.75009384,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.326,
+       "id": "bl00124",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-14.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74947319,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.356,
+       "id": "bl00125",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-15.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7488525300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.387,
+       "id": "bl00126",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-16.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74823187,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.417,
+       "id": "bl00127",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-17.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74761122,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.448,
+       "id": "bl00128",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-18.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7469905600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.478,
+       "id": "bl00129",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-19.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7463699100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.509,
+       "id": "bl00130",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-20.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74574925,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.539,
+       "id": "bl00131",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-21.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7451285900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.57,
+       "id": "bl00132",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-22.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7445079400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.601,
+       "id": "bl00133",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-23.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74388728,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.631,
+       "id": "bl00134",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-24.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74326663,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.662,
+       "id": "bl00135",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-25.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7426459700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.692,
+       "id": "bl00136",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-26.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74202531,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.723,
+       "id": "bl00137",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-27.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.74140466,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.753,
+       "id": "bl00138",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-28.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7407840000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.784,
+       "id": "bl00139",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-29.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7401633500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.814,
+       "id": "bl00140",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-30.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7395426900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.845,
+       "id": "bl00141",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-31.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7389220300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.875,
+       "id": "bl00142",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-32.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.73830138,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.906,
+       "id": "bl00143",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-33.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7376807200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.936,
+       "id": "bl00144",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-34.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7370600700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.967,
+       "id": "bl00145",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-35.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.73643941,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.998,
+       "id": "bl00146",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-36.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7358187500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.028,
+       "id": "bl00147",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-37.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7351981000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.059,
+       "id": "bl00148",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-38.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.73457744,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.089,
+       "id": "bl00149",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-39.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.73395679,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.12,
+       "id": "bl00150",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-40.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7333361300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.15,
+       "id": "bl00151",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-41.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.73271547,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.181,
+       "id": "bl00152",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-42.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.73209482,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.211,
+       "id": "bl00153",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-43.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7314741600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.242,
+       "id": "bl00154",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-44.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7308535,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.272,
+       "id": "bl00155",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-45.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.73023285,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.303,
+       "id": "bl00156",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-46.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7296121900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.333,
+       "id": "bl00157",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-47.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7289915400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.364,
+       "id": "bl00158",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-48.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.72837088,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.395,
+       "id": "bl00159",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-49.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.72817235,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.419,
+       "id": "bl00160",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-zgyg-20250722-cxg-49.8.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7356779000000001,
+        "z_sign": -1
+       }
+      }
+     ]
+    },
+    {
+     "id": "frog",
+     "stations": [
+      {
+       "s_m": 103.28,
+       "id": "fr00000",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-12.5.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7888208000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.296,
+       "id": "fr00001",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-13.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7885759000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.328,
+       "id": "fr00002",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-14.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7879405,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.36,
+       "id": "fr00003",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-15.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7873638000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.391,
+       "id": "fr00004",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-16.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7868552400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.421,
+       "id": "fr00005",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-17.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7863466800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.452,
+       "id": "fr00006",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-18.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7858381200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.482,
+       "id": "fr00007",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-19.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7853295600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.513,
+       "id": "fr00008",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-20.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7848210000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.543,
+       "id": "fr00009",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-21.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7843124400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.574,
+       "id": "fr00010",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-22.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7837533900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.589,
+       "id": "fr00011",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-22.5.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7834997,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.604,
+       "id": "fr00012",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-23.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.78324826,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.635,
+       "id": "fr00013",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-24.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7827453900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.665,
+       "id": "fr00014",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-25.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7822425100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.696,
+       "id": "fr00015",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-26.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7817396400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.726,
+       "id": "fr00016",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-27.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.78123677,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.757,
+       "id": "fr00017",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-28.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.78073389,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.787,
+       "id": "fr00018",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-29.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7802310200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.818,
+       "id": "fr00019",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-30.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77972814,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.848,
+       "id": "fr00020",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-31.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7792252700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.879,
+       "id": "fr00021",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-32.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7787223900000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.909,
+       "id": "fr00022",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-33.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77821952,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.94,
+       "id": "fr00023",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-34.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7777166500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 103.97,
+       "id": "fr00024",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-35.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77721377,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.001,
+       "id": "fr00025",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-36.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7767109000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.031,
+       "id": "fr00026",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-37.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7762080200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.062,
+       "id": "fr00027",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-38.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7757051500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.092,
+       "id": "fr00028",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-39.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7752410500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.123,
+       "id": "fr00029",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-40.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7747375000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.153,
+       "id": "fr00030",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-41.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77424658,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.183,
+       "id": "fr00031",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-42.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7737556600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.214,
+       "id": "fr00032",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-43.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7732647400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.244,
+       "id": "fr00033",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-44.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7727738200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.274,
+       "id": "fr00034",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-45.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7722829000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.304,
+       "id": "fr00035",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-46.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77179198,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.334,
+       "id": "fr00036",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-47.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7713010600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.365,
+       "id": "fr00037",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-48.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.77081014,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.395,
+       "id": "fr00038",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-49.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7703192200000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.425,
+       "id": "fr00039",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-50.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7698283,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.455,
+       "id": "fr00040",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-51.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76933728,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.485,
+       "id": "fr00041",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-52.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7688462500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.514,
+       "id": "fr00042",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-53.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7683552300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.544,
+       "id": "fr00043",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-54.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76786421,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.574,
+       "id": "fr00044",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-55.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7673731800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.604,
+       "id": "fr00045",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-56.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7668821600000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.634,
+       "id": "fr00046",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-57.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7663911400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.663,
+       "id": "fr00047",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-58.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76590011,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.693,
+       "id": "fr00048",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-59.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76540909,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.723,
+       "id": "fr00049",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-60.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7649180700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.753,
+       "id": "fr00050",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-61.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7644270400000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.783,
+       "id": "fr00051",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-62.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7639114300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.813,
+       "id": "fr00052",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-63.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7634207500000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.842,
+       "id": "fr00053",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-64.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76293007,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.872,
+       "id": "fr00054",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-65.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76243939,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.902,
+       "id": "fr00055",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-66.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7619487100000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.932,
+       "id": "fr00056",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-67.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7614580300000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.962,
+       "id": "fr00057",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-68.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.76096735,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 104.991,
+       "id": "fr00058",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-69.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7604766700000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 105.021,
+       "id": "fr00059",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-70.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7599859800000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 105.051,
+       "id": "fr00060",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-71.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7594953000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 105.06,
+       "id": "fr00061",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-71.3.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7593481000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 107.31,
+       "id": "fr00062",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-71.3.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7593481000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 107.36,
+       "id": "fr00063",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-72.2.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519220000000001,
+        "z_sign": -1
+       }
+      },
+      {
+       "s_m": 116.44,
+       "id": "fr00064",
+       "profile": {
+        "file": "lib:turnouts/CN60-1100-1_18/sections/07(009)-cxg-20250801-72.2.txt",
+        "format": "txt",
+        "units": "m",
+        "y_sign": 1,
+        "y_offset_m": 0.7519220000000001,
+        "z_sign": -1
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "track_dynamics": {
+  "kind": "local_compliant"
+ },
+ "equilibrate_vertical": true,
+ "run": {
+  "method": "DOP853",
+  "x_start_m": 40.0,
+  "seat_x_start_m": 40.0,
+  "duration_s": 0.02,
+  "output_step_s": 0.0005,
+  "max_solver_step_s": 0.0001,
+  "rtol": 1e-06,
+  "atol": 1e-08,
+  "maximum_penetration_m": 0.003,
+  "maximum_abs_contact_slope": 1.0,
+  "speed_profile": {
+   "constant": {
+    "speed_kmh": 80.0
+   }
+  }
+ },
+ "vehicle_ref": "lib:CRH380A_M_axlebox.json",
+ "flexible_wheelset": {
+  "source": "file",
+  "file": "lib:modes/CRH3C_wheelset_fe.json",
+  "axles": [
+   1,
+   2,
+   3,
+   4
+  ]
+ }
+}

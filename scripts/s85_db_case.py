@@ -172,17 +172,20 @@ def main() -> int:
     )
     case.pop("path", None)
     case.pop("initial_state", None)
+    # The wheel surface is the one profile that must stay in WHEEL coordinates: its y is measured
+    # from the wheel's own centre, and `lateral_offset_m` puts it on the axle.  Reusing the rail
+    # helper here would subtract the rail crown (-0.6772 m) and land the tread 0.68 m outboard of the
+    # axle -- measured 0.00 kN of contact at every sink from 0 to 20 mm, against 66.89 kN in the old
+    # case at 0.2 mm.
+    def wheel_profile(*, side: int, y_sign: int) -> dict:
+        block = station_profile(wheel_source.name, side=side, y_sign=y_sign)
+        block.pop("y_offset_m", None)
+        block["z_offset_m"] = -0.43
+        return block
+
     case["wheels"] = [
-        {
-            "id": "L",
-            "lateral_offset_m": -0.7465,
-            "profile": {**station_profile(wheel_source.name, side=-1, y_sign=-1), "z_offset_m": -0.43},
-        },
-        {
-            "id": "R",
-            "lateral_offset_m": 0.7465,
-            "profile": {**station_profile(wheel_source.name, side=1, y_sign=1), "z_offset_m": -0.43},
-        },
+        {"id": "L", "lateral_offset_m": -0.7465, "profile": wheel_profile(side=-1, y_sign=-1)},
+        {"id": "R", "lateral_offset_m": 0.7465, "profile": wheel_profile(side=1, y_sign=1)},
     ]
     case["rail_templates"] = [left, right]
     case["vehicle"]["travel_speed_m_s"] = 80.0 / 3.6

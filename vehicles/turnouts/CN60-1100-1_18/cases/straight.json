@@ -104,7 +104,6 @@
     "format": "prr",
     "units": "m",
     "y_sign": -1,
-    "y_offset_m": -0.6772039000000001,
     "z_sign": -1,
     "z_offset_m": -0.43
    }
@@ -117,7 +116,6 @@
     "format": "prr",
     "units": "m",
     "y_sign": 1,
-    "y_offset_m": 0.6772039000000001,
     "z_sign": -1,
     "z_offset_m": -0.43
    }

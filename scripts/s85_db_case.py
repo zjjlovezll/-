@@ -117,7 +117,12 @@ def main() -> int:
         "support": {"k_y_n_m": 3.0e7, "c_y_n_s_m": 2.0e4, "k_z_n_m": 5.0e7, "c_z_n_s_m": 4.0e4},
         "stations": [station(m, f, side=-1, y_sign=-1, tag="lf") for m, f in stock_rows],
     }
+    right_stock = [station(m, f, side=1, y_sign=1, tag="rt") for m, f in stock_rows]
     right_bodies = [
+        {
+            "id": "stock",
+            "stations": right_stock,
+        },
         {
             "id": "blade",
             "stations": [
@@ -139,7 +144,7 @@ def main() -> int:
         "mass_y_kg": 120.0,
         "mass_z_kg": 120.0,
         "support": {"k_y_n_m": 3.0e7, "c_y_n_s_m": 2.0e4, "k_z_n_m": 5.0e7, "c_z_n_s_m": 4.0e4},
-        "stations": [station(m, f, side=1, y_sign=1, tag="rt") for m, f in stock_rows],
+        "stations": right_stock,
         "bodies": right_bodies,
     }
 
@@ -147,8 +152,7 @@ def main() -> int:
     for stations in (
         left["stations"],
         right["stations"],
-        right_bodies[0]["stations"],
-        right_bodies[1]["stations"],
+        *[body["stations"] for body in right_bodies],
     ):
         for position, item in enumerate(stations):
             prefix = "".join(ch for ch in item["id"] if ch.isalpha())
@@ -199,8 +203,8 @@ def main() -> int:
     payload = json.dumps(case, ensure_ascii=False, indent=1) + chr(10)
     out.write_text(payload, encoding="utf-8", newline=chr(10))
     print(f"wrote {out} ({out.stat().st_size / 1e3:.0f} kB), crown stock {crown_y_m(STOCK) * 1e3:+.3f} mm")
-    print(f"  stations: left {len(left['stations'])}, right {len(right['stations'])}, "
-          f"blade {len(right_bodies[0]['stations'])}, frog {len(right_bodies[1]['stations'])}")
+    print(f"  stations: left {len(left['stations'])}, "
+          + ", ".join(f"{body['id']} {len(body['stations'])}" for body in right_bodies))
 
     if not (args.check or args.seat):
         return 0
@@ -212,7 +216,7 @@ def main() -> int:
     print(f"loaded: dimension {dynamics.dimension}, rails {len(loaded.rails)}")
     for rail in loaded.rails:
         bodies = getattr(rail, "bodies", None) or ()
-        print(f"  {rail.id:12s} bodies {1 + len(bodies)}")
+        print(f"  {rail.id:12s} bodies {1 + len(bodies)} {[getattr(b, 'id', '?') for b in bodies]}")
     if args.seat:
         import numpy as np
         from velch.vehicle_solver import _seat

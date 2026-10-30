@@ -1775,6 +1775,18 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 242 轮 — 横向注册在规范算例上重测：接触内移 8.0 mm、`d(lever_y)/dy = −0.0016`、`k_lat = −2827 kN/mm`
+
+B047 的三句描述（"硬 927 倍"、"倾角冻结"、"内移 16.7 mm"）全部出自 `effective_radius_m = 0.02` 还在生效的年代，而等效半径直接决定 `dδ/dy`；B048 退役了它，所以那批数不再是当前模型的数。本轮用**规范算例**（234 坐标的一 组模型）把横向注册重测一遍。新增 [LATERAL_REGISTRATION_BASELINE_2026-10-31.md](LATERAL_REGISTRATION_BASELINE_2026-10-31.md) 与 `scripts/s103_lateral_registration.py`。
+
+**方法**：dy = 0 处座椅（残差 6.927e-09 N），之后只加减 `wheelset1.y`、**只求值不重解座椅**——每档重解会把"接触几何如何随横移变化"换成"座椅如何找另一个平衡"，是两个问题。冠部一律取同站同轨**基本轨体**断面的 `max(z)`（z 向上为正；`min(z)` 是断面底边，B049 教训）。
+
+**实测（50.000 m、80 km/h）**：冠距 **1519.102 mm** 对轮平面距 **1493.000 mm**（每侧差 13.05 mm），接触点落在 **±751.573 mm**，即冠内侧 **8.0 mm**；`d(lever_y)/dy = **−0.0016**`（车轮横移 3 mm、接触点动 0.005 mm，判据 [0.5,1.0]）；`k_lat = **−2826.78 kN/mm**`（判据 10–100，且**符号正确**——位移 +y 给 −y 合力，问题是量级不是符号）；±3 mm 内卸载体脱空；倾角全程 0.023–0.033。1 mm 横移把 45 kN 从一侧搬到另一侧 ⇒ **所谓"横向刚度"其实是两侧法向力的分配斜率，不是轮对定位刚度**。
+
+**根因指向一个拟合常数**：`scripts/s85_db_case.py:81` 的 `CROWN_OFFSET_M = 13.0e-3`，注释记录"12.0–13.7 mm 窗口内八轮 1.000× 均分、<10 mm 压肩部 1087 kN、>14 mm 脱空"——但它是拿 **35 坐标刚性轮对车**拟合的，而规范算例是 86 坐标完备车 + 柔性轮对，悬挂不同、落点不同，窗口不能直接搬。**这不是"改个 0 就好"**：offset 0 的实测会压外侧肩部并在 50 m 触发斜率门。
+
+**下一轮判据（先写死）**：`CROWN_OFFSET_M ∈ {0,4,8,10,13}` mm 各建一次算例（`--crown-offset-mm` + 独立 `--out`，规范算例不许被覆盖），四条全中才算通过：① 座椅 8/8 ∈[0.625,1.6]× 且残差 ≤1e-5 N；② 两侧 `|lever−冠| ≤ 2 mm`；③ `d(lever_y)/dy ∈ [0.5,1]`；④ `k_lat ∈ [10,100]` kN/mm 单调且 ±3 mm 不脱空。若五档全不成立，结论就是"注册不能靠调常数修"，转去改接触搜索（窗口随轮心平移 / 整型面搜索）。
+
 ### 第 241 轮 — 一组模型装进同一算例：234 坐标、八轴箱、柔性轮对、真道岔几何，七门 7/7
 
 任务书 M1 的定义是"把四件东西装进同一个算例并跑通七门"。此前它们分散在四个算例里：**完备车辆**（`CRH380A_M_axlebox`，86 坐标、15 刚体含 8 个轴箱）**没有任何算例**；**柔性轮对**只在 12 站合成几何的 `examples/portable/case_flexible.json`；**柔性轨道 + 真道岔几何**在 `cases/straight.json`，而它挂的是 35 坐标刚性轮对车。新增 [ONE_SET_CASE_2026-10-31.md](ONE_SET_CASE_2026-10-31.md)。
@@ -1962,6 +1974,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |
 | [INVERSION_VERDICT_2026-10-28.md](INVERSION_VERDICT_2026-10-28.md) | 实测反演的判定页（L0–L5） |
+| [LATERAL_REGISTRATION_BASELINE_2026-10-31.md](LATERAL_REGISTRATION_BASELINE_2026-10-31.md) | 横向注册的当前基线（M2 第一步）：对"最完备的车"重新量一遍，结果比旧数更糟 |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |
 | [LITERATURE_LOG.md](LITERATURE_LOG.md) | 文献日志（任务书要求：碰到具体问题才查，登记 DOI/URL 与"它解决了什么"） |
 | [LONGITUDINAL_WHEELSET_2026-10-25.md](LONGITUDINAL_WHEELSET_2026-10-25.md) | 轮对纵向自由度：让轴箱纵向通道有物理来源（2026-10-25） |

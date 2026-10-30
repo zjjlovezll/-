@@ -1775,6 +1775,30 @@ S4 表里 0.1 m 波长的增益 96.5 (m/s²)/m 是在 **2 kHz 输出**下测的 
 **验证**：`tests/test_harmonics.py` 9 项、`tests/test_uncertainty.py` 10 项、`tests/test_assets.py` 6 项全绿；`pytest tests` 见下；文档 [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md)；复算 `scripts/s9ac_harmonic_inversion.py`、`scripts/s9ae_harmonic_redundant.py`。
 
 
+### 第 244 轮 — 条带宽度不是原因（0.05 %），B047 的两条读数退役
+
+第 243 轮把"接触落在冠顶 2 mm 内"判成写错的门；本轮把 M2 剩下的两条候选一并了结：**条带积分是不是把阻抗放大的元凶**，以及 **B047 那句"硬 927 倍"到底在比什么**。新增 `scripts/s105_strip_convergence.py`、[B047_RETIREMENT_2026-10-31.md](B047_RETIREMENT_2026-10-31.md)；任务书 §十一 追加 M1/M2 关闭表。
+
+**条带收敛（判据预注册在脚本 docstring）**：规范算例（234 坐标、80 km/h）只把 `contact.strip_dy_m` 在内存里换掉、每档重新座椅：
+
+| strip_dy (m) | 座椅残差 (N) | 贯入 左/右 (µm) | dN/dy 左 | dN/dy 右 | 配对 | 墙钟 (s) |
+|---|---|---|---|---|---|---|
+| 5.0e-4 | 6.93e-09 | 63.70/63.70 | −31.61 | +46.62 | −78.23 | 0.57 |
+| 2.5e-4 | 2.49e-08 | 63.70/63.70 | −31.60 | +46.67 | −78.27 | 0.58 |
+| 1.0e-4 | 1.55e-08 | 63.70/63.70 | −31.60 | +46.67 | **−78.27** | 0.66 |
+
+带宽细化 5 倍，配对阻抗只动 **0.05 %**，贯入三位小数不变 ⇒ `G1 PASS / G2 FAIL / G3 PASS`，`VERDICT: the impedance is geometry, not the strip width`。**把 `strip_dy_m` 调小修不好任何东西**，M2 的这条候选关闭。
+
+**这个阻抗是不是物理：可直接算**。斜率 `s` 的锥面压半径 `R` 的圆弧，横移 `p` 时最大贯入 `δ(p) = s·p + s²R/2` ⇒ `dδ/dp = s`（**与 R 无关**）。乘 Hertz 斜率 `1.5N/δ = 1.5 × 60 153 / 63.70 µm = 1417 kN/mm` 得 **35.4 kN/mm**；实测左 −31.61（= 22.3 µm/mm）、右 +46.62（= 32.9 µm/mm），围绕 25 µm/mm 不对称是因为 LMA 不是纯锥面、横移把一侧推进更陡的踏面段。**量级与符号都对**。
+
+**B047 退役**：原话"横向定位硬 927 倍（`k_force = 5404.5 kN/m` vs `k_grav = 5.83 kN/m`）"有两处问题——① `k_force` 是**载荷再分配斜率**，与 Wickens `W·λ/(4r)` 的**定位刚度**是两个不同的量（后者由滚动半径差→纵蠕滑→摇头→横蠕滑给出）；② 老读数出自 `effective_radius_m = 0.02` 时代（B048 已退役），按现在的规范算例同一物理量是 31–47 kN/mm，比老读数大 6–9 倍而**不是 927 倍**。替代陈述：接触位置由斜率相等定（`R·s = 7.5 mm`，实测 8.03 mm、倾角 0.0246）；`dN/dp` 是几何；**横向定位行为只能由时程回答**。
+
+**门的口径修正（保留原判、另立新门）**：`on_crown` → `tangent`（`|lever−冠| ∈ [R·s±2] mm` 且 `| |tilt| − s | ≤ 0.005`）；`stiffness` → `impedance`（`dN/dp` 必须等于 `1.5N/δ · s` 的 0.9–1.4 倍，且 `strip_dy` 细化 5 倍变化 ≤2 %）；`follows_wheel` 适用域收窄为 `|tilt| > 3s`（陡面接触才要求接触点跟轮走）。
+
+**测试**：`tests/test_strip_convergence.py` 2 项（细化 5 倍后左右 `dN/dy` 变化 ≤2 % 且座椅贯入差 ≤0.1 µm；两侧 `|dN/dy|` 落在解析值 0.5–2.0 倍内且符号相反），3 s 内全过；与第 243 轮的 `tests/test_crown_tangent.py` 合计 5 项 3.97 s。
+
+**写这两项时我自己的一个错**：解析常数写成 `1.5N/δ /1e3 * s *1e3`（量纲两次互抵只留 1e1），`ANALYTIC_KN_PER_MM` 一度是 3.5e7；断言当场把它顶出来，改成 `*1e-6 * s`（N/m → kN/mm）。
+
 ### 第 243 轮 — 冠偏移扫描：五档全不成立，并查出"接触落在冠顶 2 mm 内"这条门本身是错的
 
 第 242 轮把 B047 的根因指向 `scripts/s85_db_case.py:81` 的 `CROWN_OFFSET_M = 13.0e-3`（一个在 35 坐标车上拟合的常数）。本轮按预注册的四条门去重拟它：`CROWN_OFFSET_M ∈ {13, 10, 8, 4, 0}` mm 各建一个**变体**算例（做法是把每站 `y_offset_m` 平移 `±(offset−13) mm`，落在 `scratch/s104/`，**规范算例不被覆盖、`s85` 不改**），每个变体座椅后横移 −3…+3 mm 共 7 档只求值。新增 `scripts/s104_crown_offset_sweep.py` 与 [CROWN_OFFSET_SWEEP_2026-10-31.md](CROWN_OFFSET_SWEEP_2026-10-31.md)。
@@ -1933,6 +1957,7 @@ axle1_right stock 首载 50.000 m（59.680 kN）峰值 59.73 kN，59.731 m 处�
 | [ASSESSMENT_2026-10-20.md](ASSESSMENT_2026-10-20.md) | 标准评价指标（assess）：把仿真输出变成可判读的结论 |
 | [AUDIT_FIXES_2026-10-26.md](AUDIT_FIXES_2026-10-26.md) | 2026-10-26 只读审查的七个缺陷与修法 |
 | [AXLEBOX_RESTRAINT_2026-10-26.md](AXLEBOX_RESTRAINT_2026-10-26.md) | 轴箱的转动约束：13.094 Hz 无阻尼模态从哪里来，怎么去掉 |
+| [B047_RETIREMENT_2026-10-31.md](B047_RETIREMENT_2026-10-31.md) | B047 退役：横向"刚度硬 927 倍"是两条不同刚度的比较，不是缺陷（2026-10-31） |
 | [B2_EVENT_INTEGRATION_2026-10-22.md](B2_EVENT_INTEGRATION_2026-10-22.md) | B2 事件化积分 / 峰值分辨率（2026-10-22） |
 | [B3_TABLE_AMORTIZATION_2026-10-22.md](B3_TABLE_AMORTIZATION_2026-10-22.md) | B3 接触表按反演批次摊销（2026-10-22） |
 | [B4_DESCRIPTOR_2026-10-22.md](B4_DESCRIPTOR_2026-10-22.md) | B4 接触状态描述子降维 —— 实测**负结果** |

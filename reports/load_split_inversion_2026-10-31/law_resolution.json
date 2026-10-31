@@ -1,0 +1,67 @@
+{
+  "knots_u": [
+    -200.0,
+    -100.0,
+    -50.0,
+    0.0,
+    50.0,
+    100.0,
+    250.0
+  ],
+  "knots_sigma": [
+    0.0,
+    0.0,
+    0.0,
+    0.08011443260485068,
+    0.45278938373076527,
+    0.8363231323501309,
+    1.0
+  ],
+  "runs": [
+    {
+      "route": "one_set_twopeak",
+      "usable": 469,
+      "steep_band_u": [
+        -200.0,
+        250.0
+      ],
+      "steep_fraction": 1.0,
+      "nearest_knot_median_um": 23.09343481139268,
+      "nearest_knot_p90_um": 23.40661613627497,
+      "floor_um_share": 0.013317260948959863,
+      "mean_abs_error": 0.004837116620440305,
+      "corr_error_vs_knot_distance": -0.2819961130534905
+    },
+    {
+      "route": "one_set_threepeak_obs",
+      "usable": 469,
+      "steep_band_u": [
+        -200.0,
+        250.0
+      ],
+      "steep_fraction": 1.0,
+      "nearest_knot_median_um": 19.126939548692093,
+      "nearest_knot_p90_um": 23.47278670166003,
+      "floor_um_share": 0.04267270264244982,
+      "mean_abs_error": 0.03309834450377318,
+      "corr_error_vs_knot_distance": 0.5947565328888462
+    },
+    {
+      "route": "one_set_random",
+      "usable": 381,
+      "steep_band_u": [
+        -200.0,
+        250.0
+      ],
+      "steep_fraction": 1.0,
+      "nearest_knot_median_um": 12.94763934484908,
+      "nearest_knot_p90_um": 23.64043607387339,
+      "floor_um_share": 0.13135493661166883,
+      "mean_abs_error": 0.09317729143902495,
+      "corr_error_vs_knot_distance": 0.47877497911775424
+    }
+  ],
+  "p1_steep_fraction": false,
+  "p2_error_vs_knot_distance": false,
+  "verdict": "neither prediction holds: interpolation resolution does not explain the floor, so the per-station assumption itself has to be re-measured"
+}

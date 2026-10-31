@@ -1,0 +1,42 @@
+{
+  "e_star_pa": 115400000000.0,
+  "half_load_n": 60153.0,
+  "floor_target": 0.02,
+  "strip_m": 0.0001,
+  "half_span_m": 0.025,
+  "station_step_m": 0.02,
+  "wheel": "LMA_x4.prw",
+  "rows": [
+    {
+      "route": "straight_one_set",
+      "run_id": "straight_one_set-080.00kmh-0.6000s-500us-55d6fd49",
+      "usable": 469,
+      "floor": 0.19120864953329747,
+      "bias": -0.0768030922607094
+    },
+    {
+      "route": "one_set_twopeak",
+      "run_id": "one_set_twopeak-080.00kmh-0.6000s-500us-d7df6f37",
+      "usable": 479,
+      "floor": 0.200800758347515,
+      "bias": -0.11005007624643655
+    },
+    {
+      "route": "one_set_threepeak_obs",
+      "run_id": "one_set_threepeak_obs-080.00kmh-0.6000s-500us-92ddca24",
+      "usable": 476,
+      "floor": 0.25892312776688636,
+      "bias": -0.20457694883258318
+    },
+    {
+      "route": "one_set_random",
+      "run_id": "one_set_random-080.00kmh-0.6000s-500us-2f516e4b",
+      "usable": 383,
+      "floor": 0.37176139695104293,
+      "bias": -0.3038319390585261
+    }
+  ],
+  "pre_gate_pass": false,
+  "all_pass": false,
+  "verdict": "the strip integral still fails the un-bumped run, so the combined wheel-rail gap does not carry the split either: the contact layer has to come from the solver, not from a closed-form strip model"
+}

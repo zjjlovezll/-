@@ -2282,6 +2282,65 @@ along with the real digests.
 `docs/LATERAL_OBSERVABILITY_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/lateral_observability.json`；
 任务书 §二十六；冻结基线 UNCHANGED。
 
+## 第 260 轮：M7 装配——一条光带端到端重建，判决 0/3（2026-10-31）
+
+把 251–259 轮的零件接成一次反演：`sigma(s)`（`blade/(stock+blade)`）→ 宽度分辨的分离律 → `u` → `z = d − u`，
+零点由**未加凸起**那一趟定义，中值滤波窗只在零点那趟上选（选到 1.20 m）。四个已有 0.6 s 运行
+（baseline + 50/100/200 µm）上判决：`null p95 43.05 µm`、三档反演峰值 97.71 / 145.50 / 125.64、
+**0/3 全门通过**，最好一档 p95 98.1 µm 是 22 µm 门的 4.5 倍。
+
+三条失败原因分开写：背景不是零（原始偏置 43–105 µm）、幅值映射非单调（份额在 ~100 µm 以上饱和）、
+误差预算 30 µm ⊕ 50 µm ≈ 58 µm。仍成立的是**位置**（0.00–0.34 m）。
+
+新增 `scripts/s123_m7_assembly.py`、`tests/test_m7_assembly.py`（6 项）、`docs/BAND_ASSEMBLY_2026-10-31.md`、
+报告 `reports/load_split_inversion_2026-10-31/m7_assembly.json`；任务书 §二十七；冻结基线 UNCHANGED。
+
+## 第 261 轮：M7 第二步——两参数正演拟合，标定集 5/9 过门（2026-10-31）
+
+逐点反解 0/3 之后换成**正演拟合**：两参数（振幅 `A`、中心 `s0`），工作点 `u0(s)` 由未加凸起那趟反解，
+凸起**加上去**（抬高尖轨→承担更多载荷），宽度 1.2 m 作声明先验。九档幅值：20/30/40/60/80 µm **全门通过**
+（幅值 0.28–1.52 %、p95 **1.4–7.7 µm**、位置 0.000–0.033 m），50/100/120/200 µm 失败（饱和不可辨识、
+位移极小值）。**本项目第一次端到端带面反演过 22 µm 绝对门。**
+
+三次自造错误都记在文档里：凸起写成减号（拟合塌到边界）、用设计间隙当工作点（偏 0.57 vs 0.02）、
+多起点得"代价更低但误差更大"（80 µm 87.6 → 141.9 µm）。
+
+新增 `scripts/s124_joint_inversion.py`、`tests/test_joint_inversion.py`（5 项）、
+`docs/JOINT_INVERSION_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/joint_inversion.json`；
+任务书 §二十八；冻结基线 UNCHANGED。
+
+## 第 262 轮：M7 第三步——幅值与位置两个留出，0/2（2026-10-31）
+
+两个标定集之外的算例：`h-a-150um-c58.5`（幅值留出）与 `h-b-100um-c59.5`（位置留出），各 1201 帧、七门 7/7。
+纯份额估计器 0/2；混合估计器（幅值取起始站位、中心取份额拟合）也 0/2，但它把两道门**分开**了：
+150 µm 的 p95 **15.99 µm 过绝对门**、最差 2 mm 分箱 **3.22 % 不过相对门**。
+
+位置留出把两者都打破（位置误差 0.278 m），机制是量出来的：59.5 m 处尖轨已抬起、零点份额更高，
+100 µm 抬升把份额压到 1.000 的区间更宽 ⇒ `A` 与 `s0` 不可分——**是观测量没了，不是估计器坏了**。
+
+新增 `scripts/s125_holdout.py`、`tests/test_holdout.py`（4 项）、`docs/HOLDOUT_2026-10-31.md`、
+报告 `reports/load_split_inversion_2026-10-31/holdout.json`；任务书 §二十九；冻结基线 UNCHANGED。
+
+## 第 270 轮：九趟轨距把光带拼到 58.4 %，缺的 30 % 全在冠外侧（2026-10-31）
+
+单趟只看见 4 mm，想靠多趟拼满 37.15 mm。**座椅态**（每组秒级）扫右轨轨距 −8…+8 mm：九组全部座椅
+（残差 1.3e-08…1.3e-07 N、八接触 active），接触从 −19.8 mm 单调滑到冠上 +0.7 mm，**杠杆 1.28 mm/mm**、
+16 mm 轨距换 20.5 mm 行程。九条 16 mm 宽的带并起来：5 mm 深轨头（61.46 mm）**58.4 %**、
+1 mm 深走行面（37.15 mm）**69.9 %**。
+
+缺口全在**冠外侧**：按同一折算率要把接触推到 +18.6 mm 需要再开约 **+14 mm** 轨距（δ≈+22 mm），
+已不是道岔轨距。所以"多跑几趟铺满"这条路在几何上到此为止，覆盖率仍达不到 90 %，口径不改。
+
+另有一条必须写清的分野：**座椅成功不等于能起跑**。`scripts/s127_seat_after_settle.py` 复现积分器的
+"第一次座椅 → 模态沉降 → 第二次座椅"，九档里只有 **6 档**（−8/−2/0/+4/+6/+8）能起跑，被拒的
+`{−6, −4, +2}` **不单调**——那三档的横向残差地板 104–178 N，是第 247 轮"平谷"的同一机制，不是几何墙。
+我没有为此放宽 20 N 容差；并且算过：去掉这三档**不损失覆盖率**（并集由两端决定）。
+
+新增 `scripts/s126_lateral_coverage.py`、`scripts/s127_seat_after_settle.py`、
+`docs/LATERAL_COVERAGE_2026-10-31.md`、`tests/test_lateral_coverage.py`（5 项，含"三档被拒不减覆盖"的回归）、
+报告 `reports/load_split_inversion_2026-10-31/{lateral_coverage,seat_after_settle}.json`；
+任务书 §三十；冻结基线 UNCHANGED。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2357,6 +2416,7 @@ along with the real digests.
 | [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |
 | [INVERSION_VERDICT_2026-10-28.md](INVERSION_VERDICT_2026-10-28.md) | 实测反演的判定页（L0–L5） |
 | [JOINT_INVERSION_2026-10-31.md](JOINT_INVERSION_2026-10-31.md) | M7 step 2: joint forward fit — 2 parameters instead of 25 |
+| [LATERAL_COVERAGE_2026-10-31.md](LATERAL_COVERAGE_2026-10-31.md) | 光带覆盖率：把"一趟 4 mm"换成"几趟拼成一条带"（2026-10-31，第 270 轮） |
 | [LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md) | M2 时程：整车横向游走 0.73 mm/0.40 s，源头是 +718 N 的净横向力（2026-10-31） |
 | [LATERAL_FORCE_SAMPLING_2026-10-31.md](LATERAL_FORCE_SAMPLING_2026-10-31.md) | 横向力的来源：不是蠕滑，是采样的阶梯（B050） |
 | [LATERAL_OBSERVABILITY_2026-10-31.md](LATERAL_OBSERVABILITY_2026-10-31.md) | 光带（接触面）作为目标：横向可辨识宽度实测（第 259 轮，2026-10-31） |

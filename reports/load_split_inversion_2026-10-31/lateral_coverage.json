@@ -1,0 +1,971 @@
+{
+  "head_width_mm": 61.463200000000164,
+  "station_m": 58.5,
+  "deltas_mm": [
+    -8.0,
+    -6.0,
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0
+  ],
+  "passes": [
+    {
+      "route": "one_set_gauge-8mm",
+      "seat_residual_n": 4.338653525337577e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7477410580604595,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 11.861241939540523,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.598567839996,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7477410580604597,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 11.861241939540413,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.598567839304,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7477410580604598,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 11.861241939540301,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.59856783892,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7477410580604595,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 11.861241939540523,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.598567839996,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.7397410580604594,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -19.75894193954064,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.59856783961,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.7397410580604595,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -19.75894193954053,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.59856783929,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7397410580604595,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -19.75894193954053,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.598567838926,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.7397410580604594,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -19.75894193954064,
+          "half_width_mm": 8.712192708334177,
+          "normal_force_n": 60186.59856783961,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": -8.0
+    },
+    {
+      "route": "one_set_gauge-6mm",
+      "seat_residual_n": 4.5773049350827926e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7490237457612983,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 10.578554238701798,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.036597112565,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7490237457612982,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 10.578554238701908,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.03659711191,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7490237457612982,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 10.578554238701908,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.03659711221,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7490237457612983,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 10.578554238701798,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.036597112565,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.743023745761298,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -16.476254238702026,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.03659711157,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.743023745761298,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -16.476254238702026,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.03659711257,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7430237457612981,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -16.476254238701916,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.03659711288,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.7430237457612981,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -16.476254238701916,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60168.03659711192,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": -6.0
+    },
+    {
+      "route": "one_set_gauge-4mm",
+      "seat_residual_n": 1.2935925042256713e-07,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7501463110685674,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 9.455988931432625,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.702391136154,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7501463110685674,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 9.455988931432625,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.702391136154,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7501463110685676,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 9.455988931432513,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.70239113613,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7501463110685666,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 9.455988931433513,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.70239122018,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.746146311068568,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -13.353688931432073,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.70239111306,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.7461463110685681,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -13.353688931431961,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.70239111337,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7461463110685682,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -13.35368893143185,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.70239111337,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.7461463110685672,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -13.353688931432849,
+          "half_width_mm": 8.463272916667485,
+          "normal_force_n": 60158.70239119707,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": -4.0
+    },
+    {
+      "route": "one_set_gauge-2mm",
+      "seat_residual_n": 3.167224349454045e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7510044222711547,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.597877728845349,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.156240920995,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7510044222711546,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.59787772884546,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.156240923185,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7510044222711547,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.597877728845349,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.15624092194,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7510044222711545,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.597877728845571,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.156240922224,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.7490044222711546,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -10.495577728845461,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.1562409232,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.7490044222711547,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -10.495577728845351,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.15624092101,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7490044222711546,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -10.495577728845461,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.15624092223,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.7490044222711546,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -10.495577728845461,
+          "half_width_mm": 7.965433333334104,
+          "normal_force_n": 60150.15624092223,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": -2.0
+    },
+    {
+      "route": "one_set_gauge+0mm",
+      "seat_residual_n": 2.74812919087708e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7515733320651103,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.02896793488972,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.9770787844,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7515733320651103,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.02896793488972,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.9770787844,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7515733320651105,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.028967934889607,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.977078784104,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7515733320651103,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.02896793488972,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.9770787844,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.7515733320651105,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -7.9266679348896085,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.97707878438,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.7515733320651105,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -7.9266679348896085,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.97707878438,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7515733320651105,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -7.9266679348896085,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.97707878409,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.7515733320651105,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -7.9266679348896085,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60152.97707878438,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": 0.0
+    },
+    {
+      "route": "one_set_gauge+2mm",
+      "seat_residual_n": 4.683533916249871e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7519214880966208,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 7.680811903379214,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.97707879408,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7519214880966207,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 7.680811903379325,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.97707879353,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7519214880966208,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 7.680811903379214,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.97707879408,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.751921488096621,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 7.680811903379103,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.97707879378,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.7539214880966209,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -5.578511903379213,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.97707879409,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.753921488096621,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -5.578511903379102,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.977078793534,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7539214880966209,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -5.578511903379213,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.97707879409,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.753921488096621,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -5.578511903379102,
+          "half_width_mm": 7.218673958334032,
+          "normal_force_n": 60152.97707879378,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": 2.0
+    },
+    {
+      "route": "one_set_gauge+4mm",
+      "seat_residual_n": 1.565058482810855e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7514051364577772,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.197163542222885,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60394.454166672906,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7514051364577772,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.197163542222885,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60394.45416667633,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7514051364577775,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.197163542222551,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60394.454166674215,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7514051364577771,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.197163542222995,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60394.45416667811,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.756229437320997,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -3.270562679003053,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59911.79284822729,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.756229437320997,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -3.270562679003053,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59911.79284822484,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7562294373209969,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -3.270562679003164,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59911.79284822609,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.7562294373209969,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -3.270562679003164,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59911.79284822221,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": 4.0
+    },
+    {
+      "route": "one_set_gauge+6mm",
+      "seat_residual_n": 2.2118911147117615e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7513344951952675,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.267804804732549,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60494.27315233283,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7513344951952676,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.267804804732437,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60494.27315233332,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7513344951952676,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.267804804732437,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60494.27315233473,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7513344951952675,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.267804804732549,
+          "half_width_mm": 7.716513541667414,
+          "normal_force_n": 60494.273152332455,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.7581940125430382,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -1.3059874569618657,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59812.17477467041,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.7581940125430382,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -1.3059874569618657,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59812.17477467086,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7581940125430381,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -1.3059874569619767,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59812.174774672494,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.758194012543038,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": -1.3059874569620877,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59812.174774670304,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": 6.0
+    },
+    {
+      "route": "one_set_gauge+8mm",
+      "seat_residual_n": 1.280568540096283e-08,
+      "all_eight_active": true,
+      "pass_ok": true,
+      "contacts": [
+        {
+          "rail": "axle1_left",
+          "active": true,
+          "contact_y_m": -0.7515018639937072,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.100436006292844,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60546.84681306368,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_left",
+          "active": true,
+          "contact_y_m": -0.7515018639937072,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.100436006292844,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60546.84681306311,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_left",
+          "active": true,
+          "contact_y_m": -0.7515018639937072,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.100436006292844,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60546.84681306251,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_left",
+          "active": true,
+          "contact_y_m": -0.7515018639937072,
+          "crown_y_m": -0.7596023000000001,
+          "offset_from_crown_mm": 8.100436006292844,
+          "half_width_mm": 7.467593750000723,
+          "normal_force_n": 60546.8468130634,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle1_right",
+          "active": true,
+          "contact_y_m": 0.7601965487321697,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": 0.6965487321696218,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59759.58623719732,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle2_right",
+          "active": true,
+          "contact_y_m": 0.7601965487321698,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": 0.6965487321697328,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59759.58623719574,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle3_right",
+          "active": true,
+          "contact_y_m": 0.7601965487321697,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": 0.6965487321696218,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59759.586237196534,
+          "head_width_mm": 61.463200000000164
+        },
+        {
+          "rail": "axle4_right",
+          "active": true,
+          "contact_y_m": 0.7601965487321697,
+          "crown_y_m": 0.7595000000000001,
+          "offset_from_crown_mm": 0.6965487321696218,
+          "half_width_mm": 6.720834375000651,
+          "normal_force_n": 59759.586237196534,
+          "head_width_mm": 61.463200000000164
+        }
+      ],
+      "delta_mm": 8.0
+    }
+  ],
+  "passes_ok": 9,
+  "coverage": {
+    "bands_mm": [
+      [
+        -28.47113464787482,
+        -11.046749231206464
+      ],
+      [
+        -28.471134647874706,
+        -11.046749231206354
+      ],
+      [
+        -28.471134647874706,
+        -11.046749231206354
+      ],
+      [
+        -28.47113464787482,
+        -11.046749231206464
+      ],
+      [
+        -24.93952715536951,
+        -8.012981322034541
+      ],
+      [
+        -24.93952715536951,
+        -8.012981322034541
+      ],
+      [
+        -24.9395271553694,
+        -8.012981322034431
+      ],
+      [
+        -24.9395271553694,
+        -8.012981322034431
+      ],
+      [
+        -21.81696184809956,
+        -4.890416014764588
+      ],
+      [
+        -21.816961848099446,
+        -4.890416014764476
+      ],
+      [
+        -21.816961848099336,
+        -4.890416014764366
+      ],
+      [
+        -21.816961848100334,
+        -4.890416014765364
+      ],
+      [
+        -18.461011062179566,
+        -2.530144395511357
+      ],
+      [
+        -18.461011062179455,
+        -2.530144395511247
+      ],
+      [
+        -18.461011062179566,
+        -2.530144395511357
+      ],
+      [
+        -18.461011062179566,
+        -2.530144395511357
+      ],
+      [
+        -15.394261684890331,
+        -0.45907418488888574
+      ],
+      [
+        -15.394261684890331,
+        -0.45907418488888574
+      ],
+      [
+        -15.394261684890331,
+        -0.45907418488888574
+      ],
+      [
+        -15.394261684890331,
+        -0.45907418488888574
+      ],
+      [
+        -12.797185861713245,
+        1.6401620549548186
+      ],
+      [
+        -12.797185861713134,
+        1.6401620549549296
+      ],
+      [
+        -12.797185861713245,
+        1.6401620549548186
+      ],
+      [
+        -12.797185861713134,
+        1.6401620549549296
+      ],
+      [
+        -9.991397054003704,
+        3.450271695997598
+      ],
+      [
+        -9.991397054003704,
+        3.450271695997598
+      ],
+      [
+        -9.991397054003816,
+        3.450271695997487
+      ],
+      [
+        -9.991397054003816,
+        3.450271695997487
+      ],
+      [
+        -8.026821831962517,
+        5.414846918038785
+      ],
+      [
+        -8.026821831962517,
+        5.414846918038785
+      ],
+      [
+        -8.026821831962629,
+        5.414846918038674
+      ],
+      [
+        -8.026821831962739,
+        5.414846918038563
+      ],
+      [
+        -6.024285642831029,
+        7.417383107170273
+      ],
+      [
+        -6.024285642830918,
+        7.417383107170384
+      ],
+      [
+        -6.024285642831029,
+        7.417383107170273
+      ],
+      [
+        -6.024285642831029,
+        7.417383107170273
+      ]
+    ],
+    "coverage": 0.583739837398374,
+    "covered_mm": 35.80000000000051,
+    "head_width_mm": 61.463200000000164
+  },
+  "verdict": "9/9 gauge settings seat; their bands cover 58.4 % of the 61.5 mm head (35.8 mm of it)"
+}

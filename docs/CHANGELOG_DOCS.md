@@ -2302,6 +2302,7 @@ along with the real digests.
 | [B3_TABLE_AMORTIZATION_2026-10-22.md](B3_TABLE_AMORTIZATION_2026-10-22.md) | B3 接触表按反演批次摊销（2026-10-22） |
 | [B4_DESCRIPTOR_2026-10-22.md](B4_DESCRIPTOR_2026-10-22.md) | B4 接触状态描述子降维 —— 实测**负结果** |
 | [B5_JACOBIAN_EVENTS_2026-10-22.md](B5_JACOBIAN_EVENTS_2026-10-22.md) | B5 雅可比作事件检测（2026-10-22） |
+| [BAND_ASSEMBLY_2026-10-31.md](BAND_ASSEMBLY_2026-10-31.md) | M7 assembly: one light band, reconstructed end to end — and judged |
 | [BAND_CAPABILITY_2026-10-26.md](BAND_CAPABILITY_2026-10-26.md) | 分带反演能力表：修掉三处测量错误之后 |
 | [BAND_CLAIM_CLASS_2026-10-28.md](BAND_CLAIM_CLASS_2026-10-28.md) | 带幅值必须带"标定谱类"：从约定变成构造约束 |
 | [bench_toolchain_design.md](bench_toolchain_design.md) | Velch 性能基准与剖析工具链（v1 最小可用设计） |

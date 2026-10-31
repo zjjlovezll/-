@@ -1,0 +1,139 @@
+{
+  "baseline_route": "straight_one_set",
+  "law_anchor": {
+    "width_mm": 45.18750000000001,
+    "half_gap_um": 56.15468866027856,
+    "station_m": 58.0,
+    "sigma_range": [
+      0.0,
+      1.0
+    ]
+  },
+  "smooth_m": 1.2,
+  "smoothing_scores": [
+    [
+      0.1,
+      66.0995990886666
+    ],
+    [
+      0.2,
+      65.58734886482684
+    ],
+    [
+      0.3,
+      61.681969323777786
+    ],
+    [
+      0.5,
+      51.4241657132866
+    ],
+    [
+      0.8,
+      43.05510023193765
+    ],
+    [
+      1.2,
+      43.053297070850434
+    ]
+  ],
+  "null": {
+    "route": "straight_one_set",
+    "run_id": "straight_one_set-080.00kmh-0.6000s-500us-55d6fd49",
+    "truth_peak_um": 0.0,
+    "window_station_m": [
+      58.15555555555555,
+      60.5
+    ],
+    "estimated_peak_um": 86.82506116504531,
+    "peak_station_m": null,
+    "truth_peak_station_m": null,
+    "peak_error_m": 0.0,
+    "p95_um": 43.053297070850434,
+    "raw_p95_um": 43.053297070850434,
+    "worst_bin_relative_pct": 17.365012233009065,
+    "gates": {
+      "G-ABS": false,
+      "G-REL": false,
+      "G-LOC": true
+    }
+  },
+  "null_limit_um": 16.7,
+  "null_ok": false,
+  "amplitudes": [
+    {
+      "route": "one_set_bump050.0um",
+      "run_id": "one_set_bump050.0um-080.00kmh-0.6000s-500us-20295a3d",
+      "truth_peak_um": 50.0,
+      "window_station_m": [
+        58.15555555555555,
+        61.06666666666666
+      ],
+      "estimated_peak_um": 97.71178066197955,
+      "peak_station_m": 58.15555555555555,
+      "truth_peak_station_m": 58.5,
+      "peak_error_m": 0.34444444444444855,
+      "p95_um": 98.10438465630938,
+      "raw_p95_um": 105.33500439882576,
+      "worst_bin_relative_pct": 29.138774696983972,
+      "gates": {
+        "G-ABS": false,
+        "G-REL": false,
+        "G-LOC": false
+      }
+    },
+    {
+      "route": "one_set_bump100.0um",
+      "run_id": "one_set_bump100.0um-080.00kmh-0.6000s-500us-cad4db6b",
+      "truth_peak_um": 100.0,
+      "window_station_m": [
+        58.15555555555555,
+        61.06666666666666
+      ],
+      "estimated_peak_um": 145.5048795036879,
+      "peak_station_m": 58.15555555555555,
+      "truth_peak_station_m": 58.5,
+      "peak_error_m": 0.34444444444444855,
+      "p95_um": 229.80894223775297,
+      "raw_p95_um": 230.9712566813896,
+      "worst_bin_relative_pct": 48.29381302991371,
+      "gates": {
+        "G-ABS": false,
+        "G-REL": false,
+        "G-LOC": false
+      }
+    },
+    {
+      "route": "one_set_bump200.0um",
+      "run_id": "one_set_bump200.0um-080.00kmh-0.6000s-500us-28051835",
+      "truth_peak_um": 200.0,
+      "window_station_m": [
+        59.98888888888889,
+        61.06666666666666
+      ],
+      "estimated_peak_um": 125.64356292050113,
+      "peak_station_m": 59.98888888888889,
+      "truth_peak_station_m": 59.98888888888889,
+      "peak_error_m": 0.0,
+      "p95_um": 180.3845258551379,
+      "raw_p95_um": 211.40296353445066,
+      "worst_bin_relative_pct": 43.654444151996245,
+      "gates": {
+        "G-ABS": false,
+        "G-REL": false,
+        "G-LOC": true
+      }
+    }
+  ],
+  "relatives": {
+    "y_ref_um": 500.0,
+    "limit_pct": 2.0,
+    "bin_m": 0.002
+  },
+  "coverage": {
+    "contact_mm": 16.0,
+    "identifiable_mm": 4.0,
+    "head_mm": 37.15
+  },
+  "amplitudes_passing_all_gates": 0,
+  "verdict": "0/3 amplitudes pass all three amplitude gates, and G-NULL is missed at 43.1 um against a 16.7 um limit.  The best reconstruction is 50 um at p95 98.1 um (4.5x the gate).  One pass reconstructs a 4 mm strip, 11 % of the 37.15 mm head."
+}

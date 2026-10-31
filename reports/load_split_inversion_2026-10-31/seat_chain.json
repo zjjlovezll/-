@@ -1,0 +1,60 @@
+{
+  "case": "F:\\ai\u9053\u5c94\u72b6\u6001\u53cd\u6f14\u8fa8\u8bc6\\scratch\\s146\\one_set_x46.json",
+  "chains": [
+    {
+      "speed_kmh": 60.0,
+      "stages": [
+        {
+          "stage": "seat#1",
+          "residual_n": 2.9001967050135136e-08,
+          "wheel_z_um": -1454.624077980733
+        },
+        {
+          "stage": "settle#1",
+          "wheel_z_um": -1454.624077980733
+        }
+      ],
+      "failed_at": "settle#1",
+      "error": "vertical preload equilibrium failed: no seed converged; `xtol` termination condition is satisfied.",
+      "ok": false
+    },
+    {
+      "speed_kmh": 80.0,
+      "stages": [
+        {
+          "stage": "seat#1",
+          "residual_n": 2.9001967050135136e-08,
+          "wheel_z_um": -1454.624077980733
+        },
+        {
+          "stage": "settle#1",
+          "wheel_z_um": -1454.624077980733
+        },
+        {
+          "stage": "seat#2",
+          "residual_n": 2.9751390684396032e-08,
+          "wheel_z_um": -1465.5845785646154,
+          "wheel_y_um": -305.7562159752319
+        },
+        {
+          "stage": "settle#2",
+          "wheel_z_um": -1465.5845785646154
+        },
+        {
+          "stage": "seat#3",
+          "residual_n": 9.342329576611519e-09,
+          "wheel_z_um": -1468.2302086664238,
+          "wheel_y_um": -408.8494779790319
+        }
+      ],
+      "failed_at": null,
+      "error": null,
+      "ok": true
+    }
+  ],
+  "seed_sweep": [],
+  "failing_speeds": [
+    60.0
+  ],
+  "off_centre_seeds": []
+}

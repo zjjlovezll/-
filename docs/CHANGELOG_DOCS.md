@@ -1,5 +1,21 @@
 ## 第 291 轮：起步瞬态不是噪声，是起点（onset 与时间锁定）
 
+## 第 294 轮：60 km/h 倒在第二次座椅上（2026-11-01）
+
+- 速度标签修好后（第 293 轮 B052），标着 60 km/h 的算例第一次真的以 60 km/h 跑，然后**第一帧之前**就失败：
+  `graph slope limit at axle2_left/left:main, x=53.5 m`，而同一几何 80 km/h 的 0.02 s 运行 41 帧、七门 7/7。
+- 排除两条：第一次座椅两档速度都到 **2.900e-08 N**（八接触各 60.153 kN、贯入 62.84 µm）；`wheelset2.y` ±50 µm
+  扫描下最陡法向斜率始终 **0.025**（守卫 1.0）⇒ 不是横向余量。
+- 定位：`seat → (settle, seat)×2` 这条链上，60 km/h 死在 **settle#1 之后的 seat#2**（`preload equilibrium failed; xtol`），
+  80 km/h 走完三步到 9.3e-09 N、z −1454.6 → −1465.6 → −1468.2 µm。
+- 60 km/h 的平衡点**存在但在另一支**：给四个轮对 −500 µm 横向种子可收敛（6.819e-08 N），但 z −1331.1 µm、y1 +831.7 µm
+  ⇒ 偏离中心 0.83 mm / 137 µm，按第 247 轮"平谷"判据不能当初始条件。
+- 试过并否掉的修法：把沉降时的自转设为 0（"沉降不该被蠕滑驱动"）——**两档速度都失败**，蠕滑不是判别项。
+- 新增 `scripts/s149_lateral_margin.py`（±50 µm 横向余量表）、`scripts/s150_seat_after_settle.py`（复刻座椅链 + 种子扫描）、
+  `tests/test_seat_after_settle.py` 3 项、`docs/SPEED_LABEL_AND_SEAT_BRANCH_2026-11-01.md`、报告
+  `reports/load_split_inversion_2026-10-31/{lateral_margin,seat_chain}.json`。
+- 60 km/h 的 1.2 s 长算例跑了 70+ 分钟无产出，已停；机器留给诊断。
+
 ## 第 293 轮 2026-11-01 B052：三档速度其实是一趟 80 km/h
 
 `straight_one_set.json` 声明 `run.speed_profile = {"constant": {"speed_kmh": 80.0}}`，加载器让 profile 赢过
@@ -2868,6 +2884,7 @@ along with the real digests.
 | [SPECTRUM_SOURCE_2026-10-21.md](SPECTRUM_SOURCE_2026-10-21.md) | 153.85 Hz 是什么：速度标定实验 |
 | [SPEED_2026-10-20.md](SPEED_2026-10-20.md) | 提速：先量再改（2026-10-20） |
 | [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md) | 尖轨降低值的速度谱：40–100 km/h 四次过岔，首载里程只动 5.6 mm |
+| [SPEED_LABEL_AND_SEAT_BRANCH_2026-11-01.md](SPEED_LABEL_AND_SEAT_BRANCH_2026-11-01.md) | 速度标签修好之后：60 km/h 倒在"第二次座椅"上（2026-11-01，第 294 轮） |
 | [SPEED_OVERRIDE_DEFECT_2026-11-01.md](SPEED_OVERRIDE_DEFECT_2026-11-01.md) | B052：三档"速度"其实是一趟 80 km/h，以及由此要撤回的一条判定（2026-11-01，第 293 轮） |
 | [SPEED_SWEEP_2026-10-28.md](SPEED_SWEEP_2026-10-28.md) | Five drawn speeds: the straight-route amplitude claim is one band wide, not six-of-eight |
 | [SPEED_TRANSFER_2026-11-01.md](SPEED_TRANSFER_2026-11-01.md) | 换一个速度，反演还成立吗？不成立——而原因是量出来的（2026-11-01，第 290 轮） |

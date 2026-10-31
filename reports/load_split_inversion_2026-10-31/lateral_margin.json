@@ -1,0 +1,233 @@
+{
+  "case": "F:\\ai\u9053\u5c94\u72b6\u6001\u53cd\u6f14\u8fa8\u8bc6\\scratch\\s146\\one_set_x46.json",
+  "speed_kmh": 60.0,
+  "axle": 2,
+  "seat_residual_n": 2.9001967050135136e-08,
+  "steps_um": [
+    -50.0,
+    -30.0,
+    -20.0,
+    -10.0,
+    -5.0,
+    0.0,
+    5.0,
+    10.0,
+    20.0,
+    30.0,
+    50.0
+  ],
+  "rows": [
+    {
+      "dy_um": -50.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 65.53207488572005,
+        "lever_y_mm": -751.4853805798494,
+        "normal_force_kn": 62.07159862644355,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 61.567892946404065,
+        "lever_y_mm": 751.6637786637621,
+        "normal_force_kn": 58.234400443437174,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": -30.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 65.13297066719461,
+        "lever_y_mm": -751.5202761118496,
+        "normal_force_kn": 61.30415000692464,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.0325792601256,
+        "lever_y_mm": 751.6272876990407,
+        "normal_force_kn": 59.00180415163844,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": -20.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 64.86089967582987,
+        "lever_y_mm": -751.5378646133603,
+        "normal_force_kn": 60.92042569733948,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.301238165939345,
+        "lever_y_mm": 751.6091992935694,
+        "normal_force_kn": 59.38552846059853,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": -10.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 64.27625529557578,
+        "lever_y_mm": -751.5555493174262,
+        "normal_force_kn": 60.53670138804988,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.56931900011387,
+        "lever_y_mm": 751.591214744773,
+        "normal_force_kn": 59.76925276971076,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": -5.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.970367159332035,
+        "lever_y_mm": -751.56442831892,
+        "normal_force_kn": 60.34483923340291,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.703144187843506,
+        "lever_y_mm": 751.5822607935324,
+        "normal_force_kn": 59.9611149242683,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": 0.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.83682670542021,
+        "lever_y_mm": -751.5733320651107,
+        "normal_force_kn": 60.15297707878133,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.83682670542053,
+        "lever_y_mm": 751.5733320651102,
+        "normal_force_kn": 60.152977078789,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": 5.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.703144187846114,
+        "lever_y_mm": -751.5822607935326,
+        "normal_force_kn": 59.96111492426486,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.97036715932936,
+        "lever_y_mm": 751.5644283189198,
+        "normal_force_kn": 60.344839233406304,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": 10.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.5693190001165,
+        "lever_y_mm": -751.5912147447732,
+        "normal_force_kn": 59.76925276970737,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 64.27625529557335,
+        "lever_y_mm": 751.5555493174259,
+        "normal_force_kn": 60.536701388053274,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": 20.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.30123816594195,
+        "lever_y_mm": -751.6091992935696,
+        "normal_force_kn": 59.38552846059515,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 64.86089967582745,
+        "lever_y_mm": 751.53786461336,
+        "normal_force_kn": 60.92042569734287,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": 30.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 62.03257926012818,
+        "lever_y_mm": -751.627287699041,
+        "normal_force_kn": 59.001804151635035,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 65.13297066719215,
+        "lever_y_mm": 751.5202761118497,
+        "normal_force_kn": 61.30415000692802,
+        "bodies": 1,
+        "trips": false
+      }
+    },
+    {
+      "dy_um": 50.0,
+      "left": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 61.56789294640169,
+        "lever_y_mm": -751.6637786637623,
+        "normal_force_kn": 58.2344004434338,
+        "bodies": 1,
+        "trips": false
+      },
+      "right": {
+        "slope": 0.024582913509356936,
+        "penetration_um": 65.53207488573027,
+        "lever_y_mm": 751.4853805798496,
+        "normal_force_kn": 62.071598626447,
+        "bodies": 1,
+        "trips": false
+      }
+    }
+  ],
+  "first_tripping_dy_um": null,
+  "guard": 1.0,
+  "note": "static lateral margin; not an amplitude and not a speed-transfer result"
+}

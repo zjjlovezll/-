@@ -2341,6 +2341,28 @@ along with the real digests.
 报告 `reports/load_split_inversion_2026-10-31/{lateral_coverage,seat_after_settle}.json`；
 任务书 §三十；冻结基线 UNCHANGED。
 
+## 第 271 轮：换一个横向位置，同一套拟合仍认得出同一个凸起（2026-10-31）
+
+第 261 轮的两参数拟合只在 δ=0（接触落在冠内侧 7.9 mm）上标定过，第 270 轮又量到轨距能把接触点挪
+1.28 mm/mm。本轮把两者接起来：给右轨 +4 mm 轨距、同时在 blade 体上叠一个已知 60 µm 高斯凸起
+（中心 58.5 m、σ 1.2 m），1201 帧、七门 7/7，零点由**同轨距的无凸起那一趟**反解，再用第 261 轮同一套
+门判定。
+
+| 这一趟 | δ | 接触相对冠 | 真值 | 拟合 A | 相对 | p95 | 最差 2 mm 箱 | 定位 | 门 |
+|---|---|---|---|---|---|---|---|---|---|
+| 移位的这一趟 | +4.0 mm | −3.3 mm | 60.0 µm | 63.3 | 0.66 % | **4.18 µm** | 0.84 % | 0.056 m | 全过 |
+| 对照（名义轨距） | 0.0 mm | −7.9 mm | 60.0 µm | 66.1 | 1.23 % | 6.38 µm | 1.28 % | 0.033 m | 全过 |
+
+接触点在两趟之间相差 **4.6 mm**，两行都过 22 µm 绝对门，而且移位那趟**并不更差**——这是"同一套拟合、
+不同横向位置"第一次被实测支持，也是"光带能从几趟拼出来"的第一道前提。
+
+边界写清：只测一个幅值（60 µm）、一个移位量、单速度/单侧/直向；移位那趟的 A 偏 +5.5 %，说明零点反解
+与律之间仍有系统性残差；≥100 µm 的饱和区没测，那一区仍靠起始站位。
+
+新增 `scripts/s128_band_assembly.py`（`--build` / `--report`）、`tests/test_band_assembly.py`（3 项）、
+`docs/BAND_ACROSS_HEAD_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/band_assembly.json`；
+任务书 §三十一；冻结基线 UNCHANGED。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2361,6 +2383,7 @@ along with the real digests.
 | [B3_TABLE_AMORTIZATION_2026-10-22.md](B3_TABLE_AMORTIZATION_2026-10-22.md) | B3 接触表按反演批次摊销（2026-10-22） |
 | [B4_DESCRIPTOR_2026-10-22.md](B4_DESCRIPTOR_2026-10-22.md) | B4 接触状态描述子降维 —— 实测**负结果** |
 | [B5_JACOBIAN_EVENTS_2026-10-22.md](B5_JACOBIAN_EVENTS_2026-10-22.md) | B5 雅可比作事件检测（2026-10-22） |
+| [BAND_ACROSS_HEAD_2026-10-31.md](BAND_ACROSS_HEAD_2026-10-31.md) | 光带能不能从"几趟不同的横向位置"拼出来：能，代价是 4.2–6.4 µm（2026-10-31，第 271 轮） |
 | [BAND_ASSEMBLY_2026-10-31.md](BAND_ASSEMBLY_2026-10-31.md) | M7 assembly: one light band, reconstructed end to end — and judged |
 | [BAND_CAPABILITY_2026-10-26.md](BAND_CAPABILITY_2026-10-26.md) | 分带反演能力表：修掉三处测量错误之后 |
 | [BAND_CLAIM_CLASS_2026-10-28.md](BAND_CLAIM_CLASS_2026-10-28.md) | 带幅值必须带"标定谱类"：从约定变成构造约束 |

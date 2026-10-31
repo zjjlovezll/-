@@ -1,0 +1,70 @@
+{
+  "delta_mm": 4.0,
+  "amplitude_um": 60.0,
+  "width_m_prior": 1.2,
+  "fit_window_m": [
+    55.5,
+    61.5
+  ],
+  "rows": [
+    {
+      "label": "moved pass",
+      "delta_mm": 4.0,
+      "truth_um": 60.0,
+      "null_route": "one_set_gauge+4mm",
+      "bump_route": "one_set_gauge+4mm_bump060.0um",
+      "fit": {
+        "route": "one_set_gauge+4mm_bump060.0um",
+        "run_id": "one_set_gauge+4mm_bump060.0um-080.00kmh-0.6000s-500us-c8d88304",
+        "amplitude_um": 63.27522473882199,
+        "centre_m": 58.44253799023808,
+        "share_rms": 0.052372679390062855,
+        "cost": 0.8064118786693285,
+        "start_centre_m": 58.5,
+        "usable_stations": 294,
+        "observed_peak_share": 0.9786059778572593
+      },
+      "truth_peak_um": 60.0,
+      "estimated_peak_um": 63.27514488537088,
+      "amplitude_relative_pct": 0.655044947764398,
+      "p95_um": 4.1806364899068855,
+      "worst_bin_relative_pct": 0.8428697733406153,
+      "peak_error_m": 0.055555555555557135,
+      "gates": {
+        "G-ABS": true,
+        "G-REL": true,
+        "G-LOC": true
+      }
+    },
+    {
+      "label": "control at nominal gauge",
+      "delta_mm": 0.0,
+      "truth_um": 60.0,
+      "null_route": "straight_one_set",
+      "bump_route": "one_set_bump060.0um",
+      "fit": {
+        "route": "one_set_bump060.0um",
+        "run_id": "one_set_bump060.0um-080.00kmh-0.6000s-500us-541e67fa",
+        "amplitude_um": 66.13883465720188,
+        "centre_m": 58.46354070824696,
+        "share_rms": 0.051505240002040834,
+        "cost": 0.7666562370760021,
+        "start_centre_m": 58.5,
+        "usable_stations": 289,
+        "observed_peak_share": 0.9773755575885769
+      },
+      "truth_peak_um": 60.0,
+      "estimated_peak_um": 66.13861025365975,
+      "amplitude_relative_pct": 1.2277669314403767,
+      "p95_um": 6.3777316694050805,
+      "worst_bin_relative_pct": 1.283635859884042,
+      "peak_error_m": 0.03333333333333144,
+      "gates": {
+        "G-ABS": true,
+        "G-REL": true,
+        "G-LOC": true
+      }
+    }
+  ],
+  "verdict": "the inversion carries across the head"
+}

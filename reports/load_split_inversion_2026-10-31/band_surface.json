@@ -1,0 +1,64 @@
+{
+  "source_report": "band_assembly.json",
+  "width_m_prior": 1.2,
+  "columns": [
+    {
+      "label": "moved pass",
+      "delta_mm": 4.0,
+      "y_contact_mm": -3.3,
+      "amplitude_um": 63.27522473882199,
+      "centre_m": 58.44253799023808,
+      "p95_um": 4.1806364899068855,
+      "worst_bin_relative_pct": 0.8428697733406153,
+      "gates": {
+        "G-ABS": true
+      }
+    },
+    {
+      "label": "control at nominal gauge",
+      "delta_mm": 0.0,
+      "y_contact_mm": -7.9,
+      "amplitude_um": 66.13883465720188,
+      "centre_m": 58.46354070824696,
+      "p95_um": 6.3777316694050805,
+      "worst_bin_relative_pct": 1.283635859884042,
+      "gates": {
+        "G-ABS": true
+      }
+    }
+  ],
+  "consistency": {
+    "shared_stations": 1201,
+    "p95_um": 3.0460123697864994,
+    "max_um": 3.066198653851764
+  },
+  "observed_region": {
+    "head_mm": 37.15,
+    "bands": [
+      {
+        "label": "moved pass",
+        "y_centre_mm": -3.3,
+        "y_lo_mm": -11.3,
+        "y_hi_mm": 4.7
+      },
+      {
+        "label": "control at nominal gauge",
+        "y_centre_mm": -7.9,
+        "y_lo_mm": -15.9,
+        "y_hi_mm": 0.09999999999999964
+      }
+    ],
+    "coverage": 0.553763440860215,
+    "covered_mm": 20.6,
+    "span_mm": [
+      -15.9,
+      4.7
+    ]
+  },
+  "gates": {
+    "G-ABS per column": true,
+    "G-CONSISTENCY": true,
+    "G-COV (report only)": true
+  },
+  "verdict": "the two passes join into one single-valued band surface"
+}

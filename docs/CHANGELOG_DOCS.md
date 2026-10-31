@@ -2363,6 +2363,28 @@ along with the real digests.
 `docs/BAND_ACROSS_HEAD_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/band_assembly.json`；
 任务书 §三十一；冻结基线 UNCHANGED。
 
+## 第 272 轮：两趟拼成一张带面，列间只差 3.05 µm（2026-10-31）
+
+第 271 轮的两次成功只是两条互不相干的一维剖面。一张带面还需要两列在重叠处一致，否则 `z(s,y)` 是两个
+名字共用一张皮。本轮不跑新仿真，直接读第 271 轮的两个拟合，把两列放到各自实测的接触横坐标上
+（δ=0 → 冠内侧 −7.9 mm、δ=+4 mm → −3.3 mm），量它们的一致性：
+
+| 列 | 接触 y | 真值 | 拟合峰值 | p95 | 最差 2 mm 箱 |
+|---|---|---|---|---|---|
+| 移位（δ=+4） | −3.3 mm | 60.0 µm | 63.3 | **4.18 µm** | 0.84 % |
+| 名义轨距（δ=0） | −7.9 mm | 60.0 µm | 66.1 | 6.38 µm | 1.28 % |
+
+**主读数**：两列在 1201 个共同站位上差 **p95 = 3.05 µm、max = 3.07 µm**（绝对门的 1/7）⇒ 拼出来的面
+是单值的。观测区两条 16 mm 带跨 −15.9 … +4.7 mm，覆盖 1 mm 深走行面 37.15 mm 的 **55.4 %**。
+
+文档专设一节写清"与 PRR 面逐点对照"在本轮意味着什么：算例几何本身就是 PRR 断面建的，拿反演去对它
+是自证；本轮验的是唯一存在的那个差（我们叠的 60 µm 凸起）在两个横向位置上都被还原且两列自洽。
+字面意义上的"反演面 × 实测 PRR 面"仍需要独立于正演几何的 C 级真值，这一条没被绕过。
+
+新增 `scripts/s129_band_surface.py`、`tests/test_band_surface.py`（5 项）、
+`docs/BAND_SURFACE_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/band_surface.json`；
+任务书 §三十二；冻结基线 UNCHANGED。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2387,6 +2409,7 @@ along with the real digests.
 | [BAND_ASSEMBLY_2026-10-31.md](BAND_ASSEMBLY_2026-10-31.md) | M7 assembly: one light band, reconstructed end to end — and judged |
 | [BAND_CAPABILITY_2026-10-26.md](BAND_CAPABILITY_2026-10-26.md) | 分带反演能力表：修掉三处测量错误之后 |
 | [BAND_CLAIM_CLASS_2026-10-28.md](BAND_CLAIM_CLASS_2026-10-28.md) | 带幅值必须带"标定谱类"：从约定变成构造约束 |
+| [BAND_SURFACE_2026-10-31.md](BAND_SURFACE_2026-10-31.md) | 两趟拼成一张带面：列间只差 3.05 µm，Ω_obs 覆盖 55.4 %（2026-10-31，第 272 轮） |
 | [bench_toolchain_design.md](bench_toolchain_design.md) | Velch 性能基准与剖析工具链（v1 最小可用设计） |
 | [BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md](BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md) | 设计降低值被注入两次：尖轨比基本轨高 3.3 mm（B049） |
 | [BUGS.md](BUGS.md) | 缺陷账本（BUGS） |

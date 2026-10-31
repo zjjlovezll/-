@@ -2255,6 +2255,20 @@ The previous turn's summary described this campaign as already finished, with ca
 disk.  That was wrong, the campaign was built and run here, and section 7 of the document records the correction
 along with the real digests.
 
+## 第 258 轮：起始站位锚在坡道上（2026-10-31）
+
+第 257 轮那张"站位给幅值"的表是在一个形状上量的，本轮先预注册塌缩假设（`onset − centre = σ·F(幅值)`），再
+用四个 0.6 s 运行（σ 0.6/2.4、中心 57.5/59.5，各 1201 帧、七门 7/7）去判它——**两条都否掉**：σ 变 4 倍只挪
+33 mm，鼓包平移 ±1 m 只挪 67 mm，onset 始终停在 ~58.3 m。
+
+**所以 onset 跟的是坡道，不是鼓包**：形状与位置在坡道区内合计 144 mm，而幅值 50→200 µm 给 511 mm ⇒ 幅值主导
+3.5 倍，一张表可跨形状与位置搬。代价是近 100 µm 的局部斜率 3.3 mm/µm 把 144 mm 折成 **~44 µm**，是 22 µm
+绝对门的两倍，必须进误差预算而不是被忽略。
+
+新增 `scripts/s121_shape_collapse.py`、`tests/test_shape_collapse.py`（10 项，含"两条塌缩保持被否"的回归）、
+`docs/ONSET_SHAPE_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/shape_collapse.json`；
+任务书 §二十五；冻结基线 UNCHANGED。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2350,6 +2364,7 @@ along with the real digests.
 | [OMA_MEASURED_2026-10-27.md](OMA_MEASURED_2026-10-27.md) | 运行模态识别（SSI-FCM）接到实测：算法通过，实测上不收敛 |
 | [ONBOARDING_2026-10-21.md](ONBOARDING_2026-10-21.md) | 新增车体 / 新增道岔的接入指南 |
 | [ONE_SET_CASE_2026-10-31.md](ONE_SET_CASE_2026-10-31.md) | 一组模型装进同一算例：完备车辆 + 柔性轮对 + 柔性轨道 + 真道岔几何（M1） |
+| [ONSET_SHAPE_2026-10-31.md](ONSET_SHAPE_2026-10-31.md) | The onset station is anchored to the ramp, not to the bump (round 258, 2026-10-31) |
 | [ONSET_STATION_2026-10-31.md](ONSET_STATION_2026-10-31.md) | The saturation-onset station: an amplitude carrier that survives the split's knee |
 | [OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md](OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md) | 开源轮轨接触算法调查（2026-10-19） |
 | [PACKAGING_2026-10-22.md](PACKAGING_2026-10-22.md) | 打包与安装包（Windows） |

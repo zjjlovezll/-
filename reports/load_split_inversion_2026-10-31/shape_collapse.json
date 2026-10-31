@@ -1,0 +1,82 @@
+{
+  "speed_kmh": 80.0,
+  "duration_s": 0.6,
+  "amplitude_um": 100.0,
+  "onset_share": 0.95,
+  "grid_m": 0.011111111111111112,
+  "reference": {
+    "sigma_m": 1.2,
+    "centre_m": 58.5,
+    "offset_m": -0.24444444444444713
+  },
+  "rows": [
+    {
+      "sigma_m": 0.6,
+      "centre_m": 58.5,
+      "onset_m": 58.27777777777778,
+      "peak_m": 58.32222222222222,
+      "peak_share": 1.0,
+      "offset_m": -0.22222222222222143,
+      "run_id": "one_set_shape_s0.6_c58.5-080.00kmh-0.6000s-500us-b0df017f"
+    },
+    {
+      "sigma_m": 2.4,
+      "centre_m": 58.5,
+      "onset_m": 58.24444444444444,
+      "peak_m": 58.31111111111111,
+      "peak_share": 1.0,
+      "offset_m": -0.25555555555556,
+      "run_id": "one_set_shape_s2.4_c58.5-080.00kmh-0.6000s-500us-9ec637f1"
+    },
+    {
+      "sigma_m": 1.2,
+      "centre_m": 57.5,
+      "onset_m": 58.32222222222222,
+      "peak_m": 58.4,
+      "peak_share": 1.0,
+      "offset_m": 0.8222222222222229,
+      "run_id": "one_set_shape_s1.2_c57.5-080.00kmh-0.6000s-500us-cd137f76"
+    },
+    {
+      "sigma_m": 1.2,
+      "centre_m": 59.5,
+      "onset_m": 58.388888888888886,
+      "peak_m": 58.455555555555556,
+      "peak_share": 1.0,
+      "offset_m": -1.1111111111111143,
+      "run_id": "one_set_shape_s1.2_c59.5-080.00kmh-0.6000s-500us-0e17b8ff"
+    }
+  ],
+  "scaling": {
+    "checks": {
+      "sigma_0.6": {
+        "offset_m": -0.22222222222222143,
+        "predicted_m": -0.12222222222222356,
+        "ok": false
+      },
+      "sigma_2.4": {
+        "offset_m": -0.25555555555556,
+        "predicted_m": -0.48888888888889426,
+        "ok": false
+      }
+    },
+    "monotone_in_sigma": true,
+    "ok": false
+  },
+  "translation": {
+    "checks": {
+      "centre_57.5": {
+        "offset_m": 0.8222222222222229,
+        "reference_offset_m": -0.24444444444444713,
+        "ok": false
+      },
+      "centre_59.5": {
+        "offset_m": -1.1111111111111143,
+        "reference_offset_m": -0.24444444444444713,
+        "ok": false
+      }
+    },
+    "ok": false
+  },
+  "verdict": "neither axis collapsed: the onset needs a shape classification, not a single number"
+}

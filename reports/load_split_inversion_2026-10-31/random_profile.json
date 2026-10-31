@@ -1,0 +1,114 @@
+{
+  "route": "one_set_random",
+  "run_id": "one_set_random-080.00kmh-0.6000s-500us-2f516e4b",
+  "truth": [
+    [
+      58.800845418808514,
+      25.895803545405954
+    ],
+    [
+      59.256734645720535,
+      25.450623225375285
+    ],
+    [
+      60.07732433126678,
+      25.50657896969542
+    ],
+    [
+      60.8555005520189,
+      34.89118605413317
+    ],
+    [
+      61.353814041176925,
+      26.739184190074774
+    ],
+    [
+      61.98715428130839,
+      35.66782458845974
+    ]
+  ],
+  "seed": 20261031,
+  "width_m": 0.35,
+  "lambda": 0.0001,
+  "non_parametric": {
+    "p95_um": 115.0690852862839,
+    "correlation": 0.06582214787836967,
+    "peak_error_m": 0.0,
+    "share_rms": 0.03530133391061123,
+    "window_stations": 322,
+    "gates": {
+      "G-ABS": false,
+      "G-CORR": false,
+      "G-PEAK": true,
+      "G-RES": false
+    },
+    "passed": false,
+    "usable_stations": 381,
+    "spacing_m": 0.011111111111112848
+  },
+  "null": {
+    "p95_um": 0.008022475986478718,
+    "gates": {
+      "G-ABS": true,
+      "G-CORR": false,
+      "G-PEAK": true,
+      "G-RES": true
+    }
+  },
+  "composition_floor": {
+    "share_rms": 0.13135493661166883,
+    "truth_max_um": 45.24263467420075,
+    "saturated_fraction": 0.0,
+    "observed_share_max": 0.9799749599807364,
+    "passed": false,
+    "note": "the measured law cannot represent this profile better than this residual, so it bounds every estimator built on it"
+  },
+  "parametric": {
+    "selected": 3,
+    "bic": {
+      "1": -1010.4770823430503,
+      "2": -1136.823479796403,
+      "3": -1247.8172085834085,
+      "4": -1247.4285392432748,
+      "5": -1241.3135588497041,
+      "6": -1239.6682973204156
+    },
+    "peaks": [
+      [
+        58.848359572847116,
+        34.473061706738996
+      ],
+      [
+        59.459973529335265,
+        27.506282196189456
+      ],
+      [
+        60.62955673786965,
+        131.854954958825
+      ]
+    ],
+    "judged": {
+      "p95_um": 86.42672682743,
+      "correlation": 0.3268014572930769,
+      "peak_error_m": 0.4222222222222243,
+      "share_rms": NaN,
+      "window_stations": 407,
+      "gates": {
+        "G-ABS": false,
+        "G-CORR": false,
+        "G-PEAK": false,
+        "G-RES": false
+      },
+      "passed": false
+    }
+  },
+  "gates": {
+    "G-ABS": false,
+    "G-CORR": false,
+    "G-PEAK": true,
+    "G-RES": false,
+    "G-NULL": true
+  },
+  "passed": false,
+  "verdict": "the random profile is not recovered to the absolute gate; the numbers are reported as they are"
+}

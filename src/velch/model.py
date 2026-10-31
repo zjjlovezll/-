@@ -198,6 +198,16 @@ class RunSettings:
     vehicle placed once cannot seat on both: measured 4 of 8 wheels carrying load at
     30 m until the seat is restricted to the through group.
     """
+    seat_modal_scales: tuple[float, ...] | None = None
+    """Tread-deflection scales the seat retries from, before it declares no solution.
+
+    The seat is an initialisation, not physics, and it already tries several vertical seeds.  The
+    modal coordinates it is handed are one more starting coordinate: on the one-set turnout case at
+    60 km/h the adaptively-damped settle lands on a legal 1.06 mm tread (round 296) and the plain
+    start then has no vertical solution, while 80 km/h closes from the same first seat.  Each scale
+    multiplies the modal block before a retry; ``1.0`` is always tried first, so cases that already
+    seat never take a second pass.  ``None`` means ``(1.0, 0.8, 0.95, 1.05, 0.5)``.
+    """
     seat_lateral: bool = False
     """Also put each wheelset where its own net lateral force vanishes.
 

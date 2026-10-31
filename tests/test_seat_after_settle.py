@@ -29,13 +29,20 @@ def chains():
     return {speed: probe.chain(case, speed) for speed in (60.0, 80.0)}
 
 
-def test_the_corrected_sixty_fails_before_the_first_frame(chains):
+def test_the_corrected_sixty_now_walks_the_whole_chain(chains):
+    """Round 294 pinned this chain failing at the seat after the settle; round 297 retired that pin.
+
+    The repair was a modal-scale seed on the seat (`run.seat_modal_scales`, 0.8 closes where 1.0 has
+    no solution), not a looser tolerance -- `tests/test_modal_settle_trace.py` keeps the claim that
+    scale 1.0 on its own *still* fails, so this chain can only pass through the fallback.
+    """
     record = chains[60.0]
-    assert record["ok"] is False
-    assert "preload equilibrium failed" in record["error"]
-    # it must die *after* the first seat and *at* the seat that follows the settle
+    assert record["ok"] is True
     stages = [s["stage"] for s in record["stages"]]
-    assert stages == ["seat#1", "settle#1"]
+    assert stages == ["seat#1", "settle#1", "seat#2", "settle#2", "seat#3"]
+    residuals = [s["residual_n"] for s in record["stages"] if "residual_n" in s]
+    assert len(residuals) == 3
+    assert all(r <= 1e-5 for r in residuals)
 
 
 def test_the_same_geometry_at_eighty_walks_the_whole_chain(chains):

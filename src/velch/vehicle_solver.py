@@ -1340,7 +1340,7 @@ def _body_offset_m(case: VehicleCase, topology, body, q: np.ndarray) -> float:
     return 0.0
 
 
-def _seat(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray,
+def _seat_once(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray,
           v: np.ndarray) -> tuple[np.ndarray, float]:
     """Solve the static seat against the equivalent straight track.
 
@@ -1680,6 +1680,43 @@ def _load_per_wheel(rails, loads) -> dict[tuple[int, str], float]:
         key = _wheel_of(rail)
         per_wheel[key] = per_wheel.get(key, 0.0) + float(load)
     return per_wheel
+
+
+def _seat(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray,
+          v: np.ndarray) -> tuple[np.ndarray, float]:
+    """Seat the vehicle, retrying from modal-scaled tread states if the plain start has no solution.
+
+    Round 296 stopped the modal settle's runaway (|modal| 25 mm -> 1.06 mm at 60 km/h) but the seat
+    that follows still had no convergent seed there, while 80 km/h closes to 2.98e-08 N from the same
+    first seat.  The seat is an initialisation, not physics, and it already tries several vertical
+    seeds; the tread deflection it is handed is one more starting coordinate, so this adds the same
+    kind of seed rather than any tolerance: ``run.seat_modal_scales`` (default ``(1.0, 0.95, 1.05)``)
+    multiplies the settled modal coordinates before each retry, and the untouched scale is always
+    tried first, so cases that already seat never take a second pass.
+
+    Measured on the 60 km/h one-set case: scale 1.0 / 0.95 / 1.05 / 0.9 / 1.1 / 1.2 / 1.5 all report
+    no seed converged, while 0.8 closes to 8.73e-09 N (z1 -1463.4 um), 0.5 to 1.07e-07 N and 0.0 to
+    2.90e-08 N.  The basin therefore sits at a *less* deflected tread than the settle's fixed point,
+    which is why 0.8 is in the default list: the settle and the seat disagree about the same state,
+    and the seat is the one that must close.
+    """
+    modal = dynamics.modal
+    if modal is None:
+        return _seat_once(case, dynamics, q, v)
+    declared = getattr(case.run, "seat_modal_scales", None)
+    scales = tuple(float(value) for value in (declared if declared else (1.0, 0.8, 0.95, 1.05, 0.5)))
+    first_error: SimulationFailure | None = None
+    for scale in scales:
+        start = np.array(q, dtype=float)
+        if scale != 1.0:
+            start[modal.offset:] *= scale
+        try:
+            return _seat_once(case, dynamics, start, v)
+        except SimulationFailure as exc:
+            if first_error is None:
+                first_error = exc
+    assert first_error is not None
+    raise first_error
 
 
 def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,

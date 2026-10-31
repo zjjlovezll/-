@@ -23,6 +23,7 @@ import dataclasses
 import datetime as dt
 import hashlib
 import json
+import os
 import pathlib
 import time
 
@@ -73,8 +74,56 @@ def run_id_for(route: str, speed_kmh: float, duration_s: float, output_step_s: f
             f"{case_digest[:8]}")
 
 
+def _index_lock():
+    """Cross-process lock for the index file, used when a batch runs several cases at once.
+
+    Only the read-modify-write of ``index.jsonl`` is serialised; the simulations overlap.  The lock is
+    opt-in (``VELCH_INDEX_LOCK=1``) so a single run keeps the exact behaviour it had.
+    """
+    import contextlib
+    if os.environ.get("VELCH_INDEX_LOCK") != "1":
+        return contextlib.nullcontext()
+
+    @contextlib.contextmanager
+    def held():
+        lock_path = INDEX.with_suffix(".lock")
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        handle = lock_path.open("a+b")
+        try:
+            if os.name == "nt":
+                import msvcrt
+                handle.seek(0)
+                while True:
+                    try:
+                        msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+                        break
+                    except OSError:
+                        time.sleep(0.05)
+                try:
+                    yield
+                finally:
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+                try:
+                    yield
+                finally:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        finally:
+            handle.close()
+
+    return held()
+
+
 def write_index(entry: dict) -> None:
     """Replace this run's line if it is already indexed, otherwise append."""
+    with _index_lock():
+        _write_index_locked(entry)
+
+
+def _write_index_locked(entry: dict) -> None:
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     rows: list[dict] = []
     if INDEX.exists():

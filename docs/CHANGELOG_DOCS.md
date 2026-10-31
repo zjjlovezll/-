@@ -1,3 +1,21 @@
+## 第 291 轮：起步瞬态不是噪声，是起点（onset 与时间锁定）
+
+- 预注册的修法（起跑点前移 10 m、只分析 `t ≥ 0.45 s`）**被判决无效**：60 / 80 / 100 km/h 的幅值散布 **154.76 %**，
+  `G-AMP` 在 80 km/h 也**不过**（9.51 %，第 290 轮那次"过"来自 500 µm 地板分母）。
+- 但机理钉死一半：尖轨首次承载在 60 与 80 km/h 都是 **0.817–0.819 s**，而站位差 **4.5 m**（53.65 / 58.16 m）；
+  100 km/h 的 0.818 s 对应 **62.7 m**，超出该趟终点 62.2 m ⇒ **该趟尖轨从未承载**（记 `unmeasurable`，不当门失败）。
+- 因果链：净横向力 +718 N 驱动 **0.0146 m/s²** 的横向漂移，漂移∝时间² ⇒ 咬合发生在固定**时刻**而非固定站位；
+  第 270 轮座椅扫描佐证：80 km/h 到 60 m 时轮对横向 −2.0 µm，100 km/h 只到 −110.8 µm。
+- 晚一点分析对**定位**确实有用：80 km/h 的中心误差 0.033 → **0.000 m**、p95 6.38 → **5.68 µm**。
+- 新判据写死：跨速度比幅值**必须先把横向进近控制住**，否则比的是两段不同的进近。
+- 交付：`scripts/s146_settled_window.py`、`tests/test_settled_window.py`（8 项）、
+  `docs/SETTLED_WINDOW_2026-11-01.md`、报告 `reports/load_split_inversion_2026-10-31/settled_window.json`。
+- 同一轮里补上"同时跑多工况"的能力：`scripts/s147_parallel_campaign.py`（每核一进程、每个 worker 只允许一个 BLAS 线程、
+  索引写入加跨进程锁、已在索引里的 `run_id` 自动跳过），并给 `s99_run_archive.write_index` 加了**只在
+  `VELCH_INDEX_LOCK=1` 时生效**的 `msvcrt.locking`/`fcntl.flock` 锁——单跑时行为逐位不变。
+  实测：两趟 0.01 s 算例串行 18.8 s、并行（2 worker）**9.4 s**，两趟都 exit 0、索引两行都在。
+  `tests/test_parallel_campaign.py` 5 项。
+
 ## 第 290 轮：换速度反演不成立，而原因是量出来的——工作点锚在时间不在站位
 
 * 问题：251–286 轮所有幅值只在 80 km/h 上标定。本轮用同一条实测律、同一个单高斯模型，在 60 与 100 km/h 上各用**该速度自己的**无凸起趟反解 `u0(s)`，看能不能把 60 µm 鼓包找回来。
@@ -2799,6 +2817,7 @@ along with the real digests.
 | [SDITT_TRACK_PROFILE_USAGE_2026-10-30.md](SDITT_TRACK_PROFILE_USAGE_2026-10-30.md) | SDITT 是怎么用这套道岔轨道的（第 224 轮，学习而非猜） |
 | [SDITT_TRACK_TIMING_2026-10-22.md](SDITT_TRACK_TIMING_2026-10-22.md) | 采用 SDITT 柔性轨道参数时的耗时与对比（2026-10-22） |
 | [SELFCHECK_2026-10-23.md](SELFCHECK_2026-10-23.md) | 第一次运行先跑自检（`velch selfcheck`） |
+| [SETTLED_WINDOW_2026-11-01.md](SETTLED_WINDOW_2026-11-01.md) | 起步瞬态不是噪声，是起点：`onset` 与**时间**锁定、与站位无关（2026-11-01，第 291 轮） |
 | [SHORTWAVE_INVERSION_2026-10-25.md](SHORTWAVE_INVERSION_2026-10-25.md) | 短波反演：把采样提到 20 kHz 之后，结论反过来了 |
 | [SIMPACK_BOGIE_MINING_2026-10-23.md](SIMPACK_BOGIE_MINING_2026-10-23.md) | CRH380A 转向架子模型的深度挖掘（2026-10-23） |
 | [SIMPACK_CARBODY_MINING_2026-10-23.md](SIMPACK_CARBODY_MINING_2026-10-23.md) | 车体子模型：把 `CRH380A_M_Carbody.spck` 读成数字 |

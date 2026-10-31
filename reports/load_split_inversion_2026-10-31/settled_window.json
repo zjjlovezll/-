@@ -1,0 +1,91 @@
+{
+  "design": {
+    "start_m": 30.0,
+    "settle_s": 0.45,
+    "durations_s": {
+      "60.0": 1.35,
+      "80.0": 1.0,
+      "100.0": 0.8
+    },
+    "window_m": [
+      55.5,
+      61.5
+    ],
+    "share_bounds": [
+      0.02,
+      0.98
+    ],
+    "width_m": 1.2,
+    "truth_um": 60.0
+  },
+  "rows": [
+    {
+      "speed_kmh": 60.0,
+      "run_id": "one_set_x30_bump060.0um-060.00kmh-1.3500s-500us-22b1c844",
+      "amplitude_um": 8.38,
+      "centre_m": 57.4367,
+      "share_rms": 0.01603,
+      "usable_stations": 661,
+      "truth_peak_um": 60.0,
+      "estimated_peak_um": 8.3817,
+      "amplitude_relative_pct": 86.0304,
+      "p95_um": 54.2034,
+      "worst_bin_relative_pct": 10.9106,
+      "peak_error_m": 1.0667,
+      "amplitude_relative_pct_floor500": 10.3236,
+      "gates": {
+        "G-ABS": false,
+        "G-REL": false,
+        "G-LOC": false,
+        "G-AMP": false
+      },
+      "passing": false
+    },
+    {
+      "speed_kmh": 80.0,
+      "run_id": "one_set_x30_bump060.0um-080.00kmh-1.0000s-500us-22b1c844",
+      "amplitude_um": 65.71,
+      "centre_m": 58.5034,
+      "share_rms": 0.05401,
+      "usable_stations": 287,
+      "truth_peak_um": 60.0,
+      "estimated_peak_um": 65.7067,
+      "amplitude_relative_pct": 9.5117,
+      "p95_um": 5.6768,
+      "worst_bin_relative_pct": 1.1419,
+      "peak_error_m": 0.0,
+      "amplitude_relative_pct_floor500": 1.1414,
+      "gates": {
+        "G-ABS": true,
+        "G-REL": true,
+        "G-LOC": true,
+        "G-AMP": false
+      },
+      "passing": false
+    }
+  ],
+  "diagnoses": [
+    {
+      "speed_kmh": 60.0,
+      "first_station_m": 53.65,
+      "first_time_s": 0.819,
+      "plateau_share": 0.7055
+    },
+    {
+      "speed_kmh": 80.0,
+      "first_station_m": 58.1556,
+      "first_time_s": 0.817,
+      "plateau_share": 0.6809
+    }
+  ],
+  "unmeasured": [
+    {
+      "speed_kmh": 100.0,
+      "run_id": "one_set_x30_bump060.0um-100.00kmh-0.8000s-500us-22b1c844",
+      "reason": "the blade never carries in this run"
+    }
+  ],
+  "passing_speeds": [],
+  "amplitude_spread_pct": 154.758,
+  "verdict": "the settled window rescues nothing: the band inversion stays single speed"
+}

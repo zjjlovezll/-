@@ -1683,7 +1683,7 @@ def _load_per_wheel(rails, loads) -> dict[tuple[int, str], float]:
 
 
 def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,
-                              rounds: int = 20) -> np.ndarray:
+                              rounds: int = 80) -> np.ndarray:
     """Put the modal coordinates where the static contact force holds them.
 
     A flexible wheelset started at ``q = 0`` is a wheel whose tread has not yet been pressed in
@@ -1706,12 +1706,33 @@ def _settle_modal_coordinates(dynamics: VehicleDynamics, q: np.ndarray, v: np.nd
         return q
     settled = np.array(q, dtype=float)
     stiffness = modal.stiffness()
-    for _round in range(rounds):
+    relaxation = 1.0
+    previous = None
+    debug = bool(os.environ.get("VELCH_SETTLE_DEBUG"))
+    for round_index in range(rounds):
         force, _contacts = dynamics.evaluate(0.0, settled, v)
         step = np.linalg.solve(stiffness, force[modal.offset:])
-        settled[modal.offset:] += step
-        if float(np.max(np.abs(step))) < 1e-9:
+        norm = float(np.max(np.abs(step)))
+        # Under-relax when a pass does not shrink the step.  A plain fixed point is only stable
+        # while the tread compliance times the contact stiffness stays below one; measured on the
+        # one-set turnout case at 60 km/h the per-round step *grows* (median ratio 1.302, the
+        # oscillating kind, i.e. a negative differential stiffness), so the divergence is in the
+        # settle itself and not in the seeds -- which is why adding lateral seeds only landed on an
+        # off-centre branch.  Halving on stall and recovering when the step keeps shrinking leaves
+        # the well-behaved case (80 km/h, ratio 0.446) bit-identical at relaxation 1.0.
+        if previous is not None:
+            if norm >= 0.9 * previous:
+                relaxation = max(0.02, 0.5 * relaxation)
+            elif norm < 0.5 * previous:
+                relaxation = min(1.0, 1.5 * relaxation)
+        settled[modal.offset:] += relaxation * step
+        applied = relaxation * norm
+        if debug:
+            print(f"[settle] round {round_index + 1:2d} step {norm:.3e} relax {relaxation:.3f} applied {applied:.3e}",
+                  flush=True)
+        if applied < 1e-9:
             break
+        previous = applied
     return settled
 
 

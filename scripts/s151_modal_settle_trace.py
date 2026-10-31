@@ -30,6 +30,7 @@ from velch.vehicle import load_vehicle_case  # noqa: E402
 CASE = Path(r"F:/ai道岔状态反演辨识/scratch/s146/one_set_x46.json")
 SPEEDS = (60.0, 80.0)
 ROUNDS = 20
+MANUAL = False
 REPORT = ROOT / "reports" / "load_split_inversion_2026-10-31" / "modal_settle_trace.json"
 
 
@@ -46,14 +47,19 @@ def trace(case, speed_kmh, rounds=ROUNDS):
     stiffness = modal.stiffness()
     settled = np.array(q, dtype=float)
     steps, blocks = [], []
-    for index in range(rounds):
-        force, _contacts = dyn.evaluate(0.0, settled, v)
-        step = np.linalg.solve(stiffness, force[modal.offset:])
-        settled[modal.offset:] += step
-        steps.append(float(np.max(np.abs(step))))
-        blocks.append(float(np.max(np.abs(settled[modal.offset:]))))
-        if steps[-1] < 1e-9:
-            break
+    if MANUAL:
+        for index in range(rounds):
+            force, _contacts = dyn.evaluate(0.0, settled, v)
+            step = np.linalg.solve(stiffness, force[modal.offset:])
+            settled[modal.offset:] += step
+            steps.append(float(np.max(np.abs(step))))
+            blocks.append(float(np.max(np.abs(settled[modal.offset:]))))
+            if steps[-1] < 1e-9:
+                break
+    else:
+        settled = vs._settle_modal_coordinates(dyn, q, v)
+        steps = [float(np.max(np.abs(settled[modal.offset:] - q[modal.offset:])))]
+        blocks = [float(np.max(np.abs(settled[modal.offset:])))]
     seat_after = {"ok": None}
     try:
         out, residual2 = vs._seat(case, dyn, settled, v)
@@ -81,8 +87,11 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--speeds", nargs="+", type=float, default=list(SPEEDS))
     parser.add_argument("--rounds", type=int, default=ROUNDS)
+    parser.add_argument("--manual", action="store_true")
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args(argv)
+    global MANUAL
+    MANUAL = bool(args.manual)
 
     case = load_vehicle_case(CASE)
     records = []

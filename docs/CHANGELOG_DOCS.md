@@ -1,5 +1,16 @@
 ## 第 291 轮：起步瞬态不是噪声，是起点（onset 与时间锁定）
 
+## 第 296 轮：自适应阻尼止住沉降发散，堵点转到座椅（2026-11-01）
+
+- `src/velch/vehicle_solver.py::_settle_modal_coordinates` 改为**自适应松弛**不动点（步长停滞即减半，
+  下限 0.02；连续收缩则恢复，上限 1.0），轮数 20 → 80；`VELCH_SETTLE_DEBUG=1` 逐轮打印。
+- 60 km/h：`|modal|` 从 **2.5e-2 m（25 mm）** 降到有界的 **1.058e-3 m**，步长 2.4e-2 → 7.1e-6 m；
+  **座椅仍失败**（`xtol`）⇒ 堵点从"沉降发散"移到"座椅无解"。
+- 80 km/h：松弛因子全程 **1.000**，17 轮收敛、`|modal|` 9.761e-4 m、座椅 2.98e-08 N —— **逐位未变**。
+- `tests/test_modal_settle_trace.py` 改为 4 项（60 km/h 有界 ≤2e-3 m 且座椅仍被记录为失败、80 km/h
+  仍收敛到 1e-5 N 内、两档第一次座椅残差一致）。`4 passed in 32.61s`。
+- 文档 `docs/SPEED_LABEL_AND_SEAT_BRANCH_2026-11-01.md` 第 11 节；任务书 §五十六。
+
 ## 第 295 轮：发散的是模态沉降本身（2026-11-01）
 
 - 新增 `scripts/s151_modal_settle_trace.py`：逐轮记录 `_settle_modal_coordinates` 的 `|step|` 与 `|modal|`。

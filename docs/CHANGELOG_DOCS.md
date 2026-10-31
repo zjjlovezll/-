@@ -1,3 +1,12 @@
+## 第 282 轮：残差是**静态**的（准静态这一族没选错）
+
+* 动机：第 281 轮否掉无拟合点接触后，还有一个从未检验的候选——**测量本身是动态的**（0.35 m 特征在 80 km/h 只走 16 ms，短于轮对竖向周期）。
+* `scripts/s139_residual_dynamics.py`（零新仿真）：预测份额取律 `(u0+真值)`，与实测份额逐帧相减，做能量谱与互相关滞后。
+* **读数**：`one_set_random` 残差 **89 % 能量 <20 Hz**、主峰 **5.2 Hz**、滞后 **0.00 mm** ⇒ **动态排除**；`one_set_threepeak_obs` 0.381、`one_set_twopeak` **0.824**（但 rms 仅 **0.0155**，与六分量的 **0.1317** 不是一回事）。
+* **结论**：准静态族（间隙→份额）**没有被证伪**；第 281 轮的失败是**那个点接触尺寸律**不对，不是"静态律不可能"。下一个候选保持：**逐站等效刚度（真实断面、线/共形接触）**。
+* `tests/test_residual_dynamics.py` **5 项**（5 Hz 正弦判静态、80 Hz 判动态、对齐信号滞后 ~0、**留出集 <0.20 且主峰 <10 Hz 且滞后 <2 mm**、两峰 >0.50 且其 rms <0.05 < 留出 rms、判决必须保留准静态族）；
+* `docs/RESIDUAL_DYNAMICS_2026-10-31.md`（五节）；报告 `reports/load_split_inversion_2026-10-31/residual_dynamics.json`。
+
 ## 第 281 轮：逐站两体 Hertz（无拟合常数）也不成立，病根是"尖轨尖当点接触"
 
 * 动机：第 280 轮把半宽排除后，唯一剩下的候选是"逐站独立假设本身"；最直接的实现是逐站真解两体 Hertz。
@@ -2679,6 +2688,7 @@ along with the real digests.
 | [RELEASE_NOTES_0.4.5.md](RELEASE_NOTES_0.4.5.md) | Velch 0.4.5 发布说明 |
 | [RELEASE_NOTES_0.4.9.md](RELEASE_NOTES_0.4.9.md) | Velch 0.4.9 发布说明（2026-10-23） |
 | [RELEASE_SERIES.md](RELEASE_SERIES.md) | Velch 发布序列 |
+| [RESIDUAL_DYNAMICS_2026-10-31.md](RESIDUAL_DYNAMICS_2026-10-31.md) | 残差是静态的：准静态这一族没选错（2026-10-31，第 282 轮） |
 | [RESIDUAL_SMOOTHNESS_2026-10-21.md](RESIDUAL_SMOOTHNESS_2026-10-21.md) | 残差曲面光滑性：反演的准入条件 |
 | [ROADMAP_BEYOND_SIMPACK.md](ROADMAP_BEYOND_SIMPACK.md) | Velch 路线图：借鉴 Simpack 并超越它（2026-10-20 起） |
 | [S1_CHECKPOINT_2026-10-20.md](S1_CHECKPOINT_2026-10-20.md) | S1 检查点：解析接触几何（2026-10-20） |

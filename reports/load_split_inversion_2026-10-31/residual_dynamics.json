@@ -1,0 +1,33 @@
+{
+  "mode_frequency_hz": 20.0,
+  "energy_fraction_limit": 0.3,
+  "lag_limit_mm": 5.0,
+  "rows": [
+    {
+      "route": "one_set_twopeak",
+      "usable": 469,
+      "residual_rms": 0.01550414989751213,
+      "above_20hz_fraction": 0.8241168934828824,
+      "peak_hz": 4.264392324093813,
+      "lag_mm": 0.0
+    },
+    {
+      "route": "one_set_threepeak_obs",
+      "usable": 469,
+      "residual_rms": 0.04409280566283782,
+      "above_20hz_fraction": 0.3811639538928011,
+      "peak_hz": 4.264392324093813,
+      "lag_mm": 0.0
+    },
+    {
+      "route": "one_set_random",
+      "usable": 381,
+      "residual_rms": 0.13168707234247226,
+      "above_20hz_fraction": 0.11047521345698506,
+      "peak_hz": 5.249343832020993,
+      "lag_mm": 0.0
+    }
+  ],
+  "holdout_is_dynamic": false,
+  "verdict": "the residual is static: its energy sits below 20 Hz and the peak lag is within a few mm, so the quasi-static family is right and the next candidate stays a per-station contact model"
+}

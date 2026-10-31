@@ -1,3 +1,12 @@
+## 第 286 轮（M9 第一版）：交付总表——20 项预注册判决与"做不到什么"，全部可机读
+
+* `scripts/s143_deliverable_summary.py` 把 251–285 轮的全部判决从 `reports/load_split_inversion_2026-10-31/*.json` **读**出来（不手抄），输出 `reports/surface_deliverable_2026-10-31/deliverable_summary.json`；状态词表固定为 **PASS / FAIL / EXCLUDED / NOT_RUN**，每一项的 `supported` 都由该报告自己的布尔量重算。
+* **counts: PASS 9 / FAIL 7 / EXCLUDED 4**。PASS：`onset_resolution`、`joint_inversion`、`two_peak_fit`、`two_stage`、`floor_diagnosis`、`law_resolution`、`solver_calibration`、`band_assembly`、`band_surface`。FAIL：`shape_collapse`、`lateral_observability`、`holdout`、`peak_count`、`composable_forward`、`random_profile`、`rolling_slope`。EXCLUDED：`width_coordinate`、`two_body_station`、`residual_dynamics`、`strip_stiffness`。
+* **Ω_obs（按用户"只要光带"定案）**：轨头 61.46 mm（5 mm 深）/ 37.15 mm（1 mm 深）；九档轨距并集 **58.4 % / 69.9 %**；能起跑 **6/9**；两趟拼成带面 **20.6 mm / 37.15 mm = 55.4 %**、列间 **3.05 µm**。缺口在冠外侧，需再开约 **+14 mm** 轨距（δ≈+22 mm）⇒ 几何限制。
+* **一次自身错误（已写进测试）**：第一版把 `EXCLUDED` 项的 `supported` 语义写成"claim 不成立"，于是四个排除项被标成"与存档不符"；正确语义是"存档支持该状态"——`PASS` 与 `EXCLUDED` 都要求报告支持，只有 `FAIL` 要报告反驳。
+* `tests/test_deliverable_summary.py` **6 项**（状态词表闭合且计数固定、每项都被自己的报告支持、汇总可由报告重算、覆盖率取数自 `lateral_coverage`、带面取数自 `band_surface`、未达成清单三项且点名 random/coverage/truth）；
+* `docs/DELIVERABLE_SUMMARY_2026-10-31.md`（四节：判决总表、Ω_obs、能说与不能说、复算）。
+
 ## 第 285 轮：座椅的零点对、导数不对（58.0 m 只有 48 %，58.5 m 有 95 %）
 
 * 动机：第 284 轮证明座椅份额 = 滚动份额（中位差 0.0022），但那只是**零点**；反演要的是**导数**。
@@ -2627,6 +2636,7 @@ along with the real digests.
 | [CURVE_YAW_BALANCE_2026-10-28.md](CURVE_YAW_BALANCE_2026-10-28.md) | 曲线为什么停不下来：摇头平衡被量到闭合（2026-10-28） |
 | [CURVE_YAW_STABILITY_2026-10-28.md](CURVE_YAW_STABILITY_2026-10-28.md) | 摇头刚度与 Kalker 蠕滑都不能让曲线稳定（2026-10-28，第 204 轮） |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
+| [DELIVERABLE_SUMMARY_2026-10-31.md](DELIVERABLE_SUMMARY_2026-10-31.md) | 交付总表：能反演什么、到哪一步、什么做不到（2026-10-31，第 286 轮 / M9 第一版） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
 | [EFFECTIVE_RADIUS_RETIRED_2026-10-30.md](EFFECTIVE_RADIUS_RETIRED_2026-10-30.md) | 20 mm 等效半径退役：模型终于在自己写的 oracle 上运行（B048，选项 A） |

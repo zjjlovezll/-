@@ -736,3 +736,20 @@ rms **0.0165（两峰）→ 0.0317 / 0.0385（三峰）**；K=5 的残差 0.037 
 ② 座椅表**导数随站变化**（本轮 0.48 对 0.95）。因此"求解器逐站标定"只解零点（用于定位），
 解不了随机剖面的幅值；要解它，正演必须在同一站同时给出零点与导数，而导数只能靠"滚动 + 抬升"的
 时程扫描取得（每站每档一趟 ≈500 s）。
+
+## 四十六、第 286 轮（M9 第一版）：交付总表
+
+20 项预注册判决，状态只用 **PASS / FAIL / EXCLUDED** 三个词，全部由存档报告重算（`deliverable_summary.json`）：
+
+* **PASS 9**：`onset_resolution`、`joint_inversion`、`two_peak_fit`、`two_stage`、`floor_diagnosis`、
+  `law_resolution`、`solver_calibration`、`band_assembly`、`band_surface`
+* **FAIL 7**：`shape_collapse`、`lateral_observability`、`holdout`、`peak_count`、`composable_forward`、
+  `random_profile`、`rolling_slope`
+* **EXCLUDED 4**：`width_coordinate`、`two_body_station`、`residual_dynamics`、`strip_stiffness`
+
+**Ω_obs**：轨头 61.46 mm（5 mm 深）/ 37.15 mm（1 mm 深）；九档轨距并集 **58.4 % / 69.9 %**；能起跑 6/9；
+两趟带面 **55.4 %**、列间 3.05 µm。缺口在冠外侧，需再开 ~14 mm 轨距 ⇒ 几何限制，不是算法。
+
+**能说**：坡道区（≈57.7 m 起）定位 9–55 mm、幅值 0.17–1.5 %、剖面 p95 2.6–4.2 µm；两峰/三峰可定量；
+换横向位置仍成立且可拼单值带面。
+**不能说**：随机宽谱（p95 115 µm）、Ω_obs 到轨头 90 %、C 级真值。

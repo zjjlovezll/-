@@ -1,0 +1,179 @@
+{
+ "counts": {
+  "PASS": 9,
+  "FAIL": 7,
+  "EXCLUDED": 4,
+  "NOT_RUN": 0
+ },
+ "items": [
+  {
+   "report": "onset_resolution.json",
+   "label": "blade-lowering onset station carries amplitude",
+   "status": "PASS",
+   "verdict": "the station carries the amplitude at this resolution",
+   "supported": true
+  },
+  {
+   "report": "shape_collapse.json",
+   "label": "onset does not collapse on shape",
+   "status": "FAIL",
+   "verdict": "neither axis collapsed: the onset needs a shape classification, not a single number",
+   "supported": false
+  },
+  {
+   "report": "lateral_observability.json",
+   "label": "lateral identifiable width is 4 mm, not 16",
+   "status": "FAIL",
+   "verdict": "the boundary lies where neither curvature model puts it",
+   "supported": false
+  },
+  {
+   "report": "joint_inversion.json",
+   "label": "two-parameter fit recovers one bump",
+   "status": "PASS",
+   "verdict": null,
+   "supported": true
+  },
+  {
+   "report": "holdout.json",
+   "label": "hold-out amplitude and position",
+   "status": "FAIL",
+   "verdict": "share-only 0/2, hybrid 0/2 on the two hold-outs; the calibration series of round 261 gave 5/9 with the share-only estimator",
+   "supported": false
+  },
+  {
+   "report": "two_peak_fit.json",
+   "label": "two bumps recovered",
+   "status": "PASS",
+   "verdict": "both peaks are recovered and the profile clears the absolute gate",
+   "supported": true
+  },
+  {
+   "report": "peak_count.json",
+   "label": "BIC counts peaks on the empirical law",
+   "status": "FAIL",
+   "verdict": "the selector does not count the peaks; the profile's peak number is not yet identified",
+   "supported": false
+  },
+  {
+   "report": "composable_forward.json",
+   "label": "composable forward counts peaks but mis-sizes",
+   "status": "FAIL",
+   "verdict": "the composable forward still does not count the peaks; the count stays unidentified",
+   "supported": false
+  },
+  {
+   "report": "two_stage.json",
+   "label": "two stages count and size three peaks",
+   "status": "PASS",
+   "verdict": "two stages work: joint sizes the three peaks and every gate passes",
+   "supported": true
+  },
+  {
+   "report": "random_profile.json",
+   "label": "random six-component profile",
+   "status": "FAIL",
+   "verdict": "the random profile is not recovered to the absolute gate; the numbers are reported as they are",
+   "supported": false
+  },
+  {
+   "report": "floor_diagnosis.json",
+   "label": "representation error is not a range artefact",
+   "status": "PASS",
+   "verdict": "the floor is not a range artefact: the truth stays inside the measured u-range and the law still misrepresents it, so the composition problem is real",
+   "supported": true
+  },
+  {
+   "report": "law_resolution.json",
+   "label": "representation error is not look-up resolution",
+   "status": "PASS",
+   "verdict": "neither prediction holds: interpolation resolution does not explain the floor, so the per-station assumption itself has to be re-measured",
+   "supported": true
+  },
+  {
+   "report": "width_coordinate.json",
+   "label": "contact half-width is not the missing coordinate",
+   "status": "EXCLUDED",
+   "verdict": "the width does not explain the spread of the residual: removing it changes the held-out floor by less than 30 %, so the missing physics is not the contact width and the per-station assumption itself has to be re-derived from the contact layer",
+   "supported": true
+  },
+  {
+   "report": "two_body_station.json",
+   "label": "per-station point Hertz",
+   "status": "EXCLUDED",
+   "verdict": "a per-station two-body Hertz model with no fitted stiffness still misses the floor, so the residual is not the two-body split either",
+   "supported": true
+  },
+  {
+   "report": "residual_dynamics.json",
+   "label": "vertical dynamics ruled out",
+   "status": "EXCLUDED",
+   "verdict": "the residual is static: its energy sits below 20 Hz and the peak lag is within a few mm, so the quasi-static family is right and the next candidate stays a per-station contact model",
+   "supported": true
+  },
+  {
+   "report": "strip_stiffness.json",
+   "label": "strip integral over combined gap and curvature",
+   "status": "EXCLUDED",
+   "verdict": "the strip integral still fails the un-bumped run, so the combined wheel-rail gap does not carry the split either: the contact layer has to come from the solver, not from a closed-form strip model",
+   "supported": true
+  },
+  {
+   "report": "solver_calibration.json",
+   "label": "seated split equals rolling split",
+   "status": "PASS",
+   "verdict": "the static split tracks the rolling split (9/10 probes within 0.02, median 0.0022, worst 0.0218): usable as a forward, with the residual bias carried in the error budget",
+   "supported": true
+  },
+  {
+   "report": "rolling_slope.json",
+   "label": "seated slope equals rolling slope",
+   "status": "FAIL",
+   "verdict": "the seated slope is not the rolling slope: a seating table has the right zeros and the wrong derivative",
+   "supported": false
+  },
+  {
+   "report": "band_assembly.json",
+   "label": "inversion carries across the head",
+   "status": "PASS",
+   "verdict": "the inversion carries across the head",
+   "supported": true
+  },
+  {
+   "report": "band_surface.json",
+   "label": "two passes join into one band surface",
+   "status": "PASS",
+   "verdict": "the two passes join into one single-valued band surface",
+   "supported": true
+  }
+ ],
+ "coverage": {
+  "head_mm_5mm": 61.463200000000164,
+  "covered_mm_5mm": 35.80000000000051,
+  "covered_share_5mm": 0.583739837398374,
+  "gauge_steps": 9,
+  "gauge_settings_that_seat": 9,
+  "head_mm_1mm": 37.15,
+  "covered_share_1mm": 0.699
+ },
+ "band_surface": {
+  "columns": 2,
+  "shared_stations": 1201,
+  "p95_consistency_um": 3.0460123697864994,
+  "max_consistency_um": 3.066198653851764,
+  "covered_mm": 20.6,
+  "coverage": 0.553763440860215
+ },
+ "headline": {
+  "single_bump_p95_um": 4.18,
+  "two_bump_p95_um": 2.63,
+  "three_bump_p95_um": 3.37,
+  "cross_position_consistency_um": 3.05,
+  "random_profile_p95_um": 115.07
+ },
+ "not_achieved": [
+  "random-inhomogeneity inversion (four independent readings say the forward is the limit)",
+  "coverage of the whole head: gauge alone reaches 58.4 % of the 5 mm-deep head",
+  "C-level truth: the forward geometry is built from the same PRR sections, so PRR comparison is self-consistent"
+ ]
+}

@@ -1,0 +1,169 @@
+{
+  "route": "one_set_threepeak_obs",
+  "run_id": "one_set_threepeak_obs-080.00kmh-0.6000s-500us-92ddca24",
+  "truth": [
+    [
+      58.5,
+      40.0
+    ],
+    [
+      59.5,
+      30.0
+    ],
+    [
+      60.5,
+      20.0
+    ]
+  ],
+  "stage_one": {
+    "stiffness": {
+      "c_stock": 83571613584.95117,
+      "c_blade": 97177802375.23358,
+      "share_rms_on_calibration": 0.1065303978328836,
+      "stations": 321,
+      "reference": 112670000000.0
+    },
+    "selected": 3,
+    "peaks": [
+      [
+        58.50000000000004,
+        16.26323304598697
+      ],
+      [
+        59.70000000000006,
+        27.33030064025946
+      ],
+      [
+        60.60000000000007,
+        15.154849051840575
+      ]
+    ],
+    "bic": {
+      "1": -1367.5872186703573,
+      "2": -1436.354066721644,
+      "3": -1503.4295888279767,
+      "4": -1493.8730671464868,
+      "5": -1482.393481306364
+    }
+  },
+  "stage_two": {
+    "joint": {
+      "peaks": [
+        [
+          58.4905003560368,
+          43.31383187379248
+        ],
+        [
+          59.51277992408162,
+          33.24212865704944
+        ],
+        [
+          60.55483207596141,
+          20.864147184767635
+        ]
+      ],
+      "per_peak": [
+        {
+          "centre_true_m": 58.5,
+          "centre_fit_m": 58.4905003560368,
+          "location_error_m": 0.009499643963202686,
+          "amplitude_true_um": 40.0,
+          "amplitude_fit_um": 43.31383187379248,
+          "amplitude_relative_pct": 0.6627663747584961
+        },
+        {
+          "centre_true_m": 59.5,
+          "centre_fit_m": 59.51277992408162,
+          "location_error_m": 0.012779924081620209,
+          "amplitude_true_um": 30.0,
+          "amplitude_fit_um": 33.24212865704944,
+          "amplitude_relative_pct": 0.6484257314098884
+        },
+        {
+          "centre_true_m": 60.5,
+          "centre_fit_m": 60.55483207596141,
+          "location_error_m": 0.054832075961407156,
+          "amplitude_true_um": 20.0,
+          "amplitude_fit_um": 20.864147184767635,
+          "amplitude_relative_pct": 0.17282943695352698
+        }
+      ],
+      "p95_um": 3.3724697471786533,
+      "gates": {
+        "G-LOC": true,
+        "G-AMP": true,
+        "G-ABS": true,
+        "G-SEP": true
+      },
+      "cost": 0.2549649240614853,
+      "stations": 304
+    },
+    "greedy": {
+      "peaks": [
+        [
+          58.700000000000045,
+          43.60053021024786
+        ],
+        [
+          59.90000000000006,
+          55.328208705975044
+        ],
+        [
+          60.90000000000008,
+          12.65043748860015
+        ]
+      ],
+      "per_peak": [
+        {
+          "centre_true_m": 58.5,
+          "centre_fit_m": 58.700000000000045,
+          "location_error_m": 0.20000000000004547,
+          "amplitude_true_um": 40.0,
+          "amplitude_fit_um": 43.60053021024786,
+          "amplitude_relative_pct": 0.7201060420495721
+        },
+        {
+          "centre_true_m": 59.5,
+          "centre_fit_m": 59.90000000000006,
+          "location_error_m": 0.40000000000006253,
+          "amplitude_true_um": 30.0,
+          "amplitude_fit_um": 55.328208705975044,
+          "amplitude_relative_pct": 5.065641741195009
+        },
+        {
+          "centre_true_m": 60.5,
+          "centre_fit_m": 60.90000000000008,
+          "location_error_m": 0.40000000000007674,
+          "amplitude_true_um": 20.0,
+          "amplitude_fit_um": 12.65043748860015,
+          "amplitude_relative_pct": 1.46991250227997
+        }
+      ],
+      "p95_um": 34.13598592953955,
+      "gates": {
+        "G-LOC": false,
+        "G-AMP": false,
+        "G-ABS": false,
+        "G-SEP": true
+      },
+      "cost": 0.923527974950823,
+      "stations": 304
+    }
+  },
+  "gates": {
+    "joint": {
+      "G-LOC": true,
+      "G-AMP": true,
+      "G-ABS": true,
+      "G-SEP": true
+    },
+    "greedy": {
+      "G-LOC": false,
+      "G-AMP": false,
+      "G-ABS": false,
+      "G-SEP": true
+    }
+  },
+  "best_by_p95": "joint",
+  "verdict": "two stages work: joint sizes the three peaks and every gate passes"
+}

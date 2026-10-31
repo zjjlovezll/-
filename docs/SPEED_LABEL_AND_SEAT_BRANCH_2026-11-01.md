@@ -83,3 +83,42 @@ python -X utf8 scripts/s150_seat_after_settle.py --no-seeds         # 链：哪�
 python -X utf8 scripts/s150_seat_after_settle.py --seeds 0 500 -500 --write
 python -X utf8 -m pytest tests/test_seat_after_settle.py -q
 ```
+
+## 九、第 295 轮的追查：发散的是**沉降**本身，不是座椅的种子
+
+`_settle_modal_coordinates` 是不动点迭代 `q += K^-1·Phiᵀf(q)`，文档里写的收缩率是每轮 0.755。
+`scripts/s151_modal_settle_trace.py` 逐轮记录 `|step|` 与 `|modal|`：
+
+```
+== 60 km/h   seat#1 2.90e-08 N   rounds 20
+   round  1  |step| 1.328e-03 m   |modal| 1.328e-03 m
+   round  5  |step| 2.158e-03 m   |modal| 1.508e-03 m   ratio 2.386
+   round  9  |step| 2.440e-02 m   |modal| 2.505e-02 m   ratio 1.663
+   round 13  |step| 1.463e-02 m   |modal| 1.075e-02 m   ratio 0.412
+   last |step| 1.124e-02 m   median ratio 1.302        -> seat#2 FAILED
+== 80 km/h   rounds 17
+   round  1  |step| 1.280e-03 m   |modal| 1.280e-03 m
+   round  5  |step| 7.715e-06 m   |modal| 9.778e-04 m   ratio 0.241
+   round  9  |step| 3.388e-07 m   |modal| 9.761e-04 m
+   last |step| 5.330e-10 m   median ratio 0.446        -> seat#2 ok, z -1465.6 um, y -305.8 um
+```
+
+⇒ **60 km/h 的不动点是不稳定的**（中位收缩率 **1.302 > 1**），20 轮后 `|step|` 还有 1.1e-2 m，
+`|modal|` 被推到 **2.5e-2 m（25 mm）**——轮面被压入 25 mm 显然是非法状态；80 km/h 收缩率 **0.446**、
+17 轮收敛到 0.98 mm。所以第 294 轮看到的"座椅没有种子收敛"是**下游症状**：种子是从一个已经被沉降推到
+25 mm 的状态出发的。
+
+**这把修法限定在沉降本身**：要么给不动点加阻尼/回溯（|step| 变大就减半），要么对模态块做牛顿解
+（雅可比只在 132 个模态列上做差分，代价约 132 次求值/轮，比发散后再失败便宜）。两条都不动
+`xtol`/`gtol`，也不动接触物理。
+
+**同时排除了"种子不够"这条路**：第 294 轮试过给四个轮对加横向种子（0/±200/+500/±1000 µm），
+只有 −500 µm 收敛且落在偏离中心的支上 ⇒ 加种子解决不了发散。
+
+## 十、能说 / 不能说（第 295 轮补充）
+
+**能说**：模态沉降在两档速度下的收缩率不同（60 km/h 1.302、80 km/h 0.446），60 km/h 不收敛并把
+模态坐标推到 25 mm；第 60 km/h 的失败因此是**沉降发散**的下游后果。
+
+**不能说**：不能说这是"60 km/h 的物理问题"——同一几何、同一座椅起点在 80 km/h 上完好；
+也不能说"降低值/接触律在 60 km/h 不同"——本轮没测到接触几何的差别。

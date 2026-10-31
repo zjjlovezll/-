@@ -1,3 +1,11 @@
+## 第 287 轮（M9 第二件）：交付自检——这包东西能不能离开这台机器
+
+* 新增 `scripts/s144_delivery_check.py`：读三个交付算例（`straight_one_set` / `straight` / `diverging`）、解析每一处断面引用、对文件取 sha256、座椅规范算例、积分文档里的 0.02 s、再把交付总表重算一遍；四条门 **D-ASSETS / D-PATHS / D-SMOKE / D-SUMMARY** 全过才打 PASS。
+* **实测**：`references 1368  unique files 295  missing/outside 0  absolute 0`；`0.020 s → 41 帧`、座椅残差 `2.748e-08 N`、**七门 7/7**；交付总表覆盖率与带面**逐键相等**。`VERDICT: the package carries everything it needs and reproduces its own headline`。
+* 为什么单独做：① 绝对路径是这一路最易复发的错（第 260 轮报告路径写到 `ROOT.parent` 被 `git add` 拒绝、第 272 轮变体算例反过来靠绝对路径才被接受）；② 算例丢 cited 文件是**静默**的（右轨 160/76/65 个站位）；③ 冒烟必须真跑——文件齐全时几何仍可能错位，`vertical_preload_residual` 与 `no_edge_limited_active_contact` 会变红。
+* **边界（写进文档）**：这不是全新机器安装测试；`F:/velch_data/validation/crh380a_m` 的 368 个旧算例仍在本机之外（`velch selfcheck` 会报"算例语料"）；三条带面的 `Ω_obs` 仍是 55.4 %。
+* `tests/test_delivery_check.py` **4 项**（全部引用在仓库内且 sha256 齐全、交付集恰三算例且 1368/295 被钉住、规范算例 41 帧 + 七门 + 残差、总表与 manifest 与存档一致）；`docs/DELIVERY_CHECK_2026-10-31.md`（五节）；manifest 入库。
+
 ## 第 286 轮（M9 第一版）：交付总表——20 项预注册判决与"做不到什么"，全部可机读
 
 * `scripts/s143_deliverable_summary.py` 把 251–285 轮的全部判决从 `reports/load_split_inversion_2026-10-31/*.json` **读**出来（不手抄），输出 `reports/surface_deliverable_2026-10-31/deliverable_summary.json`；状态词表固定为 **PASS / FAIL / EXCLUDED / NOT_RUN**，每一项的 `supported` 都由该报告自己的布尔量重算。
@@ -2637,6 +2645,7 @@ along with the real digests.
 | [CURVE_YAW_STABILITY_2026-10-28.md](CURVE_YAW_STABILITY_2026-10-28.md) | 摇头刚度与 Kalker 蠕滑都不能让曲线稳定（2026-10-28，第 204 轮） |
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DELIVERABLE_SUMMARY_2026-10-31.md](DELIVERABLE_SUMMARY_2026-10-31.md) | 交付总表：能反演什么、到哪一步、什么做不到（2026-10-31，第 286 轮 / M9 第一版） |
+| [DELIVERY_CHECK_2026-10-31.md](DELIVERY_CHECK_2026-10-31.md) | 交付自检：这包东西能不能离开这台机器（2026-10-31，第 287 轮） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
 | [EFFECTIVE_RADIUS_RETIRED_2026-10-30.md](EFFECTIVE_RADIUS_RETIRED_2026-10-30.md) | 20 mm 等效半径退役：模型终于在自己写的 oracle 上运行（B048，选项 A） |

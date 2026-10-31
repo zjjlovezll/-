@@ -1,0 +1,92 @@
+{
+  "stiffness": {
+    "c_stock": 83571613584.95117,
+    "c_blade": 97177802375.23358,
+    "share_rms_on_calibration": 0.1065303978328836,
+    "stations": 321,
+    "reference": 112670000000.0
+  },
+  "composition": {
+    "two_peak": {
+      "route": "one_set_twopeak",
+      "share_rms": 0.1315307271734649,
+      "share_max": 0.39765165491339444,
+      "stations": 314
+    },
+    "three_peak": {
+      "route": "one_set_threepeak_obs",
+      "share_rms": 0.12340550772800589,
+      "share_max": 0.36697910028171965,
+      "stations": 311
+    }
+  },
+  "three_peak": {
+    "selected_count": 3,
+    "per_peak": [
+      {
+        "centre_true_m": 58.5,
+        "centre_fit_m": 58.50000000000004,
+        "location_error_m": 4.263256414560601e-14,
+        "amplitude_true_um": 40.0,
+        "amplitude_fit_um": 16.26323304598697,
+        "amplitude_relative_pct": 4.747353390802607
+      },
+      {
+        "centre_true_m": 59.5,
+        "centre_fit_m": 59.70000000000006,
+        "location_error_m": 0.20000000000005969,
+        "amplitude_true_um": 30.0,
+        "amplitude_fit_um": 27.33030064025946,
+        "amplitude_relative_pct": 0.5339398719481082
+      },
+      {
+        "centre_true_m": 60.5,
+        "centre_fit_m": 60.60000000000007,
+        "location_error_m": 0.10000000000007248,
+        "amplitude_true_um": 20.0,
+        "amplitude_fit_um": 15.154849051840575,
+        "amplitude_relative_pct": 0.969030189631885
+      }
+    ],
+    "p95_um": 23.5575855781535,
+    "gates": {
+      "G-COUNT": true,
+      "G-LOC": false,
+      "G-AMP": false,
+      "G-ABS": false,
+      "G-SEP": true
+    },
+    "bic": {
+      "1": -1367.5872186703573,
+      "2": -1436.354066721644,
+      "3": -1503.4295888279767,
+      "4": -1493.8730671464868,
+      "5": -1482.393481306364
+    },
+    "cost": {
+      "1": 3.6895131269969728,
+      "2": 2.8504229502679066,
+      "3": 2.214172214063529,
+      "4": 2.200523154074039,
+      "5": 2.200523154185583
+    }
+  },
+  "peaks_true": [
+    [
+      58.5,
+      40.0
+    ],
+    [
+      59.5,
+      30.0
+    ],
+    [
+      60.5,
+      20.0
+    ]
+  ],
+  "width_m_prior": 0.35,
+  "verdict": "the composable forward still does not count the peaks; the count stays unidentified",
+  "run_id": "one_set_threepeak_obs-080.00kmh-0.6000s-500us-92ddca24",
+  "usable_stations": 311
+}

@@ -1,4 +1,18 @@
 
+## 第 275 轮：换成可复合的正演——峰数从 5 回到 3，幅值还差 1.6 µm
+
+* `scripts/s132_composable_forward.py`：两体 Hertz（`F=C·max(0,p−floor)^1.5`，公共轮心二分，`share=F_blade/N`），
+  两个 `C` 只在**单个 50 µm 凸起**上拟合（`C_stock 8.357e10 / C_blade 9.718e10`，**它连自己的标定凸起都拟合不好：share rms 0.1065**）。
+* **计数回来了**：三峰算例（真值 3）选中 **3**，`G-COUNT` **PASS**，SSE 在 K=3 后**平台**（2.2142 → 2.2005 → 2.2005），
+  第 274 轮"一路下降"的指纹消失；逐峰站位误差 **0.000 / 0.200 / 0.100 m**。
+* **幅值没有**：拟合 **16.3 / 27.3 / 15.2 µm** 对真值 **40 / 30 / 20**，`p95 23.56 µm`（门 22，差 1.6）、`G-ABS/G-LOC/G-AMP` FAIL。
+* **两件事被分开**：复合误差（喂真值）实测律 **0.0317** 对可复合正演 **0.1234**（差 4 倍），但选中峰数 **5 对 3**、
+  残差行为"一路降"对"平台"⇒ **数峰是叠加问题（正演结构），定量是正演精度问题（幅值尺度）**。
+* 脚本按"五门全过才算数对"生成的判决句写的是"仍未数对"，与本轮真实发生的（`G-COUNT` 过）不一致——已在文档第二节写明该口径副作用。
+* `tests/test_composable_forward.py` 6 项（两刚度物理且标定 rms 0.05–0.15、选中 3 且 BIC 最小在 3、SSE 平台、
+  幅值仍不过且写明负结果、与第 274 轮两剖面对照、正演方向单调）；`docs/COMPOSABLE_FORWARD_2026-10-31.md`（六节）。
+* 下一件：给正演第三个自由度（`C` 随法向 `N` 或宽度变）；或用求解器本身做局部精修；或两段式（计数用可复合正演、定量回到实测律并逐峰剥离）。
+
 ## 第 274 轮：峰数从数据里数——两峰数得对，三峰选成 5（根因是实测律不复合）
 
 * `scripts/s131_peak_count.py`（`--build` / `--report`）：同样宽度的 K 个高斯、2K 参数、前向选择 + 每步联合重解，
@@ -2444,6 +2458,7 @@ along with the real digests.
 | [BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md](BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md) | 设计降低值被注入两次：尖轨比基本轨高 3.3 mm（B049） |
 | [BUGS.md](BUGS.md) | 缺陷账本（BUGS） |
 | [CAPABILITY_INVENTORY_2026-10-20.md](CAPABILITY_INVENTORY_2026-10-20.md) | 能力清单：现在的 Velch 到底准备好了什么（2026-10-20） |
+| [COMPOSABLE_FORWARD_2026-10-31.md](COMPOSABLE_FORWARD_2026-10-31.md) | 换一个能复合的正演：峰数数对了，幅值还差 1.6 µm（2026-10-31，第 275 轮） |
 | [COMPUTE_BUDGET_2026-10-19.md](COMPUTE_BUDGET_2026-10-19.md) | Velch 计算效率：与 Simpack 的同工况对比、热点归因与提速路线 |
 | [CONTACT_GEOMETRY_ERROR_BOUND_2026-10-21.md](CONTACT_GEOMETRY_ERROR_BOUND_2026-10-21.md) | 接触几何误差界：样条解析 vs 密网格 2026-10-21 |
 | [CONTACT_GEOMETRY_ERROR_BOUND_REAL_2026-10-21.md](CONTACT_GEOMETRY_ERROR_BOUND_REAL_2026-10-21.md) | 接触几何误差界（真实断面）2026-10-21 |

@@ -1,0 +1,306 @@
+{
+ "pre_registered": {
+  "r1_residual_n": 1e-05,
+  "r2_share_tolerance": 0.02,
+  "stations": [
+   52.0,
+   54.0,
+   56.0,
+   57.0,
+   58.0,
+   58.5,
+   59.0,
+   60.0,
+   61.0,
+   62.0
+  ],
+  "raise_stations": [
+   58.0,
+   58.5,
+   59.0
+  ],
+  "raises_um": [
+   0.0,
+   50.0,
+   100.0
+  ]
+ },
+ "rows": [
+  {
+   "station_m": 52.0,
+   "raise_um": 0.0,
+   "profile_station_m": 51.926,
+   "residual_n": 2.7692294679582116e-08,
+   "active": 1,
+   "forces_n": {
+    "stock": 60152.97707878454,
+    "blade": 0.0
+   },
+   "share_seated": 0.0
+  },
+  {
+   "station_m": 54.0,
+   "raise_um": 0.0,
+   "profile_station_m": 54.045,
+   "residual_n": 2.9343937058001757e-08,
+   "active": 1,
+   "forces_n": {
+    "stock": 60152.977078785625,
+    "blade": 0.0
+   },
+   "share_seated": 0.0
+  },
+  {
+   "station_m": 56.0,
+   "raise_um": 0.0,
+   "profile_station_m": 55.921,
+   "residual_n": 2.9001967050135136e-08,
+   "active": 1,
+   "forces_n": {
+    "stock": 60152.9770787887,
+    "blade": 0.0
+   },
+   "share_seated": 0.0
+  },
+  {
+   "station_m": 57.0,
+   "raise_um": 0.0,
+   "profile_station_m": 57.019,
+   "residual_n": 3.0253431759774685e-08,
+   "active": 1,
+   "forces_n": {
+    "stock": 60152.97707878594,
+    "blade": 0.0
+   },
+   "share_seated": 0.0
+  },
+  {
+   "station_m": 58.0,
+   "raise_um": 0.0,
+   "profile_station_m": 57.976,
+   "residual_n": 3.135210135951638e-08,
+   "active": 1,
+   "forces_n": {
+    "stock": 60152.9770787906,
+    "blade": 0.0
+   },
+   "share_seated": 0.0
+  },
+  {
+   "station_m": 58.0,
+   "raise_um": 50.0,
+   "profile_station_m": 57.976,
+   "residual_n": 1.0164512787014245e-07,
+   "active": 2,
+   "forces_n": {
+    "stock": 55507.376386887685,
+    "blade": 4646.315915565976
+   },
+   "share_seated": 0.07724074346432852
+  },
+  {
+   "station_m": 58.0,
+   "raise_um": 100.0,
+   "profile_station_m": 57.976,
+   "residual_n": 2.0692823454737663e-08,
+   "active": 2,
+   "forces_n": {
+    "stock": 37420.345310541044,
+    "blade": 22694.363390963706
+   },
+   "share_seated": 0.37751764719764225
+  },
+  {
+   "station_m": 58.5,
+   "raise_um": 0.0,
+   "profile_station_m": 58.477,
+   "residual_n": 6.835762178525329e-08,
+   "active": 2,
+   "forces_n": {
+    "stock": 24651.744168556124,
+    "blade": 35547.67201074557
+   },
+   "share_seated": 0.5904986172103093
+  },
+  {
+   "station_m": 58.5,
+   "raise_um": 50.0,
+   "profile_station_m": 58.477,
+   "residual_n": 1.4497345546260476e-07,
+   "active": 2,
+   "forces_n": {
+    "stock": 7026.469062925709,
+    "blade": 52984.801428105486
+   },
+   "share_seated": 0.8829141758634184
+  },
+  {
+   "station_m": 58.5,
+   "raise_um": 100.0,
+   "profile_station_m": 58.477,
+   "residual_n": 5.2394170779734857e-08,
+   "active": 1,
+   "forces_n": {
+    "stock": 0.0,
+    "blade": 60400.38259681386
+   },
+   "share_seated": 1.0
+  },
+  {
+   "station_m": 59.0,
+   "raise_um": 0.0,
+   "profile_station_m": 58.952,
+   "residual_n": 1.1844531400129198e-07,
+   "active": 2,
+   "forces_n": {
+    "stock": 52834.555823476316,
+    "blade": 7316.167203456563
+   },
+   "share_seated": 0.12163057790977344
+  },
+  {
+   "station_m": 59.0,
+   "raise_um": 50.0,
+   "profile_station_m": 58.952,
+   "residual_n": 1.150183379650116e-07,
+   "active": 2,
+   "forces_n": {
+    "stock": 39432.87485647176,
+    "blade": 20696.234579479282
+   },
+   "share_seated": 0.3441965925260329
+  },
+  {
+   "station_m": 59.0,
+   "raise_um": 100.0,
+   "profile_station_m": 58.952,
+   "residual_n": 3.622044459916651e-07,
+   "active": 2,
+   "forces_n": {
+    "stock": 24365.652173196333,
+    "blade": 35621.14297427768
+   },
+   "share_seated": 0.5938164038719721
+  },
+  {
+   "station_m": 60.0,
+   "raise_um": 0.0,
+   "profile_station_m": 60.047,
+   "residual_n": 6.546906661242247e-08,
+   "active": 2,
+   "forces_n": {
+    "stock": 21595.846257623703,
+    "blade": 38597.79310069615
+   },
+   "share_seated": 0.6412271049260163
+  },
+  {
+   "station_m": 61.0,
+   "raise_um": 0.0,
+   "profile_station_m": 60.962,
+   "residual_n": 1.7032289179041982e-07,
+   "active": 2,
+   "forces_n": {
+    "stock": 18208.30125448993,
+    "blade": 42112.92700243101
+   },
+   "share_seated": 0.6981443882916823
+  },
+  {
+   "station_m": 62.0,
+   "raise_um": 0.0,
+   "profile_station_m": 60.962,
+   "residual_n": 1.2016243999823928e-07,
+   "active": 2,
+   "forces_n": {
+    "stock": 19052.057433884725,
+    "blade": 41146.63562089399
+   },
+   "share_seated": 0.6835137697001492
+  }
+ ],
+ "comparisons": [
+  {
+   "station_m": 52.0,
+   "share_seated": 0.0,
+   "share_rolling": 0.0,
+   "abs_diff": 0.0
+  },
+  {
+   "station_m": 54.0,
+   "share_seated": 0.0,
+   "share_rolling": 0.0,
+   "abs_diff": 0.0
+  },
+  {
+   "station_m": 56.0,
+   "share_seated": 0.0,
+   "share_rolling": 0.0,
+   "abs_diff": 0.0
+  },
+  {
+   "station_m": 57.0,
+   "share_seated": 0.0,
+   "share_rolling": 0.0,
+   "abs_diff": 0.0
+  },
+  {
+   "station_m": 58.0,
+   "share_seated": 0.0,
+   "share_rolling": 0.0,
+   "abs_diff": 0.0
+  },
+  {
+   "station_m": 58.5,
+   "share_seated": 0.5904986172103093,
+   "share_rolling": 0.5861718499934417,
+   "abs_diff": 0.004326767216867533
+  },
+  {
+   "station_m": 59.0,
+   "share_seated": 0.12163057790977344,
+   "share_rolling": 0.13419139352193726,
+   "abs_diff": 0.012560815612163823
+  },
+  {
+   "station_m": 60.0,
+   "share_seated": 0.6412271049260163,
+   "share_rolling": 0.6348729801265716,
+   "abs_diff": 0.006354124799444749
+  },
+  {
+   "station_m": 61.0,
+   "share_seated": 0.6981443882916823,
+   "share_rolling": 0.6763487233823132,
+   "abs_diff": 0.021795664909369128
+  },
+  {
+   "station_m": 62.0,
+   "share_seated": 0.6835137697001492,
+   "share_rolling": 0.6769370890791895,
+   "abs_diff": 0.0065766806209597295
+  }
+ ],
+ "sensitivities": [
+  {
+   "station_m": 58.0,
+   "slope_per_m": 3775.176471976423
+  },
+  {
+   "station_m": 58.5,
+   "slope_per_m": 4095.0138278969075
+  },
+  {
+   "station_m": 59.0,
+   "slope_per_m": 4721.858259621987
+  }
+ ],
+ "worst_abs_diff": 0.021795664909369128,
+ "median_abs_diff": 0.0021633836084337665,
+ "within_tolerance": 9,
+ "single_body_probes": 6,
+ "r1": true,
+ "r2": false,
+ "r3": true,
+ "verdict": "the static split tracks the rolling split (9/10 probes within 0.02, median 0.0022, worst 0.0218): usable as a forward, with the residual bias carried in the error budget"
+}

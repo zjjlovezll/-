@@ -1,0 +1,52 @@
+{
+  "e_star_pa": 115400000000.0,
+  "wheel_lateral_radius_m": 1.27365,
+  "half_load_n": 60153.0,
+  "floor_target": 0.02,
+  "station_range_m": [
+    57.5,
+    63.5
+  ],
+  "stations_finite": 300,
+  "stations_total": 300,
+  "R_stock_mm_range": [
+    299.4049124820977,
+    299.5385956792347
+  ],
+  "R_blade_mm_range": [
+    0.8488669467482242,
+    299.959261785203
+  ],
+  "rows": [
+    {
+      "route": "straight_one_set",
+      "run_id": "straight_one_set-080.00kmh-0.6000s-500us-55d6fd49",
+      "usable": 469,
+      "floor": 0.3131558431770572,
+      "bias": -0.22201670694711947
+    },
+    {
+      "route": "one_set_twopeak",
+      "run_id": "one_set_twopeak-080.00kmh-0.6000s-500us-d7df6f37",
+      "usable": 479,
+      "floor": 0.3215830468801646,
+      "bias": -0.260752067443958
+    },
+    {
+      "route": "one_set_threepeak_obs",
+      "run_id": "one_set_threepeak_obs-080.00kmh-0.6000s-500us-92ddca24",
+      "usable": 476,
+      "floor": 0.40886170952004325,
+      "bias": -0.35368258721960244
+    },
+    {
+      "route": "one_set_random",
+      "run_id": "one_set_random-080.00kmh-0.6000s-500us-2f516e4b",
+      "usable": 383,
+      "floor": 0.5069448336615648,
+      "bias": -0.4500871295587191
+    }
+  ],
+  "all_bumped_runs_pass": false,
+  "verdict": "a per-station two-body Hertz model with no fitted stiffness still misses the floor, so the residual is not the two-body split either"
+}

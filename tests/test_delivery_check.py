@@ -63,19 +63,31 @@ def test_the_summary_and_the_manifest_still_agree_with_the_archive() -> None:
     stored = json.loads(MANIFEST.read_text(encoding="utf-8"))
     assert stored["assets"]["unique_files"] == 295
     assert stored["smoke"]["frames"] == 41
-    # the checkout is self-contained, the wheel is not: exactly one gate may fail, and it is D-WHEEL
+    # all five gates pass since setup.py's build_py started bundling the library (round 289)
     assert stored["assets"]["pass"] and stored["smoke"]["pass"] and stored["summary"]["pass"]
-    assert stored["wheel"]["pass"] is False
-    assert stored["verdict"] is False
+    assert stored["wheel"]["pass"] is True
+    assert stored["verdict"] is True
 
 
-def test_the_wheel_does_not_carry_the_library_yet() -> None:
-    """The measured gap this round is about: 104 wheel entries, none of them a section file."""
+def test_the_wheel_carries_the_library_inside_the_package() -> None:
+    """Round 288 shipped 0 of 295 sections; round 289 bundles them through setup.py's build_py."""
     wheel = check.wheel_gate()
     if not wheel["built"]:
         pytest.skip("build one first: python -m pip wheel --no-deps -w ../scratch/wheel_m9 .")
-    assert wheel["entries"] < 200
-    assert wheel["library_entries"] == 0
-    assert wheel["section_entries"] == 0
-    assert wheel["ships_library"] is False
-    assert wheel["pass"] is False
+    assert wheel["section_entries"] >= 295
+    assert wheel["library_entries"] >= 300            # sections + 3 mileage tables + 2 cases + wheels
+    assert wheel["library_inside_package"] is True    # velch/_internal/vehicles, so _root() can find it
+    assert wheel["ships_library"] is True
+    assert wheel["pass"] is True
+
+
+def test_the_build_hook_is_what_bundles_it() -> None:
+    """The wheel is self-contained because of one copy at build time, not because the library moved."""
+    hook = (ROOT / "setup.py").read_text(encoding="utf-8")
+    assert "build_py" in hook
+    assert '"vehicles"' in hook or "vehicles" in hook
+    assert "_internal" in hook
+    # the source tree still resolves the repository copy, so nothing was moved
+    from velch.vehicle_db import vehicle_dir
+    assert vehicle_dir().name == "vehicles"
+    assert (vehicle_dir().parent / "vehicles").is_dir() or vehicle_dir().parent.name == "Velch"

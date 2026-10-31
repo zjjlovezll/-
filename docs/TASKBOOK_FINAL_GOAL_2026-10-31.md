@@ -777,3 +777,14 @@ rms **0.0165（两峰）→ 0.0317 / 0.0385（三峰）**；K=5 的残差 0.037 
 五门现状：`D-ASSETS / D-PATHS / D-SMOKE / D-SUMMARY` PASS，`D-WHEEL` FAIL ⇒
 判决句为 `the package is not self-contained`。三案待选：**P1** 库随包走（8.6 MB 进 `src/velch/_internal/`，
 `_root()` 加包内优先分支）／**P2** 交付形态限定为源码树 + `pip install -e .`／P3 只在打包脚本里复制。
+
+## 四十九、第 289 轮（M9 第四件）：库随包走，D-WHEEL 转 PASS
+
+`setup.py` 的 `build_py` 在构建期把 `<repo>/vehicles` 复制进 `build_lib/velch/_internal/vehicles`；
+`vehicle_db._root()` 先看 `<package>/_internal/vehicles`（源码树无此目录，原路径逐位不变）。
+
+轮子：**463 065 B / 104 条目 / library 0** ⇒ **3 644 764 B / 413 条目 / library 309 / sections 295**；
+`D-WHEEL` FAIL → **PASS**。装到仓库外后 `lib:` 落在包内，用安装副本跑交付算例得
+**234 维 / 座椅残差 2.748e-08 N / 41 帧 / 七门 7/7**，与仓库读数逐项相同。
+
+边界：不是完整干净 venv（本机 venv 无 setuptools、temp 坏死，用 `--target` + 宿主 numpy）；外部语料仍不在包内。

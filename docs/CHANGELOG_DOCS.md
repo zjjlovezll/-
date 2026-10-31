@@ -1,3 +1,12 @@
+## 第 289 轮（M9 第四件）：让库随包走——D-WHEEL 由 FAIL 转 PASS
+
+* 三处改动：新增 `setup.py` 的 `build_py`（`super().run()` 后把 `<repo>/vehicles` 复制进 `build_lib/velch/_internal/vehicles`，库不在就 `SystemExit`）；`vehicle_db._root()` **先看** `<package>/_internal/vehicles`（源码树无此目录 ⇒ 原来"往上找仓库"的路径逐位不变）；`.gitignore` 忽略 `src/velch/_internal/`。不搬 8.6 MB 副本进 `src/`，只在构建期复制（与 `build/` 同性质）。
+* 轮子前后对照：**463 065 B / 104 条目 / library 0 / sections 0** ⇒ **3 644 764 B / 413 条目 / library 309 / sections 295**；`D-WHEEL` **FAIL → PASS**。
+* 装到仓库外（`pip install --target`）后：`vehicle_dir = .../site_m9/velch/_internal/vehicles`（存在）、`lib:` 解析落在包内且 `portable: True`；用**安装副本**跑交付算例得 **234 维、座椅残差 2.748e-08 N、41 帧、七门 7/7**，与仓库读数逐项相同。
+* 五门全 PASS，判决句回到 `the package carries everything it needs and reproduces its own headline`。
+* `tests/test_delivery_check.py` 改为 **6 项**（新增"轮子自带库：`library_entries ≥300`、`library_inside_package` True、`ships_library` True"与"构建钩子才是原因、源码树仍解析仓库副本"）。
+* 边界：本机 `venv` 无 setuptools、系统 temp 坏死，安装用 `--target` + 宿主 numpy 完成，**不是**完整干净 venv 证据；外部语料（368 个旧算例）仍不在包内。
+
 ## 第 288 轮（M9 第三件）：第五道门——轮子里没有道岔库
 
 * 上一轮的四道门是在**仓库里**跑的，只证明"仓库自包含"。本轮补 **D-WHEEL**：安装出去的轮子必须自带道岔库（轮内 `vehicles/`（或 `_internal/vehicles/`）文件 ≥295）。
@@ -2655,6 +2664,7 @@ along with the real digests.
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DELIVERABLE_SUMMARY_2026-10-31.md](DELIVERABLE_SUMMARY_2026-10-31.md) | 交付总表：能反演什么、到哪一步、什么做不到（2026-10-31，第 286 轮 / M9 第一版） |
 | [DELIVERY_CHECK_2026-10-31.md](DELIVERY_CHECK_2026-10-31.md) | 交付自检：这包东西能不能离开这台机器（2026-10-31，第 287 轮） |
+| [DELIVERY_WHEEL_BUNDLED_2026-10-31.md](DELIVERY_WHEEL_BUNDLED_2026-10-31.md) | 让库随包走：轮子从 463 KB 变成 3.64 MB（2026-10-31，第 289 轮） |
 | [DELIVERY_WHEEL_GAP_2026-10-31.md](DELIVERY_WHEEL_GAP_2026-10-31.md) | 第五道门：轮子里没有道岔库（2026-10-31，第 288 轮） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |

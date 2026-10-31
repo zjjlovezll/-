@@ -45,3 +45,5 @@ build_installer/
 
 .verify_vehicle_ref/
 
+# build-time copy of vehicles/ into the wheel (setup.py build_py); never a source-tree copy
+src/velch/_internal/

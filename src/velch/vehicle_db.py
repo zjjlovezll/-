@@ -114,6 +114,12 @@ def _root() -> Path:
     override = os.environ.get("VELCH_VEHICLE_DIR")
     if override:
         return Path(override).expanduser().resolve()
+    # A wheel installs the library inside the package (``velch/_internal/vehicles``, filled by setup.py's
+    # build_py).  Ask there first: in a source checkout that directory does not exist, so the repository
+    # lookup below is unchanged, and in an installed copy the walk-up cannot find anything.
+    packaged = Path(__file__).resolve().parent / "_internal" / "vehicles"
+    if packaged.is_dir():
+        return packaged
     from .data_root import repository_root  # 局部导入：避免 vehicle_db 成为 data_root 的依赖
 
     candidate = repository_root() / "vehicles"

@@ -2156,6 +2156,40 @@ Recorded for the next step: the estimator's forward model must carry the **footp
 the split**, not a single `C` per body; and the split law now has to be checked for mileage and speed
 dependence, since the blade's own section narrows towards the tip.
 
+## Round 255 - the split law does not collapse: it shifts with the blade's section width (M5 step 6)
+
+Added `scripts/s118_split_law_vs_station.py`, `docs/SPLIT_LAW_VS_MILEAGE_2026-10-31.md` and
+`tests/test_split_law_station.py`. Round 254 measured the law at one station; the question here is whether it
+collapses onto one curve in height-above-flush coordinates, which is what an estimator keyed on `u = d - z`
+needs. It does not.
+
+The coordinate mattered: at 52 m the blade sits 7.8 mm down, so a +-250 um absolute offset never reaches it.
+The probe therefore raises the blade by `d(s) + delta` (delta = height above flush) at 52/54/56/58/60/62 m.
+
+  station   design gap   +250   +100    +50     +0    -50   -100   -200   half width at delta=0
+    52.0        7811.0    nan   0.071  0.019  0.000  0.000  0.000  0.000        7.468
+    58.0          41.1  1.000   0.836  0.453  0.080  0.000  0.000  0.000        7.468
+    60.0         -14.0  1.000   1.000  0.923  0.519  0.106  0.000  0.000        6.234
+    62.0         -21.3  1.000   1.000  0.909  0.497  0.089  0.000  0.000        6.472
+
+Two things fall out. The probe's zero is right: where the design gap is ~0 (60.0, 62.0 m) the split at
+delta = 0 is **0.519 / 0.497**, i.e. level surfaces share the load in half. And the height at which the blade
+wins half the load, in absolute raise, is **+97.3 um at 58.0 m (45 mm section), -16.3 um at 60.0 m (63 mm),
+-21.0 um at 62.0 m (72.2 mm)** -- it moves 113 um between the narrow and the wide section and then saturates.
+The section width is read from the station file names, so the predictor is geometry, not a fitted constant.
+
+The footprint moves too: half width at delta = 0 is 7.468 mm from 52 to 58 m, 6.234 mm at 60 m, 6.472 mm at 62 m.
+
+**A pre-registered verdict is corrected in the document.** The script carried "spread <= 100 um = collapses"
+and printed that verdict because the three measurable crossings span 58.4 um. That threshold is wrong for this
+question: the shift is monotone in section width and 4.6 times the threshold's slack, so the honest statement
+is the opposite -- the law shifts with width, and an estimator keyed only on `u = d - z` will be biased
+wherever the section is narrow, which is exactly the switch panel (10 -> 45 mm over 52-58 m).
+
+Coverage is stated rather than glossed: only 3 of 6 stations reach sigma = 0.5 inside the grid, because at
+52/54/56 m the blade is 7.8/2.5/1.1 mm down and a lift that large leaves the stock carrying nothing, so the
+vertical seat has no solution (those cells are recorded as nan with the failure string).
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2340,6 +2374,7 @@ dependence, since the blade's own section narrows towards the tip.
 | [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md) | 尖轨降低值的速度谱：40–100 km/h 四次过岔，首载里程只动 5.6 mm |
 | [SPEED_SWEEP_2026-10-28.md](SPEED_SWEEP_2026-10-28.md) | Five drawn speeds: the straight-route amplitude claim is one band wide, not six-of-eight |
 | [SPLIT_LAW_MEASURED_2026-10-31.md](SPLIT_LAW_MEASURED_2026-10-31.md) | Where the amplitude compression actually comes from: the split law, measured |
+| [SPLIT_LAW_VS_MILEAGE_2026-10-31.md](SPLIT_LAW_VS_MILEAGE_2026-10-31.md) | Does the split law collapse? Measured across mileage, with a self-corrected verdict |
 | [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |
 | [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |
 | [STAGE_B_SURROGATE_2026-10-21.md](STAGE_B_SURROGATE_2026-10-21.md) | B 阶段：可微代理与保险丝 2026-10-21 |

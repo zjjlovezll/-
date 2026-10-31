@@ -1,0 +1,88 @@
+{
+  "calibration_runs": [
+    "one_set_twopeak",
+    "one_set_threepeak_obs"
+  ],
+  "holdout": "one_set_random",
+  "floor_target": 0.02,
+  "rows": [
+    {
+      "route": "one_set_twopeak",
+      "usable": 469,
+      "law_floor": 0.013317260948959863,
+      "db_mm_range": [
+        -0.7467593750000723,
+        1.0248447916653691
+      ],
+      "corr_residual_vs_db": -0.1021717437022494
+    },
+    {
+      "route": "one_set_threepeak_obs",
+      "usable": 469,
+      "law_floor": 0.04267270264244982,
+      "db_mm_range": [
+        -1.4728109027781766,
+        1.2499999999998623
+      ],
+      "corr_residual_vs_db": -0.042474769610952715
+    },
+    {
+      "route": "one_set_random",
+      "usable": 381,
+      "law_floor": 0.13135493661166883,
+      "db_mm_range": [
+        -1.4728109027781766,
+        1.0248447916653691
+      ],
+      "corr_residual_vs_db": -0.4465811274222919
+    }
+  ],
+  "width_correction": {
+    "slope_share_per_mm": -0.025162063270658813,
+    "held_out_floor_before": 0.13135493661166883,
+    "held_out_floor_after": 0.11932095278756379,
+    "relative_gain": 0.09161424864968504,
+    "reaches_target": false
+  },
+  "crude_logistic_appendix": {
+    "note": "a three-parameter logistic is a worse base than the empirical law, so these numbers cannot decide anything about the width; they are kept for the record",
+    "two_coordinate_fit": {
+      "params": [
+        5.728782755430232,
+        -32.858936577448986,
+        28.08862895491251
+      ],
+      "b_ref_mm": 6.604545975632599
+    },
+    "one_coordinate_fit": {
+      "params": [
+        0.619956584376856,
+        -153.57663154490885,
+        35.17842247368361
+      ],
+      "b_of_u": {
+        "slope_mm_per_um": 0.0023982403735593573,
+        "intercept_mm": 6.5361092361530675
+      },
+      "b_ref_mm": 6.604545975632599
+    },
+    "rows": [
+      {
+        "route": "one_set_twopeak",
+        "M2_floor": 0.10471007828188053,
+        "M3_floor": 0.1104770986936611
+      },
+      {
+        "route": "one_set_threepeak_obs",
+        "M2_floor": 0.07436085504395461,
+        "M3_floor": 0.10687439041198325
+      },
+      {
+        "route": "one_set_random",
+        "M2_floor": 0.1101855960165565,
+        "M3_floor": 0.1796285096493541
+      }
+    ]
+  },
+  "verdict": "the width does not explain the spread of the residual: removing it changes the held-out floor by less than 30 %, so the missing physics is not the contact width and the per-station assumption itself has to be re-derived from the contact layer"
+}

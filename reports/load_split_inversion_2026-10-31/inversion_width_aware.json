@@ -1,0 +1,101 @@
+{
+  "anchors": [
+    {
+      "width_mm": 10.383419689119165,
+      "half_gap_um": NaN,
+      "station_m": 52.0
+    },
+    {
+      "width_mm": 20.765624999999993,
+      "half_gap_um": NaN,
+      "station_m": 54.0
+    },
+    {
+      "width_mm": 31.470238095238102,
+      "half_gap_um": 186.50275851346453,
+      "station_m": 56.0
+    },
+    {
+      "width_mm": 45.18750000000001,
+      "half_gap_um": 56.15468866027856,
+      "station_m": 58.0
+    },
+    {
+      "width_mm": 62.54807692307695,
+      "half_gap_um": -2.2665380114344273,
+      "station_m": 60.0
+    },
+    {
+      "width_mm": 72.2,
+      "half_gap_um": 0.3399251715033652,
+      "station_m": 62.0
+    }
+  ],
+  "reference": {
+    "width_mm": 45.18750000000001,
+    "station_m": 58.0,
+    "half_gap_um": 56.15468866027856
+  },
+  "extrapolation": {
+    "measured_width_range_mm": [
+      10.383419689119165,
+      72.2
+    ],
+    "blade_stations_below_range": 11,
+    "blade_stations_total": 158,
+    "clamped_outside": true
+  },
+  "rows": [
+    {
+      "amplitude_um": 50.0,
+      "route": "one_set_bump050.0um-080.00kmh-0.6000s-500us-20295a3d",
+      "peak_um": 52.6338670942789,
+      "peak_station_m": 57.977777777777774,
+      "truth_peak_um": 49.99999999999999,
+      "error_um": 2.633867094278905,
+      "relative_pct": 0.5267734188557811,
+      "p95_um": 160.81487508250254,
+      "station_error_m": 0.5222222222222257,
+      "valid_fraction": 0.3930058284762698,
+      "width_at_peak_mm": 45.01388888888887,
+      "gate_a": true,
+      "gate_b": false,
+      "gate_c": false
+    },
+    {
+      "amplitude_um": 100.0,
+      "route": "one_set_bump100.0um-080.00kmh-0.6000s-500us-cad4db6b",
+      "peak_um": 62.95795128797938,
+      "peak_station_m": 57.81111111111111,
+      "truth_peak_um": 99.99999999999999,
+      "error_um": -37.04204871202061,
+      "relative_pct": 7.408409742404122,
+      "p95_um": 210.56153615827202,
+      "station_error_m": 0.68888888888889,
+      "valid_fraction": 0.37635303913405493,
+      "width_at_peak_mm": 43.73569023569025,
+      "gate_a": false,
+      "gate_b": false,
+      "gate_c": false
+    },
+    {
+      "amplitude_um": 200.0,
+      "route": "one_set_bump200.0um-080.00kmh-0.6000s-500us-28051835",
+      "peak_um": 62.07140021138802,
+      "peak_station_m": 57.577777777777776,
+      "truth_peak_um": 199.99999999999997,
+      "error_um": -137.92859978861196,
+      "relative_pct": 27.58571995772239,
+      "p95_um": 236.21689884567283,
+      "station_error_m": 0.9222222222222243,
+      "valid_fraction": 0.28226477935054123,
+      "width_at_peak_mm": 41.9910130718954,
+      "gate_a": false,
+      "gate_b": false,
+      "gate_c": false
+    }
+  ],
+  "folds_passing_all_three": 0,
+  "folds_total": 3,
+  "verdict": "the width-aware law still does not carry the amplitude"
+}

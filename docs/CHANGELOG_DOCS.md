@@ -2190,6 +2190,36 @@ Coverage is stated rather than glossed: only 3 of 6 stations reach sigma = 0.5 i
 52/54/56 m the blade is 7.8/2.5/1.1 mm down and a lift that large leaves the stock carrying nothing, so the
 vertical seat has no solution (those cells are recorded as nan with the failure string).
 
+## Round 256 - resolve the split law by section width: the small fold improves, the observable saturates
+
+Added `scripts/s119_width_aware_inversion.py`, `docs/WIDTH_AWARE_INVERSION_2026-10-31.md` and
+`tests/test_width_aware_inversion.py`.  Round 255 found the split law does not collapse in height-above-flush
+coordinates; this applies the width-resolved law and re-runs the three amplitudes with **no fitting to the
+bump runs at all** (law from the s118 static probes, geometry from the case, widths from station file names,
+split from the archived runs), so all three are hold-outs.
+
+A sign had to be fixed first: the first version took `u = -delta` and every anchor came out mirrored.  In
+s118 `delta_um` *is* the gap the probe imposed, so `u = +delta`; the anchors then read 45.2 mm -> +56.15 um,
+62.5 mm -> -2.27 um, 72.2 mm -> +0.34 um, and 41.1 + 56.15 = 97.25 reproduces the absolute-raise number
+quoted in round 255.
+
+  amp   peak_est  peak_true   rel%    p95(um)   at s    w(mm)   gates
+   50       52.6       50.0    0.53     160.8   57.98    45.0    Y/n/n
+  100       63.0      100.0    7.41     210.6   57.81    43.7    n/n/n
+  200       62.1      200.0   27.59     236.2   57.58    42.0    n/n/n
+  folds passing all three gates: 0/3
+
+Two things are true at once and are reported separately.  Width-awareness does correct the small end: the
+50 um fold goes from 1.37 % to 0.53 % relative.  It does not carry the large ones, and the reason is the
+observable, not the model: once the bump closes the gap past about -50 um the split saturates at sigma -> 1
+and the inversion is clamped at the end of the measured curve, so 100 and 200 um both read about 62 um.
+
+What survives in the saturated regime is *where* saturation starts: the peak station moves 57.98 -> 57.81 ->
+57.58 m for 50 -> 100 -> 200 um, monotone, 0.17-0.23 m per step.  That is the same quantity the zero-parameter
+family of round 252 called the transfer-station equation, now read through a width-aware law.
+
+Known blind spot, stated: 11 of 158 blade stations sit below the 45 mm measurement floor and are clamped.
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2405,6 +2435,7 @@ vertical seat has no solution (those cells are recorded as nan with the failure 
 | [VEHICLE_SPEED_PROFILE_2026-10-27.md](VEHICLE_SPEED_PROFILE_2026-10-27.md) | 车辆速度剖面：先把基线冻住，再把「v」变成一个值 |
 | [VEHICLE_TOPOLOGY_2026-10-23.md](VEHICLE_TOPOLOGY_2026-10-23.md) | 车辆拓扑：从写死的 35 个坐标到节点表 |
 | [VEHICLE_V2_DESIGN_AND_EVIDENCE.md](VEHICLE_V2_DESIGN_AND_EVIDENCE.md) | Velch v0.2：车辆—轮对—道岔轨道耦合的证据与实现 |
+| [WIDTH_AWARE_INVERSION_2026-10-31.md](WIDTH_AWARE_INVERSION_2026-10-31.md) | 宽度感知的分离律反演：50 µm 折到 0.53 %，但载荷分配在膝点饱和（2026-10-31） |
 <!-- DOCS:ALL:END -->` 之间生成
   "文件 → 首行标题"表（73 行，机械取自每篇自己的标题，不改写内容）；
 - 新增 `tests/test_docs_index.py`（5 项）：清单块存在且 ≥60 行、**每篇 `docs/*.md` 都被索引提到**、

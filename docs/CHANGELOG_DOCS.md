@@ -1,5 +1,22 @@
 ## 第 291 轮：起步瞬态不是噪声，是起点（onset 与时间锁定）
 
+## 第 293 轮 2026-11-01 B052：三档速度其实是一趟 80 km/h
+
+`straight_one_set.json` 声明 `run.speed_profile = {"constant": {"speed_kmh": 80.0}}`，加载器让 profile 赢过
+`vehicle.travel_speed_m_s`，而 `s99 --speed-kmh` 只替换后者 ⇒ **标签变了、物理没变**。
+
+证据：三趟（60/80/100）尖轨首次承载都是 **0.817–0.819 s**；反推 `(58.4−40)/0.818 = 22.5 m/s = 81 km/h`；
+把 `series.sample` 装成探针重算 60 km/h 归档趟的"54.000 m"帧，实际抽样站是 **58.667 m**；三趟 `case_sha256` 相同。
+
+**撤回两条**：(1) 第 292 轮"60 km/h 是轮缘根接触"——那是用 80 km/h 算例对象重算 60 标签归档造成的，
+`s148` 的动态度不成立（静态度仍成立：54.0 m 尖轨空载 0.000 kN）；(2) 第 290/291 轮"幅值散布 12.81 %/154.76 %"
+不是跨速度结论，"100 km/h 零载"只是"80 km/h 只跑了 0.8 s"。
+
+修法：`s99` 新增纯函数 `apply_speed(case, speed_kmh)`（常量 profile 与车辆速度一起改写、多段 profile 拒绝、
+meta 增 `profile_speed_kmh` 并要求一致），`tests/test_speed_override.py` 4 项。
+不受影响：所有标着 80 km/h 的运行（标签与 profile 都是 80）。
+
+
 ## 第 292 轮 2026-11-01 60 km/h 的提前量是接触制度，不是算子
 
 第 291 轮把跨速度失败钉在时间上（首次承载 0.817–0.819 s），但 60 km/h 在 54.0 m 就让尖轨承担 42 %，
@@ -2851,6 +2868,7 @@ along with the real digests.
 | [SPECTRUM_SOURCE_2026-10-21.md](SPECTRUM_SOURCE_2026-10-21.md) | 153.85 Hz 是什么：速度标定实验 |
 | [SPEED_2026-10-20.md](SPEED_2026-10-20.md) | 提速：先量再改（2026-10-20） |
 | [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md) | 尖轨降低值的速度谱：40–100 km/h 四次过岔，首载里程只动 5.6 mm |
+| [SPEED_OVERRIDE_DEFECT_2026-11-01.md](SPEED_OVERRIDE_DEFECT_2026-11-01.md) | B052：三档"速度"其实是一趟 80 km/h，以及由此要撤回的一条判定（2026-11-01，第 293 轮） |
 | [SPEED_SWEEP_2026-10-28.md](SPEED_SWEEP_2026-10-28.md) | Five drawn speeds: the straight-route amplitude claim is one band wide, not six-of-eight |
 | [SPEED_TRANSFER_2026-11-01.md](SPEED_TRANSFER_2026-11-01.md) | 换一个速度，反演还成立吗？不成立——而原因是量出来的（2026-11-01，第 290 轮） |
 | [SPLIT_LAW_MEASURED_2026-10-31.md](SPLIT_LAW_MEASURED_2026-10-31.md) | Where the amplitude compression actually comes from: the split law, measured |

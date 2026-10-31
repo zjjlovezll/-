@@ -68,6 +68,38 @@ def code_head() -> str:
         return "unknown"
 
 
+def apply_speed(case, speed_kmh: float):
+    """Return ``case`` with its travel speed set to ``speed_kmh``, declared profile included.
+
+    A case that declares ``run.speed_profile = {"constant": {...}}`` keeps that schedule: the loader
+    lets the profile speed win over ``vehicle.travel_speed_m_s``.  Overriding only the vehicle therefore
+    renames a run without changing its physics -- B052, found 2026-11-01 when three "different" speeds
+    produced one onset time.  A multi-leg profile cannot be flattened silently, so it raises.
+    """
+
+    probe = getattr(case.run, "speed_profile", None)
+    if probe is not None and (not isinstance(probe, dict) or "constant" not in probe):
+        raise SystemExit(
+            "this case declares a multi-leg speed_profile; --speed-kmh cannot override it without "
+            "changing the schedule, so edit the case instead")
+    schedule = {"constant": {"speed_kmh": float(speed_kmh)}} if probe is not None else probe
+    run = dataclasses.replace(case.run, speed_profile=schedule)
+    vehicle = dataclasses.replace(case.vehicle, travel_speed_m_s=float(speed_kmh) / 3.6)
+    out = dataclasses.replace(case, vehicle=vehicle, run=run)
+    # The loader materialises a SpeedSchedule on the case, and the solver prefers it over
+    # cfg.travel_speed_m_s (vehicle_solver.py:149).  Rewriting the two blocks above is therefore not
+    # enough -- B052 had a second layer that kept the run at the declared 80 km/h.  Rebuild it.
+    materialised = getattr(out, "speed_schedule", None)
+    if materialised is not None:
+        from velch.speed import SpeedSchedule
+
+        out = dataclasses.replace(
+            out,
+            speed_schedule=SpeedSchedule.constant(abs(float(speed_kmh)) / 3.6,
+                                                  duration_s=float(out.run.duration_s)),
+        )
+    return out
+
 def run_id_for(route: str, speed_kmh: float, duration_s: float, output_step_s: float,
                case_digest: str) -> str:
     return (f"{route}-{speed_kmh:06.2f}kmh-{duration_s:.4f}s-{output_step_s * 1e6:.0f}us-"
@@ -182,10 +214,10 @@ def main() -> int:
         print(f"run_id {run_id}\n  case {case_path} ({case_digest[:16]})\n  out  {out}")
         return 0
 
-    vehicle = dataclasses.replace(case.vehicle, travel_speed_m_s=speed_kmh / 3.6)
+    case = apply_speed(case, speed_kmh)
     run = dataclasses.replace(case.run, duration_s=args.duration, output_step_s=args.output_step)
     started = time.perf_counter()
-    result = simulate_vehicle(dataclasses.replace(case, vehicle=vehicle, run=run))
+    result = simulate_vehicle(dataclasses.replace(case, run=run))
     wall_s = time.perf_counter() - started
     summary = getattr(result, "summary", {}) or {}
     gates = summary.get("gates") or {}
@@ -272,6 +304,8 @@ def main() -> int:
         "case_sha256": case_digest,
         "speed_kmh": speed_kmh,
         "speed_m_s": speed_kmh / 3.6,
+        "profile_speed_kmh": (float(case.run.speed_profile["constant"]["speed_kmh"])
+                              if case.run.speed_profile else None),
         "x_start_m": float(case.run.x_start_m),
         "seat_x_start_m": getattr(case.run, "seat_x_start_m", None),
         "duration_s": args.duration,

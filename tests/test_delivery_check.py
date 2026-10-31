@@ -61,6 +61,21 @@ def test_the_summary_and_the_manifest_still_agree_with_the_archive() -> None:
     if not MANIFEST.exists():
         pytest.skip("the manifest has not been written yet")
     stored = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    assert stored["verdict"] is True
     assert stored["assets"]["unique_files"] == 295
     assert stored["smoke"]["frames"] == 41
+    # the checkout is self-contained, the wheel is not: exactly one gate may fail, and it is D-WHEEL
+    assert stored["assets"]["pass"] and stored["smoke"]["pass"] and stored["summary"]["pass"]
+    assert stored["wheel"]["pass"] is False
+    assert stored["verdict"] is False
+
+
+def test_the_wheel_does_not_carry_the_library_yet() -> None:
+    """The measured gap this round is about: 104 wheel entries, none of them a section file."""
+    wheel = check.wheel_gate()
+    if not wheel["built"]:
+        pytest.skip("build one first: python -m pip wheel --no-deps -w ../scratch/wheel_m9 .")
+    assert wheel["entries"] < 200
+    assert wheel["library_entries"] == 0
+    assert wheel["section_entries"] == 0
+    assert wheel["ships_library"] is False
+    assert wheel["pass"] is False

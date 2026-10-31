@@ -41,7 +41,18 @@
     },
     "pass": true
   },
-  "verdict": true,
+  "wheel": {
+    "built": true,
+    "wheel": "velch_turnout_dynamics-0.4.37-py3-none-any.whl",
+    "bytes": 463065,
+    "entries": 104,
+    "library_entries": 0,
+    "section_entries": 0,
+    "library_inside_package": false,
+    "ships_library": false,
+    "pass": false
+  },
+  "verdict": false,
   "references": [
     {
       "case": "one_set",

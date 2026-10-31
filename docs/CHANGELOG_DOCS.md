@@ -1,3 +1,12 @@
+## 第 288 轮（M9 第三件）：第五道门——轮子里没有道岔库
+
+* 上一轮的四道门是在**仓库里**跑的，只证明"仓库自包含"。本轮补 **D-WHEEL**：安装出去的轮子必须自带道岔库（轮内 `vehicles/`（或 `_internal/vehicles/`）文件 ≥295）。
+* **实测不过**：`velch_turnout_dynamics-0.4.37-py3-none-any.whl` **463 065 B / 104 条目 / library 0 / sections 0**（库本身 8.6 MB ⇒ 0.05 % 的资产进包）；装到仓库外后 `resolve_asset('lib:…')` 抛 `AssetRefError: not found under any known root`，`looked in …/scratch/vehicles`——还暴露第二件事：非源码布局下 `vehicle_dir()` 返回**安装根父目录**里一个不存在的路径且不报错。
+* 五门现状：**D-ASSETS / D-PATHS / D-SMOKE / D-SUMMARY PASS、D-WHEEL FAIL**；判决句由"齐了"改为 `the package is not self-contained (see the failing line above)`。
+* 设计决定：D-WHEEL **只看已有轮子**（`--wheel PATH` 可指定，默认 `../scratch/wheel_m9/`）、**不自己构建**——构建依赖临时目录与离线 setuptools，那是机器状态不是包状态，塞进闸门会把"构建失败"与"资产缺失"混成一条红。
+* `tests/test_delivery_check.py` 增至 **5 项**（新增"轮子尚未自带库"：`entries <200`、`library_entries == 0`、`section_entries == 0`、`ships_library False`；manifest 断言改为"恰一门失败且是 D-WHEEL、verdict False"）；`docs/DELIVERY_WHEEL_GAP_2026-10-31.md`（五节，含 P1/P2/P3 三案）。
+* 待用户选：**P1** 让库随包走（8.6 MB 进 `src/velch/_internal/`，`_root()` 加包内优先分支）／**P2** 交付形态限定为源码树 + `pip install -e .`（则"pip install 就能用"不能对外说）／P3 只在打包脚本里复制资产。
+
 ## 第 287 轮（M9 第二件）：交付自检——这包东西能不能离开这台机器
 
 * 新增 `scripts/s144_delivery_check.py`：读三个交付算例（`straight_one_set` / `straight` / `diverging`）、解析每一处断面引用、对文件取 sha256、座椅规范算例、积分文档里的 0.02 s、再把交付总表重算一遍；四条门 **D-ASSETS / D-PATHS / D-SMOKE / D-SUMMARY** 全过才打 PASS。
@@ -2646,6 +2655,7 @@ along with the real digests.
 | [DAMPING_CALIBRATION_2026-10-21.md](DAMPING_CALIBRATION_2026-10-21.md) | 接触阻尼定标：无效（负结果） |
 | [DELIVERABLE_SUMMARY_2026-10-31.md](DELIVERABLE_SUMMARY_2026-10-31.md) | 交付总表：能反演什么、到哪一步、什么做不到（2026-10-31，第 286 轮 / M9 第一版） |
 | [DELIVERY_CHECK_2026-10-31.md](DELIVERY_CHECK_2026-10-31.md) | 交付自检：这包东西能不能离开这台机器（2026-10-31，第 287 轮） |
+| [DELIVERY_WHEEL_GAP_2026-10-31.md](DELIVERY_WHEEL_GAP_2026-10-31.md) | 第五道门：轮子里没有道岔库（2026-10-31，第 288 轮） |
 | [DEVELOPMENT_GATES.md](DEVELOPMENT_GATES.md) | Velch 后续开发与验收门 |
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
 | [EFFECTIVE_RADIUS_RETIRED_2026-10-30.md](EFFECTIVE_RADIUS_RETIRED_2026-10-30.md) | 20 mm 等效半径退役：模型终于在自己写的 oracle 上运行（B048，选项 A） |

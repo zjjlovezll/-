@@ -766,3 +766,14 @@ rms **0.0165（两峰）→ 0.0317 / 0.0385（三峰）**；K=5 的残差 0.037 
 判决：`the package carries everything it needs and reproduces its own headline`。
 
 **边界**：不是全新机器安装测试；外部旧算例语料（368 个）仍在仓库外；`Ω_obs` 仍 55.4 %。
+
+## 四十八、第 288 轮（M9 第三件）：轮子不自包含
+
+新增第五道门 **D-WHEEL**：安装出去的轮子必须自带道岔库（轮内 `vehicles/` 或 `_internal/vehicles/` 文件 ≥295）。
+
+实测 **FAIL**：轮子 463 065 B、104 条目、`visible library 0`、`sections 0`；装到仓库外后 `lib:` 解析抛
+`AssetRefError`，且 `vehicle_dir()` 在非源码布局下指向安装根父目录里一个不存在的路径而不报错。
+
+五门现状：`D-ASSETS / D-PATHS / D-SMOKE / D-SUMMARY` PASS，`D-WHEEL` FAIL ⇒
+判决句为 `the package is not self-contained`。三案待选：**P1** 库随包走（8.6 MB 进 `src/velch/_internal/`，
+`_root()` 加包内优先分支）／**P2** 交付形态限定为源码树 + `pip install -e .`／P3 只在打包脚本里复制。

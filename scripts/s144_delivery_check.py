@@ -139,13 +139,55 @@ def summary() -> dict:
             "counts": stored["counts"], "pass": same_coverage and same_surface}
 
 
+
+WHEEL_DIR = ROOT.parent / "scratch" / "wheel_m9"
+SECTION_DIR = "turnouts/CN60-1100-1_18/sections/"
+
+
+def wheel_gate(path: pathlib.Path | None = None) -> dict:
+    """Does an installable wheel carry the library it needs?
+
+    A wheel is what leaves this machine, so the question is not "are the sections bundled somewhere" but
+    "does the artifact that gets installed include them".  The gate inspects an existing wheel instead of
+    building one: the build step needs a working temp directory and network-free setuptools, both of which
+    are machine state rather than package state.  Build it once with::
+
+        python -m pip wheel --no-deps -w ../scratch/wheel_m9 .
+
+    Measured 2026-10-31: 463 065 B, 104 entries, none under ``vehicles/`` -> an installed copy cannot
+    resolve a single ``lib:`` reference (``AssetRefError: not found under any known root``).
+    """
+    import zipfile
+
+    wheel = path if path is not None else next(iter(sorted(WHEEL_DIR.glob("*.whl"))), None)
+    if wheel is None or not wheel.is_file():
+        return {"built": False, "ships_library": False, "pass": False,
+                "reason": [f"no wheel in {WHEEL_DIR}; build one with python -m pip wheel --no-deps -w {WHEEL_DIR} ."]}
+    with zipfile.ZipFile(wheel) as archive:
+        names = archive.namelist()
+    library = [name for name in names if name.startswith("vehicles/") or "_internal/vehicles/" in name]
+    sections = [name for name in library if SECTION_DIR in name]
+    return {
+        "built": True,
+        "wheel": wheel.name,
+        "bytes": wheel.stat().st_size,
+        "entries": len(names),
+        "library_entries": len(library),
+        "section_entries": len(sections),
+        "library_inside_package": any("_internal/vehicles/" in name for name in names),
+        "ships_library": len(library) >= 295,
+        "pass": len(library) >= 295,
+    }
+
+
 def main(argv: list[str]) -> int:
     sys.path.insert(0, str(ROOT / "scripts"))
     report = references()
     assets = asset_gate(report)
     body = smoke()
     archive = summary()
-    verdict = assets["pass"] and body["pass"] and archive["pass"]
+    wheel = wheel_gate(pathlib.Path(argv[argv.index("--wheel") + 1]) if "--wheel" in argv else None)
+    verdict = assets["pass"] and body["pass"] and archive["pass"] and wheel["pass"]
 
     print(f"cases           {len(report['cases'])}")
     print(f"[D-ASSETS]  references {assets['references']}  unique files {assets['unique_files']}"
@@ -162,13 +204,22 @@ def main(argv: list[str]) -> int:
     print(f"[D-SUMMARY] coverage {'match' if archive['coverage_matches'] else 'DIFFERS'}"
           f"  band surface {'match' if archive['band_surface_matches'] else 'DIFFERS'}"
           f"  -> {'PASS' if archive['pass'] else 'FAIL'}")
+    if wheel.get("built"):
+        wheel_line = (f"{wheel['wheel']} {wheel['bytes']} B  entries {wheel['entries']}"
+                      f"  library {wheel['library_entries']}  sections {wheel['section_entries']}")
+        wheel_state = "PASS" if wheel["pass"] else "FAIL"
+    else:
+        wheel_line = "not built: " + " ".join(str(item) for item in wheel.get("reason", []))[:140]
+        wheel_state = "FAIL"
+    print(f"[D-WHEEL]   {wheel_line}  -> {wheel_state}")
     headline = ("the package carries everything it needs and reproduces its own headline" if verdict
                 else "the package is not self-contained (see the failing line above)")
     print(f"VERDICT: {headline}")
 
     if "--write" in argv:
         payload = {"generated_by": "scripts/s144_delivery_check.py", "cases": report["cases"],
-                   "assets": assets, "smoke": body, "summary": archive, "verdict": bool(verdict),
+                   "assets": assets, "smoke": body, "summary": archive, "wheel": wheel,
+                   "verdict": bool(verdict),
                    "references": [{k: row[k] for k in ("case", "path", "sha256") if k in row}
                                   for row in report["references"]]}
         MANIFEST.parent.mkdir(parents=True, exist_ok=True)

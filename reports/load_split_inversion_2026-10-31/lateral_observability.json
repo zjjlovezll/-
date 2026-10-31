@@ -1,0 +1,114 @@
+{
+  "speed_kmh": 80.0,
+  "duration_s": 0.6,
+  "amplitude_um": 100.0,
+  "centre_m": 58.5,
+  "sigma_s_m": 1.2,
+  "sigma_y_m": 0.002,
+  "baseline_run": "straight_one_set-080.00kmh-0.6000s-500us-55d6fd49",
+  "baseline_peak_acc": 2.2063255837245497,
+  "radii": {
+    "rail_m": 0.29527,
+    "wheel_m": 1.27365
+  },
+  "predictions": {
+    "model_a": {
+      "half_width_m": 0.006923876457887549,
+      "thresholds_um": [
+        75.09376519773504,
+        133.50002701819562,
+        208.59379221593065
+      ]
+    },
+    "model_b": {
+      "half_width_m": 0.007684660044530271,
+      "thresholds_um": [
+        60.96115419785282,
+        108.37538524062722,
+        169.33653943848003
+      ]
+    }
+  },
+  "rows": [
+    {
+      "offset_mm": 0.0,
+      "status": "ok",
+      "run_id": "one_set_lat_y00.0mm-080.00kmh-0.6000s-500us-7c68d70f",
+      "peak_delta_acc": 0.33610146136243,
+      "share_max": 0.7503584448984069,
+      "fraction_of_reference": 1.0,
+      "visible": true,
+      "invisible": false,
+      "predicted_threshold_um": 0.0
+    },
+    {
+      "offset_mm": 2.0,
+      "status": "ok",
+      "run_id": "one_set_lat_y02.0mm-080.00kmh-0.6000s-500us-cb37373e",
+      "peak_delta_acc": 0.1402895600124745,
+      "share_max": 0.681749239428466,
+      "fraction_of_reference": 0.41740241010495144,
+      "visible": true,
+      "invisible": false,
+      "predicted_threshold_um": 8.343751688637226
+    },
+    {
+      "offset_mm": 4.0,
+      "status": "ok",
+      "run_id": "one_set_lat_y04.0mm-080.00kmh-0.6000s-500us-9f2761aa",
+      "peak_delta_acc": 0.0035255694964995143,
+      "share_max": 0.6773346949695489,
+      "fraction_of_reference": 0.010489598831877047,
+      "visible": false,
+      "invisible": true,
+      "predicted_threshold_um": 33.375006754548906
+    },
+    {
+      "offset_mm": 5.0,
+      "status": "ok",
+      "run_id": "one_set_lat_y05.0mm-080.00kmh-0.6000s-500us-01d5ee5a",
+      "peak_delta_acc": 0.0006656739931418798,
+      "share_max": 0.677199198525274,
+      "fraction_of_reference": 0.001980574527833011,
+      "visible": false,
+      "invisible": true,
+      "predicted_threshold_um": 52.14844805398266
+    },
+    {
+      "offset_mm": 6.0,
+      "status": "ok",
+      "run_id": "one_set_lat_y06.0mm-080.00kmh-0.6000s-500us-874e8af1",
+      "peak_delta_acc": 0.0001092787914864779,
+      "share_max": 0.6771855549544962,
+      "fraction_of_reference": 0.00032513631759737793,
+      "visible": false,
+      "invisible": true,
+      "predicted_threshold_um": 75.09376519773504
+    },
+    {
+      "offset_mm": 8.0,
+      "status": "ok",
+      "run_id": "one_set_lat_y08.0mm-080.00kmh-0.6000s-500us-4862b308",
+      "peak_delta_acc": 2.7036263546609263e-05,
+      "share_max": 0.677183270027129,
+      "fraction_of_reference": 8.044077951049165e-05,
+      "visible": false,
+      "invisible": true,
+      "predicted_threshold_um": 133.50002701819562
+    },
+    {
+      "offset_mm": 10.0,
+      "status": "ok",
+      "run_id": "one_set_lat_y10.0mm-080.00kmh-0.6000s-500us-a38053ce",
+      "peak_delta_acc": 0.0,
+      "share_max": 0.6771832429922592,
+      "fraction_of_reference": 0.0,
+      "visible": false,
+      "invisible": true,
+      "predicted_threshold_um": 208.59379221593065
+    }
+  ],
+  "model_a_supported": false,
+  "model_b_supported": false,
+  "verdict": "the boundary lies where neither curvature model puts it"
+}

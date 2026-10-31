@@ -2269,6 +2269,19 @@ along with the real digests.
 `docs/ONSET_SHAPE_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/shape_collapse.json`；
 任务书 §二十五；冻结基线 UNCHANGED。
 
+## 第 259 轮：目标改成"光带"，横向可辨识宽度 4 mm，过车次数 3 → 9（2026-10-31）
+
+用户口径定案：只要轮轨接触面（光带），不要整个三维曲面。本轮把"光带有多宽"量出来：预注册两个曲率模型
+（双曲率 `w(100 µm)=6.9 mm`、只算轨冠 7.7 mm），用七趟 0.6 s 运行把 100 µm 凸起沿横向扫 0/2/4/5/6/8/10 mm，
+**两者都被否掉，实测更窄**——2 mm 掉到 41.7 %、4 mm 只剩 1 %，半宽 ≈1.7 mm、1 % 宽 ≈4.0 mm。
+
+由此改写 M4 的过车次数：`ceil(0.9×37.15/4) = 9` 趟（50 µm 约 13 趟）；原先"3 趟"用的是条带搜索窗 16 mm，
+那不是可辨识宽度，作废。反推 `R_eff ≈ 80 mm`，说明决定可辨识性的是接触的有效横向尺寸，不是两个名义半径。
+
+新增 `scripts/s122_lateral_observability.py`、`tests/test_lateral_observability.py`（7 项）、
+`docs/LATERAL_OBSERVABILITY_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/lateral_observability.json`；
+任务书 §二十六；冻结基线 UNCHANGED。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2343,6 +2356,7 @@ along with the real digests.
 | [INVERSION_VERDICT_2026-10-28.md](INVERSION_VERDICT_2026-10-28.md) | 实测反演的判定页（L0–L5） |
 | [LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md) | M2 时程：整车横向游走 0.73 mm/0.40 s，源头是 +718 N 的净横向力（2026-10-31） |
 | [LATERAL_FORCE_SAMPLING_2026-10-31.md](LATERAL_FORCE_SAMPLING_2026-10-31.md) | 横向力的来源：不是蠕滑，是采样的阶梯（B050） |
+| [LATERAL_OBSERVABILITY_2026-10-31.md](LATERAL_OBSERVABILITY_2026-10-31.md) | 光带（接触面）作为目标：横向可辨识宽度实测（第 259 轮，2026-10-31） |
 | [LATERAL_REGISTRATION_BASELINE_2026-10-31.md](LATERAL_REGISTRATION_BASELINE_2026-10-31.md) | 横向注册的当前基线（M2 第一步）：对"最完备的车"重新量一遍，结果比旧数更糟 |
 | [LATERAL_SEAT_JOINT_2026-10-31.md](LATERAL_SEAT_JOINT_2026-10-31.md) | 横向座椅联立：链条一起解，还是逐个轮对解？（B051） |
 | [LAYERED_TRACK_2026-10-20.md](LAYERED_TRACK_2026-10-20.md) | 分层轨道（layered track）：钢轨 / 扣件 / 轨枕 / 板下胶垫 / 轨道板 |

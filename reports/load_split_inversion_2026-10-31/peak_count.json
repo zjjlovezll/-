@@ -1,0 +1,141 @@
+{
+  "route": "one_set_threepeak_obs",
+  "run_id": "one_set_threepeak_obs-080.00kmh-0.6000s-500us-92ddca24",
+  "peaks_true": [
+    [
+      58.5,
+      40.0
+    ],
+    [
+      59.5,
+      30.0
+    ],
+    [
+      60.5,
+      20.0
+    ]
+  ],
+  "composition": {
+    "one_set_twopeak": {
+      "route": "one_set_twopeak",
+      "share_rms": 0.016537838466466743,
+      "share_max": 0.135338654343411,
+      "stations": 304
+    },
+    "one_set_threepeak": {
+      "route": "one_set_threepeak",
+      "share_rms": 0.03849163766741615,
+      "share_max": 0.18590278783297276,
+      "stations": 286
+    },
+    "one_set_threepeak_obs": {
+      "route": "one_set_threepeak_obs",
+      "share_rms": 0.03171323802616691,
+      "share_max": 0.19417391477864307,
+      "stations": 304
+    }
+  },
+  "width_m_prior": 0.35,
+  "fit_window_m": [
+    55.5,
+    61.5
+  ],
+  "max_peaks": 5,
+  "two_peak": {
+    "selected_count": 2,
+    "bic_margin": 11.301850894295058,
+    "per_peak": [
+      {
+        "centre_true_m": 57.6,
+        "centre_fit_m": 57.60000000000003,
+        "location_error_m": 2.842170943040401e-14,
+        "amplitude_true_um": 50.0,
+        "amplitude_fit_um": 55.37885878466212,
+        "amplitude_relative_pct": 1.0757717569324243
+      },
+      {
+        "centre_true_m": 59.4,
+        "centre_fit_m": 59.400000000000055,
+        "location_error_m": 5.684341886080802e-14,
+        "amplitude_true_um": 30.0,
+        "amplitude_fit_um": 31.97796120836667,
+        "amplitude_relative_pct": 0.3955922416733337
+      }
+    ],
+    "p95_um": 5.25630449944836,
+    "gates": {
+      "G-COUNT": true,
+      "G-LOC": true,
+      "G-AMP": true,
+      "G-ABS": true,
+      "G-SEP": true
+    },
+    "bic": {
+      "1": -2270.6775860918747,
+      "2": -2526.1223016607605,
+      "3": -2514.8204507664655,
+      "4": -2503.6503565651487,
+      "5": -2492.7920849037146
+    },
+    "cost": {
+      "1": 0.16697377952564368,
+      "2": 0.06940411066725254,
+      "3": 0.06937393454394493,
+      "4": 0.06931372375674479,
+      "5": 0.06918256604610226
+    }
+  },
+  "three_peak": {
+    "selected_count": 5,
+    "bic_margin": 111.26402131573968,
+    "per_peak": [
+      {
+        "centre_true_m": 58.5,
+        "centre_fit_m": 58.10000000000004,
+        "location_error_m": 0.39999999999996305,
+        "amplitude_true_um": 40.0,
+        "amplitude_fit_um": 25.59536384971474,
+        "amplitude_relative_pct": 2.880927230057052
+      },
+      {
+        "centre_true_m": 59.5,
+        "centre_fit_m": 58.700000000000045,
+        "location_error_m": 0.7999999999999545,
+        "amplitude_true_um": 30.0,
+        "amplitude_fit_um": 28.875630513301807,
+        "amplitude_relative_pct": 0.22487389733963853
+      },
+      {
+        "centre_true_m": 60.5,
+        "centre_fit_m": 59.50000000000006,
+        "location_error_m": 0.9999999999999432,
+        "amplitude_true_um": 20.0,
+        "amplitude_fit_um": 20.7103614934123,
+        "amplitude_relative_pct": 0.14207229868246002
+      }
+    ],
+    "p95_um": 13.957335471401258,
+    "gates": {
+      "G-COUNT": false,
+      "G-LOC": false,
+      "G-AMP": false,
+      "G-ABS": true,
+      "G-SEP": false
+    },
+    "bic": {
+      "1": -1236.0015755661698,
+      "2": -1610.9942186459832,
+      "3": -1727.858728015679,
+      "4": -1841.658564989366,
+      "5": -1952.9225863051056
+    },
+    "cost": {
+      "1": 5.02095934781196,
+      "2": 1.4084369804971029,
+      "3": 0.923527974950823,
+      "4": 0.6117033838731847,
+      "5": 0.40855861961748474
+    }
+  },
+  "verdict": "the selector does not count the peaks; the profile's peak number is not yet identified"
+}

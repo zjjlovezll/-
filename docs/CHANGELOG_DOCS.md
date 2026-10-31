@@ -2351,6 +2351,7 @@ along with the real digests.
 | [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
 | [GOAL_STATUS_2026-10-23.md](GOAL_STATUS_2026-10-23.md) | 整体目标：完成度与差距 |
 | [HARMONIC_LADDER_INVERSION_2026-10-26.md](HARMONIC_LADDER_INVERSION_2026-10-26.md) | 谐波阶梯反演：用一条缺陷的谐波序列恢复它的**形状**（2026-10-26） |
+| [HOLDOUT_2026-10-31.md](HOLDOUT_2026-10-31.md) | M7 step 3: hold-outs — one amplitude, one position (and the zone where inversion works) |
 | [INNOVATION_SPRINT_2026-10-22.md](INNOVATION_SPRINT_2026-10-22.md) | 创新冲刺 2026-10-22（B1 步长上限 → A1 接触窗 → B4 描述子降维 → …） |
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |

@@ -2355,6 +2355,7 @@ along with the real digests.
 | [INVERSION_DEMO_2026-10-20.md](INVERSION_DEMO_2026-10-20.md) | 合成反演：可辨识性门 + 高斯‑牛顿（2026-10-20） |
 | [INVERSION_PIPELINE_2026-10-27.md](INVERSION_PIPELINE_2026-10-27.md) | 反演流水线 L0/L1：先把数据准入与配准做成可判定的门 |
 | [INVERSION_VERDICT_2026-10-28.md](INVERSION_VERDICT_2026-10-28.md) | 实测反演的判定页（L0–L5） |
+| [JOINT_INVERSION_2026-10-31.md](JOINT_INVERSION_2026-10-31.md) | M7 step 2: joint forward fit — 2 parameters instead of 25 |
 | [LATERAL_DRIFT_2026-10-31.md](LATERAL_DRIFT_2026-10-31.md) | M2 时程：整车横向游走 0.73 mm/0.40 s，源头是 +718 N 的净横向力（2026-10-31） |
 | [LATERAL_FORCE_SAMPLING_2026-10-31.md](LATERAL_FORCE_SAMPLING_2026-10-31.md) | 横向力的来源：不是蠕滑，是采样的阶梯（B050） |
 | [LATERAL_OBSERVABILITY_2026-10-31.md](LATERAL_OBSERVABILITY_2026-10-31.md) | 光带（接触面）作为目标：横向可辨识宽度实测（第 259 轮，2026-10-31） |

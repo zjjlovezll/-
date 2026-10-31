@@ -1,0 +1,480 @@
+{
+  "width_m_prior": 1.2,
+  "fit_window_m": [
+    55.5,
+    61.5
+  ],
+  "share_bounds": [
+    0.02,
+    0.98
+  ],
+  "modes": {
+    "single": {
+      "description": "single start at the nominal centre",
+      "amplitudes": [
+        {
+          "route": "one_set_bump020.0um",
+          "fit": {
+            "route": "one_set_bump020.0um",
+            "run_id": "one_set_bump020.0um-080.00kmh-0.6000s-500us-e33b6d65",
+            "amplitude_um": 21.409777404230645,
+            "centre_m": 58.49347301361408,
+            "share_rms": 0.017566520523333976,
+            "cost": 0.09380912356220097,
+            "start_centre_m": 58.5,
+            "usable_stations": 304,
+            "observed_peak_share": 0.7600776259701524
+          },
+          "truth_peak_um": 20.0,
+          "estimated_peak_um": 21.409621186281985,
+          "amplitude_relative_pct": 0.2819554808461291,
+          "p95_um": 1.405645118784555,
+          "worst_bin_relative_pct": 0.2828495810642017,
+          "peak_error_m": 0.011111111111112848,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump030.0um",
+          "fit": {
+            "route": "one_set_bump030.0um",
+            "run_id": "one_set_bump030.0um-080.00kmh-0.6000s-500us-eb3942f3",
+            "amplitude_um": 32.05792740459497,
+            "centre_m": 58.49905731542802,
+            "share_rms": 0.02362310081648568,
+            "cost": 0.1696474712244973,
+            "start_centre_m": 58.5,
+            "usable_stations": 304,
+            "observed_peak_share": 0.8356964621810538
+          },
+          "truth_peak_um": 30.0,
+          "estimated_peak_um": 32.05791751278681,
+          "amplitude_relative_pct": 0.41158548091899405,
+          "p95_um": 2.0459371019599324,
+          "worst_bin_relative_pct": 0.4116124943608995,
+          "peak_error_m": 0.0,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump040.0um",
+          "fit": {
+            "route": "one_set_bump040.0um",
+            "run_id": "one_set_bump040.0um-080.00kmh-0.6000s-500us-0f3c1bab",
+            "amplitude_um": 43.3245160327002,
+            "centre_m": 58.47912913764364,
+            "share_rms": 0.03233283256042995,
+            "cost": 0.31780526665976305,
+            "start_centre_m": 58.5,
+            "usable_stations": 304,
+            "observed_peak_share": 0.903301090381752
+          },
+          "truth_peak_um": 40.0,
+          "estimated_peak_um": 43.32448856115248,
+          "amplitude_relative_pct": 0.6649032065400404,
+          "p95_um": 3.380214091460598,
+          "worst_bin_relative_pct": 0.6801421148912298,
+          "peak_error_m": 0.022222222222225696,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump050.0um",
+          "fit": {
+            "route": "one_set_bump050.0um",
+            "run_id": "one_set_bump050.0um-080.00kmh-0.6000s-500us-20295a3d",
+            "amplitude_um": 62.66044600115639,
+            "centre_m": 57.915693523054586,
+            "share_rms": 0.04489525318224178,
+            "cost": 0.6127374625224675,
+            "start_centre_m": 58.5,
+            "usable_stations": 304,
+            "observed_peak_share": 0.9592427677805624
+          },
+          "truth_peak_um": 50.0,
+          "estimated_peak_um": 62.65998913638913,
+          "amplitude_relative_pct": 2.532089200231278,
+          "p95_um": 24.42352978552624,
+          "worst_bin_relative_pct": 4.932614298267282,
+          "peak_error_m": 0.5888888888888886,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": false
+          }
+        },
+        {
+          "route": "one_set_bump060.0um",
+          "fit": {
+            "route": "one_set_bump060.0um",
+            "run_id": "one_set_bump060.0um-080.00kmh-0.6000s-500us-541e67fa",
+            "amplitude_um": 66.13883465720188,
+            "centre_m": 58.46354070824696,
+            "share_rms": 0.051505240002040834,
+            "cost": 0.7666562370760021,
+            "start_centre_m": 58.5,
+            "usable_stations": 289,
+            "observed_peak_share": 0.9773755575885769
+          },
+          "truth_peak_um": 60.0,
+          "estimated_peak_um": 66.13861025365975,
+          "amplitude_relative_pct": 1.2277669314403767,
+          "p95_um": 6.3777316694050805,
+          "worst_bin_relative_pct": 1.283635859884042,
+          "peak_error_m": 0.03333333333333144,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump080.0um",
+          "fit": {
+            "route": "one_set_bump080.0um",
+            "run_id": "one_set_bump080.0um-080.00kmh-0.6000s-500us-9c5248c9",
+            "amplitude_um": 87.5820772080171,
+            "centre_m": 58.52431314143148,
+            "share_rms": 0.07317303875039323,
+            "cost": 1.4617221527908677,
+            "start_centre_m": 58.5,
+            "usable_stations": 273,
+            "observed_peak_share": 0.9790845592728528
+          },
+          "truth_peak_um": 80.0,
+          "estimated_peak_um": 87.58194425538828,
+          "amplitude_relative_pct": 1.5164154416034195,
+          "p95_um": 7.716350855482735,
+          "worst_bin_relative_pct": 1.553024972575662,
+          "peak_error_m": 0.022222222222225696,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump100.0um",
+          "fit": {
+            "route": "one_set_bump100.0um",
+            "run_id": "one_set_bump100.0um-080.00kmh-0.6000s-500us-cad4db6b",
+            "amplitude_um": 221.5813642293999,
+            "centre_m": 57.42601969375021,
+            "share_rms": 0.03825656346096301,
+            "cost": 0.38345393773478487,
+            "start_centre_m": 58.5,
+            "usable_stations": 262,
+            "observed_peak_share": 0.969798519861917
+          },
+          "truth_peak_um": 100.0,
+          "estimated_peak_um": 221.58025472581556,
+          "amplitude_relative_pct": 24.31627284587998,
+          "p95_um": 161.66418663653985,
+          "worst_bin_relative_pct": 32.583944322732165,
+          "peak_error_m": 1.0777777777777757,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": false
+          }
+        },
+        {
+          "route": "one_set_bump120.0um",
+          "fit": {
+            "route": "one_set_bump120.0um",
+            "run_id": "one_set_bump120.0um-080.00kmh-0.6000s-500us-94770b98",
+            "amplitude_um": 235.88866035157133,
+            "centre_m": 58.54109824413112,
+            "share_rms": 0.03472950654718719,
+            "cost": 0.2002190117518456,
+            "start_centre_m": 58.5,
+            "usable_stations": 166,
+            "observed_peak_share": 0.9791827309135921
+          },
+          "truth_peak_um": 120.0,
+          "estimated_peak_um": 235.8877432496505,
+          "amplitude_relative_pct": 23.177732070314267,
+          "p95_um": 115.36081149919487,
+          "worst_bin_relative_pct": 23.206086611621615,
+          "peak_error_m": 0.04444444444444429,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump200.0um",
+          "fit": {
+            "route": "one_set_bump200.0um",
+            "run_id": "one_set_bump200.0um-080.00kmh-0.6000s-500us-28051835",
+            "amplitude_um": 399.99999999999994,
+            "centre_m": 57.41121581580343,
+            "share_rms": 0.034025552898181176,
+            "cost": 0.16671430800387727,
+            "start_centre_m": 58.5,
+            "usable_stations": 144,
+            "observed_peak_share": 0.9793889650410647
+          },
+          "truth_peak_um": 200.0,
+          "estimated_peak_um": 399.99999847735097,
+          "amplitude_relative_pct": 39.99999999999999,
+          "p95_um": 283.5080218322903,
+          "worst_bin_relative_pct": 57.18126915380778,
+          "peak_error_m": 1.0888888888888886,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": false
+          }
+        }
+      ],
+      "passing_all_gates": 5,
+      "passing_absolute": 5,
+      "verdict": "5/9 amplitudes pass all three gates (G-ABS alone: 5/9)"
+    },
+    "multistart": {
+      "description": "multi-start over centre",
+      "amplitudes": [
+        {
+          "route": "one_set_bump020.0um",
+          "fit": {
+            "route": "one_set_bump020.0um",
+            "run_id": "one_set_bump020.0um-080.00kmh-0.6000s-500us-e33b6d65",
+            "amplitude_um": 21.409777519229486,
+            "centre_m": 58.49347299827947,
+            "share_rms": 0.017566520523333965,
+            "cost": 0.09380912356220088,
+            "start_centre_m": 58.79999999999998,
+            "usable_stations": 304,
+            "observed_peak_share": 0.7600776259701524
+          },
+          "truth_peak_um": 20.0,
+          "estimated_peak_um": 21.409621302325128,
+          "amplitude_relative_pct": 0.28195550384589724,
+          "p95_um": 1.4056452304276323,
+          "worst_bin_relative_pct": 0.28284960824363453,
+          "peak_error_m": 0.011111111111112848,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump030.0um",
+          "fit": {
+            "route": "one_set_bump030.0um",
+            "run_id": "one_set_bump030.0um-080.00kmh-0.6000s-500us-eb3942f3",
+            "amplitude_um": 32.05792753834188,
+            "centre_m": 58.49905730670013,
+            "share_rms": 0.023623100816485672,
+            "cost": 0.1696474712244972,
+            "start_centre_m": 58.499999999999986,
+            "usable_stations": 304,
+            "observed_peak_share": 0.8356964621810538
+          },
+          "truth_peak_um": 30.0,
+          "estimated_peak_um": 32.057917646350504,
+          "amplitude_relative_pct": 0.4115855076683758,
+          "p95_um": 2.045937257314281,
+          "worst_bin_relative_pct": 0.4116125215044605,
+          "peak_error_m": 0.0,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump040.0um",
+          "fit": {
+            "route": "one_set_bump040.0um",
+            "run_id": "one_set_bump040.0um-080.00kmh-0.6000s-500us-0f3c1bab",
+            "amplitude_um": 43.324516139993946,
+            "centre_m": 58.479129130841535,
+            "share_rms": 0.032332832560429944,
+            "cost": 0.3178052666597629,
+            "start_centre_m": 58.19999999999999,
+            "usable_stations": 304,
+            "observed_peak_share": 0.903301090381752
+          },
+          "truth_peak_um": 40.0,
+          "estimated_peak_um": 43.324488668722715,
+          "amplitude_relative_pct": 0.6649032279987892,
+          "p95_um": 3.3802142610168935,
+          "worst_bin_relative_pct": 0.6801421453672531,
+          "peak_error_m": 0.022222222222225696,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump050.0um",
+          "fit": {
+            "route": "one_set_bump050.0um",
+            "run_id": "one_set_bump050.0um-080.00kmh-0.6000s-500us-20295a3d",
+            "amplitude_um": 62.660444097716315,
+            "centre_m": 57.91569356911589,
+            "share_rms": 0.044895253182241565,
+            "cost": 0.6127374625224618,
+            "start_centre_m": 59.39999999999998,
+            "usable_stations": 304,
+            "observed_peak_share": 0.9592427677805624
+          },
+          "truth_peak_um": 50.0,
+          "estimated_peak_um": 62.65998722377833,
+          "amplitude_relative_pct": 2.5320888195432634,
+          "p95_um": 24.423527069852458,
+          "worst_bin_relative_pct": 4.932613741707651,
+          "peak_error_m": 0.5888888888888886,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": false
+          }
+        },
+        {
+          "route": "one_set_bump060.0um",
+          "fit": {
+            "route": "one_set_bump060.0um",
+            "run_id": "one_set_bump060.0um-080.00kmh-0.6000s-500us-541e67fa",
+            "amplitude_um": 66.13883495270453,
+            "centre_m": 58.46354069577185,
+            "share_rms": 0.051505240002040806,
+            "cost": 0.7666562370760013,
+            "start_centre_m": 58.499999999999986,
+            "usable_stations": 289,
+            "observed_peak_share": 0.9773755575885769
+          },
+          "truth_peak_um": 60.0,
+          "estimated_peak_um": 66.13861054737029,
+          "amplitude_relative_pct": 1.2277669905409057,
+          "p95_um": 6.3777320840454825,
+          "worst_bin_relative_pct": 1.2836359532233543,
+          "peak_error_m": 0.03333333333333144,
+          "gates": {
+            "G-ABS": true,
+            "G-REL": true,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump080.0um",
+          "fit": {
+            "route": "one_set_bump080.0um",
+            "run_id": "one_set_bump080.0um-080.00kmh-0.6000s-500us-9c5248c9",
+            "amplitude_um": 141.85700580246225,
+            "centre_m": 58.264107137323855,
+            "share_rms": 0.07214034551082624,
+            "cost": 1.4207546399650386,
+            "start_centre_m": 58.19999999999999,
+            "usable_stations": 273,
+            "observed_peak_share": 0.9790845592728528
+          },
+          "truth_peak_um": 80.0,
+          "estimated_peak_um": 141.85668311801584,
+          "amplitude_relative_pct": 12.371401160492452,
+          "p95_um": 64.6848806723913,
+          "worst_bin_relative_pct": 13.02282461467066,
+          "peak_error_m": 0.23333333333333428,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": false
+          }
+        },
+        {
+          "route": "one_set_bump100.0um",
+          "fit": {
+            "route": "one_set_bump100.0um",
+            "run_id": "one_set_bump100.0um-080.00kmh-0.6000s-500us-cad4db6b",
+            "amplitude_um": 221.5813640985897,
+            "centre_m": 57.42601969435148,
+            "share_rms": 0.038256563460963004,
+            "cost": 0.38345393773478464,
+            "start_centre_m": 57.3,
+            "usable_stations": 262,
+            "observed_peak_share": 0.969798519861917
+          },
+          "truth_peak_um": 100.0,
+          "estimated_peak_um": 221.5802545946547,
+          "amplitude_relative_pct": 24.316272819717938,
+          "p95_um": 161.66418648762522,
+          "worst_bin_relative_pct": 32.58394429158556,
+          "peak_error_m": 1.0777777777777757,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": false
+          }
+        },
+        {
+          "route": "one_set_bump120.0um",
+          "fit": {
+            "route": "one_set_bump120.0um",
+            "run_id": "one_set_bump120.0um-080.00kmh-0.6000s-500us-94770b98",
+            "amplitude_um": 235.8381482866473,
+            "centre_m": 58.540341683920715,
+            "share_rms": 0.034729400749981806,
+            "cost": 0.2002177918911709,
+            "start_centre_m": 59.39999999999998,
+            "usable_stations": 166,
+            "observed_peak_share": 0.9791827309135921
+          },
+          "truth_peak_um": 120.0,
+          "estimated_peak_um": 235.83676989499082,
+          "amplitude_relative_pct": 23.16762965732946,
+          "p95_um": 115.29585361017676,
+          "worst_bin_relative_pct": 23.195041217870166,
+          "peak_error_m": 0.04444444444444429,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": true
+          }
+        },
+        {
+          "route": "one_set_bump200.0um",
+          "fit": {
+            "route": "one_set_bump200.0um",
+            "run_id": "one_set_bump200.0um-080.00kmh-0.6000s-500us-28051835",
+            "amplitude_um": 399.99999999999994,
+            "centre_m": 57.41121582231039,
+            "share_rms": 0.03402555289818115,
+            "cost": 0.16671430800387696,
+            "start_centre_m": 57.599999999999994,
+            "usable_stations": 144,
+            "observed_peak_share": 0.9793889650410647
+          },
+          "truth_peak_um": 200.0,
+          "estimated_peak_um": 399.99999847716174,
+          "amplitude_relative_pct": 39.99999999999999,
+          "p95_um": 283.5080213767905,
+          "worst_bin_relative_pct": 57.18126902727134,
+          "peak_error_m": 1.0888888888888886,
+          "gates": {
+            "G-ABS": false,
+            "G-REL": false,
+            "G-LOC": false
+          }
+        }
+      ],
+      "passing_all_gates": 4,
+      "passing_absolute": 4,
+      "verdict": "4/9 amplitudes pass all three gates (G-ABS alone: 4/9)"
+    }
+  },
+  "finding": "The share-only joint fit recovers amplitude and position for amplitudes below about 50 um, and fails above it: the share saturates (1.000 on the 100/200 um runs) so the two parameters stop being identifiable, and multi-start then finds lower-cost but worse answers, which is evidence of model misspecification rather than of a better fit.  Round 260's pointwise assembly managed 0/3; this forward fit manages 5/9 from the nominal start and 4/9 from multi-start."
+}

@@ -2123,6 +2123,39 @@ all of them (<= 0.52 m), and the conclusion is about the measurement: one pass o
 determine the bump amplitude. The ensemble of >= 3 lateral offsets is the mechanism, and its forward
 model must carry both bodies' support compliance.
 
+## Round 254 - the split law measured, and round 253's explanation retracted (M5 step 5)
+
+Added `scripts/s116_support_sink.py`, `scripts/s117_split_law.py`, `docs/SPLIT_LAW_MEASURED_2026-10-31.md`
+and `tests/test_split_law.py`. Round 253 named "the two bodies' support compliance" as the missing physics.
+It was measured first, and it is **wrong**: a `local_compliant` track has one node pair per rail and the
+stock and blade are two bodies on that same node, so they cannot sink differently.  Seated, all eight rails
+sink by identically **-1202.6962 um** (`F/sink = -5.002e7 N/m` against the case's `k_z = 5.0e7`), the span
+across rails is **0.00 um**, and the gap `d = stock - blade` is a difference of two surfaces on one node, so
+the common descent cancels.  The mechanism is retired in the document rather than quietly deleted.
+
+So the law itself was measured: lift or lower the whole blade body and re-seat, with the probe seated at
+**58.0 m** (inside the blade body's 50.578-104.419 m range; the canonical 50.0 m has no blade geometry at all,
+which is why the first attempt returned sigma = 0 for every offset).
+
+  offset (um)  stock (kN)  blade (kN)  sigma   half width (mm)
+      -250.0        0.00       60.20   1.0000       6.000
+      -150.0        6.05       53.86   0.8990       5.750
+       -80.0       37.95       22.16   0.3687       6.472
+       -40.0       55.71        4.45   0.0739       7.468
+       +20.0       60.15        0.00   0.0000       7.468
+
+The split reaches one half at **-97.3 um** of blade raise, the whole dynamic range occupies about **210 um**
+of blade height (steepest 0.00758 per um), and the contact half-width moves **5.750 -> 7.468 mm (1.30x)**
+across it, because the blade's strip is narrower than the stock's.  That is the compression: the bumps under
+test are 50/100/200 um, the law lives in 210 um, and one stiffness per body has to average over a 30 % change
+in the footprint -- which it does by rescaling the height axis (round 253: 50 um read as 102.8, 200 um as
+121.7).  A descriptive two-parameter fit `sigma = 1/(1 + (g/g0)^p)` gives `g0 = 72.6 um`, `p = 6.000`
+(rmse 0.028 in sigma); p = 6 is the measure of how far the real law is from a one-stiffness Hertz law.
+
+Recorded for the next step: the estimator's forward model must carry the **footprint width as a function of
+the split**, not a single `C` per body; and the split law now has to be checked for mileage and speed
+dependence, since the blade's own section narrows towards the tip.
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2306,6 +2339,7 @@ model must carry both bodies' support compliance.
 | [SPEED_2026-10-20.md](SPEED_2026-10-20.md) | 提速：先量再改（2026-10-20） |
 | [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md) | 尖轨降低值的速度谱：40–100 km/h 四次过岔，首载里程只动 5.6 mm |
 | [SPEED_SWEEP_2026-10-28.md](SPEED_SWEEP_2026-10-28.md) | Five drawn speeds: the straight-route amplitude claim is one band wide, not six-of-eight |
+| [SPLIT_LAW_MEASURED_2026-10-31.md](SPLIT_LAW_MEASURED_2026-10-31.md) | Where the amplitude compression actually comes from: the split law, measured |
 | [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |
 | [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |
 | [STAGE_B_SURROGATE_2026-10-21.md](STAGE_B_SURROGATE_2026-10-21.md) | B 阶段：可微代理与保险丝 2026-10-21 |

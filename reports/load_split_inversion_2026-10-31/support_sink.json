@@ -1,0 +1,106 @@
+{
+ "seat_residual_n": 2.74812919087708e-08,
+ "track_kind": "local_compliant",
+ "k_z_n_m": 50000000.0,
+ "rows": [
+  {
+   "rail": "axle1_left",
+   "sink_m": -0.00120269619,
+   "force_n": 60152.9770787844,
+   "implied_stiffness_n_m": -50015105.709102154,
+   "force_over_k_m": 0.001203059541575688
+  },
+  {
+   "rail": "axle2_left",
+   "sink_m": -0.00120269619,
+   "force_n": 60152.9770787844,
+   "implied_stiffness_n_m": -50015105.709102154,
+   "force_over_k_m": 0.001203059541575688
+  },
+  {
+   "rail": "axle3_left",
+   "sink_m": -0.0012026961900000002,
+   "force_n": 60152.977078784104,
+   "implied_stiffness_n_m": -50015105.70910189,
+   "force_over_k_m": 0.0012030595415756821
+  },
+  {
+   "rail": "axle4_left",
+   "sink_m": -0.00120269619,
+   "force_n": 60152.9770787844,
+   "implied_stiffness_n_m": -50015105.709102154,
+   "force_over_k_m": 0.001203059541575688
+  },
+  {
+   "rail": "axle1_right",
+   "sink_m": -0.00120269619,
+   "force_n": 60152.97707878438,
+   "implied_stiffness_n_m": -50015105.70910213,
+   "force_over_k_m": 0.0012030595415756875
+  },
+  {
+   "rail": "axle2_right",
+   "sink_m": -0.00120269619,
+   "force_n": 60152.97707878438,
+   "implied_stiffness_n_m": -50015105.70910213,
+   "force_over_k_m": 0.0012030595415756875
+  },
+  {
+   "rail": "axle3_right",
+   "sink_m": -0.0012026961900000002,
+   "force_n": 60152.97707878409,
+   "implied_stiffness_n_m": -50015105.70910188,
+   "force_over_k_m": 0.001203059541575682
+  },
+  {
+   "rail": "axle4_right",
+   "sink_m": -0.00120269619,
+   "force_n": 60152.97707878438,
+   "implied_stiffness_n_m": -50015105.70910213,
+   "force_over_k_m": 0.0012030595415756875
+  }
+ ],
+ "body_share": [
+  {
+   "rail": "axle1_left",
+   "body": "left:main",
+   "force_n": 60152.9770787844
+  },
+  {
+   "rail": "axle1_right",
+   "body": "stock",
+   "force_n": 60152.97707878438
+  },
+  {
+   "rail": "axle2_left",
+   "body": "left:main",
+   "force_n": 60152.9770787844
+  },
+  {
+   "rail": "axle2_right",
+   "body": "stock",
+   "force_n": 60152.97707878438
+  },
+  {
+   "rail": "axle3_left",
+   "body": "left:main",
+   "force_n": 60152.977078784104
+  },
+  {
+   "rail": "axle3_right",
+   "body": "stock",
+   "force_n": 60152.97707878409
+  },
+  {
+   "rail": "axle4_left",
+   "body": "left:main",
+   "force_n": 60152.9770787844
+  },
+  {
+   "rail": "axle4_right",
+   "body": "stock",
+   "force_n": 60152.97707878438
+  }
+ ],
+ "sink_span_m": 2.168404344971009e-19
+}

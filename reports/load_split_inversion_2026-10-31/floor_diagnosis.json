@@ -1,0 +1,57 @@
+{
+  "curve_station_m": 58.0,
+  "runs": [
+    {
+      "route": "one_set_twopeak",
+      "run_id": "one_set_twopeak-080.00kmh-0.6000s-500us-d7df6f37",
+      "usable": 469,
+      "curve_u_range": [
+        -200.0,
+        250.0
+      ],
+      "u_min": -110.47162856409,
+      "u_max": 57.797355997798526,
+      "clamped_low": 0,
+      "clamped_high": 0,
+      "clamped_fraction": 0.0,
+      "floor_all": 0.013317260948959863,
+      "floor_unclamped": 0.013317260948959863,
+      "unclamped": 469
+    },
+    {
+      "route": "one_set_threepeak_obs",
+      "run_id": "one_set_threepeak_obs-080.00kmh-0.6000s-500us-92ddca24",
+      "usable": 469,
+      "curve_u_range": [
+        -200.0,
+        250.0
+      ],
+      "u_min": -103.05180757581917,
+      "u_max": 95.45035147399565,
+      "clamped_low": 0,
+      "clamped_high": 0,
+      "clamped_fraction": 0.0,
+      "floor_all": 0.04267270264244982,
+      "floor_unclamped": 0.04267270264244982,
+      "unclamped": 469
+    },
+    {
+      "route": "one_set_random",
+      "run_id": "one_set_random-080.00kmh-0.6000s-500us-2f516e4b",
+      "usable": 381,
+      "curve_u_range": [
+        -200.0,
+        250.0
+      ],
+      "u_min": -121.82442757273472,
+      "u_max": 79.1363776358677,
+      "clamped_low": 0,
+      "clamped_high": 0,
+      "clamped_fraction": 0.0,
+      "floor_all": 0.13135493661166883,
+      "floor_unclamped": 0.13135493661166883,
+      "unclamped": 381
+    }
+  ],
+  "verdict": "the floor is not a range artefact: the truth stays inside the measured u-range and the law still misrepresents it, so the composition problem is real"
+}

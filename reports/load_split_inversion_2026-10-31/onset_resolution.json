@@ -1,0 +1,84 @@
+{
+ "speed_kmh": 80.0,
+ "duration_s": 0.6,
+ "centre_m": 58.5,
+ "sigma_m": 1.2,
+ "onset_share": 0.95,
+ "grid_m": 0.011111111111111112,
+ "rows": [
+  {
+   "amplitude_um": 20.0,
+   "status": "never saturated",
+   "run_id": "one_set_bump020.0um-080.00kmh-0.6000s-500us-e33b6d65"
+  },
+  {
+   "amplitude_um": 30.0,
+   "status": "never saturated",
+   "run_id": "one_set_bump030.0um-080.00kmh-0.6000s-500us-eb3942f3"
+  },
+  {
+   "amplitude_um": 40.0,
+   "status": "never saturated",
+   "run_id": "one_set_bump040.0um-080.00kmh-0.6000s-500us-0f3c1bab"
+  },
+  {
+   "amplitude_um": 60.0,
+   "status": "ok",
+   "run_id": "one_set_bump060.0um-080.00kmh-0.6000s-500us-541e67fa",
+   "onset_station_m": 58.422222222222224,
+   "peak_station_m": 58.51111111111111,
+   "share_max": 0.9951075436749937
+  },
+  {
+   "amplitude_um": 80.0,
+   "status": "ok",
+   "run_id": "one_set_bump080.0um-080.00kmh-0.6000s-500us-9c5248c9",
+   "onset_station_m": 58.32222222222222,
+   "peak_station_m": 58.36666666666667,
+   "share_max": 1.0
+  },
+  {
+   "amplitude_um": 120.0,
+   "status": "ok",
+   "run_id": "one_set_bump120.0um-080.00kmh-0.6000s-500us-94770b98",
+   "onset_station_m": 58.17777777777778,
+   "peak_station_m": 58.233333333333334,
+   "share_max": 1.0
+  },
+  {
+   "amplitude_um": 50.0,
+   "status": "ok",
+   "run_id": "one_set_bump050.0um-080.00kmh-0.6000s-500us-20295a3d",
+   "onset_station_m": 58.5,
+   "peak_station_m": 58.51111111111111,
+   "share_max": 0.9592427677805624
+  },
+  {
+   "amplitude_um": 100.0,
+   "status": "ok",
+   "run_id": "one_set_bump100.0um-080.00kmh-0.6000s-500us-cad4db6b",
+   "onset_station_m": 58.25555555555555,
+   "peak_station_m": 58.3,
+   "share_max": 1.0
+  },
+  {
+   "amplitude_um": 200.0,
+   "status": "ok",
+   "run_id": "one_set_bump200.0um-080.00kmh-0.6000s-500us-28051835",
+   "onset_station_m": 57.98888888888889,
+   "peak_station_m": 58.03333333333333,
+   "share_max": 1.0
+  }
+ ],
+ "deltas_m": [
+  -0.07777777777777573,
+  -0.10000000000000142,
+  -0.06666666666666998,
+  -0.07777777777777573,
+  -0.18888888888889
+ ],
+ "monotone": true,
+ "resolvable": true,
+ "collapsed": false,
+ "verdict": "the station carries the amplitude at this resolution"
+}

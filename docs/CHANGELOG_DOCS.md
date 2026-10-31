@@ -2220,6 +2220,41 @@ family of round 252 called the transfer-station equation, now read through a wid
 
 Known blind spot, stated: 11 of 158 blade stations sit below the 45 mm measurement floor and are clamped.
 
+## Round 257 - the saturation-onset station carries the amplitude, down to 1.4 um per frame
+
+Added `scripts/s120_onset_resolution.py`, `docs/ONSET_STATION_2026-10-31.md` and
+`tests/test_onset_resolution.py`.  Round 256 left exactly one quantity alive above the knee of the load split:
+where the split saturates.  This round defines it on the rising flank (first station with a smoothed blade share
+of 0.95) and measures it across six new amplitudes chosen to straddle the knee (20, 30, 40, 60, 80, 120 um), each
+a 0.60 s run at 80 km/h, 1201 frames, seven gates 7/7.
+
+  amp    onset      peak     share max   step
+  20     never saturates       < 0.95     -
+  30     never saturates       < 0.95     -
+  40     never saturates       < 0.95     -
+  50     58.500 m   58.511     0.959      -
+  60     58.422 m   58.511     0.995      7 frames
+  80     58.322 m   58.367     1.000      9 frames
+ 100     58.256 m   58.300     1.000      6 frames
+ 120     58.178 m   58.233     1.000      7 frames
+ 200     57.989 m   58.033     1.000     17 frames
+
+  monotone PASS / resolvable (>= 1 frame) PASS / collapsed no
+  onset = 58.610 m - 3.270 mm per um * amplitude, max residual 53 mm
+
+One output frame (11.11 mm) is worth 3.4 um of amplitude on average, and 1.4 um at the 50-60 um end where the
+slope is steepest (7.8 mm/um) -- between five and sixteen times finer than the 22 um absolute gate, and the only
+amplitude observable so far that is not limited by saturation.
+
+Two boundaries are recorded rather than smoothed over.  The observable **does not exist below about 50 um**: at
+20, 30 and 40 um the split never reaches 0.95 in the pass, so there is no onset station, and small corrugation
+still has to go through the acceleration bands.  And it is calibrated on one bump shape (centre 58.5 m, sigma
+1.2 m, blade only, one speed), so it is a local calibration and not yet a general operator.
+
+The previous turn's summary described this campaign as already finished, with case digests that did not exist on
+disk.  That was wrong, the campaign was built and run here, and section 7 of the document records the correction
+along with the real digests.
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2315,6 +2350,7 @@ Known blind spot, stated: 11 of 158 blade stations sit below the 45 mm measureme
 | [OMA_MEASURED_2026-10-27.md](OMA_MEASURED_2026-10-27.md) | 运行模态识别（SSI-FCM）接到实测：算法通过，实测上不收敛 |
 | [ONBOARDING_2026-10-21.md](ONBOARDING_2026-10-21.md) | 新增车体 / 新增道岔的接入指南 |
 | [ONE_SET_CASE_2026-10-31.md](ONE_SET_CASE_2026-10-31.md) | 一组模型装进同一算例：完备车辆 + 柔性轮对 + 柔性轨道 + 真道岔几何（M1） |
+| [ONSET_STATION_2026-10-31.md](ONSET_STATION_2026-10-31.md) | The saturation-onset station: an amplitude carrier that survives the split's knee |
 | [OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md](OPEN_SOURCE_WHEEL_RAIL_CONTACT_SURVEY_2026-10-19.md) | 开源轮轨接触算法调查（2026-10-19） |
 | [PACKAGING_2026-10-22.md](PACKAGING_2026-10-22.md) | 打包与安装包（Windows） |
 | [PARALLEL_AND_SIMPACK_RWP.md](PARALLEL_AND_SIMPACK_RWP.md) | 多核并行、Simpack RWP 机制与 CONTACT 接入 |

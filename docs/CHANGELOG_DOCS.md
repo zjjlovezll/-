@@ -1,5 +1,23 @@
 ## 第 291 轮：起步瞬态不是噪声，是起点（onset 与时间锁定）
 
+## 第 292 轮 2026-11-01 60 km/h 的提前量是接触制度，不是算子
+
+第 291 轮把跨速度失败钉在时间上（首次承载 0.817–0.819 s），但 60 km/h 在 54.0 m 就让尖轨承担 42 %，
+而那处尖轨画出来的冠低 2.474 mm —— 踏面转移不可能。本轮不跑新动力学，只问那一刻在哪个制度里。
+
+- 静座椅 54.0 m：尖轨 **0.000 kN**（残差 2.93e-08 N）；
+- 同一站位滚动态：stock 33.660 kN（贯入 46.87 µm，`lever_y +750977.6`）+ blade **24.386 kN**
+  （贯入 38.91 µm，`lever_y +752229.0`）；
+- 两斑相距 **1.25 mm**，却要求轮面在之间下落 **2.47 mm**（斜率 **1.97**）⇒ **轮缘根**，不是踏面。
+
+因此 60 km/h 的"尖轨份额"是轮缘根碰薄片，**不能**当踏面载荷转移去反演幅值；第 290/291 轮的
+"幅值散布 154.76 %"度量的是制度差。100 km/h 全程零载、单斑 7.47 mm 也由此解释（0.8 s 内进近不够）。
+
+交付：`scripts/s148_regime_probe.py`、`tests/test_regime_probe.py`（4 项）、
+`docs/CONTACT_REGIME_2026-11-01.md`、报告 `reports/load_split_inversion_2026-10-31/regime_probe.json`。
+明确不说：算子随速度变化（没测）、轮缘根形貌已确认（轮坐标轮面未打印，报告 `not_measured` 点名）、幅值。
+
+
 - 预注册的修法（起跑点前移 10 m、只分析 `t ≥ 0.45 s`）**被判决无效**：60 / 80 / 100 km/h 的幅值散布 **154.76 %**，
   `G-AMP` 在 80 km/h 也**不过**（9.51 %，第 290 轮那次"过"来自 500 µm 地板分母）。
 - 但机理钉死一半：尖轨首次承载在 60 与 80 km/h 都是 **0.817–0.819 s**，而站位差 **4.5 m**（53.65 / 58.16 m）；
@@ -2667,6 +2685,7 @@ along with the real digests.
 | [CONTACT_NATIVE_INTEGRATION_2026-10-19.md](CONTACT_NATIVE_INTEGRATION_2026-10-19.md) | CONTACT 原生接触求解接入记录（2026-10-19） |
 | [CONTACT_POLICY_ARCHITECTURE_2026-10-20.md](CONTACT_POLICY_ARCHITECTURE_2026-10-20.md) | 接触策略层：可插拔接口、首轮 A/B 结果与创新路线（2026-10-20） |
 | [CONTACT_REFERENCE_THREE_WAY_2026-10-21.md](CONTACT_REFERENCE_THREE_WAY_2026-10-21.md) | 三方对拍：解析真值 / 45 µm 网格 / 分段样条 2026-10-21 |
+| [CONTACT_REGIME_2026-11-01.md](CONTACT_REGIME_2026-11-01.md) | 60 km/h 那 4 米提前量：换了一个接触制度，不是算子变差（2026-11-01，第 292 轮） |
 | [CONTACT_SEARCH_LOCAL_2026-10-19.md](CONTACT_SEARCH_LOCAL_2026-10-19.md) | 轮轨接触搜索：型面表化 + 局部连续搜索（2026-10-19） |
 | [CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md) | 在连续的 PRR 文件里模拟波磨：表示、密度与两个坑 |
 | [COVERAGE_HELDOUT_2026-10-28.md](COVERAGE_HELDOUT_2026-10-28.md) | Held-out coverage, and why the measured verdict had to be made reproducible first |

@@ -1,0 +1,42 @@
+{
+  "crown_step_m": 0.0024744,
+  "dynamic": {
+    "bodies": {
+      "blade": {
+        "force_n": 24385.57734299006,
+        "lever_y_m": 0.7522290255795214,
+        "penetration_m": 3.891384568438283e-05
+      },
+      "stock": {
+        "force_n": 33660.18841270746,
+        "lever_y_m": 0.750977646203847,
+        "penetration_m": 4.6867287275617855e-05
+      }
+    },
+    "rail_force_n": 58045.76575569752,
+    "run_id": "one_set_x30-060.00kmh-1.3500s-500us-019747f6",
+    "station_m": 54.0,
+    "wheelset_y_m": 0.0014409878073114069,
+    "wheelset_z_m": -0.001448749844477828
+  },
+  "geometry": {
+    "lateral_separation_m": 0.001251379375674433,
+    "slope": 1.9709822667322365,
+    "tread_could_supply": false,
+    "wheel_surface_drop_m": 0.0024664465584087647
+  },
+  "not_measured": "the wheel surface at the two contact ordinates in wheel-local coordinates",
+  "regime": "flange_root",
+  "speed_kmh": 60.0,
+  "static": {
+    "blade_n": 0.0,
+    "bodies_n": {
+      "blade": 0.0,
+      "stock": 60152.977078785625
+    },
+    "rail_force_n": 60152.977078785625,
+    "residual_n": 2.9343937058001757e-08
+  },
+  "station_m": 54.0,
+  "verdict": "static and dynamic disagree at the same station: the blade is idle when seated and loaded when rolling, and the two contacts demand a 2.47 mm wheel drop over 1.25 mm.  The 60 km/h blade load is a flange_root contact, so its share is not a tread transfer and cannot carry the amplitude"
+}

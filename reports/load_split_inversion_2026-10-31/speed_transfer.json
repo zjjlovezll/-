@@ -1,0 +1,138 @@
+{
+  "model": {
+    "width_m": 1.2,
+    "fit_window_m": [
+      55.5,
+      61.5
+    ],
+    "share_bounds": [
+      0.02,
+      0.98
+    ],
+    "truth_um": 60.0,
+    "bump_centre_m": 58.5
+  },
+  "gates": {
+    "G-ABS": 22.0,
+    "G-REL": 2.0,
+    "G-LOC": 0.2,
+    "G-AMP": 2.0
+  },
+  "self_check_80": {
+    "archived": {
+      "amplitude_um": 66.1,
+      "centre_m": 58.464,
+      "p95_um": 6.38
+    },
+    "reproduced": true
+  },
+  "rows": [
+    {
+      "speed_kmh": 80.0,
+      "run_id": "one_set_bump060.0um-080.00kmh-0.6000s-500us-541e67fa",
+      "amplitude_um": 66.14,
+      "centre_m": 58.4635,
+      "share_rms": 0.05151,
+      "usable_stations": 289,
+      "truth_peak_um": 60.0,
+      "estimated_peak_um": 66.1386,
+      "amplitude_relative_pct": 10.2314,
+      "p95_um": 6.3777,
+      "worst_bin_relative_pct": 1.2836,
+      "peak_error_m": 0.0333,
+      "amplitude_relative_pct_floor500": 1.2278,
+      "gates": {
+        "G-ABS": true,
+        "G-REL": true,
+        "G-LOC": true,
+        "G-AMP": false
+      },
+      "passing": false
+    },
+    {
+      "speed_kmh": 60.0,
+      "run_id": "one_set_bump060.0um-060.00kmh-0.6000s-500us-541e67fa",
+      "amplitude_um": 75.12,
+      "centre_m": 56.1522,
+      "share_rms": 0.05847,
+      "usable_stations": 443,
+      "truth_peak_um": 60.0,
+      "estimated_peak_um": 75.1219,
+      "amplitude_relative_pct": 25.2034,
+      "p95_um": 66.5908,
+      "worst_bin_relative_pct": 13.5583,
+      "peak_error_m": 2.35,
+      "amplitude_relative_pct_floor500": 3.0244,
+      "gates": {
+        "G-ABS": false,
+        "G-REL": false,
+        "G-LOC": false,
+        "G-AMP": false
+      },
+      "passing": false
+    },
+    {
+      "speed_kmh": 100.0,
+      "run_id": "one_set_bump060.0um-100.00kmh-0.6000s-500us-541e67fa",
+      "amplitude_um": 68.97,
+      "centre_m": 60.5274,
+      "share_rms": 0.08789,
+      "usable_stations": 82,
+      "truth_peak_um": 60.0,
+      "estimated_peak_um": 68.9708,
+      "amplitude_relative_pct": 14.9513,
+      "p95_um": 57.1815,
+      "worst_bin_relative_pct": 11.5413,
+      "peak_error_m": 2.0278,
+      "amplitude_relative_pct_floor500": 1.7942,
+      "gates": {
+        "G-ABS": false,
+        "G-REL": false,
+        "G-LOC": false,
+        "G-AMP": false
+      },
+      "passing": false
+    }
+  ],
+  "transitions": [
+    {
+      "speed_kmh": 80.0,
+      "level": 0.05,
+      "station_m": 58.1556,
+      "time_s": 0.367
+    },
+    {
+      "speed_kmh": 80.0,
+      "level": 0.5,
+      "station_m": 58.4222,
+      "time_s": 0.379
+    },
+    {
+      "speed_kmh": 60.0,
+      "level": 0.05,
+      "station_m": 56.15,
+      "time_s": 0.369
+    },
+    {
+      "speed_kmh": 60.0,
+      "level": 0.5,
+      "station_m": 56.3167,
+      "time_s": 0.379
+    },
+    {
+      "speed_kmh": 100.0,
+      "level": 0.05,
+      "station_m": 60.1944,
+      "time_s": 0.367
+    },
+    {
+      "speed_kmh": 100.0,
+      "level": 0.5,
+      "station_m": 60.5278,
+      "time_s": 0.379
+    }
+  ],
+  "transfers": false,
+  "amplitude_spread_pct": 12.815,
+  "verdict": "the inversion does not carry across speed: the operating point or the law is speed dependent"
+}

@@ -1,3 +1,13 @@
+## 第 290 轮：换速度反演不成立，而原因是量出来的——工作点锚在时间不在站位
+
+* 问题：251–286 轮所有幅值只在 80 km/h 上标定。本轮用同一条实测律、同一个单高斯模型，在 60 与 100 km/h 上各用**该速度自己的**无凸起趟反解 `u0(s)`，看能不能把 60 µm 鼓包找回来。
+* 自检先行：本地拟合路径在 80 km/h 上复现存档数 **A 66.1 µm / 中心 58.464 m / p95 6.38 µm**（逐位相同）⇒ 60/100 那两行说的是速度，不是重写。
+* 读数：80 km/h **p95 6.38 µm / 位置 0.033 m**（G-ABS/G-REL/G-LOC 过）；**60 km/h p95 66.59 µm / 位置 2.350 m**、**100 km/h p95 57.18 µm / 位置 2.028 m**（全门失败）；三速度幅值散布 12.81 %。
+* 机制（零新仿真）：无凸起趟尖轨首次承载 —— 60/80/100 km/h 的**时间**都是 **0.367 s（≥5 %）/0.379 s（≥50 %）**，而**站位**是 56.15 / 58.16 / 60.19 m（差 **4.0 m**）⇒ 工作点 `u0(s)` 锚在起步瞬态上，被车速平移；60 km/h 上份额在 58–60 m 平台在 **0.704** 而不到 1.000。
+* 口径更正：第 271 轮报的「1.23 %」用的是 `max(|真值|, 500 µm)` 分母；按真值 60 µm 分母，同一个 66.1 µm 是 **10.23 %** —— 同一批数据两种口径差 8 倍，**80 km/h 的幅值门其实也没过**。两数并列写入报告与测试。
+* `tests/test_speed_transfer.py` **7 项**（门可分离性：超读只失败 G-AMP、平移只失败 G-LOC；`plan()` 四条；无归档速度必须 `SystemExit`；**瞬态时间恒定而站位差 >1.5 m**；报告钉住 `transfers False` 与 10.23 %/1.23 % 两个分母）。
+* 下一刀：起跑点提前到 30 m、窗口取 `t ≥ 0.45 s`，判据不变；不过则"带面反演只能单速度"即为结论。
+
 ## 第 289 轮（M9 第四件）：让库随包走——D-WHEEL 由 FAIL 转 PASS
 
 * 三处改动：新增 `setup.py` 的 `build_py`（`super().run()` 后把 `<repo>/vehicles` 复制进 `build_lib/velch/_internal/vehicles`，库不在就 `SystemExit`）；`vehicle_db._root()` **先看** `<package>/_internal/vehicles`（源码树无此目录 ⇒ 原来"往上找仓库"的路径逐位不变）；`.gitignore` 忽略 `src/velch/_internal/`。不搬 8.6 MB 副本进 `src/`，只在构建期复制（与 `build/` 同性质）。
@@ -2804,6 +2814,7 @@ along with the real digests.
 | [SPEED_2026-10-20.md](SPEED_2026-10-20.md) | 提速：先量再改（2026-10-20） |
 | [SPEED_CAMPAIGN_BLADE_2026-10-31.md](SPEED_CAMPAIGN_BLADE_2026-10-31.md) | 尖轨降低值的速度谱：40–100 km/h 四次过岔，首载里程只动 5.6 mm |
 | [SPEED_SWEEP_2026-10-28.md](SPEED_SWEEP_2026-10-28.md) | Five drawn speeds: the straight-route amplitude claim is one band wide, not six-of-eight |
+| [SPEED_TRANSFER_2026-11-01.md](SPEED_TRANSFER_2026-11-01.md) | 换一个速度，反演还成立吗？不成立——而原因是量出来的（2026-11-01，第 290 轮） |
 | [SPLIT_LAW_MEASURED_2026-10-31.md](SPLIT_LAW_MEASURED_2026-10-31.md) | Where the amplitude compression actually comes from: the split law, measured |
 | [SPLIT_LAW_VS_MILEAGE_2026-10-31.md](SPLIT_LAW_VS_MILEAGE_2026-10-31.md) | Does the split law collapse? Measured across mileage, with a self-corrected verdict |
 | [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |

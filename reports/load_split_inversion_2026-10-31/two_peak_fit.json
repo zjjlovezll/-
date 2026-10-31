@@ -1,0 +1,54 @@
+{
+  "route": "one_set_twopeak",
+  "run_id": "one_set_twopeak-080.00kmh-0.6000s-500us-d7df6f37",
+  "peaks_true": [
+    [
+      57.6,
+      50.0
+    ],
+    [
+      59.4,
+      30.0
+    ]
+  ],
+  "width_m_prior": 0.35,
+  "fit_window_m": [
+    55.5,
+    61.5
+  ],
+  "params": {
+    "amplitude_a": 52.237125125738196,
+    "centre_a": 57.61131101850664,
+    "amplitude_b": 31.973265635745403,
+    "centre_b": 59.40361786506264
+  },
+  "per_peak": [
+    {
+      "centre_true_m": 57.6,
+      "centre_fit_m": 57.61131101850664,
+      "location_error_m": 0.011311018506638959,
+      "amplitude_true_um": 50.0,
+      "amplitude_fit_um": 52.237125125738196,
+      "amplitude_relative_pct": 0.44742502514763915
+    },
+    {
+      "centre_true_m": 59.4,
+      "centre_fit_m": 59.40361786506264,
+      "location_error_m": 0.0036178650626439435,
+      "amplitude_true_um": 30.0,
+      "amplitude_fit_um": 31.973265635745403,
+      "amplitude_relative_pct": 0.3946531271490806
+    }
+  ],
+  "separation_m": 1.7923068465560021,
+  "p95_um": 2.629260864810332,
+  "worst_bin_relative_pct": 0.5408954507807835,
+  "gates": {
+    "G-ABS": true,
+    "G-LOC": true,
+    "G-AMP": true,
+    "G-SEP": true
+  },
+  "verdict": "both peaks are recovered and the profile clears the absolute gate",
+  "starts": 9
+}

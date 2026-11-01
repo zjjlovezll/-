@@ -1,3 +1,13 @@
+## 第 311 轮 — 平稳性审计：63 个归档、61 可引用、2 隔离
+
+- `scripts/s164_stationarity_audit.py`：对每个有 `series.npz` 的归档做一条**预注册**检验 `stationary ⇔ 八轨法向力 std < 5 kN`，附 `modal_decay`（模态块起点/末点范数比，诊断而非门）与 `gates_all_true`；报告 `reports/load_split_inversion_2026-10-31/stationarity_audit.json`。
+- 结果：**63 个归档 / 61 平稳 / 2 隔离**，被隔离的正是第 310 轮撤回的两趟 60 km/h（std 34.75 kN、模态衰减 0.748）；而且这两趟正是全部"七门全过"却非平稳的归档，两张清单重合。
+- **带门数字不受撤回影响**：80/100 km/h 的 bump、`threepeak`、`random`、`shape`（四）、`slope`（四）、`lat_y`（五）全部平稳（0.20–0.80 kN）⇒ 第 303 轮四门仍可引用。
+- `s156_gate_page.py` 改为按 **run_id** 向审计提问（`_run_id` 走 `s113_profile_inference._index_rows()`、`_stationary_run`、`_stationary(speed, route, duration)`，缺审计回落第 310 轮的按速度报告）；行内新增 `stationary_bump` 与 `gates_quotable`，`verdict()` 报每个速度的 `gates_quotable`。
+- 记录而非隐藏：`one_set_x46_bump060.0um-100.00kmh-0.3300s` 力静（0.72 kN）但模态块在**长**（2.164×），列 `unsettled_modal`；0.33 s 短于任何模态时间常数，故不把这一列当门。
+- 坑：campaign 的 route 串（`one_set_x46_bump060.0um`）与归档 `meta["route"]`（`one_set_bump060.0um`）不是同一文本 ⇒ 键必须用 `run_id`，否则静默落空。
+- `tests/test_stationarity_audit.py` 5 项（63/61/2 与隔离清单、带门归档全平稳、按 route+speed 取最长档、判据两侧与 5 kN 边界的拒绝力、缺档行不得可引用）；文档 `docs/STATIONARITY_AUDIT_2026-11-01.md`（八节）。
+
 ## 第 310 轮 — 60 km/h 那一趟不是一次测量：它起步就在振
 
 为给最后两个候选（轨体横向柔度、份额阈值口径）建探针时，撞到更基础的问题：**60 km/h 的归档从来没有静下来**。
@@ -3274,6 +3284,7 @@ along with the real digests.
 | [STAGE2_MODAL_2026-10-21.md](STAGE2_MODAL_2026-10-21.md) | 阶段②：钢轨模态扩阶（60 → 320 阶）对接触力频谱的影响 |
 | [STAGE3_EFFICIENCY_2026-10-21.md](STAGE3_EFFICIENCY_2026-10-21.md) | 阶段③：与 SDITT 的效率对标 |
 | [STAGE_B_SURROGATE_2026-10-21.md](STAGE_B_SURROGATE_2026-10-21.md) | B 阶段：可微代理与保险丝 2026-10-21 |
+| [STATIONARITY_AUDIT_2026-11-01.md](STATIONARITY_AUDIT_2026-11-01.md) | Stationarity audit: which archived runs may be quoted |
 | [STRAIGHT_BLADE_SEAT_2026-10-29.md](STRAIGHT_BLADE_SEAT_2026-10-29.md) | 直向尖轨降低值反演：静平衡能坐住，时程走不出 53.74 m |
 | [STRAIGHT_LATERAL_B047_2026-10-29.md](STRAIGHT_LATERAL_B047_2026-10-29.md) | 直向横向：起点偏移是零，漂移是 B047（横向定位刚度 ~10³ 倍） |
 | [STRAIGHT_PAIR_2026-10-29.md](STRAIGHT_PAIR_2026-10-29.md) | 直向刚性算例：四个缺陷，一段 10 m 的干净运行 |

@@ -19,6 +19,8 @@
         "0.10": 0.31700000000000017
       },
       "stationary": false,
+      "stationary_bump": false,
+      "gates_quotable": false,
       "reason": "null route archived; the bump route is missing, and the four synthetic gates are measured on it (s152.fit loads route index 1); and round 310 found the rail load never settles, so its physical column is withdrawn"
     },
     "80": {
@@ -63,6 +65,8 @@
       },
       "bump_available": true,
       "stationary": true,
+      "stationary_bump": true,
+      "gates_quotable": true,
       "physical_error_m": {
         "0.01": 0.389222222222223,
         "0.02": 0.4003333333333359,
@@ -118,6 +122,8 @@
       },
       "bump_available": true,
       "stationary": true,
+      "stationary_bump": true,
+      "gates_quotable": true,
       "physical_error_m": {
         "0.01": 0.3781111111111173,
         "0.02": 0.392000000000003,
@@ -159,7 +165,12 @@
     ],
     "not_stationary": [
       "60"
-    ]
+    ],
+    "gates_quotable": {
+      "60": false,
+      "80": true,
+      "100": true
+    }
   },
   "limits": {
     "G-ABS": 22.0,

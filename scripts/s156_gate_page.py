@@ -128,9 +128,43 @@ STATIONARITY = (pathlib.Path(__file__).resolve().parent.parent
 MAX_STATIONARY_STD_KN = 5.0
 
 
-def _stationary(speed_kmh: float) -> bool | None:
-    """Whether the archived null run holds its load; ``None`` when round 310's report is absent."""
+#: Round 311's audit answers the question per archived run, which is what the gates actually read.
+AUDIT = (pathlib.Path(__file__).resolve().parent.parent
+         / "reports" / "load_split_inversion_2026-10-31" / "stationarity_audit.json")
 
+
+def _run_id(route: str, speed_kmh: float, duration_s: float) -> str | None:
+    import s113_profile_inversion as base
+
+    for row in base._index_rows():
+        if (row.get("route") == route and abs(float(row.get("speed_kmh", -1.0)) - speed_kmh) < 1e-6
+                and abs(float(row.get("duration_s", -1.0)) - duration_s) < 1e-9):
+            return row.get("run_id")
+    return None
+
+
+def _stationary_run(run_id: str | None) -> bool | None:
+    if not run_id or not AUDIT.is_file():
+        return None
+    report = json.loads(AUDIT.read_text(encoding="utf-8"))
+    for row in report.get("rows", []):
+        if row["run_id"] == run_id:
+            return bool(row["stationary"])
+    return None
+
+
+def _stationary(speed_kmh: float, route: str | None = None, duration_s: float | None = None) -> bool | None:
+    """Whether the run that answers ``route`` holds its load.
+
+    Prefers round 311's per-run audit -- because the gates read the bump run while the physical column reads the
+    null one, and the two can differ (they do at 60 km/h).  Falls back to round 310's per-speed report when the
+    audit is absent, so a checkout without the newer report still flags the slow row.
+    """
+
+    if route is not None and duration_s is not None:
+        answer = _stationary_run(_run_id(route, speed_kmh, duration_s))
+        if answer is not None:
+            return answer
     if not STATIONARITY.is_file():
         return None
     report = json.loads(STATIONARITY.read_text(encoding="utf-8"))
@@ -161,7 +195,9 @@ def measure() -> dict:
             table[f"{speed:g}"] = {"status": "pending", "reason": "no archive at this duration yet"}
             continue
         null_scan = engage_scan(speed, "null")
-        stationary = _stationary(speed)
+        duration = _runs(speed)[2]
+        stationary = _stationary(speed, null_route, duration)
+        stationary_bump = _stationary(speed, bump_route, duration)
         physical = {key: (None if value is None else value - GEOMETRY_TOUCH_M)
                     for key, value in null_scan["by_threshold"].items()}
         if not _route_archived(bump_route, speed):
@@ -174,12 +210,16 @@ def measure() -> dict:
                 "engage": null_scan,
                 "physical_error_m": physical,
                 "stationary": stationary,
+                "stationary_bump": stationary_bump,
+                "gates_quotable": False,
                 "reason": note,
             }
             continue
         bump_scan = engage_scan(speed, "bump")
         row = {"status": "measured", "gates": gates(speed), "engage": null_scan,
-               "engage_bump": bump_scan, "bump_available": True, "stationary": stationary}
+               "engage_bump": bump_scan, "bump_available": True, "stationary": stationary,
+               "stationary_bump": stationary_bump,
+               "gates_quotable": bool(stationary is not False and stationary_bump is not False)}
         row["physical_error_m"] = physical
         row["bump_shift_m"] = {
             key: (None if (null_scan["by_threshold"][key] is None or bump_scan["by_threshold"][key] is None)
@@ -206,6 +246,7 @@ def verdict(table: dict) -> dict:
         "pending": [key for key, row in table.items() if row.get("status") == "pending"],
         "partial": [key for key, row in table.items() if row.get("status") == "partial"],
         "not_stationary": [key for key, row in table.items() if row.get("stationary") is False],
+        "gates_quotable": {key: row.get("gates_quotable") for key, row in table.items()},
     }
 
 

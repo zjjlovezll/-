@@ -1074,3 +1074,18 @@ rms **0.0165（两峰）→ 0.0317 / 0.0385（三峰）**；K=5 的残差 0.037 
 | 结果 | 三速度表 → **两速度表（80、100 km/h）**；上门页带 `stationary: false` 与 `not_stationary` |
 | 不能说 | 不能说 60 km/h 偏移是 0；不能说 60 一定不稳定（需另跑 ≥1.6 s ≈ 7 h）；不能把原因锁死在 `scales=0.8` |
 | 测试 | `tests/test_engage_chatter.py` **5 项**（含"平稳的运行不得被标记"的反向守卫） |
+
+## 七十一、第 311 轮：全档案平稳性审计（哪些数可以引用）
+
+| 项 | 结果 |
+|---|---|
+| 判据（跑前写死） | `stationary ⇔ 八轨法向力 std < 5 kN`；`modal_decay` 只作诊断 |
+| 归档 | **63** 个有 `series.npz` 的 run |
+| 平稳 | **61** |
+| 隔离 | **2**——`one_set_x46-060.00kmh-0.0200s` 与 `-0.5400s`（std 34.75 kN、模态 0.748），即第 310 轮撤回的那两趟 |
+| 带门归档 | 80/100 bump（0.25/0.32/0.72 kN）、`threepeak`（0.26/0.28）、`random`（0.24）、`shape`（0.31–0.35）、`slope`（0.22–0.80）、`lat_y`（0.20）**全部平稳** ⇒ 第 303 轮四门不受影响 |
+| 观察项 | `one_set_x46_bump060.0um-100`：力静 0.72 kN 但 `modal_decay 2.164`（在长），列 `unsettled_modal` |
+| 门页接线 | 按 `run_id` 查审计；`stationary`（null 路）/`stationary_bump`/`gates_quotable`；缺审计回落 s163 |
+| 坑 | campaign route 串与归档 `meta["route"]` 不同（`one_set_x46_bump060.0um` 对 `one_set_bump060.0um`）⇒ 键用 `run_id` |
+| 仍未做 | 60 km/h 需重跑 ≥1.6 s 且过平稳性前置门才恢复第三行；100 km/h 的 `modal_decay 2.164` 需更长窗口判它是否漂 |
+

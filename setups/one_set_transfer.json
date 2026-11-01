@@ -1,0 +1,28 @@
+{
+ "label": "one_set_transfer",
+ "case": "vehicles/turnouts/CN60-1100-1_18/cases/straight_one_set.json",
+ "speed_kmh": 80.0,
+ "duration_s": 0.2,
+ "output_step_s": 0.005,
+ "report_launch": true,
+ "stationarity_window_m": null,
+ "start_x_m": 93.0,
+ "seat_start_m": 46.0,
+ "prebalance": {
+  "equilibrate_vertical": true,
+  "seat_lateral": true,
+  "seat_modal_scales": [
+   1.0,
+   0.8,
+   0.95,
+   1.05,
+   0.5
+  ]
+ },
+ "notes": {
+  "what": "a short window on the wing-rail-to-point-rail transfer: the front axle runs 103.0 m to 108.6 m",
+  "knob": "speed.kmh",
+  "why": "the full 40-116 m passage costs hours in the frog region; this window asks the same question about the transfer and leaves the rest to a later run",
+  "seat": "the seat is solved at 46 m, where the four axles find the running surface; 93 m inside the wing-rail groove does not converge (gtol). The reading window is 103.0-107.4 m, so the state carried there comes from an equilibrium solved 47 m upstream"
+ }
+}

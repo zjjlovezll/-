@@ -1,3 +1,28 @@
+## 第 317 轮 — 心轨在算例里，但它永远碰不到车轮
+
+前一轮查明：71 个归档没有一趟到达心轨（前轴终点最大 70.00 m），所以 58.1 m 首载、58.145 m 穿越
+全是**尖轨**的数。本轮试图把车开进辙叉区，得到的是一个几何结论，而不是一个读数。
+
+- 全段 40 → 116 m（80 km/h、3.5 s）跑了约两小时没有落档；短窗口（103.0 m 起、0.25 s）在**座椅**
+  就失败：直接坐在 93 m 给 `gtol`，先在 46 m 坐稳再坐 93 m 给 `xtol`；`s158.seat_at` 在 100 m
+  与 103 m 也分别给 `xtol` 与 `gtol`。**不是容差，是这一区没有 z-only 静平衡。**
+- 断面读数（冠 = `max(z)`，B049 的教训）：`stock` 在 90…116 m **全程 +0.072 mm**；`blade` 在
+  103.28 m 为 +0.000；`frog` 在 103.28 m 为 **−13.962 mm**，104.42 m 归零（设计表 13.5 mm，
+  差 0.46 mm 是离散化，不是问题）。
+- 两个事实合起来决定答案：**基本轨贯穿辙叉**，而心轨最高只到 0.000 mm，**比走行面低 0.072 mm**
+  ⇒ 车轮全程踩在基本轨上，**没有可交接的对象**。三体在 0.072 mm 内共面、横向同在 +759.5 mm，
+  这也是座椅不收敛的来源。
+- 因此"心轨未建"应改成：**心轨体在、降低值在，但辙叉没有被建成辙叉**。要建的是三件：切断
+  辙叉区的基本轨、把翼轨与长心轨做成两个体、补护轨。
+- 判据（跑之前写死）：103.28 m 处心轨 0 kN 而翼轨承担轴载；到 105.0 m 心轨承担 ≥90 %；同一窗口
+  在 100 km/h 重跑，交接里程移动 ≤0.10 m；逐体和 = 轨级合力（≤1 N）；门全过或点名失败的；
+  `freeze_baseline --check` UNCHANGED。
+
+新增 `tests/test_frog_region.py`（5 项，1.6 s：三体存在、心轨鼻端 −13.962 mm、104.42 m 归零、
+基本轨贯穿、心轨全程低于走行面）、`docs/FROG_REGION_2026-11-02.md`、`scripts/s173_frog_passage.py`
+（逐体读力 + 恒等式 + 门状态，支持 `--setup/--duration/--report`）、
+`setups/one_set_passage.json` 与 `setups/one_set_transfer.json`。
+
 ## 第 316 轮 — 覆盖性也要给两个读者看：审计与门页
 
 第 315 轮把"窗口有没有走到"写进了门，但同一批归档还有两个读者：`s164_stationarity_audit.py`（说哪些归档可引用）与 `s156_gate_page.py`（说哪一行可引用）。它们只知道 std，所以一档安静的 0.44 m 在它们眼里仍是"可引用"。这一轮补第二个条件，**不动**预注册的力判据。
@@ -3251,6 +3276,7 @@ along with the real digests.
 | [FLEXIBLE_WHEELSET_PORT_2026-10-24.md](FLEXIBLE_WHEELSET_PORT_2026-10-24.md) | 柔性轮对移植：SDITT 的数据契约与我们的落点（2026-10-24） |
 | [FLOOR_DIAGNOSIS_2026-10-31.md](FLOOR_DIAGNOSIS_2026-10-31.md) | 第 277 轮的表示误差不是"超出 u 范围"，是真的不复合（2026-10-31，第 278 轮） |
 | [FORCE_ELEMENT_LIBRARY_2026-10-23.md](FORCE_ELEMENT_LIBRARY_2026-10-23.md) | 力学元件库 |
+| [FROG_REGION_2026-11-02.md](FROG_REGION_2026-11-02.md) | The frog is in the case and can never carry the wheel |
 | [FROG_WINDOW_BREAKTHROUGH_2026-10-21.md](FROG_WINDOW_BREAKTHROUGH_2026-10-21.md) | 辙叉窗突破：脱空归零，宽带频谱塌回 Simpack 量级 |
 | [GATE_PAGE_2026-11-01.md](GATE_PAGE_2026-11-01.md) | 一页判决表：四门按速度 + 物理定位列（2026-11-01，第 303 轮） |
 | [GOAL_STATUS_2026-10-23.md](GOAL_STATUS_2026-10-23.md) | 整体目标：完成度与差距 |

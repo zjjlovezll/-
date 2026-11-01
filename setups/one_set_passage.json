@@ -1,0 +1,21 @@
+{
+ "label": "one_set_passage",
+ "case": "vehicles/turnouts/CN60-1100-1_18/cases/straight_one_set.json",
+ "speed_kmh": 80.0,
+ "duration_s": 3.5,
+ "output_step_s": 0.005,
+ "report_launch": true,
+ "stationarity_window_m": null,
+ "start_x_m": 40.0,
+ "seat_start_m": 40.0,
+ "prebalance": {
+  "equilibrate_vertical": true,
+  "seat_lateral": true,
+  "seat_modal_scales": [1.0, 0.8, 0.95, 1.05, 0.5]
+ },
+ "notes": {
+  "what": "the first run that crosses from the switch blade into the frog: 40 m to 116.4 m",
+  "knob": "speed.kmh",
+  "why": "every earlier archive stops at or before 70 m, while the frog body spans 103.28-116.44 m, so the wing-rail-to-point-rail transfer has never been exercised"
+ }
+}

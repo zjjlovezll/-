@@ -1,3 +1,33 @@
+## 第 310 轮 — 60 km/h 那一趟不是一次测量：它起步就在振
+
+为给最后两个候选（轨体横向柔度、份额阈值口径）建探针时，撞到更基础的问题：**60 km/h 的归档从来没有静下来**。
+
+```
+  speed  frames   std kN         min-max kN  up>1kN   modal0 m  modal_end m   decay
+   60.0    1081    34.75 [   0.00,  207.75]       9  1.570e-02    1.175e-02   0.748
+   80.0     201     0.07 [  59.88,   60.45]       1  2.768e-03    2.878e-03   1.040
+  100.0     661     0.51 [  56.35,   62.11]       1  2.941e-03    3.137e-03   1.067
+C1 sixty not stationary True   C2 modal unsettled True   valid speeds [80, 100]
+```
+
+**判据（跑前写死）**：`C1` = 带载轨法向力 std > 5 kN 而另外两趟 < 1 kN、且尖轨力越过 1 kN 超过 2 次；`C2` = 模态块初始范数 ≥ 其他人 2 倍、且窗口末仍大于初始一半。
+**判决**：`C1` 34.75 对 0.07/0.51 kN、通断 9 对 1/1；`C2` 5.50 倍、0.54 s 只衰减到 0.748。均成立。
+
+**机制**：第 296 轮记录 60 km/h 座椅要用 `seat_modal_scales = 0.8`（80 km/h 用 1.0），这一趟带着位移的模态块起步，`|modal|` 起点是别人 5.5 倍，
+衰减时间常数远大于 0.54 s 窗口 ⇒ 轨道模态在振，轮轨力跟着振（前轴右轨 0→208 kN、尖轨力反复通断）。**七门全过**是因为七门是数值门
+（有限性/预载残差/贯入/摩擦界/无边缘接触/作用反力/积分完成），**不含平稳性**。
+
+**撤回三句**：① 60 km/h 的 `engage(5 %) = 58.000 m`；② 60 与 80 km/h 之间 0.145 m 的偏移；③ "物理偏移随速度下降而减小"。三速度表退化为**两速度表**（80、100）。
+
+`scripts/s163_engage_chatter.py`（三次归档读，5 s）+ `tests/test_engage_chatter.py` **5 项**（34.75 对 0.07/0.51 的分离、9 次通断、模态 5.50 倍与 0.748 不衰减、撤回清单、
+上门页**不能**把该行当可引用、以及"平稳的运行不得被标记"的反向守卫）。
+`scripts/s156_gate_page.py` 现在读 `engage_chatter.json`：std ≥ 5 kN 的行带 `stationary: false`、列进 `verdict()["not_stationary"]`，物理列备注写"已撤回"。
+`docs/ENGAGE_CHATTER_2026-11-01.md`（八节），`docs/EFFECTIVE_GAP_2026-11-01.md` 与 `docs/GATE_PAGE_2026-11-01.md` 各追加第 310 轮撤回节。
+
+**能说**：这一趟的前轴右轨力在 0–208 kN 摆、模态起点 5.5 倍且不衰减，所以它的 `engage` 不可引用、0.145 m 不存在。
+**不能说**：不能说 60 km/h 的物理偏移是 0（只能测不出）；不能说 60 km/h 一定不稳定（要另跑 ≥1.6 s，约 7 小时）；不能把原因锁死在 `scales = 0.8`
+（本轮证据只到"起点大且不衰减"）。
+
 ## 第 309 轮 — 把轮对按归档位置摆上去：方向对了，量级差 16.9 倍
 
 第 308 轮读出 60 km/h 的前轮对在 58.150 m 处比 80 km/h 差 **−3.096 mm**，但符号判据被我写反，机制悬着。本轮不推断、
@@ -3096,6 +3126,7 @@ along with the real digests.
 | [EFFECTIVE_GAP_2026-11-01.md](EFFECTIVE_GAP_2026-11-01.md) | 有效间隙：载荷分配长在接触点上，不在冠上 |
 | [EFFECTIVE_RADIUS_RETIRED_2026-10-30.md](EFFECTIVE_RADIUS_RETIRED_2026-10-30.md) | 20 mm 等效半径退役：模型终于在自己写的 oracle 上运行（B048，选项 A） |
 | [ELEMENT_CATALOGUE_2026-10-23.md](ELEMENT_CATALOGUE_2026-10-23.md) | 元件目录与 Simpack 对照 |
+| [ENGAGE_CHATTER_2026-11-01.md](ENGAGE_CHATTER_2026-11-01.md) | 60 km/h 那一趟不是一次测量：它起步就在振（第 310 轮） |
 | [ENGAGE_REFERENCE_2026-11-01.md](ENGAGE_REFERENCE_2026-11-01.md) | The reference station a load split predicts for 5 % blade share — and why it is 0.30 m short |
 | [ENGAGE_REGISTRATION_2026-11-01.md](ENGAGE_REGISTRATION_2026-11-01.md) | 谁把 5 % 那份载荷交出去的？三速度的横向注册测量（第 308 轮） |
 | [EVIDENCE_MAP.md](EVIDENCE_MAP.md) | 证据地图：这一版凭什么可以说「可以发布」 |

@@ -129,3 +129,11 @@ python -X utf8 scripts/s158_effective_gap.py --speed 60 --refine  # 再补 58.02
 python -X utf8 scripts/s158_effective_gap.py --speed 60 --reuse   # 只从产物重算判决，0 次座椅
 python -X utf8 -m pytest tests/test_effective_gap_60.py -q        # 5 项
 ```
+
+## 9 撤回（第 310 轮）
+
+**本文第 7 节里 60 km/h 的那一行撤回。** 第 310 轮读出：60 km/h 那一趟的前轴右轨法向力在 **0–207.75 kN** 之间摆（std **34.75 kN**），
+尖轨力越过 1 kN **9 次**，而 80/100 km/h 是 **0.07/0.51 kN** 与 1 次；模态块起点是另外两趟的 **5.50 倍**、0.54 s 只衰减到 **0.748**。
+所以它的 `engage(5 %) = 58.000 m` 与"60 km/h 的 0.145 m 偏移"都**不可引用**，三速度表退化为两速度表（80、100 km/h）。
+证据见 `docs/ENGAGE_CHATTER_2026-11-01.md` 与 `reports/load_split_inversion_2026-10-31/engage_chatter.json`；
+`scripts/s156_gate_page.py` 现在会把这一行标成 `stationary: false` 并列进 `not_stationary`。

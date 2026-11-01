@@ -121,6 +121,25 @@ def gates(speed_kmh: float) -> dict:
             "usable_stations": int(fit["usable_stations"])}
 
 
+#: Round 310's stationarity read: a run whose rail load never settles has no quotable crossing, whatever its
+#: gates say (the seven gates do not test stationarity).
+STATIONARITY = (pathlib.Path(__file__).resolve().parent.parent
+                / "reports" / "load_split_inversion_2026-10-31" / "engage_chatter.json")
+MAX_STATIONARY_STD_KN = 5.0
+
+
+def _stationary(speed_kmh: float) -> bool | None:
+    """Whether the archived null run holds its load; ``None`` when round 310's report is absent."""
+
+    if not STATIONARITY.is_file():
+        return None
+    report = json.loads(STATIONARITY.read_text(encoding="utf-8"))
+    row = report.get("rows", {}).get(f"{speed_kmh:g}")
+    if row is None:
+        return None
+    return bool(float(row["loaded_rail_std_kn"]) < MAX_STATIONARY_STD_KN)
+
+
 def _runs(speed_kmh: float) -> tuple:
     import s152_cross_speed as cross
 
@@ -142,20 +161,25 @@ def measure() -> dict:
             table[f"{speed:g}"] = {"status": "pending", "reason": "no archive at this duration yet"}
             continue
         null_scan = engage_scan(speed, "null")
+        stationary = _stationary(speed)
         physical = {key: (None if value is None else value - GEOMETRY_TOUCH_M)
                     for key, value in null_scan["by_threshold"].items()}
         if not _route_archived(bump_route, speed):
+            note = ("null route archived; the bump route is missing, and the four synthetic gates "
+                    "are measured on it (s152.fit loads route index 1)")
+            if stationary is False:
+                note += "; and round 310 found the rail load never settles, so its physical column is withdrawn"
             table[f"{speed:g}"] = {
                 "status": "partial",
                 "engage": null_scan,
                 "physical_error_m": physical,
-                "reason": ("null route archived; the bump route is missing, and the four synthetic gates "
-                           "are measured on it (s152.fit loads route index 1)"),
+                "stationary": stationary,
+                "reason": note,
             }
             continue
         bump_scan = engage_scan(speed, "bump")
         row = {"status": "measured", "gates": gates(speed), "engage": null_scan,
-               "engage_bump": bump_scan, "bump_available": True}
+               "engage_bump": bump_scan, "bump_available": True, "stationary": stationary}
         row["physical_error_m"] = physical
         row["bump_shift_m"] = {
             key: (None if (null_scan["by_threshold"][key] is None or bump_scan["by_threshold"][key] is None)
@@ -181,6 +205,7 @@ def verdict(table: dict) -> dict:
         "geometry_source": GEOMETRY_SOURCE,
         "pending": [key for key, row in table.items() if row.get("status") == "pending"],
         "partial": [key for key, row in table.items() if row.get("status") == "partial"],
+        "not_stationary": [key for key, row in table.items() if row.get("stationary") is False],
     }
 
 

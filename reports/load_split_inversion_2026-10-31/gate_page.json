@@ -146,15 +146,18 @@
     "physical_by_speed": {
       "60": {
         "error_m": 0.267000000000003,
-        "within_gate": false
+        "within_gate": false,
+        "quotable": false
       },
       "80": {
         "error_m": 0.42255555555555446,
-        "within_gate": false
+        "within_gate": false,
+        "quotable": true
       },
       "100": {
         "error_m": 0.4197777777777816,
-        "within_gate": false
+        "within_gate": false,
+        "quotable": true
       }
     },
     "geometry_touch_m": 57.733,
@@ -164,6 +167,9 @@
       "60"
     ],
     "not_stationary": [
+      "60"
+    ],
+    "not_quotable": [
       "60"
     ],
     "gates_quotable": {

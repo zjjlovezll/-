@@ -144,11 +144,16 @@ def _run_id(route: str, speed_kmh: float, duration_s: float) -> str | None:
 
 
 def _stationary_run(run_id: str | None) -> bool | None:
+    # Not just "is the load quiet": since round 315 an archive can be quiet over 4.4 % of the
+    # window it claims, so this returns the audit's ``quotable`` (quiet *and* driven) and falls
+    # back to ``stationary`` only for reports written before coverage existed.
     if not run_id or not AUDIT.is_file():
         return None
     report = json.loads(AUDIT.read_text(encoding="utf-8"))
     for row in report.get("rows", []):
         if row["run_id"] == run_id:
+            if "quotable" in row:
+                return bool(row["quotable"])
             return bool(row["stationary"])
     return None
 
@@ -237,7 +242,13 @@ def verdict(table: dict) -> dict:
     physical = {}
     for key, row in readable.items():
         error = row["physical_error_m"].get("0.05")
-        physical[key] = {"error_m": error, "within_gate": bool(error is not None and abs(error) <= LIMITS["G-LOC"])}
+        # Round 316: a number from a run nobody may quote is still printed, but it is labelled.
+        physical[key] = {
+            "error_m": error,
+            "within_gate": bool(error is not None and abs(error) <= LIMITS["G-LOC"]),
+            "quotable": bool(row.get("stationary") is not False
+                              and row.get("stationary_bump") is not False),
+        }
     return {
         "all_gates_by_speed": all_gates,
         "physical_by_speed": physical,
@@ -246,6 +257,8 @@ def verdict(table: dict) -> dict:
         "pending": [key for key, row in table.items() if row.get("status") == "pending"],
         "partial": [key for key, row in table.items() if row.get("status") == "partial"],
         "not_stationary": [key for key, row in table.items() if row.get("stationary") is False],
+        "not_quotable": [key for key, row in table.items()
+                         if row.get("stationary") is False or row.get("stationary_bump") is False],
         "gates_quotable": {key: row.get("gates_quotable") for key, row in table.items()},
     }
 
@@ -282,8 +295,9 @@ def main() -> int:
     result = verdict(table)
     print()
     for key, entry in result["physical_by_speed"].items():
+        note = "" if entry["quotable"] else "  [withdrawn: this run is not quotable]"
         print(f"  {key} km/h physical error at 5 % share: {entry['error_m']:+.3f} m "
-              f"-> {'within' if entry['within_gate'] else 'OUTSIDE'} the 0.20 m tolerance")
+              f"-> {'within' if entry['within_gate'] else 'OUTSIDE'} the 0.20 m tolerance{note}")
     if result["pending"]:
         print(f"pending: {', '.join(result['pending'])}")
     if result["partial"]:

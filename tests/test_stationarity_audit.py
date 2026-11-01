@@ -30,15 +30,41 @@ def report() -> dict:
 @pytest.mark.corpus
 def test_the_slow_archive_is_quarantined_and_nothing_else_is(report: dict) -> None:
     verdict = report["verdict"]
-    assert verdict["runs"] == 63
+    assert verdict["runs"] == 71
     assert verdict["quarantined"] == ["one_set_x46-060.00kmh-0.0200s-500us-83e727fc", CHATTERED]
-    assert verdict["stationary"] == 61
+    assert verdict["stationary"] == 69
     rows = {row["run_id"]: row for row in report["rows"]}
     slow = rows[CHATTERED]
     assert slow["max_rail_std_kn"] > 30.0
     assert slow["worst_rail"] == "axle1_right"
     # the failure mode was a modal transient that never decayed, not a wrong load
     assert slow["modal_decay"] > 0.7
+
+
+@pytest.mark.corpus
+def test_a_quiet_run_that_never_reached_its_window_is_not_quotable(report: dict) -> None:
+    """Round 315: 0.44 m of a 9 m window is quiet, and that is not a reading.  Round 316 added the
+    second condition here, so the audit stops calling it quotable."""
+
+    verdict = report["verdict"]
+    assert verdict["window_declared"] == ["one_set_reading-080.00kmh-0.4050s-500us-1ec3222f",
+                                         "one_set_straight-060.00kmh-0.0200s-500us-69281ee8",
+                                         "one_set_straight-080.00kmh-0.0200s-500us-a18815bb"]
+    assert verdict["uncovered_window"] == ["one_set_straight-060.00kmh-0.0200s-500us-69281ee8",
+                                          "one_set_straight-080.00kmh-0.0200s-500us-a18815bb"]
+    # Two quarantined for ringing plus two quiet ones that never reached their window.
+    assert len(verdict["not_quotable"]) == 4
+    assert set(verdict["quarantined"]) < set(verdict["not_quotable"])
+    rows = {row["run_id"]: row for row in report["rows"]}
+    reading = rows["one_set_reading-080.00kmh-0.4050s-500us-1ec3222f"]
+    assert reading["window_covered"] is True
+    assert reading["quotable"] is True
+    assert reading["window_span_m"] >= reading["window_expected_span_m"] - 1.0e-9
+    short = rows["one_set_straight-080.00kmh-0.0200s-500us-a18815bb"]
+    assert short["stationary"] is True          # the load is quiet
+    assert short["window_covered"] is False     # and the claim was never measured
+    assert short["quotable"] is False
+    assert short["window_span_m"] < 0.5
 
 
 @pytest.mark.corpus

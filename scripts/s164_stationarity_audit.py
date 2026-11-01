@@ -36,6 +36,37 @@ TRACK_BLOCK = slice(86, 102)
 DECAY_CEILING = 0.5
 
 
+def window_coverage(meta: dict) -> dict:
+    """Did this run drive the window it claims?
+
+    Recomputes from the archive's own record when the writer did not store coverage, so the audit can
+    judge runs written before round 315: ``span`` is bounded by both the window length and how far the
+    run travelled, ``spacing`` from the sample count, and one spacing of shortfall is allowed because
+    no grid puts a sample exactly on both ends.
+    """
+    window = meta.get("stationarity_window_m")
+    if window is None:
+        return {"window_m": None, "covered": None, "span_m": None, "expected_span_m": None,
+                "spacing_m": None, "samples": None}
+    if meta.get("stationarity_covered") is not None:
+        return {"window_m": [float(window[0]), float(window[1])],
+                "covered": bool(meta["stationarity_covered"]),
+                "span_m": meta.get("stationarity_span_m"),
+                "expected_span_m": meta.get("stationarity_expected_span_m"),
+                "spacing_m": meta.get("stationarity_spacing_m"),
+                "samples": meta.get("stationarity_samples")}
+    low, high = float(window[0]), float(window[1])
+    duration = float(meta.get("duration_s") or 0.0)
+    speed = float(meta.get("speed_kmh", float("nan"))) / 3.6
+    samples = int(meta.get("stationarity_samples") or 0)
+    span = min(high - low, duration * speed)
+    spacing = None if samples < 2 else span / (samples - 1)
+    expected = None if spacing is None else (high - low) - spacing
+    covered = None if expected is None else bool(span >= expected - 1.0e-9)
+    return {"window_m": [low, high], "covered": covered, "span_m": span,
+            "expected_span_m": expected, "spacing_m": spacing, "samples": samples}
+
+
 def is_stationary(max_std_kn: float) -> bool:
     """The pre-registered test, named on its own so a test can try to poison it."""
 
@@ -56,6 +87,8 @@ def audit(directory: pathlib.Path) -> dict:
     modal_start = float(np.linalg.norm(modal[0]))
     modal_end = float(np.linalg.norm(modal[-1]))
     decay = None if modal_start <= 0.0 else modal_end / modal_start
+    coverage = window_coverage(meta)
+    stationary = is_stationary(peak)
     return {
         "run_id": directory.name,
         "route": meta.get("route"),
@@ -71,7 +104,17 @@ def audit(directory: pathlib.Path) -> dict:
         "modal_norm_end_m": modal_end,
         "modal_decay": decay,
         "gates_all_true": bool(all(meta["gates"].values())) if isinstance(meta.get("gates"), dict) else None,
-        "stationary": is_stationary(peak),
+        "stationary": stationary,
+        "window_m": coverage["window_m"],
+        "window_covered": coverage["covered"],
+        "window_span_m": coverage["span_m"],
+        "window_expected_span_m": coverage["expected_span_m"],
+        "window_spacing_m": coverage["spacing_m"],
+        "window_samples": coverage["samples"],
+        # Two conditions, kept separate on purpose: the force test is pre-registered and
+        # unchanged, and coverage is a different question.  A number is quotable only when both
+        # hold.
+        "quotable": bool(stationary and coverage["covered"] is not False),
     }
 
 
@@ -79,6 +122,7 @@ def main() -> int:
     directories = sorted(p for p in RUNS_DIR.iterdir() if p.is_dir() and (p / "series.npz").is_file())
     rows = [audit(directory) for directory in directories]
     quarantined = [row["run_id"] for row in rows if not row["stationary"]]
+    uncovered = [row["run_id"] for row in rows if row["window_covered"] is False]
     #: One answer per (route, speed): the longest archive of that pair, which is the one the gates read.
     by_route_speed: dict[str, dict] = {}
     for row in rows:
@@ -87,7 +131,10 @@ def main() -> int:
         if current is None or row["duration_s"] > current["duration_s"]:
             by_route_speed[key] = {"run_id": row["run_id"], "duration_s": row["duration_s"],
                                    "max_rail_std_kn": row["max_rail_std_kn"],
-                                   "modal_decay": row["modal_decay"], "stationary": row["stationary"]}
+                                   "modal_decay": row["modal_decay"],
+                                   "stationary": row["stationary"],
+                                   "window_covered": row["window_covered"],
+                                   "quotable": row["quotable"]}
     report = {
         "rows": rows,
         "constants": {"max_std_kn": MAX_STD_KN, "decay_ceiling": DECAY_CEILING,
@@ -97,6 +144,9 @@ def main() -> int:
             "runs": len(rows),
             "stationary": sum(1 for row in rows if row["stationary"]),
             "quarantined": quarantined,
+            "window_declared": [row["run_id"] for row in rows if row["window_m"] is not None],
+            "uncovered_window": uncovered,
+            "not_quotable": [row["run_id"] for row in rows if not row["quotable"]],
             "all_gates_true_but_not_stationary": [row["run_id"] for row in rows
                                                   if not row["stationary"] and row["gates_all_true"]],
             "unsettled_modal": [row["run_id"] for row in rows
@@ -108,17 +158,20 @@ def main() -> int:
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
-    print(f"{'run':>52} {'dur s':>7} {'maxStd kN':>10} {'worst rail':>14} {'modal decay':>12} {'ok':>4}")
+    print(f"{'run':>52} {'dur s':>7} {'maxStd kN':>10} {'window':>7} {'modal decay':>12} {'ok':>4}")
     for row in sorted(rows, key=lambda item: (item["speed_kmh"], item["route"] or "", item["duration_s"])):
         decay = "n/a" if row["modal_decay"] is None else f"{row['modal_decay']:.3f}"
+        window = "-" if row["window_covered"] is None else ("yes" if row["window_covered"] else "NO")
         print(f"{row['run_id'][:52]:>52} {row['duration_s']:7.3f} {row['max_rail_std_kn']:10.2f} "
-              f"{row['worst_rail']:>14} {decay:>12} {'yes' if row['stationary'] else 'NO':>4}")
+              f"{window:>7} {decay:>12} {'yes' if row['quotable'] else 'NO':>4}")
     print()
     v = report["verdict"]
     print(f"runs {v['runs']}   stationary {v['stationary']}   quarantined {len(v['quarantined'])}")
     for run_id in v["quarantined"]:
         print(f"  quarantined: {run_id}")
     print(f"gates true but not stationary: {v['all_gates_true_but_not_stationary']}")
+    print(f"declared a window: {len(v['window_declared'])}   never reached it: {v['uncovered_window']}")
+    print(f"not quotable: {len(v['not_quotable'])}")
     print(f"report -> {REPORT.relative_to(ROOT)}")
     return 0
 

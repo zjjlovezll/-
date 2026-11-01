@@ -1,3 +1,15 @@
+## 第 316 轮 — 覆盖性也要给两个读者看：审计与门页
+
+第 315 轮把"窗口有没有走到"写进了门，但同一批归档还有两个读者：`s164_stationarity_audit.py`（说哪些归档可引用）与 `s156_gate_page.py`（说哪一行可引用）。它们只知道 std，所以一档安静的 0.44 m 在它们眼里仍是"可引用"。这一轮补第二个条件，**不动**预注册的力判据。
+
+- `window_coverage(meta)`：新归档读 `stationarity_covered`，老归档用 `min(窗口长度, duration×speed)` 与 `span/(samples-1)` 重算，允许**一个采样间距**的欠额；`quotable = stationary and covered is not False`。
+- 审计每行多六个窗口字段与 `quotable`；`verdict` 多 `window_declared` / `uncovered_window` / `not_quotable`。
+- 实测 **71 个归档、69 平稳、2 隔离**（仍是那两趟 60 km/h）；**声明窗口 3 个、没走到 2 个、不可引用 4 个**；`one_set_reading-080…-0.4050s` 覆盖 `True`、span `9.000 m`、可引用；`one_set_straight-080…-0.0200s` 力安静但覆盖 `False`、**不可引用**。
+- 门页 `_stationary_run` 改返回 `quotable`（老报告回落 `stationary`），`verdict()` 增 `not_quotable`，打印把 60 km/h 那行标 `[withdrawn: this run is not quotable]`——**数字仍打印，不隐藏**。
+- 边界：只对声明窗口的归档生效（3/71），其余 `covered = None` 不参与判决；60 km/h 长跑未重跑；5 kN 与"一个间距"都没放宽。
+
+文档 `docs/COVERAGE_READERS_2026-11-01.md`；测试 `tests/test_stationarity_audit.py` 增一项（两份清单、四个不可引用、reading 归档可引用、0.02 s 归档安静但不可引用）。
+
 ## 第 315 轮 — 让"平稳"先证明窗口走到了（覆盖性、起点证据、屏幕上的九门）
 
 第 314 轮把门 9 加进求解器，但审查（以及我自己的回读）发现它**只在数样本**：两个 0.02 s 归档在 9 m 的窗口里各放了 41 个样本（`stationarity_samples == frames == 41`），行程只有 0.444 m / 0.333 m，覆盖 **4.9 % / 3.7 %**，却因为 `std = 0.096 / 0.103 kN` 远低于限值而通过。同一轮还留下两个更小的洞：门 8 的证据可能被归档丢掉（`launch_balance: true` 配 `launch: null`），以及屏幕的 `GATE_LABELS` 只有七条、`_render_gates` 只遍历它，于是**门 8 失败会显示成 7/7 PASS**。
@@ -3200,6 +3212,7 @@ along with the real digests.
 | [CONTACT_SEARCH_LOCAL_2026-10-19.md](CONTACT_SEARCH_LOCAL_2026-10-19.md) | 轮轨接触搜索：型面表化 + 局部连续搜索（2026-10-19） |
 | [CORRUGATION_IN_PRR_2026-10-26.md](CORRUGATION_IN_PRR_2026-10-26.md) | 在连续的 PRR 文件里模拟波磨：表示、密度与两个坑 |
 | [COVERAGE_HELDOUT_2026-10-28.md](COVERAGE_HELDOUT_2026-10-28.md) | Held-out coverage, and why the measured verdict had to be made reproducible first |
+| [COVERAGE_READERS_2026-11-01.md](COVERAGE_READERS_2026-11-01.md) | 覆盖性有两个读者：审计与门页（第 316 轮） |
 | [CREST_OVERSHOOT_2026-11-01.md](CREST_OVERSHOOT_2026-11-01.md) | 58.6 → 58.8 m 那一跳：一个断面的冠部超越，不是拼接、也不是插值 |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |

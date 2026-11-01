@@ -209,6 +209,13 @@ class RunSettings:
     seat never take a second pass.  ``None`` means ``(1.0, 0.8, 0.95, 1.05, 0.5)``.
     """
     seat_lateral: bool = False
+    #: Mileage window, in metres, over which this run claims a quasi-static reading.  Gate 9 is
+    #: computed inside it and nowhere else; ``None`` means the run makes no such claim and no gate
+    #: is produced.  The distinction is measured, not stylistic: the frozen baseline moves 53.88 kN
+    #: of load from ``stock`` to ``switch`` inside its first 0.015 s, so a whole-record standard
+    #: deviation refuses it for doing exactly what a turnout does.  Declaring the window is what
+    #: turns "the launch is quiet" from an assumption into a test.
+    stationarity_window_m: tuple[float, float] | None = None
     """Also put each wheelset where its own net lateral force vanishes.
 
     The vertical seat solves ``z`` only.  On a *flexible* wheelset the tread deflects

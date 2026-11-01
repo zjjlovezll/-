@@ -5,6 +5,9 @@
  "duration_s": 0.02,
  "output_step_s": 0.0005,
  "report_launch": true,
+ "stationarity_window_m": [56.0, 65.0],
+ "start_x_m": 46.0,
+ "seat_start_m": 40.0,
  "prebalance": {
   "equilibrate_vertical": true,
   "seat_lateral": true,

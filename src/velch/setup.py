@@ -64,11 +64,14 @@ OVERRIDES: dict[str, tuple[str, str, tuple[float, float] | None]] = {
     "prebalance.equilibrate_vertical": ("prebalance.equilibrate_vertical", "bool", None),
     "prebalance.seat_lateral": ("prebalance.seat_lateral", "bool", None),
     "prebalance.seat_modal_scales": ("prebalance.seat_modal_scales", "floats", None),
+    "reading.window_m": ("stationarity_window_m", "window", (0.0, 1.0e4)),
+    "start.x_m": ("start_x_m", "float", (0.0, 1.0e3)),
+    "seat.start_m": ("seat_start_m", "float", (0.0, 1.0e3)),
 }
 
 #: Every key a setup file may carry.  Anything else is a typo, not an extension point.
 SETUP_KEYS = ("label", "case", "speed_kmh", "duration_s", "output_step_s", "report_launch",
-              "prebalance", "notes")
+              "prebalance", "stationarity_window_m", "start_x_m", "seat_start_m", "notes")
 PREBALANCE_KEYS = ("equilibrate_vertical", "seat_lateral", "seat_modal_scales")
 
 
@@ -82,6 +85,16 @@ class Setup:
     duration_s: float
     output_step_s: float
     report_launch: bool = True
+    #: ``[start, end]`` mileage of the reading window, or ``None`` for no claim.  Gate 9 is only
+    #: produced inside a declared window, so this is the one port that decides whether a run is
+    #: allowed to say "these samples are a reading".
+    stationarity_window_m: tuple[float, float] | None = None
+    #: Mileage where the clock starts, and where the vehicle is seated; ``None`` keeps the case's
+    #: own numbers.  These two are why a declared reading window can be reached at all: the case
+    #: starts at 40 m (front axle 50 m), while the measurement window is the front axle's 56-65 m,
+    #: so a run that does not say where it starts cannot be the run the window describes.
+    start_x_m: float | None = None
+    seat_start_m: float | None = None
     prebalance: dict[str, Any] = dataclasses.field(default_factory=dict)
     notes: dict[str, str] = dataclasses.field(default_factory=dict)
     source: str = ""
@@ -143,6 +156,13 @@ def load_setup(path: str | pathlib.Path) -> Setup:
         duration_s=_positive("duration_s", raw.get("duration_s", 0.02), 1.0e-6, 120.0),
         output_step_s=_positive("output_step_s", raw.get("output_step_s", 5.0e-4), 1.0e-9, 10.0),
         report_launch=bool(raw.get("report_launch", True)),
+        stationarity_window_m=(None if raw.get("stationarity_window_m") is None else
+                               (float(raw["stationarity_window_m"][0]),
+                                float(raw["stationarity_window_m"][1]))),
+        start_x_m=(None if raw.get("start_x_m") is None
+                   else _positive("start_x_m", raw["start_x_m"], 0.0, 1.0e3)),
+        seat_start_m=(None if raw.get("seat_start_m") is None
+                      else _positive("seat_start_m", raw["seat_start_m"], 0.0, 1.0e3)),
         prebalance=prebalance,
         notes={str(k): str(v) for k, v in (raw.get("notes") or {}).items()},
         source=str(target),
@@ -156,6 +176,13 @@ def _parse(kind: str, text: str) -> Any:
         return text
     if kind == "floats":
         return [float(part) for part in text.replace(";", ",").split(",") if part.strip()]
+    if kind == "window":
+        parts = [part for part in text.replace(";", ",").split(",") if part.strip()]
+        if not parts or parts[0].strip().lower() in {"none", "off", "no"}:
+            return None
+        if len(parts) != 2:
+            raise ValueError(f"expected two mileages (start,end) or 'none', got {text!r}")
+        return [float(parts[0]), float(parts[1])]
     if kind == "bool":
         lowered = text.strip().lower()
         if lowered in {"1", "true", "yes", "on"}:
@@ -186,8 +213,15 @@ def apply_overrides(setup: Setup, assignments: list[str] | tuple[str, ...]) -> t
             raise ValueError(f"unknown parameter {name!r}; legal names are {sorted(OVERRIDES)}")
         target, kind, limits = OVERRIDES[name]
         value = _parse(kind, text)
-        if limits is not None:
-            value = _positive(name, value, *limits)
+        if limits is not None and value is not None:
+            if kind == "window":
+                low, high = limits
+                start, end = (_positive(name, part, low, high) for part in value)
+                if not start < end:
+                    raise ValueError(f"{name} needs start < end, got {text!r}")
+                value = (start, end)
+            else:
+                value = _positive(name, value, *limits)
         if isinstance(target, str) and target.startswith("prebalance."):
             updated["prebalance"][target.split(".", 1)[1]] = value
         else:
@@ -220,6 +254,15 @@ def _write_case(setup: Setup, out_dir: pathlib.Path) -> tuple[pathlib.Path, str]
     run["duration_s"] = float(setup.duration_s)
     run["output_step_s"] = float(setup.output_step_s)
     run["report_launch"] = bool(setup.report_launch)
+    if setup.stationarity_window_m is None:
+        run["stationarity_window_m"] = None
+    else:
+        run["stationarity_window_m"] = [float(setup.stationarity_window_m[0]),
+                                        float(setup.stationarity_window_m[1])]
+    if setup.start_x_m is not None:
+        run["x_start_m"] = float(setup.start_x_m)
+    if setup.seat_start_m is not None:
+        run["seat_x_start_m"] = float(setup.seat_start_m)
     prebalance = setup.prebalance
     if "equilibrate_vertical" in prebalance:
         raw["equilibrate_vertical"] = bool(prebalance["equilibrate_vertical"])
@@ -294,6 +337,22 @@ def resolve(setup: Setup, overrides: list[str] | tuple[str, ...] = (),
          "source": "override" if any(port.startswith("output_step") for port in applied) else "setup"},
         {"parameter": "report_launch", "value": str(resolved.report_launch), "unit": "-",
          "source": "override" if any(port.startswith("report_launch") for port in applied)
+                   else "setup"},
+        {"parameter": "reading.window_m",
+         "value": ("none" if resolved.stationarity_window_m is None else
+                   f"{float(resolved.stationarity_window_m[0]):g}.."
+                   f"{float(resolved.stationarity_window_m[1]):g}"),
+         "unit": "m",
+         "source": "override" if any(port.startswith("reading.") for port in applied)
+                   else "setup"},
+        {"parameter": "start.x_m",
+         "value": ("case" if resolved.start_x_m is None else f"{resolved.start_x_m:g}"),
+         "unit": "m",
+         "source": "override" if any(port.startswith("start.") for port in applied) else "setup"},
+        {"parameter": "seat.start_m",
+         "value": ("case" if resolved.seat_start_m is None else f"{resolved.seat_start_m:g}"),
+         "unit": "m",
+         "source": "override" if any(port.startswith("seat.start") for port in applied)
                    else "setup"},
         {"parameter": "prebalance", "value": json.dumps(resolved.prebalance, ensure_ascii=False),
          "unit": "-", "source": "setup/override"},

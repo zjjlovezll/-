@@ -6,7 +6,9 @@ Three things have to hold, and each is checked, not asserted in prose:
                recorded, so the bytes that produced every number in DELIVERABLE_SUMMARY are pinned
     D-PATHS    no delivered case points at an absolute path (``G:\\...`` / ``F:\\velch_data``); every reference
                goes through ``lib:``/``case:``/``data:`` and resolves under the package root
-    D-SMOKE    the canonical one-set case seats and integrates 0.02 s with all seven gates true
+    D-SMOKE    the canonical one-set case seats and integrates 0.02 s with every produced gate true
+               (eight since round 314: the seven numeric gates plus launch_balance; stationarity
+               is produced only inside a reading window and this case declares none)
     D-SUMMARY  the delivered summary file still equals what the archived reports recompute to
 
 Usage::
@@ -96,7 +98,7 @@ def asset_gate(report: dict) -> dict:
 
 
 def smoke() -> dict:
-    """Seat the canonical case and integrate the documented 0.02 s; report the seven gates."""
+    """Seat the canonical case, integrate the documented 0.02 s, and report every produced gate."""
     from velch.vehicle import load_vehicle_case
     from velch.vehicle_solver import VehicleDynamics, _seat, simulate_vehicle
 

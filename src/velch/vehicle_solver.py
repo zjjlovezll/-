@@ -138,6 +138,60 @@ _SEAT_LATERAL_TOLERANCE = 20.0
 #: this constant is documented against those numbers in ``docs/RUN_PATH_2026-11-01.md``.  It must
 #: reject the withdrawn 60 km/h launch (``|modal| = 1.57e-02 m``, spin that did not match the speed)
 #: while accepting a properly seated one.
+MAX_STATIONARY_FORCE_STD_KN = 5.0
+PHYSICAL_GATE_NAMES = frozenset({"launch_balance", "stationarity"})
+
+
+def launch_balance_gate(launch: dict | None) -> bool:
+    """Gate 8, as a pure function so it can be tested without a simulation.
+
+    The two numbers it reads are the ones the seater already reports: the vertical preload residual
+    (same 0.1 N limit as ``vertical_preload_residual``) and the spin consistency
+    ``|spin*r - travel| / travel`` (same 1e-3 limit as ``spin_tracking``).  The modal residual is
+    deliberately *not* here: measured, it is the fixed point of the settle/seat alternation (~101 N at
+    both 60 and 80 km/h, bit-identical at 400 rounds), a property of the compromise rather than of the
+    run, and turning a number nobody calibrated into a gate is how a tolerance gets invented.
+    """
+    if launch is None:
+        return False
+    preload = launch.get("vertical_preload_residual_n")
+    spin = launch.get("spin_relative_max")
+    if preload is not None and float(preload) > 0.1:
+        return False
+    return spin is None or float(spin) <= 1.0e-3
+
+
+def rail_force_std_kn(samples: dict[str, list[float]]) -> dict[str, float]:
+    """Per-rail standard deviation of the normal force, converted to kN."""
+    return {rail_id: (float(np.std(values)) / 1.0e3 if values else 0.0)
+            for rail_id, values in samples.items()}
+
+
+def stationarity_gate(force_std_kn: dict[str, float], samples: int) -> bool:
+    """Gate 9, inside a declared reading window: the worst rail must not ring above 5 kN.
+
+    Only produced when the case declares ``run.stationarity_window_m``.  A window the run never
+    reaches, or one holding fewer than three samples, fails rather than passing vacuously: the whole
+    point is to stop a claim nobody measured.  Whole-record statistics are the wrong instrument --
+    measured on the frozen baseline, the load moves 53.88 kN from ``stock`` to ``switch`` inside
+    0.015 s of legal transfer, which would refuse a turnout for behaving like one.
+    """
+    if not force_std_kn or samples < 3:
+        return False
+    worst = max(force_std_kn.values())
+    return bool(worst <= MAX_STATIONARY_FORCE_STD_KN)
+
+
+def gates_result_status(gates: dict[str, bool]) -> tuple[str, list[str]]:
+    """Three-way status: only physical gates failing is not a numerical failure."""
+    failed = [name for name, ok in gates.items() if not ok]
+    if not failed:
+        return "numerically_checked", []
+    if all(name in PHYSICAL_GATE_NAMES for name in failed):
+        return "physical_gate_failed", failed
+    return "numerical_gate_failed", failed
+
+
 def _launch_report(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,
                    static_residual_n: float | None) -> dict[str, object]:
     """Describe the state the integrator is about to start from.
@@ -2059,8 +2113,9 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         # Position alone is not enough: the line also *moves* under the vehicle.  Measured, the
         # geometry route without this reached only 1.04 m of travel before the slope guard.
         v = _align_velocity_to_track(case, dynamics, q, v)
-    launch_report = (_launch_report(case, dynamics, q, v, static_residual_n)
-                     if bool(getattr(run, "report_launch", False)) else None)
+    # Computed unconditionally: the launch balance is gate 8 now, and a gate a run can switch off
+    # with a flag is not a gate.  ``report_launch`` decides only whether the block is reported.
+    launch_report = _launch_report(case, dynamics, q, v, static_residual_n)
     initial = np.concatenate((q, v))
     count = int(math.ceil(run.duration_s / run.output_step_s))
     times = np.linspace(0, run.duration_s, count + 1)
@@ -2085,6 +2140,12 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     contact_history = []
     peak_normal = {rail.id: 0.0 for rail in case.rails}
     active = {rail.id: 0 for rail in case.rails}
+    force_samples: dict[str, list[float]] = {rail.id: [] for rail in case.rails}
+    # The front axle's own mileage at every output sample: gate 9 is a claim about a reading
+    # window, so it has to know where the vehicle was when each sample was taken.
+    _front_rail = next((rail for rail in case.rails
+                        if getattr(rail, "axle_index", None) == 0), case.rails[0])
+    front_stations_m: list[float] = []
     max_depth = max_friction_excess = 0.0
     max_hertz_depth = max_settlement = 0.0
     edge_active = 0
@@ -2122,6 +2183,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         acceleration_rows.append([float(force[index]) / float(dynamics.mass[index])
                                   for index, _body, _axis in acceleration_channels])
         contact_history.append(contacts)
+        front_stations_m.append(float(dynamics.station_m(_front_rail, float(t), position)))
         # The call above just refreshed ``_body_cache``, so this is the same frame's per-body
         # split, not a second evaluation.
         body_history.append(dict(dynamics.body_contacts))
@@ -2173,6 +2235,7 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         for rail in case.rails:
             response = contacts[rail.id]
             peak_normal[rail.id] = max(peak_normal[rail.id], response.normal_force_n)
+            force_samples[rail.id].append(float(response.normal_force_n))
             active[rail.id] += int(response.active)
             if response.geometry:
                 max_depth = max(max_depth, response.geometry.penetration_m)
@@ -2256,9 +2319,33 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         gates["translational_action_reaction"] = bool(max_translation_balance_error_n <= 1e-6)
     if spin_tracking_relative is not None:
         gates["spin_tracking"] = bool(spin_tracking_relative <= 0.01)
+    gates["launch_balance"] = launch_balance_gate(launch_report)
+    stationarity_window = case.run.stationarity_window_m
+    if stationarity_window is None:
+        force_std_kn: dict[str, float] = {}
+        max_force_std_kn: float | None = None
+        stationarity_samples = 0
+    else:
+        low, high = float(stationarity_window[0]), float(stationarity_window[1])
+        keep = [i for i, station in enumerate(front_stations_m) if low <= station <= high]
+        stationarity_samples = len(keep)
+        force_std_kn = rail_force_std_kn(
+            {rail_id: [values[i] for i in keep]
+             for rail_id, values in force_samples.items()})
+        max_force_std_kn = max(force_std_kn.values()) if force_std_kn else 0.0
+        gates["stationarity"] = stationarity_gate(force_std_kn, stationarity_samples)
+    result_status, failed_gates = gates_result_status(gates)
     summary = {
         "case_id": case.case_id, "case_purpose": case.purpose,
-        "result_status": "numerically_checked" if all(gates.values()) else "numerical_gate_failed",
+        "result_status": result_status,
+        "failed_gates": failed_gates,
+        "max_rail_force_std_kn": max_force_std_kn,
+        "rail_force_std_kn": force_std_kn,
+        "stationary_force_std_limit_kn": MAX_STATIONARY_FORCE_STD_KN,
+        "stationarity_window_m": (None if stationarity_window is None
+                                   else [float(stationarity_window[0]),
+                                         float(stationarity_window[1])]),
+        "stationarity_samples": stationarity_samples,
         "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
         # Written here as the no-claim default and nowhere else: only velch.inverse.verdict may
         # return anything stronger, because that is the layer that actually compares against a
@@ -2289,7 +2376,8 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
     return VehicleResult(times, positions, velocities, contact_history, summary,
                          accelerations=accelerations, acceleration_names=acceleration_names,
                          body_contacts=body_history, body_ids=body_id_history,
-                         launch=launch_report)
+                         launch=(launch_report
+                                 if bool(getattr(run, "report_launch", False)) else None))
 
 
 _COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",

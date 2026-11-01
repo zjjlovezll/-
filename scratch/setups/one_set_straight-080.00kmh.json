@@ -5576,7 +5576,7 @@
  "equilibrate_vertical": true,
  "run": {
   "method": "DOP853",
-  "x_start_m": 40.0,
+  "x_start_m": 46.0,
   "seat_x_start_m": 40.0,
   "duration_s": 0.02,
   "output_step_s": 0.0005,
@@ -5592,6 +5592,10 @@
   },
   "seat_lateral": true,
   "report_launch": true,
+  "stationarity_window_m": [
+   56.0,
+   65.0
+  ],
   "seat_modal_scales": [
    1.0,
    0.8,

@@ -219,7 +219,8 @@ def main() -> int:
     started = time.perf_counter()
     result = simulate_vehicle(dataclasses.replace(case, run=run))
     wall_s = time.perf_counter() - started
-    gates = (getattr(result, "summary", {}) or {}).get("gates") or {}
+    summary = getattr(result, "summary", {}) or {}
+    gates = summary.get("gates") or {}
     notes: dict[str, str] = {}
     for item in args.note:
         if "=" not in item:
@@ -322,6 +323,7 @@ def write_archive(result, *, case, case_path, case_digest: str, route: str, spee
 
     gates = (getattr(result, "summary", {}) or {}).get("gates") or {}
 
+    summary = getattr(result, "summary", {}) or {}
     meta = {
         "run_id": run_id,
         "route": route,
@@ -347,6 +349,26 @@ def write_archive(result, *, case, case_path, case_digest: str, route: str, spee
         "body_labels": body_labels,
         "acceleration_names": list(getattr(result, "acceleration_names", ()) or ()),
         "gates": {str(k): bool(v) for k, v in gates.items()},
+        # Until round 314 the launch block lived only in the index row, so a reader who opened
+        # meta.json -- the file that describes a run -- could not see the state that run started
+        # from, and the two gates that read it.  Both travel with the run now.
+        "result_status": summary.get("result_status"),
+        "failed_gates": list(summary.get("failed_gates") or ()),
+        "max_rail_force_std_kn": summary.get("max_rail_force_std_kn"),
+        "stationary_force_std_limit_kn": summary.get("stationary_force_std_limit_kn"),
+        # Gate 9 is a claim about a window, so the archive has to record which window was claimed
+        # and whether the run actually reached it.  Without these two lines a reader cannot tell a
+        # quiet run from a run that never sampled the window it declared.
+        "stationarity_window_m": summary.get("stationarity_window_m"),
+        "stationarity_samples": summary.get("stationarity_samples"),
+        "launch": None if launch is None else {
+            "modal_norm_m": float(launch["modal_norm_m"]),
+            "modal_residual_n": float(launch["modal_residual_n"]),
+            "modal_residual_share": launch.get("modal_residual_share"),
+            "vertical_preload_residual_n": launch["vertical_preload_residual_n"],
+            "spin_relative_max": float(launch["spin_relative_max"]),
+            "balanced": bool(launch["balanced"]),
+        },
         "wall_s": wall_s,
         "notes": notes,
     }

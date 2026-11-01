@@ -47,7 +47,14 @@ def test_a_constant_profile_adds_no_gate_and_no_metric(tmp_path):
     result = simulate_vehicle(case)
     assert "spin_tracking" not in result.summary["gates"]
     assert result.summary["spin_tracking_max_m"] is None
-    assert len(result.summary["gates"]) == 7
+    # Eight: ``launch_balance`` (round 314) is unconditional, while ``stationarity`` is only
+    # produced inside a reading window the case declares -- this case declares none, and a gate
+    # that cannot be measured is absent rather than vacuous.  Same rule as ``spin_tracking``.
+    assert set(result.summary["gates"]) == {
+        "solver_completed", "finite_states_and_forces", "vertical_preload_residual",
+        "penetration_within_case_limit", "friction_bound", "no_edge_limited_active_contact",
+        "translational_action_reaction", "launch_balance"}
+    assert result.summary["stationarity_window_m"] is None
 
 
 def test_a_ramp_is_tracked_within_the_gate(tmp_path):

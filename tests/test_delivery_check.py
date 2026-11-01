@@ -50,7 +50,15 @@ def test_the_canonical_case_still_seats_and_runs_the_documented_twenty_milliseco
     body = check.smoke()
     assert body["pass"] is True
     assert body["frames"] == 41                      # 0.02 s at the 5e-4 s output step
-    assert sum(body["gates"].values()) == len(body["gates"]) == 7
+    # Eight since round 314, not seven: ``launch_balance`` is computed unconditionally (a check a
+    # setting can switch off is not a check), while ``stationarity`` is only produced inside a
+    # reading window and this canonical case declares none.  The set is pinned, not counted, so a
+    # gate that quietly appears or disappears fails here.
+    assert set(body["gates"]) == {
+        "solver_completed", "finite_states_and_forces", "vertical_preload_residual",
+        "penetration_within_case_limit", "friction_bound", "no_edge_limited_active_contact",
+        "translational_action_reaction", "launch_balance"}
+    assert all(body["gates"].values())
     assert body["seat_residual_n"] <= 1.0e-5
 
 

@@ -209,13 +209,6 @@ class RunSettings:
     seat never take a second pass.  ``None`` means ``(1.0, 0.8, 0.95, 1.05, 0.5)``.
     """
     seat_lateral: bool = False
-    #: Mileage window, in metres, over which this run claims a quasi-static reading.  Gate 9 is
-    #: computed inside it and nowhere else; ``None`` means the run makes no such claim and no gate
-    #: is produced.  The distinction is measured, not stylistic: the frozen baseline moves 53.88 kN
-    #: of load from ``stock`` to ``switch`` inside its first 0.015 s, so a whole-record standard
-    #: deviation refuses it for doing exactly what a turnout does.  Declaring the window is what
-    #: turns "the launch is quiet" from an assumption into a test.
-    stationarity_window_m: tuple[float, float] | None = None
     """Also put each wheelset where its own net lateral force vanishes.
 
     The vertical seat solves ``z`` only.  On a *flexible* wheelset the tread deflects
@@ -226,6 +219,14 @@ class RunSettings:
     ``F_y = 0``), which this flag solves after the vertical/modal seat.  Off by default so every
     frozen baseline keeps its numbers bit for bit.
     """
+    #: Mileage window, in metres, over which this run claims a quasi-static reading.  Gate 9 is
+    #: computed inside it and nowhere else; ``None`` means the run makes no such claim and no gate
+    #: is produced.  The distinction is measured, not stylistic: the frozen baseline moves 53.88 kN
+    #: of load from ``stock`` to ``switch`` inside its first 0.015 s, so a whole-record standard
+    #: deviation refuses it for doing exactly what a turnout does.  Declaring the window is what
+    #: turns "the launch is quiet" from an assumption into a test, and the window has to be *reached*
+    #: for the test to mean anything (round 315: 0.44 m of a 9 m window answered it).
+    stationarity_window_m: tuple[float, float] | None = None
     report_launch: bool = False
     """Record what the run actually started from, instead of only that it started.
 
@@ -300,6 +301,13 @@ class RunSettings:
             raise ValueError("supported methods are DOP853, Radau and BDF")
         if self.jacobian not in {None, "sparse_fd", "analytic"}:
             raise ValueError("jacobian must be None, 'sparse_fd' or 'analytic'")
+        if self.stationarity_window_m is not None:
+            window = tuple(float(value) for value in self.stationarity_window_m)
+            if len(window) != 2 or not window[0] < window[1]:
+                raise ValueError(
+                    "run.stationarity_window_m needs two mileages with start < end, got "
+                    f"{self.stationarity_window_m!r}")
+            object.__setattr__(self, "stationarity_window_m", window)
         if self.jacobian is not None and self.method == "DOP853":
             # solve_ivp silently ignores jac/jac_sparsity for explicit solvers and only
             # emits a UserWarning, so a case could claim an analytic Jacobian and quietly

@@ -122,3 +122,61 @@ max rail std 53.877 kN   （axle1_right_switch 53.877，axle1_right_stock 23.595
 **5）改后实测**：60/80 km/h 都 **9/9**（窗口内 41 个样本、max std 0.103 / 0.0962 kN），基线算例 **8/8**、`stationarity` 不出现、`result_status = numerically_checked`。
 
 **这一条要记住的是**：我上一轮用"整段 std"去判"起跑即静"，是在**同一条数据上换了一把更钝的尺子**；尺子自己的第一次读数就把冻结基线判成失败，这是它该被否的信号，不是它被判得太严。
+
+## 10 覆盖性：第 9 条原来只数样本，不问窗口有没有走到
+
+第 314 轮的第 9 条只检查"窗口内有 ≥3 个样本"，于是**一个只走了窗口 4.9 % 的运行也通过了**。实测：
+
+| 归档 | 帧数 | 窗口 | 窗口内行程 | 覆盖 | 窗口内 max std |
+|---|---|---|---|---|---|
+| `one_set_straight-080…-0.0200s` | 41 | [56, 65] m | **0.444 m** | **4.9 %** | 0.0962 kN |
+| `one_set_straight-060…-0.0200s` | 41 | [56, 65] m | **0.333 m** | **3.7 %** | 0.103 kN |
+| `one_set_reading-080…-0.4050s` | 811 | [56, 65] m | **9.000 m** | **100 %** | 0.2382 kN |
+
+两个 0.02 s 归档的 `stationarity_samples == frames == 41`——**样本数与帧数相等这件事本身就是答案**：窗口里只装得下整条记录的样本。0.096 kN 比 5 kN 限值低 52 倍，看起来干净，实际只在"起点那 0.44 m"干净。
+
+**新规则（`stationarity_coverage`）**：样本落在等距网格上，任何运行都不可能同时在窗口两端各放一个样本，所以允许**一个采样间距**的欠额：
+
+```
+spacing  = median(diff(kept))
+expected = (high - low) - spacing
+covered  = span >= expected - 1e-9
+```
+
+`stationarity_gate(force_std_kn, samples, covered)` 在 `covered=False` 时直接失败——**没量到的窗口不许算作平稳**。
+
+**实测（`one_set_reading-080…-0.4050s`）**：811 帧、`stationarity_span_m = 9.000`、`expected = 8.9889`、`spacing = 0.01111`、`covered = True`、`max std = 0.2382 kN`、**9/9 门全过**、wall 363.5 s。
+
+**同一条谓词回算旧归档**（`tests/test_launch_gates.py::test_the_short_archive_that_passed_in_round_314_would_now_be_refused`）：用它自己的 `duration_s`、`speed_kmh`、`stationarity_samples` 重建站位 ⇒ `covered = False`、`stationarity_gate(...) is False`。**第 314 轮那次"9/9"不是被推翻，而是被证明测的不是窗口。**
+
+**入口也拒绝**：0.405 s 在 60 km/h 只走 6.750 m，不到窗口的 9 m，`velch.setup.resolve` 直接
+
+```
+ValueError: the run is too short for the declared reading window: 6.750 m of 9.000 m at 60 km/h
+for 0.405 s. Lengthen duration.s, narrow reading.window_m, or set reading.window_m=none to run
+without a stationarity claim.
+```
+
+**因此现在有两个 setup**，区别只在"是否主张平稳性"：`setups/one_set_straight.json`（0.02 s，`reading.window_m: none` ⇒ 8 门、12.9 s）与 `setups/one_set_reading.json`（0.405 s，`[56, 65]` ⇒ 9 门、363.5 s）。
+
+## 11 门 8 的证据必须跟着门一起存
+
+扫 69 个归档发现 1 个反例：`…-080.00kmh-0.0200s-500us-d92f8397` 记着 `launch_balance: true`，却 **`launch: null`**。原因是门读的是**无条件计算**的 `launch_report`，而归档存的是 `report_launch` 关掉之后的 `None`。一个门说"起点平衡"，归档里却没有任何起点证据。
+
+修法：`summary["launch"] = launch_report`（与门同源），`s99.write_archive` 在 `launch is None` 时回落 `summary["launch"]`。实测 `one_set_reading` 的 `meta["launch"]` 六个键齐全：`balanced / modal_norm_m / modal_residual_n / modal_residual_share / spin_relative_max / vertical_preload_residual_n`。
+
+## 12 屏幕只认识七门
+
+`src/velch/ui/store.py` 的 `GATE_LABELS` 只有七条，`screen_assess._render_gates` 只遍历这张表，`failed` 也只从它取——所以**门 8 失败会显示成 `7/7` PASS**。这比"少显示一行"严重：它把那一个能抓住"转速没跟上速度"的门藏起来了。
+
+修法：`GATE_LABELS` 扩到九条（新增 `launch_balance`「起点平衡（转速 + 预载）」、`stationarity`「读数窗口平稳」），并把渲染改成"标签行 + 未在表里的键按原名渲染"，`failed` 从合并后的行取。`tests/test_gate_labels.py` 3 项钉住：键集合与求解器写出的九门完全一致、每条门都有可读的数字（`launch_balance → spin_relative_max`、`stationarity → max_rail_force_std_kn`）、**表里没有的键仍要有名字**。
+
+## 13 这一轮撤掉的三把尺子（都是我自己的）
+
+| 尺子 | 何时立 | 为什么撤 |
+|---|---|---|
+| 模态残差 ≤ 0.1 N | 第 312 轮 | 实测交替不动点恒有 101–107 N、与速度无关、400 轮逐位相同 ⇒ 0.1 N 是我拍的，不是测出来的 |
+| 整段 std ≤ 5 kN | 第 314 轮 | 冻结基线在 0.015 s 内合法转移 53.88 kN，被判 `physical_gate_failed` ⇒ 尺子比对象粗 |
+| "门数 = 7" | 第 314 轮 | 多一条门就红，是常数在漂，不是行为在变 ⇒ 改成钉门名集合 |
+
+共同的教训：**判据要先问"这个数是怎么来的"**。`stationarity_samples == frames` 那一次，就是尺子比对象还短的现场。

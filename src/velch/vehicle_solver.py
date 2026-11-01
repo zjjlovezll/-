@@ -167,7 +167,28 @@ def rail_force_std_kn(samples: dict[str, list[float]]) -> dict[str, float]:
             for rail_id, values in samples.items()}
 
 
-def stationarity_gate(force_std_kn: dict[str, float], samples: int) -> bool:
+def stationarity_coverage(stations: list[float] | tuple[float, ...],
+                          window: tuple[float, float]) -> dict[str, float | bool | None]:
+    """Does the kept sample span cover the declared window, up to one sample spacing?
+
+    Gate 9 asks whether the reading window was *quiet*.  A run that only drove the first 0.44 m of a
+    9 m window answers a different question, and it answered it with a pass: measured in round 315,
+    41 of 41 frames lay inside ``[56, 65]`` m with 0.096 kN, while the window's other 8.56 m were
+    never sampled.  Samples sit on a grid, so no run can hold a sample exactly on both ends; one
+    spacing is the allowance, and it is read from the data rather than chosen.
+    """
+    low, high = float(window[0]), float(window[1])
+    kept = sorted(float(station) for station in stations)
+    if len(kept) < 2:
+        return {"covered": False, "span_m": 0.0, "expected_span_m": high - low, "spacing_m": None}
+    spacing = float(np.median(np.diff(kept)))
+    span = kept[-1] - kept[0]
+    expected = (high - low) - spacing
+    return {"covered": bool(span >= expected - 1.0e-9), "span_m": span,
+            "expected_span_m": expected, "spacing_m": spacing}
+
+
+def stationarity_gate(force_std_kn: dict[str, float], samples: int, covered: bool = True) -> bool:
     """Gate 9, inside a declared reading window: the worst rail must not ring above 5 kN.
 
     Only produced when the case declares ``run.stationarity_window_m``.  A window the run never
@@ -176,7 +197,7 @@ def stationarity_gate(force_std_kn: dict[str, float], samples: int) -> bool:
     measured on the frozen baseline, the load moves 53.88 kN from ``stock`` to ``switch`` inside
     0.015 s of legal transfer, which would refuse a turnout for behaving like one.
     """
-    if not force_std_kn or samples < 3:
+    if not force_std_kn or samples < 3 or not covered:
         return False
     worst = max(force_std_kn.values())
     return bool(worst <= MAX_STATIONARY_FORCE_STD_KN)
@@ -2325,15 +2346,25 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         force_std_kn: dict[str, float] = {}
         max_force_std_kn: float | None = None
         stationarity_samples = 0
+        stationarity_span_m: float | None = None
+        stationarity_expected_span_m: float | None = None
+        stationarity_spacing_m: float | None = None
+        stationarity_covered: bool | None = None
     else:
         low, high = float(stationarity_window[0]), float(stationarity_window[1])
         keep = [i for i, station in enumerate(front_stations_m) if low <= station <= high]
         stationarity_samples = len(keep)
+        coverage = stationarity_coverage([front_stations_m[i] for i in keep], stationarity_window)
+        stationarity_span_m = float(coverage["span_m"])
+        stationarity_expected_span_m = coverage["expected_span_m"]
+        stationarity_spacing_m = coverage["spacing_m"]
+        stationarity_covered = bool(coverage["covered"])
         force_std_kn = rail_force_std_kn(
             {rail_id: [values[i] for i in keep]
              for rail_id, values in force_samples.items()})
         max_force_std_kn = max(force_std_kn.values()) if force_std_kn else 0.0
-        gates["stationarity"] = stationarity_gate(force_std_kn, stationarity_samples)
+        gates["stationarity"] = stationarity_gate(force_std_kn, stationarity_samples,
+                                                  stationarity_covered)
     result_status, failed_gates = gates_result_status(gates)
     summary = {
         "case_id": case.case_id, "case_purpose": case.purpose,
@@ -2346,6 +2377,14 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                                    else [float(stationarity_window[0]),
                                          float(stationarity_window[1])]),
         "stationarity_samples": stationarity_samples,
+        "stationarity_span_m": stationarity_span_m,
+        "stationarity_expected_span_m": stationarity_expected_span_m,
+        "stationarity_spacing_m": stationarity_spacing_m,
+        "stationarity_covered": stationarity_covered,
+        # Gate 8 is unconditional, so its evidence must be too: measured in round 315, one archive
+        # carried ``launch_balance: true`` next to ``launch: null`` because the block was gated by
+        # ``report_launch`` while the gate was not.  A gate reads this dict; the archive stores it.
+        "launch": launch_report,
         "physics_validation_status": "unvalidated_against_measurement_or_Simpack",
         # Written here as the no-claim default and nowhere else: only velch.inverse.verdict may
         # return anything stronger, because that is the layer that actually compares against a

@@ -260,11 +260,16 @@ class AssessScreen(Screen):
         return "—"
 
     def _render_gates(self, run: store.RunInfo) -> None:
-        self.gates.build([(key, label, self._gate_detail(key))
-                          for key, label in store.GATE_LABELS])
+        # Every gate the run actually produced, labelled ones first and anything new by its own
+        # name: a gate that is missing from the label table must still be visible, or a failing run
+        # reads as a clean pass (round 315: launch_balance was invisible and 7/7 was shown).
+        labelled = list(store.GATE_LABELS)
+        known_keys = {key for key, _label in labelled}
+        rows = labelled + [(key, key) for key in run.gates if key not in known_keys]
+        self.gates.build([(key, label, self._gate_detail(key)) for key, label in rows])
         passed = 0
         known = 0
-        for key, _label in store.GATE_LABELS:
+        for key, _label in rows:
             value = run.gates.get(key)
             self.gates.set(key, value, self._gate_detail(key))
             if value is None:
@@ -274,7 +279,7 @@ class AssessScreen(Screen):
         self.card_status.set(f"{passed}/{known}" if known else "—",
                             tone=theme.PASS if known and passed == known else theme.FAIL
                             if known else theme.INK_MUTED)
-        failed = [label for key, label in store.GATE_LABELS if run.gates.get(key) is False]
+        failed = [label for key, label in rows if run.gates.get(key) is False]
         note = run.peak_force_n
         text = (f"算例 {run.case_id or '—'} · 总自由度 {run.total_dof or '—'} · "
                 f"峰值法向力 {fmt_number(note, 'N') if note is not None else '—'}")

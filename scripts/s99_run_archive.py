@@ -361,6 +361,10 @@ def write_archive(result, *, case, case_path, case_digest: str, route: str, spee
         # quiet run from a run that never sampled the window it declared.
         "stationarity_window_m": summary.get("stationarity_window_m"),
         "stationarity_samples": summary.get("stationarity_samples"),
+        "stationarity_span_m": summary.get("stationarity_span_m"),
+        "stationarity_expected_span_m": summary.get("stationarity_expected_span_m"),
+        "stationarity_spacing_m": summary.get("stationarity_spacing_m"),
+        "stationarity_covered": summary.get("stationarity_covered"),
         "launch": None if launch is None else {
             "modal_norm_m": float(launch["modal_norm_m"]),
             "modal_residual_n": float(launch["modal_residual_n"]),

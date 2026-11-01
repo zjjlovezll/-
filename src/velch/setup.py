@@ -123,6 +123,28 @@ def _positive(name: str, value: float, low: float, high: float) -> float:
     return number
 
 
+def _window(name: str, value: Any) -> tuple[float, float] | None:
+    """Validate a reading window from any entry point.
+
+    One validator, because a window typed backwards is a *configuration* error and nothing else.
+    Measured in round 315 before this existed: the setup loader accepted ``[65, 56]`` (the run then
+    failed as "physical"), accepted ``[56.0, 65.0, 70.0]`` by dropping the third, and raised
+    ``IndexError`` for ``[56.0]`` -- three ways for a typo to become a physics conclusion.
+    """
+    if value is None:
+        return None
+    if isinstance(value, (int, float, str)):
+        raise ValueError(f"{name} must be two mileages [start, end] or null, got {value!r}")
+    parts = list(value)
+    if len(parts) != 2:
+        raise ValueError(f"{name} must be exactly two mileages [start, end], got {value!r}")
+    low = _positive(f"{name}[0]", parts[0], 0.0, 1.0e4)
+    high = _positive(f"{name}[1]", parts[1], 0.0, 1.0e4)
+    if not low < high:
+        raise ValueError(f"{name} needs start < end, got {value!r}")
+    return (low, high)
+
+
 def load_setup(path: str | pathlib.Path) -> Setup:
     """Read and validate a setup file.  Unknown keys are refused, not ignored."""
     target = pathlib.Path(path)
@@ -156,9 +178,8 @@ def load_setup(path: str | pathlib.Path) -> Setup:
         duration_s=_positive("duration_s", raw.get("duration_s", 0.02), 1.0e-6, 120.0),
         output_step_s=_positive("output_step_s", raw.get("output_step_s", 5.0e-4), 1.0e-9, 10.0),
         report_launch=bool(raw.get("report_launch", True)),
-        stationarity_window_m=(None if raw.get("stationarity_window_m") is None else
-                               (float(raw["stationarity_window_m"][0]),
-                                float(raw["stationarity_window_m"][1]))),
+        stationarity_window_m=_window(f"{target}: stationarity_window_m",
+                                     raw.get("stationarity_window_m")),
         start_x_m=(None if raw.get("start_x_m") is None
                    else _positive("start_x_m", raw["start_x_m"], 0.0, 1.0e3)),
         seat_start_m=(None if raw.get("seat_start_m") is None
@@ -254,9 +275,9 @@ def _write_case(setup: Setup, out_dir: pathlib.Path) -> tuple[pathlib.Path, str]
     run["duration_s"] = float(setup.duration_s)
     run["output_step_s"] = float(setup.output_step_s)
     run["report_launch"] = bool(setup.report_launch)
-    if setup.stationarity_window_m is None:
-        run["stationarity_window_m"] = None
-    else:
+    if setup.stationarity_window_m is not None:
+        # Only written when claimed: materialising a null key changed ``case_sha256`` and split the
+        # archive id of an unchanged setup from its earlier runs (round 315).
         run["stationarity_window_m"] = [float(setup.stationarity_window_m[0]),
                                         float(setup.stationarity_window_m[1])]
     if setup.start_x_m is not None:
@@ -319,6 +340,15 @@ def resolve(setup: Setup, overrides: list[str] | tuple[str, ...] = (),
     directory = pathlib.Path(out_dir) if out_dir is not None else REPO_ROOT / "scratch" / "setups"
     case_path, digest = _write_case(resolved, directory)
     case = load_vehicle_case(case_path)
+    if resolved.stationarity_window_m is not None:
+        low, high = (float(value) for value in resolved.stationarity_window_m)
+        reach = resolved.duration_s * (resolved.speed_kmh / 3.6)
+        if reach + 1.0e-9 < high - low:
+            raise ValueError(
+                f"the run is too short for the declared reading window: {reach:.3f} m of "
+                f"{high - low:.3f} m at {resolved.speed_kmh:g} km/h for "
+                f"{resolved.duration_s:g} s. Lengthen duration.s, narrow reading.window_m, or set "
+                f"reading.window_m=none to run without a stationarity claim.")
     spin_relative = check_kinematics(case)
     speed_ms = resolved.speed_kmh / 3.6
     radius = float(case.vehicle.nominal_wheel_radius_m)

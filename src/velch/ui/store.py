@@ -44,8 +44,11 @@ SIMPACK_GROUP = "timeInt/RS_result/SRS_S_R/SRS_S_WS_F/SRS_RWP_R"
 SIMPACK_Z_GROUP = "timeInt/bodyPosTrans/SS_F__S_WS_F__B_WS/z"
 SIMPACK_STATION_OFFSET_M = 17.5
 
-#: The seven manifest gates, in the order the solver writes them, with the numeric
-#: companion the manifest records for each so a failure can be read, not just seen.
+#: The manifest gates, in the order the solver writes them, with the numeric companion the
+#: manifest records for each so a failure can be read, not just seen.  Nine since round 315: the
+#: screen read only these seven and therefore showed a run whose ``launch_balance`` failed as
+#: ``7/7`` -- the one gate that catches a launch with the wrong spin was invisible.  Unknown keys
+#: are still rendered by name, so the next gate does not have to be added here to be seen.
 GATE_LABELS: tuple[tuple[str, str], ...] = (
     ("solver_completed", "求解器收敛完成"),
     ("finite_states_and_forces", "状态与力全部有限"),
@@ -54,6 +57,8 @@ GATE_LABELS: tuple[tuple[str, str], ...] = (
     ("friction_bound", "摩擦力在摩擦界内"),
     ("no_edge_limited_active_contact", "无边缘限幅有效接触"),
     ("translational_action_reaction", "平动作用-反力平衡"),
+    ("launch_balance", "起点平衡（转速 + 预载）"),
+    ("stationarity", "读数窗口平稳"),
 )
 
 GATE_DETAIL_FIELDS: dict[str, str] = {
@@ -62,6 +67,8 @@ GATE_DETAIL_FIELDS: dict[str, str] = {
     "friction_bound": "max_friction_excess_n",
     "no_edge_limited_active_contact": "edge_limited_active_output_samples",
     "translational_action_reaction": "max_translation_balance_error_n",
+    "launch_balance": "spin_relative_max",
+    "stationarity": "max_rail_force_std_kn",
 }
 
 GATE_UNITS: dict[str, str] = {
@@ -70,6 +77,8 @@ GATE_UNITS: dict[str, str] = {
     "max_friction_excess_n": "N",
     "edge_limited_active_output_samples": "个采样",
     "max_translation_balance_error_n": "N",
+    "spin_relative_max": "-",
+    "max_rail_force_std_kn": "kN",
 }
 
 

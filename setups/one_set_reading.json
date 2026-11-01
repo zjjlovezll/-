@@ -1,0 +1,21 @@
+{
+ "label": "one_set_reading",
+ "case": "vehicles/turnouts/CN60-1100-1_18/cases/straight_one_set.json",
+ "speed_kmh": 80.0,
+ "duration_s": 0.405,
+ "output_step_s": 0.0005,
+ "report_launch": true,
+ "stationarity_window_m": [56.0, 65.0],
+ "start_x_m": 46.0,
+ "seat_start_m": 40.0,
+ "prebalance": {
+  "equilibrate_vertical": true,
+  "seat_lateral": true,
+  "seat_modal_scales": [1.0, 0.8, 0.95, 1.05, 0.5]
+ },
+ "notes": {
+  "what": "the same one-set turnout model, long enough to drive the whole 9 m reading window",
+  "knob": "speed.kmh is the parameter; duration.s follows only if you want to keep the same window",
+  "why": "round 315 measured that a 0.02 s run at 80 km/h covers 0.44 m of this window and still passed gate 9; the coverage check now refuses that, so the claim needs a run that reaches the window's far end"
+ }
+}

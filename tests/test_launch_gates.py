@@ -27,6 +27,7 @@ from velch.vehicle_solver import (
     launch_balance_gate,
     rail_force_std_kn,
     simulate_vehicle,
+    stationarity_coverage,
     stationarity_gate,
 )
 
@@ -82,20 +83,39 @@ def test_gate_eight_reads_only_the_two_limits_it_names() -> None:
 
 def test_gate_nine_separates_the_ringing_archive_from_the_quiet_pair() -> None:
     ringing, _ = _series(_one("one_set_x46-060.00kmh-0.5400s-*"))
-    quiet_60, meta_60 = _series(_one_with_window("one_set_straight-060.00kmh-0.0200s-*"))
-    quiet_80, meta_80 = _series(_one_with_window("one_set_straight-080.00kmh-0.0200s-*"))
+    quiet_60, _meta_60 = _series(_one_with_window("one_set_straight-060.00kmh-0.0200s-*"))
+    quiet_80, _meta_80 = _series(_one_with_window("one_set_straight-080.00kmh-0.0200s-*"))
     ringing_std, quiet60_std, quiet80_std = (_max_std(ringing), _max_std(quiet_60),
                                              _max_std(quiet_80))
     print("std kN", ringing_std, quiet60_std, quiet80_std)
-    # The archives were taken over the whole 0.54 s / 0.02 s records; gate 9 is applied inside a
-    # declared window, so the counts here stand in for "the window had samples".
     assert stationarity_gate({"ringing": ringing_std}, 1081) is False
-    assert stationarity_gate({"quiet60": quiet60_std, "quiet80": quiet80_std}, 41) is True
     assert ringing_std > 30.0 and quiet60_std < 1.0 and quiet80_std < 1.0
-    # Both quiet archives declare where their reading window was.
-    assert meta_60["stationarity_window_m"] == [56.0, 65.0]
-    assert meta_80["stationarity_window_m"] == [56.0, 65.0]
-    assert meta_60["stationarity_samples"] >= 3
+    # The quiet pair is quiet, and round 315 showed that is not enough: those 0.02 s archives
+    # sampled 0.44 m of a 9 m window, so the claim was never measured.  Gate 9 refuses them now,
+    # which is the point of the coverage term -- and means the pass in round 314 was vacuous.
+    assert stationarity_gate({"quiet": quiet80_std}, 41, covered=False) is False
+
+
+def test_coverage_refuses_a_window_the_run_never_reached() -> None:
+    """Round 314 in one line: 41 samples, quiet, and 8.56 m of the window untouched."""
+    stepped = [56.0 + index * 0.011111 for index in range(41)]  # 0.44 m at 80 km/h over 0.02 s
+    coverage = stationarity_coverage(stepped, (56.0, 65.0))
+    print(coverage)
+    assert coverage["covered"] is False
+    assert coverage["span_m"] < 0.5 and coverage["expected_span_m"] > 8.9
+    assert stationarity_gate({"a": 0.1}, 41, coverage["covered"]) is False
+    # A run that drives the window: one sample spacing of allowance, and no more.
+    whole = [56.0 + index * 0.011111 for index in range(820)]
+    full = stationarity_coverage(whole, (56.0, 65.0))
+    print(full)
+    assert full["covered"] is True
+    assert stationarity_gate({"a": 0.1}, 820, full["covered"]) is True
+    # One spacing short of the window's end still counts; two short does not.
+    short = whole[:-1]
+    assert stationarity_coverage(short, (56.0, 65.0))["covered"] is True
+    assert stationarity_coverage(short[:-40], (56.0, 65.0))["covered"] is False
+    assert stationarity_coverage([], (56.0, 65.0))["covered"] is False
+    assert stationarity_coverage([56.0], (56.0, 65.0))["covered"] is False
 
 
 def test_a_window_with_no_samples_fails_rather_than_passing_vacuously() -> None:
@@ -146,7 +166,8 @@ def test_a_case_that_declares_no_window_gets_no_stationarity_gate(tmp_path) -> N
 
 @pytest.mark.corpus
 def test_a_run_archived_after_the_gates_carries_all_nine() -> None:
-    directory = _one_with_window("one_set_straight-060.00kmh-0.0200s-*")
+    """The 9 m window has to be driven: this archive covers it and carries the coverage numbers."""
+    directory = _one_with_window("one_set_reading-080.00kmh-0.4050s-*")
     meta = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
     gates = meta["gates"]
     expected = {"solver_completed", "finite_states_and_forces", "vertical_preload_residual",
@@ -161,3 +182,25 @@ def test_a_run_archived_after_the_gates_carries_all_nine() -> None:
     assert meta["launch"]["spin_relative_max"] <= 1.0e-3
     assert meta["launch"]["balanced"] is True
     assert meta["max_rail_force_std_kn"] <= MAX_STATIONARY_FORCE_STD_KN
+    # Coverage is written down, so "quiet" cannot be claimed from a fraction of the window.
+    assert meta["stationarity_window_m"] == [56.0, 65.0]
+    assert meta["stationarity_covered"] is True
+    assert meta["stationarity_span_m"] >= meta["stationarity_expected_span_m"] - 1.0e-9
+    assert meta["stationarity_samples"] >= 800
+
+
+@pytest.mark.corpus
+def test_the_short_archive_that_passed_in_round_314_would_now_be_refused() -> None:
+    """Recompute the old run's coverage from its own record: 0.02 s cannot reach 9 m."""
+    directory = _one_with_window("one_set_straight-080.00kmh-0.0200s-*")
+    meta = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
+    samples = int(meta["stationarity_samples"])
+    travel = float(meta["duration_s"]) * float(meta["speed_kmh"]) / 3.6
+    spacing = travel / max(samples - 1, 1)
+    low = float(meta["stationarity_window_m"][0])
+    stations = [low + index * spacing for index in range(samples)]
+    coverage = stationarity_coverage(stations, tuple(meta["stationarity_window_m"]))
+    assert coverage["covered"] is False
+    assert coverage["span_m"] < 0.5
+    assert stationarity_gate({key: 0.1 for key in ("a",)}, samples, coverage["covered"]) is False
+

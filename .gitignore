@@ -23,6 +23,10 @@ dist/
 # the repository entirely (see validation/INDEX.md), so these patterns only catch strays.
 validation/**/out_*/
 
+# Materialised setup cases: five thousand lines per run, written by velch.setup.resolve
+# and reproducible from the setup file it came from.
+scratch/setups/
+
 # Generated geometry and modal expansions.  All of it is derivable from the PRR profiles in
 # `validation/crh380a_m/bodies` and the SDITT catalogue; `validation/INDEX.md` says how.
 validation/**/div_panel/

@@ -219,9 +219,39 @@ def main() -> int:
     started = time.perf_counter()
     result = simulate_vehicle(dataclasses.replace(case, run=run))
     wall_s = time.perf_counter() - started
-    summary = getattr(result, "summary", {}) or {}
-    gates = summary.get("gates") or {}
+    gates = (getattr(result, "summary", {}) or {}).get("gates") or {}
+    notes: dict[str, str] = {}
+    for item in args.note:
+        if "=" not in item:
+            raise SystemExit(f"--note needs KEY=VALUE, got {item!r}")
+        key, value = item.split("=", 1)
+        notes[key.strip()] = value.strip()
+    entry = write_archive(result, case=case, case_path=case_path, case_digest=case_digest,
+                          route=route, speed_kmh=speed_kmh, duration_s=args.duration,
+                          output_step_s=args.output_step, wall_s=wall_s, notes=notes,
+                          launch=getattr(result, "launch", None))
+    print(f"{entry['run_id']}: frames {entry['frames']}  gates "
+          f"{sum(bool(v) for v in entry['gates'].values())}/{len(entry['gates'])}  "
+          f"wall {wall_s:.1f} s")
+    for name, value in entry["gates"].items():
+        print(f"  {name}: {value}")
+    print(f"data -> {entry['path']}")
+    return 0 if entry["gates"] and all(entry["gates"].values()) else 1
 
+
+def write_archive(result, *, case, case_path, case_digest: str, route: str, speed_kmh: float,
+                  duration_s: float, output_step_s: float, wall_s: float, notes: dict,
+                  launch: dict | None = None, setup: str | None = None,
+                  overrides: tuple[str, ...] = ()) -> dict:
+    """Write one finished run into ``scratch/runs/<run_id>/`` and return its index row.
+
+    The run id is derived from inputs only, so the same configuration cannot accumulate duplicates
+    and a changed case cannot silently reuse an old id.  ``launch`` is what the integration started
+    from (``run.report_launch``); it is written into ``meta.json`` because a run that did not start
+    seated reads its own transient, and until round 311 the archive could not tell.
+    """
+    run_id = run_id_for(route, speed_kmh, duration_s, output_step_s, case_digest)
+    out = OUT_ROOT / run_id
     out.mkdir(parents=True, exist_ok=True)
     arrays = {
         "times": np.asarray(result.times_s, dtype=float),
@@ -290,12 +320,7 @@ def main() -> int:
     arrays["body_normal_force_n"] = body_normal
     np.savez_compressed(out / "series.npz", **arrays)
 
-    notes: dict[str, str] = {}
-    for item in args.note:
-        if "=" not in item:
-            raise SystemExit(f"--note needs KEY=VALUE, got {item!r}")
-        key, value = item.split("=", 1)
-        notes[key.strip()] = value.strip()
+    gates = (getattr(result, "summary", {}) or {}).get("gates") or {}
 
     meta = {
         "run_id": run_id,
@@ -308,8 +333,8 @@ def main() -> int:
                               if case.run.speed_profile else None),
         "x_start_m": float(case.run.x_start_m),
         "seat_x_start_m": getattr(case.run, "seat_x_start_m", None),
-        "duration_s": args.duration,
-        "output_step_s": args.output_step,
+        "duration_s": duration_s,
+        "output_step_s": output_step_s,
         "max_solver_step_s": float(case.run.max_solver_step_s),
         "method": case.run.method,
         "rtol": float(case.run.rtol),
@@ -339,12 +364,12 @@ def main() -> int:
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + chr(10),
                                       encoding="utf-8")
-    write_index({
+    entry = {
         "run_id": run_id,
         "route": route,
         "speed_kmh": speed_kmh,
-        "duration_s": args.duration,
-        "output_step_s": args.output_step,
+        "duration_s": duration_s,
+        "output_step_s": output_step_s,
         "frames": int(arrays["times"].size),
         "gates": meta["gates"],
         "case_sha256": case_digest,
@@ -353,14 +378,18 @@ def main() -> int:
         "notes": dict(meta.get("notes", {})),
         "wall_s": wall_s,
         "path": str(out),
-    })
-
-    print(f"{run_id}: frames {arrays['times'].size}  gates "
-          f"{sum(bool(v) for v in gates.values())}/{len(gates)}  wall {wall_s:.1f} s")
-    for name, value in gates.items():
-        print(f"  {name}: {value}")
-    print(f"data -> {out}")
-    return 0 if gates and all(bool(v) for v in gates.values()) else 1
+    }
+    entry["launch"] = None if launch is None else {
+        "modal_norm_m": float(launch["modal_norm_m"]),
+        "modal_residual_n": float(launch["modal_residual_n"]),
+        "vertical_preload_residual_n": launch["vertical_preload_residual_n"],
+        "spin_relative_max": float(launch["spin_relative_max"]),
+        "balanced": bool(launch["balanced"]),
+    }
+    entry["setup"] = setup
+    entry["overrides"] = list(overrides)
+    write_index(entry)
+    return entry
 
 
 if __name__ == "__main__":

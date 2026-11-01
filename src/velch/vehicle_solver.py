@@ -108,6 +108,11 @@ class VehicleResult:
     #: Per frame, the body id behind each entry of ``body_contacts`` (same rail, same order).  Only
     #: bodies active at that station report, so the names cannot be recovered from the rail.
     body_ids: list[dict[str, tuple[str, ...]]] | None = None
+    #: What the integration actually started from, when the case asked for it
+    #: (``run.report_launch``): modal norm, modal force residual, preload residual, wheelset spins
+    #: and the creep kinematic consistency.  ``None`` on every run that did not ask, so nothing
+    #: that exists changes.
+    launch: dict[str, object] | None = None
 
 
 #: Time constant of the wheel-spin servo, seconds.  Slow enough for DOP853 at
@@ -125,6 +130,81 @@ _SEAT_BARRIER_RESIDUAL = 1.0
 # 4x wheel sampling already leaves, so it is not the residual that decides the drift any more.
 # Pre-registered in the docstring of ``scripts/s108_lateral_seat.py``.
 _SEAT_LATERAL_TOLERANCE = 20.0
+
+
+#: Modal force residual, in N, that a launch state may still carry and be called seated.
+#: Set from measurement, not from a tolerance wish: ``scripts/s172_run_case.py --set speed.kmh=80``
+#: and ``--set speed.kmh=60`` print ``modal_residual_n`` for the state the seat actually leaves, and
+#: this constant is documented against those numbers in ``docs/RUN_PATH_2026-11-01.md``.  It must
+#: reject the withdrawn 60 km/h launch (``|modal| = 1.57e-02 m``, spin that did not match the speed)
+#: while accepting a properly seated one.
+def _launch_report(case: VehicleCase, dynamics: VehicleDynamics, q: np.ndarray, v: np.ndarray,
+                   static_residual_n: float | None) -> dict[str, object]:
+    """Describe the state the integrator is about to start from.
+
+    Three things decide whether a short window means anything, and none of them was recorded
+    before round 312: how far the tread is deflected (``|modal|``), how much static force that
+    deflection still leaves unbalanced (``K q - Q``), and whether the wheelset spin agrees with the
+    speed it is being carried at (``spin*r = travel``).  A run that starts with the wrong spin and a
+    hot modal block is not a slower version of a good run -- it is a different experiment, and the
+    seven gates cannot see either.
+
+    One ``evaluate`` at ``t = 0`` on the seated state; the returned forces are the same ones the
+    first right-hand side would ask for, so this adds no state and no physics.
+    """
+    force, _contacts = dynamics.evaluate(0.0, q, v)
+    modal = dynamics.modal
+    if modal is None:
+        modal_norm = 0.0
+        modal_residual = 0.0
+    else:
+        block = q[modal.offset:]
+        modal_norm = float(np.max(np.abs(block))) if block.size else 0.0
+        modal_residual = float(np.max(np.abs(force[modal.offset:]))) if block.size else 0.0
+    travel = float(case.vehicle.travel_speed_m_s)
+    radius = float(case.vehicle.nominal_wheel_radius_m)
+    denominator = max(abs(travel), 1e-12)
+    spins: dict[str, float] = {}
+    worst = 0.0
+    for axle in range(len(case.vehicle.axle_offsets_m)):
+        index = dynamics.topology.require(f"wheelset{axle + 1}", "spin")
+        spin = float(v[index])
+        spins[f"wheelset{axle + 1}"] = spin
+        worst = max(worst, abs(spin * radius - travel) / denominator)
+    preload = None if static_residual_n is None else float(static_residual_n)
+    # What this flag is allowed to decide.  The preload and the spin have established limits (the
+    # ``vertical_preload_residual`` gate's 0.1 N, and the spin-tracking gate's 1e-3), so they decide
+    # ``balanced``.  The modal residual does NOT: round 312 pre-registered 0.1 N, measured 101.45 N
+    # at 80 km/h and 106.74 N at 60 km/h, re-measured at 400 settle rounds with bit-identical
+    # results, and inferred that the number is the compromise the settle and the seat strike on the
+    # same state -- a property of this seat, not of the speed.  So it is reported, with its share of
+    # the wheel load, and the stationarity audit decides whether it matters.
+    total_kg = (float(case.vehicle.carbody.mass_kg) + 2.0 * float(case.vehicle.bogie.mass_kg)
+                + 4.0 * float(case.vehicle.wheelset.mass_kg))
+    mean_contact_n = total_kg * float(case.vehicle.gravity_m_s2) / max(len(case.vehicle.axle_offsets_m) * 2, 1)
+    share = None if mean_contact_n <= 0.0 else float(modal_residual) / mean_contact_n
+    balanced = bool((preload is None or preload <= 0.1) and worst <= 1.0e-3)
+    return {
+        "modal_norm_m": modal_norm,
+        "modal_residual_n": modal_residual,
+        "modal_residual_share": share,
+        "vertical_preload_residual_n": preload,
+        "spin_rad_s": spins,
+        "spin_relative_max": worst,
+        "travel_m_s": travel,
+        "wheel_radius_m": radius,
+        "balanced": balanced,
+        "criteria": {
+            "vertical_preload_n": 0.1,
+            "spin_relative": 1.0e-3,
+        },
+        "reported_only": {
+            "modal_residual_n": "the settle/seat compromise leaves ~1e2 N regardless of speed; "
+                                "stationarity (s164) decides, this flag does not",
+        },
+        "note": "balanced = vertical preload residual <= 0.1 N and |spin*r - travel|/travel <= 1e-3; "
+                "the seven gates test neither, and the modal residual is reported, not gated.",
+    }
 
 
 class VehicleDynamics:
@@ -1979,6 +2059,8 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
         # Position alone is not enough: the line also *moves* under the vehicle.  Measured, the
         # geometry route without this reached only 1.04 m of travel before the slope guard.
         v = _align_velocity_to_track(case, dynamics, q, v)
+    launch_report = (_launch_report(case, dynamics, q, v, static_residual_n)
+                     if bool(getattr(run, "report_launch", False)) else None)
     initial = np.concatenate((q, v))
     count = int(math.ceil(run.duration_s / run.output_step_s))
     times = np.linspace(0, run.duration_s, count + 1)
@@ -2206,7 +2288,8 @@ def _integrate_vehicle(case: VehicleCase, dynamics: VehicleDynamics) -> VehicleR
                      if acceleration_rows else None)
     return VehicleResult(times, positions, velocities, contact_history, summary,
                          accelerations=accelerations, acceleration_names=acceleration_names,
-                         body_contacts=body_history, body_ids=body_id_history)
+                         body_contacts=body_history, body_ids=body_id_history,
+                         launch=launch_report)
 
 
 _COLUMN_SUFFIX = {"x": "x_m", "y": "y_m", "z": "z_m", "roll": "roll_rad",

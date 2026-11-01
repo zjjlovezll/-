@@ -1,0 +1,17 @@
+{
+ "label": "one_set_straight",
+ "case": "vehicles/turnouts/CN60-1100-1_18/cases/straight_one_set.json",
+ "speed_kmh": 80.0,
+ "duration_s": 0.02,
+ "output_step_s": 0.0005,
+ "report_launch": true,
+ "prebalance": {
+  "equilibrate_vertical": true,
+  "seat_lateral": true,
+  "seat_modal_scales": [1.0, 0.8, 0.95, 1.05, 0.5]
+ },
+ "notes": {
+  "what": "the one-set turnout model: 234 coordinates, flexible wheelset, compliant rail support",
+  "knob": "speed.kmh is the parameter; nothing else has to change to move the run to another speed"
+ }
+}

@@ -219,6 +219,18 @@ class RunSettings:
     ``F_y = 0``), which this flag solves after the vertical/modal seat.  Off by default so every
     frozen baseline keeps its numbers bit for bit.
     """
+    report_launch: bool = False
+    """Record what the run actually started from, instead of only that it started.
+
+    The seat is an initialisation, and until round 311 nothing in the archive said whether it had
+    closed: ``meta.json`` carried neither the wheelset spin nor the modal block it launched from, so
+    the 60 km/h run that started with ``|modal| = 1.57e-02`` (5.7x the 80 km/h run on the same case)
+    could only be diagnosed by replaying the seat by hand.  With this flag the run evaluates the
+    seated state once more and reports the modal norm, the modal force residual, the vertical preload
+    residual and the creep kinematic consistency ``|spin*r - travel| / travel``.  Off by default: the
+    extra ``evaluate`` is a right-hand-side call, so leaving it off is how every existing result keeps
+    its last bits.
+    """
     curve_geometry: bool = False
     # Place the vehicle on the sampled track's own centreline and tangent.  A turnout's diverging
     # route is curved through its station table, not through curve_radius_m, so without this the

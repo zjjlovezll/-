@@ -2724,6 +2724,18 @@ along with the real digests.
 `docs/BAND_SURFACE_2026-10-31.md`、报告 `reports/load_split_inversion_2026-10-31/band_surface.json`；
 任务书 §三十二；冻结基线 UNCHANGED。
 
+## 第 299 轮（2026-11-01）：对齐窗口后重问跨速度，并更正第 42 轮的错算术
+
+- 缺陷 **B052** 的证据链重述：第 42 轮把 `58.667 − 30 = 28.667 = 22.222 × 0.840` 当过决定性算术，**乘法错了**
+  （`22.222 × 0.840 = 18.667`）。B052 成立靠另外两条：三趟首次承载时间同为 0.817–0.819 s（三个速度应 0.92/0.74/0.61 s），
+  以及修复后 `x_at(0.5)` 给出 54.333 / 57.111 / 59.889 m。凡引用该算术的句子已改。
+- **第 290/291 轮的"跨速度不可迁移（12.8 % / 154.8 %）"作废**——那三趟标着 60/80/100，物理全是 80 km/h。
+- 新建 `scripts/s152_cross_speed.py`（同一九米窗口、每档自己的零点、`select()` 校验 `meta.speed_kmh`）+ `tests/test_cross_speed.py`（6 项）。
+- 读数：80 → engage 58.156 m / A 66.2 µm / centre 58.514 / p95 6.25 µm；100 → engage 58.153 m / A 56.6 µm / centre 58.919 / p95 10.23 µm；
+  **首次承载站位两档差 3 mm**、幅值差 **16.11 %**、100 的定位漂 **0.42 m** 且相对分箱门 2.34 % 不过。
+- 60 km/h 未进表：0.02 s 就要 3.2 min（切换区 ≈10 min/模拟秒）⇒ 0.54 s 需 ≥1.6 h，仍在跑。成本结构进文档。
+- 文档 `docs/CROSS_SPEED_2026-11-01.md`（七节）；任务书 §五十九。
+
 <!-- DOCS:ALL:BEGIN -->
 ## 完整文档清单（由 `scripts/gen_docs_index.py` 生成，测试会检查是否过期）
 
@@ -2769,6 +2781,7 @@ along with the real digests.
 | [COVERAGE_HELDOUT_2026-10-28.md](COVERAGE_HELDOUT_2026-10-28.md) | Held-out coverage, and why the measured verdict had to be made reproducible first |
 | [CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md](CRH380A_M_REAL_SIMPACK_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型真实 Simpack 验证记录（2026-10-19） |
 | [CRH380A_M_VALIDATION_2026-10-19.md](CRH380A_M_VALIDATION_2026-10-19.md) | CRH380A_M 刚性模型作为 Velch 验证算例的检查记录 |
+| [CROSS_SPEED_2026-11-01.md](CROSS_SPEED_2026-11-01.md) | 同样的九米窗口、两种真实速度：跨速度差 16 %，而不是 154 %（2026-11-01，第 299 轮） |
 | [CROWN_OFFSET_SWEEP_2026-10-31.md](CROWN_OFFSET_SWEEP_2026-10-31.md) | M2 第一轮：冠偏移扫描——四条门无一成立（2026-10-31） |
 | [CURVE_ALIGNMENT_VELOCITY_2026-10-28.md](CURVE_ALIGNMENT_VELOCITY_2026-10-28.md) | 曲线：把路线自己的横向速度装回去，以及为什么几何路由仍然拿不住这条曲线 |
 | [CURVE_APPROACH_DECISIONS_2026-10-27.md](CURVE_APPROACH_DECISIONS_2026-10-27.md) | 曲线走进哪一侧：四条被实测否掉的路，和一条还没被否的 |

@@ -58,7 +58,11 @@ REPORT = ROOT / "reports" / "load_split_inversion_2026-10-31" / "effective_gap.j
 
 RAIL = "axle1_right"
 AXLE_OFFSET_M = 10.0
-SPEED_KMH = 80.0
+DEFAULT_SPEED_KMH = 80.0
+SPEED_KMH = DEFAULT_SPEED_KMH          # overridden by --speed; sets the spin and the report path
+# The measured engage(5 %) station of each archived speed (round 304), used as the reference only.
+ENGAGE_5PCT_M = {60.0: 58.000, 80.0: 58.156, 100.0: 58.153}
+REFERENCE_M = ENGAGE_5PCT_M[DEFAULT_SPEED_KMH]
 ROLL_RADIUS_M = 0.43
 STATIONS_M = tuple(57.4 + 0.2 * index for index in range(10))
 # The crossing of the 5 % gap sits inside one 0.2 m cell, so the coarse sweep can only bracket it.
@@ -75,7 +79,7 @@ SHARE_TARGET = 0.05
 CROWN_TOLERANCE_M = 10e-6
 CLOSURE_TOLERANCE = 0.02
 STATION_TOLERANCE_M = 0.10
-MEASURED_ENGAGE_5PCT_M = 58.156
+MEASURED_ENGAGE_5PCT_M = ENGAGE_5PCT_M[80.0]   # kept as the 80 km/h reference for the tests
 
 
 def stiffness() -> float:
@@ -240,7 +244,8 @@ def verdict(data: dict) -> dict:
     finite_crown = closure_crown[np.isfinite(closure_crown)]
     found = crossings(rows, data["target_gap_m"])
     station = found[0] if found else None
-    station_error = None if station is None else abs(station - MEASURED_ENGAGE_5PCT_M)
+    # The reference is per speed: 58.156 m at 80 km/h, 58.000 m at 60, 58.153 m at 100 (round 304).
+    station_error = None if station is None else abs(station - REFERENCE_M)
     unique = len(found) == 1
     return {
         "worst_crown_minus_effective_um": worst_crown * 1e6,
@@ -254,7 +259,8 @@ def verdict(data: dict) -> dict:
         "station_from_effective_m": station,
         "station_error_m": station_error,
         "H7_reference_station": bool(unique and station_error is not None and station_error <= STATION_TOLERANCE_M),
-        "measured_engage_5pct_m": MEASURED_ENGAGE_5PCT_M,
+        "measured_engage_5pct_m": REFERENCE_M,
+        "speed_kmh": SPEED_KMH,
         "target_gap_um": data["target_gap_m"] * 1e6,
     }
 
@@ -267,7 +273,16 @@ def reports(stations: list, target_gap: float) -> dict:
 
 
 def main(argv: list | None = None) -> int:
+    global SPEED_KMH, REFERENCE_M, REPORT
     argv = sys.argv[1:] if argv is None else argv
+    if "--speed" in argv:
+        index = argv.index("--speed")
+        SPEED_KMH = float(argv[index + 1])
+        if SPEED_KMH not in ENGAGE_5PCT_M:
+            raise SystemExit(f"no archived engage(5 %) reference for {SPEED_KMH:g} km/h")
+        REFERENCE_M = ENGAGE_5PCT_M[SPEED_KMH]
+        if SPEED_KMH != DEFAULT_SPEED_KMH:
+            REPORT = REPORT.with_name(f"effective_gap_{SPEED_KMH:g}.json")
     if "--reuse" in argv:
         previous = json.loads(REPORT.read_text(encoding="utf-8"))
         payload = reports(previous["stations"], previous["constants"]["target_gap_m"])
@@ -306,7 +321,7 @@ def main(argv: list | None = None) -> int:
     print(f"non-monotone consecutive pairs {len(result['non_monotone_pairs'])}")
     if result["station_from_effective_m"] is not None:
         print(f"station where effective gap = 5 % gap  {result['station_from_effective_m']:.3f} m "
-              f"against measured {MEASURED_ENGAGE_5PCT_M:.3f} m "
+              f"against measured {REFERENCE_M:.3f} m at {SPEED_KMH:.0f} km/h "
               f"({result['station_error_m']:.3f} m) -> H7 "
               f"{'PASS' if result['H7_reference_station'] else 'FAIL'}")
     print(f"report -> {REPORT.relative_to(ROOT)}")

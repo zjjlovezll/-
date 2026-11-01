@@ -263,6 +263,7 @@
         "to_m": 59.0
       }
     ],
+    "speed_kmh": 80.0,
     "station_error_m": 0.010706851004542273,
     "station_from_effective_m": 58.14529314899546,
     "target_gap_um": 54.655758873040426,

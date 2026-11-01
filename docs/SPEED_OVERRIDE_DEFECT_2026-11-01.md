@@ -91,3 +91,27 @@ cd Velch
 python -X utf8 -m pytest tests/test_speed_override.py -q
 python -X utf8 scripts/s99_run_archive.py --case ../scratch/s146/one_set_x30.json --speed-kmh 60 --duration 1.2
 ```
+
+## 八、归档级守卫：每一趟都得是它自己声称的那个速度
+
+两层修法（`apply_speed` 改写 profile + 重建 `SpeedSchedule`）只保证**新**运行对。数据这一侧还需要一道
+便宜的守卫，否则同类缺陷可以再次悄悄发生而不被任何物理测试抓住：
+
+`tests/test_archive_speed_guard.py`（3 项，只读 index + `meta.json`，从不加载状态数组）：
+
+1. `test_every_archived_one_set_run_was_driven_at_the_speed_it_claims` —— 每趟归档的
+   `|speed_m_s| × 3.6` 必须等于它自己记的 `speed_kmh`（误差 ≤1e-6）。B052 时期的记录会在这里直接红。
+2. `test_the_declared_profile_speed_agrees_whenever_it_is_recorded` —— 写了 `profile_speed_kmh` 的趟，
+   它必须与 `speed_kmh` 一致；修法之前的老趟没有这个字段，不算失败。
+3. `test_the_speed_schedule_is_the_one_the_run_used` —— 对同一个算例调 `apply_speed(60/100)`：
+   `speed_schedule.constant_speed_m_s`、`run.speed_profile["constant"]["speed_kmh"]` 都要跟着变，
+   而**原对象必须不动**（`80/3.6` 仍在）。
+
+它跑在每轮 campaign 上，成本 0.8 s。
+
+## 九、60 km/h 的真实成本（本轮实测，未完成）
+
+把修正后的 60 km/h 拉到 1.35 s（`one_set_x30.json`，前轴 40 → 62 m）时，**41 分钟墙钟后仍未归档**
+（CPU 2 458 s 单核饱和）。对照同几何的 80 km/h 1.0 s 只要 **724 s** ⇒ 60 km/h 在切换区里每模拟秒的
+代价是 80 km/h 的 **≥3 倍**（不是 1.5 倍的线性比例）。这是 `body_hysteresis` 关闭时两体同时求值、
+接触集合频繁切换的直接代价，也是"跨速度要跑 6 趟"这条路线必须先把成本算清的原因。

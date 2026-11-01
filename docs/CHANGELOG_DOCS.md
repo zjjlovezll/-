@@ -1,5 +1,15 @@
 ## 第 291 轮：起步瞬态不是噪声，是起点（onset 与时间锁定）
 
+## 第 298 轮：B052 的归档级守卫（2026-11-01）
+
+- 新增 `tests/test_archive_speed_guard.py`（3 项，0.8 s）：每趟归档的 `|speed_m_s|×3.6` 必须等于它
+  自己记的 `speed_kmh`；`profile_speed_kmh` 与 `speed_kmh` 一致；`apply_speed` 必须同时改
+  `speed_schedule.constant_speed_m_s` 与 `run.speed_profile`，且**不动原对象**。
+- `docs/SPEED_OVERRIDE_DEFECT_2026-11-01.md` 增第八、九节：守卫的三条判据，以及修正后 60 km/h 的
+  真实成本（1.35 s 运行 41 min 仍未归档，CPU 2 458 s；同几何 80 km/h 1.0 s 只要 724 s ⇒ 每模拟秒
+  ≥3 倍）。
+- 任务书 §五十八。
+
 ## 第 297 轮：模态尺度种子打通 60 km/h 座椅，短算例首次七门全过（2026-11-01）
 
 - `RunSettings.seat_modal_scales`（默认 `(1.0, 0.8, 0.95, 1.05, 0.5)`）与 `_seat` 的重试包装

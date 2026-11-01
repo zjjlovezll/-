@@ -1,3 +1,18 @@
+## 第 300 轮：采样密度不是那 16 % 的来源（混淆项排除，2026-11-01）
+
+- 新增 `scripts/s153_window_confound.py`（零新仿真）：把 80 km/h 那一行按 `stride` 1/2/3 重新拟合，
+  站位步长 11.11 → 13.89 → 20.83 mm，幅值 **66.22 / 65.36 / 67.15 µm**，相对 stride 1 移动
+  **−0.86 / +0.93 µm**（缺口的 1/9）。
+- 预注册写在脚本 docstring：`H1`＝16.11 % 的差是采样密度造成的；证伪判据＝两次移动都 < **3.0 µm**。
+  实测触发证伪判据 ⇒ **`H1` 被否**：跨速度比较不必在同一步长上重做。
+- `scripts/s152_cross_speed.py` 增 `load(..., stride)` / `fit(..., stride)`：**只读**抽样，
+  `stride=1` 与归档逐位相同，`stride<1` 直接 `SystemExit`；`null_state` 保持 stride 1。
+- `tests/test_window_confound.py`（5 项）：基线复现 66.22 µm、两次移动都在门内、样本数确实被抽掉
+  （2001/1001/667）、判决必须否掉 H1、伪造 3.5 µm 位移时判据必须能触发。
+- `docs/WINDOW_CONFOUND_2026-11-01.md`（六节：预注册、三档读数、能说／不能说、`stride` 的只读性、复算）。
+- 仍挂着的两件：60 km/h 0.54 s 匹配窗口（0.02 s 就要 3.2 min ⇒ ≈10 min/模拟秒，≥1.6 h 仍在算）、
+  100 km/h 的定位漂 0.42 m 与相对分箱 2.34 %。任务书 §六十。
+
 ## 第 291 轮：起步瞬态不是噪声，是起点（onset 与时间锁定）
 
 ## 第 298 轮：B052 的归档级守卫（2026-11-01）
@@ -2984,6 +2999,7 @@ along with the real digests.
 | [VEHICLE_V2_DESIGN_AND_EVIDENCE.md](VEHICLE_V2_DESIGN_AND_EVIDENCE.md) | Velch v0.2：车辆—轮对—道岔轨道耦合的证据与实现 |
 | [WIDTH_AWARE_INVERSION_2026-10-31.md](WIDTH_AWARE_INVERSION_2026-10-31.md) | 宽度感知的分离律反演：50 µm 折到 0.53 %，但载荷分配在膝点饱和（2026-10-31） |
 | [WIDTH_COORDINATE_2026-10-31.md](WIDTH_COORDINATE_2026-10-31.md) | 接触半宽不是缺失的那个坐标（2026-10-31，第 280 轮） |
+| [WINDOW_CONFOUND_2026-11-01.md](WINDOW_CONFOUND_2026-11-01.md) | 采样密度不是那 16 % 的来源（2026-11-01，第 300 轮） |
 <!-- DOCS:ALL:END -->` 之间生成
   "文件 → 首行标题"表（73 行，机械取自每篇自己的标题，不改写内容）；
 - 新增 `tests/test_docs_index.py`（5 项）：清单块存在且 ≥60 行、**每篇 `docs/*.md` 都被索引提到**、

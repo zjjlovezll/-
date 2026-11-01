@@ -1,0 +1,47 @@
+{
+  "speed_kmh": 80.0,
+  "strides": [
+    1,
+    2,
+    3
+  ],
+  "rows": {
+    "1": {
+      "samples": 2001,
+      "station_step_mm": 11.11,
+      "amplitude_um": 66.21954744177114,
+      "centre_m": 58.51355572718767,
+      "p95_um": 6.246986897245169,
+      "worst_bin_pct": 1.2519811560813863,
+      "usable_stations": 369
+    },
+    "2": {
+      "samples": 1001,
+      "station_step_mm": 13.89,
+      "amplitude_um": 65.36242815574742,
+      "centre_m": 58.539768578379544,
+      "p95_um": 5.7130454697097575,
+      "worst_bin_pct": 1.145434459460367,
+      "usable_stations": 185
+    },
+    "3": {
+      "samples": 667,
+      "station_step_mm": 20.83,
+      "amplitude_um": 67.15440283156151,
+      "centre_m": 58.48851015422781,
+      "p95_um": 7.163234829793067,
+      "worst_bin_pct": 1.4359905412360758,
+      "usable_stations": 123
+    }
+  },
+  "baseline_amplitude_um": 66.21954744177114,
+  "amplitude_shift_um": {
+    "2": -0.8571192860237176,
+    "3": 0.9348553897903713
+  },
+  "worst_shift_um": 0.9348553897903713,
+  "tolerance_um": 3.0,
+  "notional_gap_um": 9.600000000000001,
+  "sampling_is_the_explanation": false,
+  "reason": "decimation moves the amplitude by less than 3 um, a fifth of the 9.6 um gap"
+}

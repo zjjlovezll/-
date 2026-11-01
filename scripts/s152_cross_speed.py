@@ -91,12 +91,25 @@ def select(route: str, speed_kmh: float, duration_s: float) -> dict:
     return row
 
 
-def load(route: str, speed_kmh: float, duration_s: float) -> dict:
+def load(route: str, speed_kmh: float, duration_s: float, stride: int = 1) -> dict:
+    """Load one archived run at its own speed.
+
+    ``stride`` decimates the per-sample series.  It exists to answer one question only: whether one
+    speed's refit moves when that speed is sampled as coarsely as another speed is.  stride=1 means
+    the run exactly as archived.
+    """
     import s145_speed_transfer as transfer
 
+    if stride < 1:
+        raise SystemExit(f"stride must be >= 1, got {stride}")
     row = select(route, speed_kmh, duration_s)
     run = transfer.load(str(row["run_id"]), speed_kmh)
     run["route"] = route
+    if stride > 1:
+        count = len(run["times"])
+        for key, value in list(run.items()):
+            if isinstance(value, np.ndarray) and value.ndim >= 1 and len(value) == count:
+                run[key] = value[::stride]
     return run
 
 
@@ -134,7 +147,7 @@ def null_state(speed_kmh: float) -> dict:
     }
 
 
-def fit(speed_kmh: float, state: dict) -> dict:
+def fit(speed_kmh: float, state: dict, stride: int = 1) -> dict:
     from scipy.optimize import least_squares
 
     from s113_profile_inversion import _smooth, _split
@@ -145,7 +158,7 @@ def fit(speed_kmh: float, state: dict) -> dict:
     import s119_width_aware_inversion as law
 
     route = RUNS[speed_kmh][1]
-    run = load(route, speed_kmh, RUNS[speed_kmh][2])
+    run = load(route, speed_kmh, RUNS[speed_kmh][2], stride)
     stations = run["station"]
     observed = _smooth(_split(run), stations, 0.20)
     u0 = np.interp(stations, state["station"], state["u0"], left=np.nan, right=np.nan)

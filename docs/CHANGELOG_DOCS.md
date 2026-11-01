@@ -1,3 +1,44 @@
+## 第 304 轮 — 5 % 份额的参考站位：冠面高差正好给出首触，却短 0.30 m 给不出份额
+
+第 303 轮把物理定位门挂起：`engage(5 %)` 实测 58.156 m（80 km/h）、58.153 m（100 km/h），落在
+首触 57.733 m 与齐平 58.423 m 之间（61 % 处），而档案里没有任何东西说明"5 % 份额应当落在哪一米"。
+本轮用一条独立路线补这个参考：两支弹簧的载荷分配律，输入是**算例自己的冠面高差**与**冻结刚度**，
+无任何拟合参数。
+
+预注册（跑前定稿）：`H4` = 5 % 站位就是冠面高差的并联分配所预测的位置；证伪 = `|s_law − s_model| ≥ 0.10 m`
+（±0.20 m 物理门的一半）；形状声明 = 同一律复现份额曲线（相关 ≥0.99、rms ≤0.05）；作废条件 = 冠面高差
+若不能把标定首触 57.733 m 复现到 0.02 m 以内，则它不是求解器看到的那条间隙，比较作废。
+
+实测：
+
+```
+stiffness from the frozen oracle 1.1267e+11 N/m^1.5, wheel load 60134.8 N
+touch   : crown gap 65.47 um at 57.733 m (calibrated 57.733 m, off 0.000 m)
+5 %     : crown gap 54.66 um at 57.853 m (law) against 58.156 m (model) -> 0.303 m
+crown gap where the model engages: 26.45 um -> 28.2 um more gap than the crowns give
+shape   : rms share difference 0.134 at correlation 0.907 over 161 samples
+VERDICT : CROWN-GAP SPLIT NOT SUFFICIENT
+```
+
+同时把 60 km/h 的物理列读出来了（null 归档已在 2026-11-01 落地，140 min 37 s，七门全过）：`engage(5 %)`
+**58.000 m**、相对首触 **+0.267 m**，比 80/100 的 +0.423/+0.420 m 更小 ⇒ 物理偏移**随速度下降而减小**，
+与"采样假象"方向相反。四个合成门在 60 km/h 仍不可读（`s152.fit` 走 bump 路线、该归档不存在），
+`s156` 因此把该速度判为 `partial`：物理列可引、门列**留白而不是打印成通过**（这条区别是承重的——
+`measure()` 原先把"只有 null 归档"当 `measured`，本轮 10:59 那次闸门就是因此在 bump 路线上撞 `SystemExit`）。
+
+三条读数各说一件事：**冠面高差对首触是精确的**（0.000 m）——首触由两条断面的最高点决定，宽度、横向
+偏移、楔形在那一个事件里全部抵消；**同一条间隙对份额过于乐观 28.2 µm**——模型在冠面差只有 26.45 µm
+时就报 5 %，而律要 54.66 µm 才给 5 %；**形状也只是"像"**（相关 0.907、rms 0.134）。
+
+物理解释与下一步都写在 [`ENGAGE_REFERENCE_2026-11-01.md`](ENGAGE_REFERENCE_2026-11-01.md) §4–§6：
+尖轨是楔形、其冠在内侧，车轮滚动圆走在冠的外侧，于是"轮看到的间隙"大于"冠到冠"；首触对这种偏移不敏感，
+份额敏感。因此 0.303 m 既不是模型错、也不是律错，而是**用冠面高差当份额的横坐标本身不对**。物理定位门
+**继续挂起**，参考站位必须从接触点的有效间隙来（下一轮：10 个站位的静态探针，读两体的侵入与横向位置）。
+
+新增 `scripts/s157_engage_reference.py`、`tests/test_engage_reference.py`（5 项：刚度即冻结 oracle、
+零间隙 50 % 且单调、首触复现 57.733、5 % 的 0.303 m 与判决、28.2 µm 恒等式）、
+`docs/ENGAGE_REFERENCE_2026-11-01.md`（六节）、报告 `reports/load_split_inversion_2026-10-31/engage_reference.json`。
+
 ## 第 303 轮：一页判决表，并把"0.42 m 晚"归因撤回（2026-11-01）
 
 - 新增 `scripts/s156_gate_page.py`：窗口按米固定（56.0–65.0 m），把预注册四门与物理定位列并排。
@@ -2872,6 +2913,7 @@ along with the real digests.
 | [DIVERGING_ROUTE_2026-10-21.md](DIVERGING_ROUTE_2026-10-21.md) | 曲向（diverging route）装配 — 阶段 1 记录（2026-10-21） |
 | [EFFECTIVE_RADIUS_RETIRED_2026-10-30.md](EFFECTIVE_RADIUS_RETIRED_2026-10-30.md) | 20 mm 等效半径退役：模型终于在自己写的 oracle 上运行（B048，选项 A） |
 | [ELEMENT_CATALOGUE_2026-10-23.md](ELEMENT_CATALOGUE_2026-10-23.md) | 元件目录与 Simpack 对照 |
+| [ENGAGE_REFERENCE_2026-11-01.md](ENGAGE_REFERENCE_2026-11-01.md) | The reference station a load split predicts for 5 % blade share — and why it is 0.30 m short |
 | [EVIDENCE_MAP.md](EVIDENCE_MAP.md) | 证据地图：这一版凭什么可以说「可以发布」 |
 | [FLEXIBLE_WHEELSET_PORT_2026-10-24.md](FLEXIBLE_WHEELSET_PORT_2026-10-24.md) | 柔性轮对移植：SDITT 的数据契约与我们的落点（2026-10-24） |
 | [FLOOR_DIAGNOSIS_2026-10-31.md](FLOOR_DIAGNOSIS_2026-10-31.md) | 第 277 轮的表示误差不是"超出 u 范围"，是真的不复合（2026-10-31，第 278 轮） |

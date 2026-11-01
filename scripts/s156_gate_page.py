@@ -51,6 +51,25 @@ def _archived(speed_kmh: float) -> bool:
     return bool(rows)
 
 
+def _route_archived(route: str, speed_kmh: float) -> bool:
+    """Is there an archived run for exactly this route?  The bump route must exist for its own scan."""
+    import s113_profile_inversion as base
+
+    duration = _duration(speed_kmh)
+    return any(
+        row.get("route") == route
+        and abs(float(row.get("speed_kmh", -1)) - speed_kmh) < 1e-6
+        and abs(float(row.get("duration_s", -1)) - duration) < 1e-9
+        for row in base._index_rows()
+    )
+
+
+def _duration(speed_kmh: float) -> float:
+    import s152_cross_speed as cross
+
+    return float(cross.RUNS[speed_kmh][2])
+
+
 def engage_scan(speed_kmh: float, which: str = "null") -> dict:
     """First station where the blade carries more than each threshold share, on one of the two routes.
 
@@ -64,7 +83,18 @@ def engage_scan(speed_kmh: float, which: str = "null") -> dict:
     from s113_profile_inversion import _smooth, _split
 
     index = 0 if which == "null" else 1
-    run = cross.load(cross.RUNS[speed_kmh][index], speed_kmh, cross.RUNS[speed_kmh][2])
+    route = cross.RUNS[speed_kmh][index]
+    if not _route_archived(route, speed_kmh):
+        # A missing archive is not a measurement: report the cell as unavailable instead of raising,
+        # so the other columns of that speed can still be read (round 304).
+        return {
+            "available": False,
+            "reason": f"no archived run for route {route!r} at {speed_kmh:g} km/h",
+            "by_threshold": {f"{threshold:.2f}": None for threshold in THRESHOLDS},
+            "share_max": None,
+            "samples": 0,
+        }
+    run = cross.load(route, speed_kmh, cross.RUNS[speed_kmh][2])
     share = _smooth(_split(run), run["station"], 0.20)
     stations = run["station"]
     scan = {}
@@ -91,17 +121,42 @@ def gates(speed_kmh: float) -> dict:
             "usable_stations": int(fit["usable_stations"])}
 
 
+def _runs(speed_kmh: float) -> tuple:
+    import s152_cross_speed as cross
+
+    return cross.RUNS[speed_kmh]
+
+
 def measure() -> dict:
+    """One row per speed: the four synthetic gates (bump route) and the physical engage (null route).
+
+    The two columns live on different archived runs -- ``s152.fit`` loads route index 1, while the
+    physical column must be read on route index 0 -- so a speed whose bump run is missing is reported as
+    ``partial``: its physical engage is quotable, its four gates are not.  Treating that as ``measured``
+    would put an absent gate in the pass column (round 304).
+    """
     table = {}
     for speed in SPEEDS_KMH:
-        if not _archived(speed):
+        null_route, bump_route, _ = _runs(speed)
+        if not _route_archived(null_route, speed):
             table[f"{speed:g}"] = {"status": "pending", "reason": "no archive at this duration yet"}
             continue
         null_scan = engage_scan(speed, "null")
+        physical = {key: (None if value is None else value - GEOMETRY_TOUCH_M)
+                    for key, value in null_scan["by_threshold"].items()}
+        if not _route_archived(bump_route, speed):
+            table[f"{speed:g}"] = {
+                "status": "partial",
+                "engage": null_scan,
+                "physical_error_m": physical,
+                "reason": ("null route archived; the bump route is missing, and the four synthetic gates "
+                           "are measured on it (s152.fit loads route index 1)"),
+            }
+            continue
         bump_scan = engage_scan(speed, "bump")
-        row = {"status": "measured", "gates": gates(speed), "engage": null_scan, "engage_bump": bump_scan}
-        row["physical_error_m"] = {key: (None if value is None else value - GEOMETRY_TOUCH_M)
-                                   for key, value in null_scan["by_threshold"].items()}
+        row = {"status": "measured", "gates": gates(speed), "engage": null_scan,
+               "engage_bump": bump_scan, "bump_available": True}
+        row["physical_error_m"] = physical
         row["bump_shift_m"] = {
             key: (None if (null_scan["by_threshold"][key] is None or bump_scan["by_threshold"][key] is None)
                   else bump_scan["by_threshold"][key] - null_scan["by_threshold"][key])
@@ -111,11 +166,12 @@ def measure() -> dict:
 
 
 def verdict(table: dict) -> dict:
-    measured = {key: row for key, row in table.items() if row.get("status") == "measured"}
-    all_gates = {key: row["gates"]["all_passed"] for key, row in measured.items()}
+    scored = {key: row for key, row in table.items() if row.get("status") == "measured"}
+    readable = {key: row for key, row in table.items() if row.get("status") in ("measured", "partial")}
+    all_gates = {key: row["gates"]["all_passed"] for key, row in scored.items()}
     # the physical column: does the 5 % engage stay within the 0.20 m location tolerance?
     physical = {}
-    for key, row in measured.items():
+    for key, row in readable.items():
         error = row["physical_error_m"].get("0.05")
         physical[key] = {"error_m": error, "within_gate": bool(error is not None and abs(error) <= LIMITS["G-LOC"])}
     return {
@@ -124,6 +180,7 @@ def verdict(table: dict) -> dict:
         "geometry_touch_m": GEOMETRY_TOUCH_M,
         "geometry_source": GEOMETRY_SOURCE,
         "pending": [key for key, row in table.items() if row.get("status") == "pending"],
+        "partial": [key for key, row in table.items() if row.get("status") == "partial"],
     }
 
 
@@ -132,7 +189,7 @@ def main() -> int:
     print(f"{'speed':>5} {'status':>9} {'G-ABS um':>9} {'G-REL %':>8} {'G-LOC m':>8} {'G-AMP %':>8} {'verdict':>8}")
     for key, row in table.items():
         if row.get("status") != "measured":
-            print(f"{key:>5} {'pending':>9} {'-':>9} {'-':>8} {'-':>8} {'-':>8} {'-':>8}   {row['reason']}")
+            print(f"{key:>5} {row.get('status', 'pending'):>9} {'-':>9} {'-':>8} {'-':>8} {'-':>8} {'-':>8}   {row['reason']}")
             continue
         values, passed = row["gates"]["values"], row["gates"]["passed"]
         verdict_text = "PASS" if row["gates"]["all_passed"] else "FAIL"
@@ -143,15 +200,18 @@ def main() -> int:
     print("physical location column (engage = first station at a given blade share, NULL route):")
     print(f"  geometry reference {GEOMETRY_TOUCH_M:.3f} m  [{GEOMETRY_SOURCE}]")
     for key, row in table.items():
-        if row.get("status") != "measured":
+        if row.get("status") not in ("measured", "partial"):
             continue
         scan = row["engage"]["by_threshold"]
         cells = ", ".join(f"{threshold}: {scan[threshold]:.3f} m ({row['physical_error_m'][threshold]:+.3f})"
                           for threshold in scan if scan[threshold] is not None)
         print(f"  {key} km/h  {cells}")
+        if "bump_shift_m" not in row:
+            print("          bump moves it: pending (the bump route is not archived at this speed)")
+            continue
         shift = row["bump_shift_m"]
-        print(f"          bump moves it: "
-              + ", ".join(f"{threshold}: {shift[threshold]:+.3f} m" for threshold in shift if shift[threshold] is not None))
+        cells = ", ".join(f"{threshold}: {shift[threshold]:+.3f} m" for threshold in shift if shift[threshold] is not None)
+        print("          bump moves it: " + (cells if cells else "pending (the bump route is not archived at this speed)"))
 
     result = verdict(table)
     print()
@@ -160,6 +220,8 @@ def main() -> int:
               f"-> {'within' if entry['within_gate'] else 'OUTSIDE'} the 0.20 m tolerance")
     if result["pending"]:
         print(f"pending: {', '.join(result['pending'])}")
+    if result["partial"]:
+        print(f"physical column only (gates need the bump route): {', '.join(result['partial'])}")
 
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps({"table": table, "verdict": result, "limits": LIMITS,

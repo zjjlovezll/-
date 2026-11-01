@@ -1,0 +1,30 @@
+{
+  "crown_gap_at_model_um": 26.44631393298082,
+  "effective_gap_excess_um": 28.209444940059605,
+  "gap_for_5pct_um": 54.655758873040426,
+  "geometry_tolerance_m": 0.02,
+  "seated_depth_um": 41.450054416872355,
+  "shape": {
+    "correlation": 0.9073234940701116,
+    "rms_share": 0.13372762234258398,
+    "samples": 161
+  },
+  "share_at_zero_gap": 0.4999999999999999,
+  "station_law_5pct_m": 57.85256783833651,
+  "station_model_5pct_m": 58.15555555555555,
+  "station_offset_m": 0.3029877172190396,
+  "stiffness_n_m_1p5": 112670003537.9672,
+  "tolerance_m": 0.1,
+  "touch_gap_um": 65.46610000000001,
+  "touch_mismatch_m": 0.0002532225785429887,
+  "touch_station_calibrated_m": 57.733,
+  "touch_station_geometry_m": 57.73325322257854,
+  "verdict": {
+    "crown_gap_split_sufficient": false,
+    "geometry_reproduces_touch": true,
+    "offset_within_tolerance": false,
+    "reason": "the law puts 5 % at 57.853 m against the measured 58.156 m (0.303 m apart); the share curves differ by rms 0.134 at correlation 0.907; the model needs an effective gap 28.2 um wider than the crown gap, so the reference station must come from the contact geometry, not the crowns",
+    "shape_within_tolerance": false
+  },
+  "wheel_load_n": 60134.8125
+}

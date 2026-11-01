@@ -1,8 +1,24 @@
 {
   "table": {
     "60": {
-      "status": "pending",
-      "reason": "no archive at this duration yet"
+      "status": "partial",
+      "engage": {
+        "by_threshold": {
+          "0.01": 57.891666666666666,
+          "0.02": 57.891666666666666,
+          "0.05": 58.0,
+          "0.10": 58.05
+        },
+        "share_max": 0.6458035438510001,
+        "samples": 1081
+      },
+      "physical_error_m": {
+        "0.01": 0.15866666666666873,
+        "0.02": 0.15866666666666873,
+        "0.05": 0.267000000000003,
+        "0.10": 0.31700000000000017
+      },
+      "reason": "null route archived; the bump route is missing, and the four synthetic gates are measured on it (s152.fit loads route index 1)"
     },
     "80": {
       "status": "measured",
@@ -44,6 +60,7 @@
         "share_max": 0.9963950047432679,
         "samples": 2001
       },
+      "bump_available": true,
       "physical_error_m": {
         "0.01": 0.389222222222223,
         "0.02": 0.4003333333333359,
@@ -97,6 +114,7 @@
         "share_max": 0.9741413143875389,
         "samples": 661
       },
+      "bump_available": true,
       "physical_error_m": {
         "0.01": 0.3781111111111173,
         "0.02": 0.392000000000003,
@@ -117,6 +135,10 @@
       "100": false
     },
     "physical_by_speed": {
+      "60": {
+        "error_m": 0.267000000000003,
+        "within_gate": false
+      },
       "80": {
         "error_m": 0.42255555555555446,
         "within_gate": false
@@ -128,7 +150,8 @@
     },
     "geometry_touch_m": 57.733,
     "geometry_source": "scripts/s110_lowering_readings.py (blade within one static penetration of the stock)",
-    "pending": [
+    "pending": [],
+    "partial": [
       "60"
     ]
   },

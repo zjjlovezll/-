@@ -70,9 +70,20 @@ def test_the_bump_moves_the_engagement_earlier_by_itself(table: dict) -> None:
 
 
 @pytest.mark.corpus
-def test_60_kmh_is_pending_not_dropped(table: dict) -> None:
-    assert table["60"]["status"] == "pending"
-    assert page.verdict(table)["pending"] == ["60"]
+def test_60_kmh_reports_its_physical_column_and_withholds_the_gates(table: dict) -> None:
+    """The 0.54 s null run landed on 2026-11-01, so the physical column is readable at 60 km/h.
+
+    The four synthetic gates are measured on the *bump* route (``s152.fit`` loads route index 1) and that
+    run does not exist yet, so the speed must stay out of the gate column.  Calling it "measured" would
+    print an absent gate as a PASS; calling it "pending" would hide a real physical reading.
+    """
+    assert table["60"]["status"] == "partial"
+    assert "gates" not in table["60"]
+    assert page.verdict(table)["partial"] == ["60"]
+    assert page.verdict(table)["pending"] == []
+    # the physical engage at 60 km/h is a genuine third column: 0.267 m past the calibrated touch
+    assert table["60"]["physical_error_m"]["0.05"] == pytest.approx(0.267, abs=0.010)
+    assert table["60"]["engage"]["by_threshold"]["0.05"] == pytest.approx(58.000, abs=0.010)
 
 
 @pytest.mark.corpus

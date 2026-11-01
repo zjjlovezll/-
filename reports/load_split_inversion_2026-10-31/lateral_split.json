@@ -1,0 +1,106 @@
+{
+ "H10_mechanism_confirmed": true,
+ "H9_convention_confirmed": true,
+ "constants": {
+  "axle_offset_m": 10.0,
+  "displacements_mm": [
+   -3.096,
+   -3.0,
+   -1.5,
+   0.0,
+   1.5,
+   3.0
+  ],
+  "lever_slope_window": [
+   0.5,
+   1.5
+  ],
+  "measured_displacement_mm": -3.096,
+  "share_floor": 0.02,
+  "share_window": [
+   0.03,
+   0.08
+  ],
+  "speed_kmh": 60.0,
+  "station_m": 58.15
+ },
+ "rows": [
+  {
+   "blade_force_n": 2931.350898874558,
+   "blade_penetration_m": 8.037067375553622e-06,
+   "blade_y_m": 0.753593632598095,
+   "displacement_m": -0.0030960000000000002,
+   "residual_n": 7.88859324529767e-08,
+   "share": 0.05251459638839024,
+   "stock_force_n": 52888.38495503389,
+   "stock_penetration_m": 5.7580366111912794e-05,
+   "stock_y_m": 0.7522124971248981,
+   "total_n": 55819.73585390845
+  },
+  {
+   "blade_force_n": 2964.2344734902194,
+   "blade_penetration_m": 8.150694084682724e-06,
+   "blade_y_m": 0.7535942480410928,
+   "displacement_m": -0.003,
+   "residual_n": 3.9319274947047234e-08,
+   "share": 0.05296808753636389,
+   "stock_force_n": 52998.41419596004,
+   "stock_penetration_m": 5.763753453033081e-05,
+   "stock_y_m": 0.7522085497177876,
+   "total_n": 55962.64866945026
+  },
+  {
+   "blade_force_n": 3246.264310859379,
+   "blade_penetration_m": 8.66434700845203e-06,
+   "blade_y_m": 0.7535940677454747,
+   "displacement_m": -0.0015,
+   "residual_n": 2.7454007067717612e-08,
+   "share": 0.05584548117890112,
+   "stock_force_n": 54883.1356393347,
+   "stock_penetration_m": 5.8846997329613004e-05,
+   "stock_y_m": 0.7520604489852238,
+   "total_n": 58129.39995019408
+  },
+  {
+   "blade_force_n": 2540.369371579763,
+   "blade_penetration_m": 7.33880527595462e-06,
+   "blade_y_m": 0.7536743228573513,
+   "displacement_m": 0.0,
+   "residual_n": 8.48158379085362e-08,
+   "share": 0.042199284449025216,
+   "stock_force_n": 57658.97772039313,
+   "stock_penetration_m": 6.108775769274388e-05,
+   "stock_y_m": 0.7515964690384112,
+   "total_n": 60199.34709197289
+  },
+  {
+   "blade_force_n": 593.4200298961246,
+   "blade_penetration_m": 3.039880419946411e-06,
+   "blade_y_m": 0.7539218128817707,
+   "displacement_m": 0.0015,
+   "residual_n": 2.7713667805073783e-08,
+   "share": 0.009532151703546975,
+   "stock_force_n": 61661.15253164936,
+   "stock_penetration_m": 6.78705583868443e-05,
+   "stock_y_m": 0.7505931809646788,
+   "total_n": 62254.57256154548
+  },
+  {
+   "blade_force_n": 0.0,
+   "blade_penetration_m": 0.0,
+   "blade_y_m": NaN,
+   "displacement_m": 0.003,
+   "residual_n": 9.898212738335133e-08,
+   "share": 0.0,
+   "stock_force_n": 64432.67986079763,
+   "stock_penetration_m": 7.345881960869401e-05,
+   "stock_y_m": 0.7490253807247849,
+   "total_n": 64432.67986079763
+  }
+ ],
+ "share_at_measured_displacement": 0.05251459638839024,
+ "slopes": {
+  "lever_y_per_displacement": -0.5222404004367432,
+  "share_per_m": -10.14996696987213
+ }
+}

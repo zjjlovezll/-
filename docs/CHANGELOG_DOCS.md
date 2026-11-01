@@ -1,3 +1,18 @@
+## 第 302 轮：谷变浅是背景造成的，不是幅值（2026-11-01）
+
+- 新增 `scripts/s155_valley_factor.py`（2×2 因子，零新仿真，四次 ridge 扫描）：背景固定时只换幅值。
+  `rise` 表 **80@66.22 = 66.7 %**、**80@56.56 = 74.3 %**、**100@66.22 = 2.5 %**、**100@56.56 = 11.5 %**，
+  于是 **background_effect 26.89×**、**amplitude_effect 0.90×** ⇒ 预注册判据（阈值 2.0×）判 **BACKGROUND**。
+- **幅值效应方向反了**：把幅值从 66.2 减到 56.6 µm，80 km/h 的谷反而**变尖**（66.7 → 74.3 %），
+  所以"扰动小所以谷浅"被自己的对照否掉。
+- 第二层否证：两个背景的**局部灵敏度 `dσ/du` 几乎相同**（0.0075 对 0.0076，差 1.3 %），
+  所以机制不是"份额律进了饱和区、扰动传不出去"。
+- 真正同时发生的两件事：基残差 **0.087 对 0.057 µm（1.53×）**，而滑动 ±0.6 m 的**绝对**代价
+  **0.002–0.009 对 0.038 µm** ⇒ 相对抬升降到 1/27。
+- `tests/test_valley_factor.py`（5 项，1.9 s）：四条 rise 复现、判决必须是 background 且 0.90 < 1.1、
+  两背景 `dσ/du` 相差 <10 %、基残差比 >1.3 且绝对代价 <1/4、伪造表必须落到 `joint` / `neither` 分支。
+- `docs/VALLEY_FACTOR_2026-11-01.md`（六节，含"只定位到背景这一层、没有再往下"的边界）。任务书 §六十二。
+
 ## 第 301 轮：0.41 m 的中心漂移是估计器的谷变浅，不是采样（2026-11-01）
 
 - 新增 `scripts/s154_centre_drift.py`（零新仿真、六次拟合）：80/100 km/h × stride 1/2/3。
@@ -3009,6 +3024,7 @@ along with the real digests.
 | [UI_CHINESE_LABELS_2026-10-22.md](UI_CHINESE_LABELS_2026-10-22.md) | 界面中文命名规则（Velch UI） |
 | [UI_READABILITY_2026-10-22.md](UI_READABILITY_2026-10-22.md) | 界面可读性：字号缩放与不截断 |
 | [UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md](UNIFIED_SCALE_AND_SOFTWARE_READINESS_2026-10-22.md) | 统一口径复核 + 代码体检（2026-10-22） |
+| [VALLEY_FACTOR_2026-11-01.md](VALLEY_FACTOR_2026-11-01.md) | 谷为什么变浅：是背景，不是幅值（2026-11-01，第 302 轮） |
 | [VEHICLE_DATABASE_2026-10-23.md](VEHICLE_DATABASE_2026-10-23.md) | 车辆数据库（Stage 1）：一台车只有一个定义 |
 | [VEHICLE_SPEED_PROFILE_2026-10-27.md](VEHICLE_SPEED_PROFILE_2026-10-27.md) | 车辆速度剖面：先把基线冻住，再把「v」变成一个值 |
 | [VEHICLE_TOPOLOGY_2026-10-23.md](VEHICLE_TOPOLOGY_2026-10-23.md) | 车辆拓扑：从写死的 35 个坐标到节点表 |

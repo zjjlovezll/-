@@ -1,3 +1,18 @@
+## 第 301 轮：0.41 m 的中心漂移是估计器的谷变浅，不是采样（2026-11-01）
+
+- 新增 `scripts/s154_centre_drift.py`（零新仿真、六次拟合）：80/100 km/h × stride 1/2/3。
+  中心 **58.514 / 58.540 / 58.489**（80）与 **58.919 / 58.940 / 58.920**（100），
+  抽样移动 **≤0.026 m**（预注册门 0.10 m），而两速度的中心差 **+0.406 / +0.400 / +0.431 m**
+  在三档上稳定 ⇒ **`H2`（采样密度）被否**。
+- `H3`（谷变浅）：固定幅值、沿中心扫 ±0.60 m，残差抬升 **80 km/h 66.8 % $\to$ 100 km/h 11.5 %**
+  （≈1/5.8）。预注册的"平"是 <10 %，实测 11.5 % **刚好没算平**，故如实记为"近于平、未达阈值"。
+  这就是"首触一致到 3 mm、拟合中心差 0.41 m"的机制。
+- 口径：**继续用 `engage`（首触）报定位，不把 `centre` 当物理量引用**——它是估计器的自由参数。
+  相对分箱 1.25 %（80）对 2.34 %（100）在两档上对抽样都不敏感，也是真实差。
+- `tests/test_centre_drift.py`（5 项，5.6 s）：中心与幅值复现、抽样移动 < 门的 1/4、三档都超门、
+  100 km/h 的谷比 80 的浅 4 倍以上且 `valley_is_flat is False`、伪造 0.15 m 位移必须触发而 0.09 m 不触发。
+- `docs/CENTRE_DRIFT_2026-11-01.md`（六节）。任务书 §六十一。
+
 ## 第 300 轮：采样密度不是那 16 % 的来源（混淆项排除，2026-11-01）
 
 - 新增 `scripts/s153_window_confound.py`（零新仿真）：把 80 km/h 那一行按 `stride` 1/2/3 重新拟合，
@@ -2780,6 +2795,7 @@ along with the real digests.
 | [BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md](BLADE_LOWERING_DOUBLE_INJECTION_2026-10-31.md) | 设计降低值被注入两次：尖轨比基本轨高 3.3 mm（B049） |
 | [BUGS.md](BUGS.md) | 缺陷账本（BUGS） |
 | [CAPABILITY_INVENTORY_2026-10-20.md](CAPABILITY_INVENTORY_2026-10-20.md) | 能力清单：现在的 Velch 到底准备好了什么（2026-10-20） |
+| [CENTRE_DRIFT_2026-11-01.md](CENTRE_DRIFT_2026-11-01.md) | 0.41 m 的中心漂移不是采样密度造成的（2026-11-01，第 301 轮） |
 | [COMPOSABLE_FORWARD_2026-10-31.md](COMPOSABLE_FORWARD_2026-10-31.md) | 换一个能复合的正演：峰数数对了，幅值还差 1.6 µm（2026-10-31，第 275 轮） |
 | [COMPUTE_BUDGET_2026-10-19.md](COMPUTE_BUDGET_2026-10-19.md) | Velch 计算效率：与 Simpack 的同工况对比、热点归因与提速路线 |
 | [CONTACT_GEOMETRY_ERROR_BOUND_2026-10-21.md](CONTACT_GEOMETRY_ERROR_BOUND_2026-10-21.md) | 接触几何误差界：样条解析 vs 密网格 2026-10-21 |
